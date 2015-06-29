@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Kiezatlas Website</title>
+
+        <meta charset="utf-8"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0"/>
+
+        <link rel="stylesheet" href="/de.kiezatlas.website/vendor/jquery/jquery.mobile.theme-1.3.0.min.css">
+        <link rel="stylesheet" href="/de.kiezatlas.website/vendor/jquery/jquery.mobile-1.3.0.min.css">
+        <link rel="stylesheet" href="/de.kiezatlas.website/vendor/leaflet/dist/leaflet.css"/>
+        <link rel="stylesheet" href="/de.kiezatlas.website/css/sitestyle.css"/>
+
+        <script src="/de.kiezatlas.website/vendor/jquery/jquery-1.9.1.min.js"></script>
+        <script src="/de.kiezatlas.website/vendor/leaflet/dist/leaflet.js"></script>
+        <script src="/de.kiezatlas.website/vendor/jquery/jquery.mobile-1.3.0.min.js"></script>
+        <script type="text/javascript">
+            $(document).ready(function(e) {
+
+
+                $.getJSON('/search/hallo/0.5', function (geo_objects) {
+                    console.log(geo_objects)
+                })
+                
+                // $.mobile.transitionFallbacks.slideout = "none"
+                // ... /de.kiezatlas.website/vendor/small-scale-geometries/ne_110m_admin_0_countries.shp
+                $("#map").height(400)
+                /** var map = new L.Map('map', {
+                    dragging: true, touchZoom: false, scrollWheelZoom: false, doubleClickZoom: false
+                }).setView([51.505, -0.09], 4);
+                L.tileLayer('https://api.tiles.mapbox.com/v4/kiezatlas.m7222ia5/{z}/{x}/{y}.png?access_token=pk.eyJ1Ijoia2llemF0bGFzIiwiYSI6InFmRTdOWlUifQ.VjM4-2Ow6uuWR_7b49Y9Eg', {
+                    attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://mapbox.com">Mapbox</a>',
+                    id: 'kiezatlas.m7222ia5',
+                    accessToken: 'pk.eyJ1Ijoia2llemF0bGFzIiwiYSI6InFmRTdOWlUifQ.VjM4-2Ow6uuWR_7b49Y9Eg'
+                }).addTo(map) **/
+                // 
+                $('h1.title').text("Kiezatlas Berlin")
+                // var styling = { "color": "#fcba5b", "weight": 2, "opacity": 0.65 }
+                // '/de.kiezatlas.website/bezirke-geometrie.kml'
+                /** 
+                        onEachFeature: function (feature, layer) {
+                            var detail = '<h3>'+feature.properties.name + '</h3><p>ISO Code: '+feature.properties.iso_a2+', '+feature.properties.iso_a3+'</p>'
+                            layer.bindPopup(detail )
+                            console.log(feature.properties.name, feature.properties.iso_a2, feature.properties.iso_a3, feature.properties.pop_est)
+                        },
+                        style: styling
+                    })
+                    map.setMaxBounds(geojson.getBounds())
+                    geojson.addTo(map)
+                }) **/
+
+            });
+
+        </script>
+    </head>
+    <body>
+
+        <div id="map-page" data-role="page">
+
+            <div data-role="header" data-theme="c">
+                <h1 class="title">Karte</h1>
+                <!-- a href="#" data-icon="bars">&nbsp;</a-->
+                <a class="back" style="display: none;" href="#detail-page" data-transition="slidefade"></a>
+            </div>
+
+            <div id="message" class="notification">Test test..</div>
+
+            <div id="map" class="fullsize"></div>
+
+        </div>
+
+        <div id="detail-page" data-role="page">
+
+            <div data-role="header" data-theme="c">
+                <h1 class="my-title">Details</h1>
+                <!-- a href="#" data-icon="bars">&nbsp;</a-->
+            </div>
+
+        </div>
+
+    </body>
+</html>
+
