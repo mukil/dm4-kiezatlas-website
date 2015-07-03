@@ -1,17 +1,18 @@
 package de.kiezatlas.website;
 
-import de.deepamehta.core.RelatedTopic;
-import de.deepamehta.core.Topic;
 import java.util.logging.Logger;
 import java.util.List;
+import java.util.ArrayList;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.core.MediaType;
 
-
+import de.deepamehta.core.RelatedTopic;
+import de.deepamehta.core.Topic;
 import de.deepamehta.core.osgi.PluginActivator;
 import de.deepamehta.core.service.Inject;
 import de.deepamehta.core.service.ResultList;
@@ -20,8 +21,7 @@ import de.deepamehta.plugins.geomaps.service.GeomapsService;
 import de.deepamehta.plugins.geospatial.service.GeospatialService;
 import de.kiezatlas.service.KiezatlasService;
 import de.kiezatlas.website.model.KiezatlasEntry;
-import java.util.ArrayList;
-import javax.ws.rs.core.MediaType;
+
 
 
 /**
@@ -46,20 +46,16 @@ public class KiezatlasWebsitePlugin extends PluginActivator {
 
     @Inject
     GeomapsService geomapsService;
-    
-    @GET
-    @Path("/map/{webAlias}")
-    public List<RelatedTopic> getCityMap(@PathParam("webAlias") String webAlias) {
-        // ### Do fetch generic "Kiezatlas Site" with focus on the region represented in 
-        //     the given "City Map" Web Alias
-        return null;
-    }
-    
+
     @GET
     @Path("/search/{coordinatePair}/{radius}")
     public List<KiezatlasEntry> getGeoObjectsNearBy(@PathParam("coordinatePair") String coordinates, 
             @PathParam("radius") String radius) {
         double lon = 13.4, lat = 52.5;
+        if (coordinates != null && !coordinates.isEmpty() && coordinates.contains(",")) {
+            lat = Double.parseDouble(coordinates.split(",")[0].trim());
+            lon = Double.parseDouble(coordinates.split(",")[1].trim());
+        }
         double r;
         r = (radius.isEmpty() || radius.equals("0")) ? 1.0 : Double.parseDouble(radius);
         List<Topic> geoCoordTopics = geospatialService.getTopicsWithinDistance(new GeoCoordinate(lon, lat), r);

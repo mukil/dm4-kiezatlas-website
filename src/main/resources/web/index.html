@@ -6,76 +6,113 @@
         <meta charset="utf-8"/>
         <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0"/>
 
-        <link rel="stylesheet" href="/de.kiezatlas.website/vendor/jquery/jquery.mobile.theme-1.3.0.min.css">
-        <link rel="stylesheet" href="/de.kiezatlas.website/vendor/jquery/jquery.mobile-1.3.0.min.css">
-        <link rel="stylesheet" href="/de.kiezatlas.website/vendor/leaflet/dist/leaflet.css"/>
+        <!--link rel="stylesheet" href="/de.kiezatlas.website/vendor/jquery/jquery.mobile.theme-1.3.0.min.css"-->
+        <!--link rel="stylesheet" href="/de.kiezatlas.website/vendor/jquery/jquery.mobile-1.3.0.min.css"-->
+        <link rel="stylesheet" href="/de.kiezatlas.website/vendor/leaflet/leaflet.css"/>
         <link rel="stylesheet" href="/de.kiezatlas.website/css/sitestyle.css"/>
 
         <script src="/de.kiezatlas.website/vendor/jquery/jquery-1.9.1.min.js"></script>
-        <script src="/de.kiezatlas.website/vendor/leaflet/dist/leaflet.js"></script>
-        <script src="/de.kiezatlas.website/vendor/jquery/jquery.mobile-1.3.0.min.js"></script>
+        <script src="/de.kiezatlas.website/vendor/leaflet/leaflet.js"></script>
+        <script src="/de.kiezatlas.website/vendor/leaflet/L.CircleEditor.js"></script>
+        <!--script src="/de.kiezatlas.website/vendor/jquery/jquery.mobile-1.3.0.min.js"></script-->
+
         <script type="text/javascript">
             $(document).ready(function(e) {
-
-
-                $.getJSON('/search/hallo/0.5', function (geo_objects) {
-                    console.log(geo_objects)
-                })
-                
-                // $.mobile.transitionFallbacks.slideout = "none"
-                // ... /de.kiezatlas.website/vendor/small-scale-geometries/ne_110m_admin_0_countries.shp
+                //
+                var map = undefined
+                var layer = undefined
+                var berlin_center = [52.5, 13.4]
+                //
+                // var markerGroup = L.layerGroup()
+                var controlGroup = L.layerGroup()
+                // model of all geo-domain object in client
+                var items = []
+                //
                 $("#map").height(400)
-                /** var map = new L.Map('map', {
-                    dragging: true, touchZoom: false, scrollWheelZoom: false, doubleClickZoom: false
-                }).setView([51.505, -0.09], 4);
-                L.tileLayer('https://api.tiles.mapbox.com/v4/kiezatlas.m7222ia5/{z}/{x}/{y}.png?access_token=pk.eyJ1Ijoia2llemF0bGFzIiwiYSI6InFmRTdOWlUifQ.VjM4-2Ow6uuWR_7b49Y9Eg', {
+                map = new L.Map('map', {
+                    dragging: true, touchZoom: true, scrollWheelZoom: true, doubleClickZoom: true
+                }).setView(berlin_center, 14);
+                /** layer = L.tileLayer('https://api.tiles.mapbox.com/v4/kiezatlas.m7222ia5/{z}/{x}/{y}.png?access_token=pk.eyJ1Ijoia2llemF0bGFzIiwiYSI6InFmRTdOWlUifQ.VjM4-2Ow6uuWR_7b49Y9Eg', {
                     attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://mapbox.com">Mapbox</a>',
                     id: 'kiezatlas.m7222ia5',
                     accessToken: 'pk.eyJ1Ijoia2llemF0bGFzIiwiYSI6InFmRTdOWlUifQ.VjM4-2Ow6uuWR_7b49Y9Eg'
-                }).addTo(map) **/
+                }).addTo(map) */
+                var imageUrl = '/de.kiezatlas.website/tile_map_development_bg.png',
+                    imageBounds = map.getBounds()
+                    L.imageOverlay(imageUrl, imageBounds).addTo(map);
+                var radius = 350; /*radius in meters*/
+                var eCircle = new L.CircleEditor(berlin_center, radius, {
+                    color : "#333333", fillColor: "#666666", extendedIconClass: ".extend-icon-medium"
+                })
                 // 
-                $('h1.title').text("Kiezatlas Berlin")
-                // var styling = { "color": "#fcba5b", "weight": 2, "opacity": 0.65 }
-                // '/de.kiezatlas.website/bezirke-geometrie.kml'
-                /** 
-                        onEachFeature: function (feature, layer) {
-                            var detail = '<h3>'+feature.properties.name + '</h3><p>ISO Code: '+feature.properties.iso_a2+', '+feature.properties.iso_a3+'</p>'
-                            layer.bindPopup(detail )
-                            console.log(feature.properties.name, feature.properties.iso_a2, feature.properties.iso_a3, feature.properties.pop_est)
-                        },
-                        style: styling
+                controlGroup.addLayer(eCircle)
+                eCircle.on('click', function (event) {
+                    console.log("Radius control clicked..", event)
+                })
+                controlGroup.addTo(map)
+                // 
+                eCircle.on('edit', function (event) {
+                    console.log("Radius control moved/edited to ", event, event.target._latlng, event.target._mRadius)
+                    map.eachLayer(function (el) {
+                        // ### do not remove control group
+                        console.log(el)
+                        if (el.hasOwnProperty('options') && el.options.hasOwnProperty('kiezatlas_id')) {
+                            map.removeLayer(el)
+                        }
+                        map.addLayer(controlGroup)
                     })
-                    map.setMaxBounds(geojson.getBounds())
-                    geojson.addTo(map)
-                }) **/
-
-            });
+                    // fire new query
+                    var new_center = event.target._latlng.lat + "," + event.target._latlng.lng
+                    var new_radius = event.target._mRadius
+                    query_geo_objects(new_center, new_radius, render_geo_objects)
+                })
+        
+                query_geo_objects(berlin_center, 350, render_geo_objects)
+        
+                function query_geo_objects(location, radius, success) {
+                    $.getJSON('/search/'+encodeURIComponent(location)+'/' + (radius / 1000), function (geo_objects) {
+                        console.log("query-result", geo_objects)
+                        items = geo_objects
+                        if (typeof success !== "undefined") success(geo_objects)
+                    })
+                }
+                
+                function render_geo_objects(data) {
+                    for (var el in data) {
+                        var result = data[el]
+                        // console.log(result)
+                        var coordinate = L.latLng(result["geo_coordinate_lat"], result["geo_coordinate_lon"])
+                        var circle = L.circleMarker(coordinate, { 
+                                color: "#ffff00", fillColor: "rgba(255, 255, 0, 1)", title : result["name"], alt : "Markierung t: " + result["name"], 
+                                riseOnHover: true, kiezatlas_id : result["geo_coordinate_id"]
+                            })
+                            // ### Level: 14 > 8px e.g. Level: 13 > 5px
+                            circle.setRadius(8)
+                            circle.bindPopup('<h3>'+result.name+'</h3>')
+                        map.addLayer(circle)
+                    }
+                    // markerGroup.addTo(map)
+                }
+            })
 
         </script>
     </head>
     <body>
-
-        <div id="map-page" data-role="page">
-
-            <div data-role="header" data-theme="c">
-                <h1 class="title">Karte</h1>
-                <!-- a href="#" data-icon="bars">&nbsp;</a-->
-                <a class="back" style="display: none;" href="#detail-page" data-transition="slidefade"></a>
-            </div>
-
-            <div id="message" class="notification">Test test..</div>
-
-            <div id="map" class="fullsize"></div>
-
+        
+        <div id="navigation">
+            <a href="/impressum">Impressum</a>
+            <a href="/open-source">Open Source</a>
         </div>
 
-        <div id="detail-page" data-role="page">
+        <div id="map-container">
+            <h1 class="title">Kartenansicht</h1>
+            <div id="message" class="notification">Test test..</div>
+            <div id="map" class="fullsize"></div>
+        </div>
 
-            <div data-role="header" data-theme="c">
-                <h1 class="my-title">Details</h1>
-                <!-- a href="#" data-icon="bars">&nbsp;</a-->
-            </div>
-
+        <div id="detail-area">
+            <h1 class="my-title">Details</h1>
+            <div class="details"></div>
         </div>
 
     </body>
