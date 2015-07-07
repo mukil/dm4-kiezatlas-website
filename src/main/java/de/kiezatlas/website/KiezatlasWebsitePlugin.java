@@ -84,7 +84,7 @@ public class KiezatlasWebsitePlugin extends PluginActivator {
             if (address != null) {
                 ResultList<RelatedTopic> geoObjects = address.getRelatedTopics("dm4.core.composition", "dm4.core.child", "dm4.core.parent", "ka2.geo_object", 0);
                 for (RelatedTopic geoObject : geoObjects) {
-                    results.add(new MapEntryView(geoObject, geoCoordTopic, geoCoord));
+                    results.add(new MapEntryView(geoObject, geomapsService));
                 }
             } else {
                 log.info("No Address Entry found for geo-coordinate " + geoCoordTopic.getSimpleValue());

@@ -48,7 +48,7 @@
                         function (geo_objects) {
                             kiezatlas.items = geo_objects
                             if (typeof success !== "undefined") {
-                                // kiezatlas.clear_markers()
+                                kiezatlas.clear_markers()
                                 kiezatlas.hide_spinning_wheel()
                                 success(geo_objects)
                             }
@@ -64,7 +64,7 @@
                                 // clear markers after fulltext-search
                                 kiezatlas.clear_markers()
                                 kiezatlas.hide_spinning_wheel()
-                                success(geo_objects, true)
+                                success(geo_objects, true) // ####
                             }
                         })
                 }
@@ -79,39 +79,67 @@
                             var coordinate = L.latLng(result["geo_coordinate_lat"], result["geo_coordinate_lon"])
                             /** brighter blue #5a78f3, blue: "#1944fc" **/
                             var circle = L.circleMarker(coordinate, {
-                                    color: "#FFCC33", strokeOpacity: 1, weight: 2,
-                                    fillColor: "#FC3", title : result["name"],
-                                    alt : "Markierung von " + result["name"],
-                                    riseOnHover: true, coordinate_id : result["geo_coordinate_id"],
-                                    geo_object_id : result["id"], uri: result["uri"], name: result["name"]
+                                    color: "#FFCC33", strokeOpacity: 1, weight: 2, opacity: .5, fillColor: "#FC3", title: result["name"],
+                                    alt: "Markierung von " + result["name"], location_id: result["address_id"],
+                                    geo_object_id: result["id"], uri: result["uri"], name: result["name"], riseOnHover: true
                                 })
                                 // ### Level: 14 > 8px e.g. Level: 13 > 5px
                                 circle.setRadius(10)
                                 // circle.bindPopup(result.name)
                                 circle.on('click', function (e) {
-                                    kiezatlas.render_selected_details(e.target.options['geo_object_id'])
+                                    kiezatlas.select_map_entry(e.target)
                                 })
                                 // ### on hover show name in In-Map detail-window
                             list_of_markers.push(circle)
                         }
                     }
+                    // maintain also all previously added markers
+                    if (typeof kiezatlas.markerGroup !== "undefined") {
+                        kiezatlas.markerGroup.eachLayer(function (marker) {
+                            if (!kiezatlas.exist_in_marker_listing(marker.options.geo_object_id, list_of_markers)) {
+                                console.log("adding old marker to update featureGroup..", marker.options.geo_object_id)
+                                list_of_markers.push(marker)
+                            }
+                        })
+                    }
+                    // create updated/new feature/markerGroup
                     kiezatlas.markerGroup = L.featureGroup(list_of_markers)
                     kiezatlas.markerGroup.addTo(kiezatlas.map)
-                    if (set_view_to_bounds) { // ###
-                        console.log(kiezatlas.markerGroup.getBounds())
-                        kiezatlas.map.setView(kiezatlas.center_coords, 11)
+                    if (set_view_to_bounds && list_of_markers.length > 0) {
+                        // kiezatlas.map.setMaxBounds(kiezatlas.markerGroup.getBounds())
+                        kiezatlas.map.fitBounds(kiezatlas.markerGroup.getBounds())
                     }
                 }
                 
-                this.render_selected_details = function (itemId) {
-                    $.getJSON('/kiezatlas/topic/'+itemId, 
-                        function (geo_object) {
-                            if (typeof geo_object !== "undefined") {
-                                // ### complete this
-                                $('#detail-area .my-title').text(geo_object.name)
-                                $('#detail-area .details').html(geo_object.address_name.toString())
+                this.select_map_entry = function (marker) {
+                    kiezatlas.markerGroup.eachLayer(function (el) {
+                        el.setStyle({ color: "#FFCC33", fillColor: "#FC3" })
+                        if (el.options['geo_object_id'] === marker.options['geo_object_id']) {
+                            // ### adding class name to path does not work
+                            marker.setStyle({ color: "#1944fc", weight: 3, fillColor: "#1944fc", className: "selected" })
+                            // marker.redraw()
+                        }
+                    })
+                    var geo_objects_under_marker = kiezatlas.find_all_geo_objects(marker.options['location_id'])
+                    kiezatlas.clear_details_area()
+                    kiezatlas.render_selected_details(geo_objects_under_marker)
+                }
+
+                this.render_selected_details = function (result_list) {
+                    // console.log("> render details for", result_list)
+                    for (var i in result_list) {
+                        $.getJSON('/kiezatlas/topic/'+result_list[i].options['geo_object_id'],
+                            function (geo_object) {
+                                if (typeof geo_object !== "undefined") {
+                                    // ### complete this
+                                    $('#detail-area').append('<div class="entry-card">'
+                                        + '<h3>'+geo_object.name+'</h3>'
+                                        + '<div class="details"><p>'+geo_object.address_name.toString()+'<br/>...</p></div>'
+                                        + '</div>')
+                                }
                             }
-                        })
+                        )
+                    }
                 }
                 
                 this.clear_markers = function () {
@@ -123,13 +151,37 @@
                         kiezatlas.map.addLayer(kiezatlas.controlGroup)
                     })
                 }
-                
+
+                this.clear_details_area = function () {
+                    $('#detail-area').empty()
+                }
+
                 this.show_spinning_wheel = function () {
                     $('#spinning-wheel').show()
                 }
-                
+
                 this.hide_spinning_wheel = function () {
                     $('#spinning-wheel').hide()
+                }
+
+                this.find_all_geo_objects = function (coordinate_id) {
+                    var results = []
+                    kiezatlas.markerGroup.eachLayer(function (el) {
+                        if (el.options.location_id === coordinate_id) results.push(el)
+                    })
+                    return results
+                }
+
+                this.exist_in_marker_listing = function (geo_object_id, listing) {
+                    if (typeof listing !== "undefined") {
+                        for (var i in listing) {
+                            if (listing[i].options.geo_object_id === geo_object_id) {
+                                console.warn("Skipping to add an (already present) Geo Object ID to marker group list", geo_object_id)
+                                return true
+                            }   
+                        }
+                    }
+                    return false
                 }
             }
 
@@ -139,16 +191,17 @@
                 //
                 kiezatlas.map = new L.Map('map', {
                     dragging: true, touchZoom: true, scrollWheelZoom: false,
-                    doubleClickZoom: true, zoomControl: false
+                    doubleClickZoom: true, zoomControl: false, minZoom: 9,
+                    maxBounds: L.latLngBounds(L.latLng(52.298000, 12.909336), L.latLng(52.715646, 13.817779))
                 }).setView(kiezatlas.center_coords, 14)
-                /** tile_layer = L.tileLayer('https://api.tiles.mapbox.com/v4/kiezatlas.m7222ia5/{z}/{x}/{y}.png?access_token=pk.eyJ1Ijoia2llemF0bGFzIiwiYSI6InFmRTdOWlUifQ.VjM4-2Ow6uuWR_7b49Y9Eg', {
+                tile_layer = L.tileLayer('https://api.tiles.mapbox.com/v4/kiezatlas.m7222ia5/{z}/{x}/{y}.png?access_token=pk.eyJ1Ijoia2llemF0bGFzIiwiYSI6InFmRTdOWlUifQ.VjM4-2Ow6uuWR_7b49Y9Eg', {
                     attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://mapbox.com">Mapbox</a>',
                     id: 'kiezatlas.m7222ia5',
                     accessToken: 'pk.eyJ1Ijoia2llemF0bGFzIiwiYSI6InFmRTdOWlUifQ.VjM4-2Ow6uuWR_7b49Y9Eg'
-                }).addTo(kiezatlas.map) **/
-                var imageUrl = '/de.kiezatlas.website/images/tile_map_development_bg.png',
+                }).addTo(kiezatlas.map)
+                /** var imageUrl = '/de.kiezatlas.website/images/tile_map_development_bg.png',
                     imageBounds = kiezatlas.map.getBounds()
-                    L.imageOverlay(imageUrl, imageBounds).addTo(kiezatlas.map);
+                    L.imageOverlay(imageUrl, imageBounds).addTo(kiezatlas.map); **/
                 var eCircle = new L.CircleEditor(kiezatlas.center_coords, kiezatlas.default_radius, {
                     color: "#343434", weight: 3, fillColor: "#FFCC33", /** #666 **/
                     fillOpacity: .1, extendedIconClass: ".extend-icon-medium",
@@ -327,7 +380,7 @@
         </div>
 
         <div id="map-container">
-            <h3 class="title">Geographische Auswahl sozialer Einrichtungen in Berlin</h3>
+            <h3>Geographische Auswahl sozialer Einrichtungen in Berlin</h3>
             <div id="message" class="notification">Test test..</div>
             <div id="map" class="fullsize"></div>
             <div id="spinning-wheel">
@@ -335,14 +388,7 @@
             </div>
         </div>
 
-        <div id="detail-area">
-            <h3 class="my-title">Details</h3>
-            <div class="details">
-                <p>
-                    .....
-                </p>
-            </div>
-        </div>
+        <div id="detail-area"></div>
 
         <div id="bottom">
             <p>...</p>
