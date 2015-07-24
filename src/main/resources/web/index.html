@@ -11,6 +11,7 @@
         <link rel="stylesheet" href="/de.kiezatlas.website/vendor/leaflet/leaflet.css"/>
         <link rel="stylesheet" href="/de.kiezatlas.website/css/sitestyle.css"/>
 
+        <script src="/de.kiezatlas.website/vendor/pouchdb/pouchdb-3.6.0.min.js"></script>
         <script src="/de.kiezatlas.website/vendor/jquery/jquery-1.9.1.min.js"></script>
         <script src="/de.kiezatlas.website/vendor/leaflet/leaflet.js"></script>
         <script src="/de.kiezatlas.website/vendor/leaflet/L.CircleEditor.js"></script>
@@ -20,11 +21,13 @@
             
             var kiezatlas = new function () {
 
+                this.default_radius = 500; /* radius in meters*/
+                this.radius_control = undefined
+
+                this.current_location = { name: "Berlin", coordinate: new L.latLng(52.5, 13.4) }
                 this.alternative_items = [] // near-by search street-alternatives
                 this.autocomplete_item = 0
                 //
-                this.center_coords = [52.5, 13.4]
-                this.default_radius = 500; /* radius in meters*/
                 this.LEVEL_OF_DETAIL_ZOOM = 15 // the map focus when a mapinternal infoWindow is rendered
                 this.LEVEL_OF_STREET_ZOOM = 14 // the map focus when a mapinternal infoWindow is rendered
                 this.LEVEL_OF_KIEZ_ZOOM = 13
@@ -38,13 +41,70 @@
                 this.map = undefined
                 // 
                 this.markerGroup = undefined
-                this.controlGroup = L.layerGroup()
+                this.controlGroup = L.featureGroup()
                 // model of all geo-domain object in client
                 this.items = []
-                
+                this.db = undefined
+
+                this.start_local_db = function () {
+                    db = new PouchDB('kiezatlas_favourites')
+                    console.log("Started local storage wrapper (PouchDB)!")
+                }
+
+                this.update_current_location = function () {
+                    //
+                    var latitude, longitude;
+                        latitude = kiezatlas.current_location.coordinate.lat
+                        longitude = kiezatlas.current_location.coordinate.lng
+                    // ### sanity check for bigger berlin area before firing a range-query...
+                    $('.location-label').html(kiezatlas.current_location.name
+                        + ' <small>('+latitude+' N, '+longitude+' E)</small>')
+                    // update radius control too
+                    kiezatlas.render_radius_control(true)
+                    kiezatlas.query_geo_objects(undefined, undefined, kiezatlas.render_geo_objects)
+                    // then fire query
+                }
+
+                this.render_radius_control = function (fitBounds) {
+                    // setup radius control
+                    if (typeof kiezatlas.radius_control !== "undefined") {
+                        kiezatlas.controlGroup.removeLayer(kiezatlas.radius_control)
+                        kiezatlas.map.removeLayer(kiezatlas.controlGroup)
+                    }
+                    kiezatlas.radius_control = new L.CircleEditor(kiezatlas.current_location.coordinate, kiezatlas.default_radius, {
+                        color: "#343434", weight: 3, fillColor: "#FFCC33", /** #666 **/
+                        fillOpacity: .1, extendedIconClass: "extend-icon-medium",
+                        className: "leaflet-radius-control", clickable: false
+                    })
+                    // add raduis control to map
+                    kiezatlas.controlGroup.addLayer(kiezatlas.radius_control)
+                    kiezatlas.controlGroup.addTo(kiezatlas.map)
+                    // add event handler to radius control
+                    kiezatlas.radius_control.on('edit', function (event) {
+                        // fire new query
+                        var new_radius = event.target._mRadius
+                        kiezatlas.query_geo_objects(event.target._latlng, new_radius, kiezatlas.render_geo_objects)
+                    })
+                    // update viewport to the programmatically set radius-control
+                    if (typeof fitBounds !== "undefined") {
+                        // kiezatlas.map.fitBounds(kiezatlas.controlGroup.getBounds())
+                        kiezatlas.map.setView(
+                            kiezatlas.controlGroup.getBounds().getCenter(),
+                            kiezatlas.LEVEL_OF_STREET_ZOOM)
+                    }
+                }
+
                 this.query_geo_objects = function (location, radius, success) {
                     kiezatlas.show_spinning_wheel()
-                    $.getJSON('/kiezatlas/search/'+encodeURIComponent(location)+'/' + (radius / 1000), 
+                    var location_string = ''
+                    var radius_value = kiezatlas.default_radius
+                    if (typeof location === "undefined") {
+                        location_string = kiezatlas.current_location.coordinate.lat + ', '+kiezatlas.current_location.coordinate.lng
+                    } else {
+                        location_string = location.lat + ', '+location.lng
+                    }
+                    if (typeof radius !== "undefined") radius_value = radius
+                    $.getJSON('/kiezatlas/search/'+encodeURIComponent(location_string)+'/' + (radius_value / 1000),
                         function (geo_objects) {
                             kiezatlas.items = geo_objects
                             if (typeof success !== "undefined") {
@@ -54,7 +114,7 @@
                             }
                         })
                 }
-                
+
                 this.search_geo_objects = function (text, success) {
                     kiezatlas.show_spinning_wheel()
                     $.getJSON('/kiezatlas/search/?search='+encodeURIComponent(text), 
@@ -68,7 +128,7 @@
                             }
                         })
                 }
-                
+
                 this.render_geo_objects = function (data, set_view_to_bounds) {
                     // ### if we do not clear markers (which would be nice), we should not render any duplicates ..
                     var list_of_markers = []
@@ -81,7 +141,8 @@
                             var circle = L.circleMarker(coordinate, {
                                     color: "#FFCC33", strokeOpacity: 1, weight: 2, opacity: .5, fillColor: "#FC3", title: result["name"],
                                     alt: "Markierung von " + result["name"], location_id: result["address_id"],
-                                    geo_object_id: result["id"], uri: result["uri"], name: result["name"], riseOnHover: true
+                                    geo_object_id: result["id"], uri: result["uri"], name: result["name"],// riseOnHover: true,
+                                    bezirksregion_uri: result["bezirksregion_uri"]
                                 })
                                 // ### Level: 14 > 8px e.g. Level: 13 > 5px
                                 circle.setRadius(10)
@@ -97,7 +158,6 @@
                     if (typeof kiezatlas.markerGroup !== "undefined") {
                         kiezatlas.markerGroup.eachLayer(function (marker) {
                             if (!kiezatlas.exist_in_marker_listing(marker.options.geo_object_id, list_of_markers)) {
-                                console.log("adding old marker to update featureGroup..", marker.options.geo_object_id)
                                 list_of_markers.push(marker)
                             }
                         })
@@ -131,11 +191,17 @@
                         $.getJSON('/kiezatlas/topic/'+result_list[i].options['geo_object_id'],
                             function (geo_object) {
                                 if (typeof geo_object !== "undefined") {
-                                    // ### complete this
+                                    // linkage works
+                                    var web_alias = geo_object.bezirksregion_uri.slice(18)
+                                    var topic_id = geo_object.uri.slice(19)
                                     $('#detail-area').append('<div class="entry-card">'
                                         + '<h3>'+geo_object.name+'</h3>'
-                                        + '<div class="details"><p>'+geo_object.address_name.toString()+'<br/>...</p></div>'
-                                        + '</div>')
+                                        + '<div class="details"><p>'+geo_object.address_name.toString() + '<br/>...'
+                                        + '</p>'
+                                        + '<a href="http://www.kiezatlas.de/map/'+web_alias+'/p/'+topic_id+'">Mehr Infos im Stadtplan</a>'
+                                        + '<a href="https://fahrinfo.bvg.de/Fahrinfo/bin/query.bin/dn?Z='+geo_object.address_name.toString()+'&REQ0JourneyStopsZA1=2&start=1&pk_campaign=kiezatlas.de"><img src="/de.kiezatlas.website/images/fahrinfo.gif"></a>'
+                                        + '</div>'
+                                    + '</div>')
                                 }
                             }
                         )
@@ -156,12 +222,20 @@
                     $('#detail-area').empty()
                 }
 
-                this.show_spinning_wheel = function () {
-                    $('#spinning-wheel').show()
+                this.show_spinning_wheel = function (isLocating) {
+                    if (isLocating) {
+                        $('#location-input .spinning-wheel').show()
+                    } else {
+                        $('#spinning-wheel').show()
+                    }
                 }
 
-                this.hide_spinning_wheel = function () {
-                    $('#spinning-wheel').hide()
+                this.hide_spinning_wheel = function (isLocating) {
+                    if (isLocating) {
+                        $('#location-input .spinning-wheel').hide()
+                    } else {
+                        $('#spinning-wheel').hide()
+                    }
                 }
 
                 this.find_all_geo_objects = function (coordinate_id) {
@@ -176,68 +250,93 @@
                     if (typeof listing !== "undefined") {
                         for (var i in listing) {
                             if (listing[i].options.geo_object_id === geo_object_id) {
-                                console.warn("Skipping to add an (already present) Geo Object ID to marker group list", geo_object_id)
+                                // console.warn("Skipping to add an (already present) Geo Object ID to marker group list", geo_object_id)
                                 return true
                             }   
                         }
                     }
                     return false
                 }
+
+                this.render_location_button = function () {
+                    var locateButton = '<a class="leaflet-control-zoom-loc" href="#" title="Your Location"></a>'
+                    $(locateButton).insertBefore(".leaflet-control-zoom-in")
+                    $(".leaflet-control-zoom-loc").click(kiezatlas.get_browser_location);
+                }
+
+                this.get_browser_location = function (options) {
+                    if (typeof options === "undefined") {
+                        options =  {
+                            "setView" : true, "maxZoom" : kiezatlas.LEVEL_OF_KIEZ_ZOOM
+                        }
+                    }
+                    kiezatlas.map.locate(options)
+                    kiezatlas.show_spinning_wheel(true)
+                }
+
+                this.on_location_found = function (e) {
+                    kiezatlas.current_location.coordinate.lat = e.latitude
+                    kiezatlas.current_location.coordinate.lng = e.longitude
+                    // ### if location not berlin, do something smart
+                    // ### if location in berlin, do something smart (suggest to save location to favourites'db
+                    $.getJSON('/kiezatlas/reverse-geocode/' + e.latitude + ',' + e.longitude, function (geo_names) {
+                            kiezatlas.hide_spinning_wheel(true)
+                            if (geo_names.results.length > 0) {
+                                var first_result = geo_names.results[0]
+                                var components = first_result.address_components
+                                var o = { coordinates : "" + e.latitude + "," + e.longitude }
+                                for (var i in components) {
+                                    var el = components[i]
+                                    if (el.types[0] === "route") {
+                                        o.street = el.long_name
+                                    } else if (el.types[0] === "sublocality_level_2") {
+                                        o.area = el.long_name
+                                    } else if (el.types[0] === "locality") {
+                                        o.city = el.long_name
+                                    } else if (el.types[0] === "postal_code") {
+                                        o.postal_code= el.long_name
+                                    }
+                                }
+                                // console.log("Location detected", o)
+                                kiezatlas.current_location.name = o.street + ", " + o.city + " " +o.area
+                                kiezatlas.update_current_location()
+                            }
+                        })
+                        // ### complete error handling, for geo-name lookup
+                }
+
+                this.on_location_error = function (e) {
+                    console.og("Location could not be detected, error:", e)
+                    kiezatlas.hide_spinning_wheel(true)
+                }
+
             }
 
             $(document).ready(function(e) {
-                //
-                var tile_layer = undefined
-                //
+                // initiate map
                 kiezatlas.map = new L.Map('map', {
                     dragging: true, touchZoom: true, scrollWheelZoom: false,
                     doubleClickZoom: true, zoomControl: false, minZoom: 9,
                     maxBounds: L.latLngBounds(L.latLng(52.298000, 12.909336), L.latLng(52.715646, 13.817779))
-                }).setView(kiezatlas.center_coords, 14)
-                tile_layer = L.tileLayer('https://api.tiles.mapbox.com/v4/kiezatlas.m7222ia5/{z}/{x}/{y}.png?access_token=pk.eyJ1Ijoia2llemF0bGFzIiwiYSI6InFmRTdOWlUifQ.VjM4-2Ow6uuWR_7b49Y9Eg', {
+                }).setView(kiezatlas.current_location.coordinate, 14)
+                // custom zoom control
+                new L.control.zoom( { position: "topright" }).addTo(kiezatlas.map)
+                L.tileLayer('https://api.tiles.mapbox.com/v4/kiezatlas.m7222ia5/{z}/{x}/{y}.png?access_token=pk.eyJ1Ijoia2llemF0bGFzIiwiYSI6InFmRTdOWlUifQ.VjM4-2Ow6uuWR_7b49Y9Eg', {
                     attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://mapbox.com">Mapbox</a>',
                     id: 'kiezatlas.m7222ia5',
                     accessToken: 'pk.eyJ1Ijoia2llemF0bGFzIiwiYSI6InFmRTdOWlUifQ.VjM4-2Ow6uuWR_7b49Y9Eg'
                 }).addTo(kiezatlas.map)
-                /** var imageUrl = '/de.kiezatlas.website/images/tile_map_development_bg.png',
+                /** var imageUrl = '/de.kiezatlas.websites/images/tile_map_development_bg.png',
                     imageBounds = kiezatlas.map.getBounds()
-                    L.imageOverlay(imageUrl, imageBounds).addTo(kiezatlas.map); **/
-                var eCircle = new L.CircleEditor(kiezatlas.center_coords, kiezatlas.default_radius, {
-                    color: "#343434", weight: 3, fillColor: "#FFCC33", /** #666 **/
-                    fillOpacity: .1, extendedIconClass: ".extend-icon-medium",
-                    className: "leaflet-radius-control", clickable: false
-                })
+                    L.imageOverlay(imageUrl, imageBounds).addTo(kiezatlas.map) **/
+                //
+                kiezatlas.update_current_location()
+                kiezatlas.query_geo_objects(kiezatlas.current_location.coordinate, kiezatlas.default_radius, kiezatlas.render_geo_objects)
                 // 
-                new L.control.zoom( { position: "topright" }).addTo(kiezatlas.map)
-                // 
-                kiezatlas.controlGroup.addLayer(eCircle)
-                kiezatlas.controlGroup.addTo(kiezatlas.map)
-                // 
-                eCircle.on('edit', function (event) {
-                    // console.log("Radius control moved/edited to ", event, event.target._latlng, event.target._mRadius)
-                    // kiezatlas.clear_markers()
-                    // fire new query
-                    var new_center = event.target._latlng.lat + "," + event.target._latlng.lng
-                    var new_radius = event.target._mRadius
-                    kiezatlas.query_geo_objects(new_center, new_radius, kiezatlas.render_geo_objects)
-                })
-        
-                kiezatlas.query_geo_objects(kiezatlas.center_coords, kiezatlas.default_radius, kiezatlas.render_geo_objects)
-                
-                /** function hover_handler () {
-                    if (typeof markerGroup !== "undefined") {
-                        markerGroup.eachLayer(function (marker) {
-                            // console.log("debug-marker", marker)
-                            marker.on('mouseover', function () {
-                                marker.openPopup()
-                            })
-                            marker.on('mouseout', function () {
-                                marker.closePopup()
-                            })
-                        })
-                    }
-                } **/
-
+                kiezatlas.map.on('locationfound', kiezatlas.on_location_found)
+                kiezatlas.map.on('locationerror', kiezatlas.on_location_error)
+                kiezatlas.render_location_button()
+                kiezatlas.start_local_db()
             })
             
             function search_fulltext() {
@@ -249,8 +348,7 @@
             function search_near_by_input () {
                 var streetFocus = $("#near-by").val() + ' Berlin'
                     streetFocus = encodeURIComponent(streetFocus, "UTF-8")
-                // var locale = "de"; // default set to de if empty by proxy-servlet
-                // var body = '{"method": "geoCode", "params": ["'+ streetFocus +'", "...", "'+locale+'"]}'
+                kiezatlas.show_spinning_wheel(true)
                 $.ajax({
                     type: "GET", url: "/kiezatlas/geocode/" + streetFocus,
                     /** beforeSend: function(xhr) {
@@ -258,12 +356,11 @@
                         xhr.setRequestHeader("Charset", "UTF-8")
                     }, **/
                     success: function(obj) {
+                        kiezatlas.hide_spinning_wheel(true)
                         kiezatlas.alternative_items = null
                         kiezatlas.alternative_items = obj.results
                         kiezatlas.autocomplete_item = 0
-
                         if (kiezatlas.alternative_items.length == 1) {
-                            // select_current_item()
                             focus_current_item()
                             render_alternatives()
                             if (kiezatlas.alternative_items.length <= 1) {
@@ -276,23 +373,24 @@
                     },
                     error: function(x, s, e) {
                         console.warn("ERROR", "x: " + x + " s: " + s + " e: " + e)
+                        kiezatlas.hide_spinning_wheel(true)
                     }
                 })
 
                 function focus_current_item () {
                     var item = kiezatlas.alternative_items[kiezatlas.autocomplete_item]
                     if (typeof item !== "undefined") {
-                        kiezatlas.map.setView(new L.latLng(item.geometry.location.lat, item.geometry.location.lng), 
-                            15)
-                        // update gui (search-input field) to contents of first result entry
-                        $("#near-by").val(item['formatted_address'])
+                        kiezatlas.current_location.coordinate = new L.latLng(item.geometry.location.lat, item.geometry.location.lng)
+                        kiezatlas.current_location.name = item['formatted_address']
+                        kiezatlas.update_current_location()
+                        // $("#near-by").val(item['formatted_address'])
                         // Display location
-                        if (kiezatlas.location_circle != undefined) {
+                        /** if (kiezatlas.location_circle != undefined) {
                             kiezatlas.map.removeLayer(kiezatlas.location_circle);
                         }
                         kiezatlas.location_circle = new L.circle(item.geometry.location, 200, {"stroke": true,
                             "clickable": false, "color": "#dae3f8", "fillOpacity": 0.6, "opacity": 0.8, "weight":10});
-                        kiezatlas.map.addLayer(kiezatlas.location_circle, {"clickable" : false});
+                        kiezatlas.map.addLayer(kiezatlas.location_circle, {"clickable" : false}); **/
                     }
                 }
 
@@ -338,6 +436,7 @@
     <body>
         
         <div id="navigation">
+            <!--
             <a href="/" class="active">Home</a>
             <a href="/aktuelles">Aktuelles</a>
             <a href="/projekt">Projektbeschreibung</a>
@@ -345,14 +444,14 @@
             <a href="/weitere-atlanten">Weitere Atlanten</a>
                 <!--a href="/weitere-atlanten/wip">WIP</a-->
                 <!--a href="/weitere-atlanten/archiv">Archiv</a-->
-            <a href="/dies-und-das">Dies & Das</a>
+            <!--a href="/dies-und-das">Dies & Das</a-->
                 <!--a href="/dies-und-das/archiv">Archiv</a-->
-            <a href="/tipps-und-tricks">Tipps & Tricks</a>
+            <!--a href="/tipps-und-tricks">Tipps & Tricks</a>
             <a href="/impressum">Impressum</a>
             <!-- a href="/suche">Suche</a-->
-            <a href="/links">Links</a>
+            <!--a href="/links">Links</a>
             <a href="/kontakt">Kontakt</a>
-            <a href="/open-source">Open Source</a>
+            <a href="/open-source">Open Source</a-->
         </div>
         
         <div id="header">
@@ -362,25 +461,28 @@
         </div>
 
         <div id="filter-container">
-            <div id="fulltext-input">
+            <!-- div id="fulltext-input">
                 <form action="javascript:search_fulltext()" id="fulltext-form" accept-charset="UTF-8">
                     <label for="fulltext" id="fulltext-label">Volltextsuche</label>
                     <input id="fulltext" type="text" placeholder="Name"></input>
                     <input id="do-search" type="submit" class="btn" value="Ok"></input>
                 </form>
-            </div>
+            </div-->
             <div id="location-input">
                 <form action="javascript:search_near_by_input()" id="near-by-form" accept-charset="UTF-8">
                     <label for="near-by" id="near-by-label">In der N&auml;he von</label>
                     <input id="near-by" type="text" placeholder="Stra&szlig;enname / Hnr."></input>
                     <input id="do-nearby" type="submit" class="btn" value="Ok"></input>
+                    <div class="spinning-wheel">
+                        <img src="/de.kiezatlas.website/images/ajax-loader.gif" />
+                    </div>
                 </form>
                 <div id="street-alternatives"></div>
             </div>
         </div>
 
         <div id="map-container">
-            <h3>Geographische Auswahl sozialer Einrichtungen in Berlin</h3>
+            <h3 class="location-label"></h3>
             <div id="message" class="notification">Test test..</div>
             <div id="map" class="fullsize"></div>
             <div id="spinning-wheel">

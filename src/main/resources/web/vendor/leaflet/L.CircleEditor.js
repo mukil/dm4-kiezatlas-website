@@ -51,22 +51,30 @@ L.CircleEditor = L.Circle.extend ({
         this._markerGroup = new L.LayerGroup();
         this._markers = [];
 
-        var markerCenter = this._createMarker(this._latlng, 0, true);
+        var markerCenter = this._createMarker(this._latlng, 0, true, 'move');
         this._markers.push(markerCenter);
 
         var circleBounds = this.getBounds(),
             center = circleBounds.getCenter(),
             neCoord = circleBounds.getNorthEast(),
             northCenterCoord = new L.LatLng(center.lat, neCoord.lng, true);
-            markerNorthCenter = this._createMarker(northCenterCoord, 1);
+            markerNorthCenter = this._createMarker(northCenterCoord, 1, false, 'radius');
         this._markers.push(markerNorthCenter);
     },
 
-    _createMarker: function (latlng, index, isCenter) {
+    _createMarker: function (latlng, index, isCenter, css_name) {
+        // this.options.icon.className = this.options.icon.className + ' leaflet-'+ css_name
         var marker = new L.Marker(latlng, {
             draggable: true,
-            icon: this.options.icon
+            icon: new L.DivIcon({
+                iconSize: new L.Point(10, 10),
+                className: 'leaflet-div-icon leaflet-editing-icon leaflet-'+ css_name
+            })
         });
+        // marker.setIcon(this.options.icon)
+        // console.log(marker)
+        // marker._icon.className += className
+        // marker.options.icon.className = "resize-move"
 
         if (isCenter === undefined) {
             isCenter = false;
@@ -95,14 +103,14 @@ L.CircleEditor = L.Circle.extend ({
         var target = e.target,
             icon = target._icon,
             classValues = icon.getAttribute("class");
-        //icon.setAttribute("class", "extend-icon " + classValues);
+        // icon.setAttribute("class", "extend-icon " + classValues);
         icon.setAttribute("class", this.options.extendedIconClass + " " + classValues);
     },
     _onMouseOut: function (e) {
         var target = e.target,
             icon = target._icon,
             classValues = icon.getAttribute("class");
-        //icon.setAttribute("class", classValues.replace("extend-icon", ""));
+        // icon.setAttribute("class", classValues.replace("extend-icon", ""));
         icon.setAttribute("class", classValues.replace(this.options.extendedIconClass, ""));
     },
 

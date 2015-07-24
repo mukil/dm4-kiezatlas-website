@@ -152,4 +152,33 @@ public class KiezatlasWebsitePlugin extends PluginActivator {
         return result;
     }
 
+    @GET
+    @Path("/reverse-geocode/{latlng}")
+    public String geoCodeLocationInput(@PathParam("latlng") String latlng) {
+        String result = "";
+        try {
+            String url = "https://maps.googleapis.com/maps/api/geocode/json?latlng="+latlng+"&language=de";
+            // &result_type=street_address|postal_code&key=API_KEY
+            URLConnection connection = new URL(url).openConnection();
+            connection.setRequestProperty("Content-Type", "application/json");
+            connection.setRequestProperty("Charset", "UTF-8");
+            // Get the response
+            BufferedReader rd = new BufferedReader(new InputStreamReader(connection.getInputStream(), "UTF-8"));
+            StringBuilder sb = new StringBuilder();
+            String line;
+            while ((line = rd.readLine()) != null) {
+                sb.append(line);
+            }
+            rd.close();
+            result = sb.toString();
+        } catch (UnsupportedEncodingException ex) {
+            log.log(Level.WARNING, "Unsuporrted Encoding Exception", ex);
+        } catch (MalformedURLException mux) {
+            log.log(Level.WARNING, "Malformed URL Exception", mux);
+        } catch (IOException ioex) {
+            log.log(Level.WARNING, "IOException", ioex);
+        }
+        return result;
+    }
+
 }
