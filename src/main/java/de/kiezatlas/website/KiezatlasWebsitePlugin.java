@@ -25,6 +25,7 @@ import de.kiezatlas.website.model.EntryView;
 import de.kiezatlas.website.model.MapEntryView;
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
@@ -43,7 +44,7 @@ import javax.ws.rs.QueryParam;
  *
  */
 
-@Path("/kiezatlas/")
+@Path("/")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 public class KiezatlasWebsitePlugin extends PluginActivator {
@@ -58,15 +59,21 @@ public class KiezatlasWebsitePlugin extends PluginActivator {
 
     @Inject
     GeomapsService geomapsService;
-    
+
     @GET
-    @Path("/topic/{topicId}")
+    @Produces(MediaType.TEXT_HTML)
+    public InputStream getKiezatlasWebsite () {
+        return getStaticResource("web/index.html");
+    }
+
+    @GET
+    @Path("/kiezatlas/topic/{topicId}")
     public EntryView getKiezatlasTopicView(@PathParam("topicId") long topicId) {
         return new EntryView(dms.getTopic(topicId), geomapsService);
     }
 
     @GET
-    @Path("/search/{coordinatePair}/{radius}")
+    @Path("/kiezatlas/search/{coordinatePair}/{radius}")
     public List<MapEntryView> getGeoObjectsNearBy(@PathParam("coordinatePair") String coordinates, 
             @PathParam("radius") String radius) {
         double lon = 13.4, lat = 52.5;
@@ -94,7 +101,7 @@ public class KiezatlasWebsitePlugin extends PluginActivator {
     }
     
     @GET
-    @Path("/search")
+    @Path("/kiezatlas/search")
     @Transactional
     public List<MapEntryView> searchTopics(@QueryParam("search") String query) {
         try {
@@ -121,7 +128,7 @@ public class KiezatlasWebsitePlugin extends PluginActivator {
     }
 
     @GET
-    @Path("/geocode/{input}")
+    @Path("/kiezatlas/geocode/{input}")
     public String geoCodeAddressInput(@PathParam("input") String input) {
         String query = input;
         String result = "";
@@ -153,7 +160,7 @@ public class KiezatlasWebsitePlugin extends PluginActivator {
     }
 
     @GET
-    @Path("/reverse-geocode/{latlng}")
+    @Path("/kiezatlas/reverse-geocode/{latlng}")
     public String geoCodeLocationInput(@PathParam("latlng") String latlng) {
         String result = "";
         try {
