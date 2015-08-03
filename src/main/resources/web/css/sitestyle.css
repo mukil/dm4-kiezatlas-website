@@ -69,7 +69,7 @@ h3.location-label {
         margin-bottom: 20px;
     }
     h3.location-label {
-        margin-bottom: 0px;
+        margin-bottom: 5px;
     }
     #street-alternatives {
         margin-left: 15px;
@@ -93,11 +93,6 @@ h1.my-title {
 #message {
     padding: 20px;
     padding-bottom: 50px;
-}
-
-#map-container {
-    position: relative;
-    top: 60px;
 }
 
 .notification {
@@ -234,19 +229,21 @@ h1.my-title {
     opacity: .3em;
 }
 
-#map-container {
+#karte {
+    position: relative;
+    top: 60px;
     padding-top: 5px;
     padding-bottom: 15px;
     background-color: #fff;
 }
 
-#map-container h3 {
+#karte h3 {
     margin-left: 15px;
     margin-right: 15px;
     display: inline-block;
 }
 
-#map-container h3 small {
+#karte h3 small {
     color: #666;
     font-size: 0.8em;
 }

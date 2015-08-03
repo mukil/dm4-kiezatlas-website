@@ -88,6 +88,7 @@
                         var new_radius = event.target._mRadius
                         kiezatlas.current_location.lat = event.target._latlng.lat
                         kiezatlas.current_location.lng = event.target._latlng.lng
+                        // ### on small screens (here, after dragging) our current center should be the mapcenter (fitBounds..)
                         kiezatlas.query_geo_objects(event.target._latlng, new_radius, kiezatlas.render_geo_objects)
                         kiezatlas.reverse_geocode()
                     })
@@ -96,7 +97,7 @@
                         // kiezatlas.map.fitBounds(kiezatlas.controlGroup.getBounds())
                         kiezatlas.map.setView(
                             kiezatlas.controlGroup.getBounds().getCenter(),
-                            kiezatlas.LEVEL_OF_KIEZ_ZOOM)
+                            kiezatlas.LEVEL_OF_STREET_ZOOM)
                     }
                 }
 
@@ -271,9 +272,9 @@
                 }
 
                 this.get_browser_location = function (options) {
-                    if (typeof options === "undefined") {
+                    if (typeof options === "undefined") { // ??? do this options work for us?
                         options =  {
-                            "setView" : true, "maxZoom" : kiezatlas.LEVEL_OF_KIEZ_ZOOM
+                            "setView" : true, "maxZoom" : kiezatlas.LEVEL_OF_DETAIL_ZOOM
                         }
                     }
                     kiezatlas.map.locate(options)
@@ -281,15 +282,16 @@
                 }
 
                 this.on_location_found = function (e) {
-                    kiezatlas.current_location.coordinate.lat = e.latitude
-                    kiezatlas.current_location.coordinate.lng = e.longitude
                     // ### if location NOT berlin, do something smart - does NOT WORK
-                    console.log(kiezatlas.max_bounds.contains([e.latitude, e.longitude]))
+                    kiezatlas.hide_spinning_wheel(true)
                     if (!kiezatlas.max_bounds.contains([e.latitude, e.longitude])) {
                         kiezatlas.current_location.name = 'Ihr aktueller Standort liegt au&szlig;erhalb '
-                            + 'unseres momentanen Einflu&szlig;bereichs. Wir k&ouml;nnen ihnen aktuell nur Daten aus dem '
-                            + 'Gro&szlig;raum Berlin anbieten. Bitte geben sie z.B.: einen Stra&szlig;ennamen ein.'
+                            + 'unseres momentanen Einflu&szlig;bereichs. Wir k&ouml;nnen ihnen lediglich Daten aus dem '
+                            + 'Gro&szlig;raum Berlin anbieten. Bitte geben sie dazu z.B.: bei <a href="#b">B)</a> einen Stra&szlig;ennamen ein.'
+                        kiezatlas.update_current_location_label(false)
                     } else {
+                        kiezatlas.current_location.coordinate.lat = e.latitude
+                        kiezatlas.current_location.coordinate.lng = e.longitude
                         // ### if location in berlin, do something smart (suggest to save location to favourites'db
                             // ### complete error handling, for geo-name lookup
                         kiezatlas.reverse_geocode()
@@ -351,7 +353,7 @@
                 //
                 kiezatlas.update_current_location_label(true) // implicitly queries for geo_objects
                 // correct current default viewport
-                kiezatlas.map.setView(kiezatlas.current_location.coordinate, kiezatlas.LEVEL_OF_KIEZ_ZOOM)
+                kiezatlas.map.setView(kiezatlas.current_location.coordinate, kiezatlas.LEVEL_OF_DETAIL_ZOOM)
                 // 
                 kiezatlas.map.on('locationfound', kiezatlas.on_location_found)
                 kiezatlas.map.on('locationerror', kiezatlas.on_location_error)
@@ -485,12 +487,12 @@
                 </p>
             </div>
             <div class="search-option c">
-                <h1>A)</h1>
+                <h1 id="a">A)</h1>
                 <b>Deinen aktuellen Standort freigeben</b><br/>
                 Mit Hilfe deines Web-Browsers kannst du einfach per Klick <a href="javascript:kiezatlas.get_browser_location()">deinen aktuellen Standort</a> als Ausgangspunkt f&uuml;r die Umkreissuche benutzen.
             </div>
             <div class="search-option b">
-                <h1>B)</h1>
+                <h1 id="b">B)</h1>
                 <b>Name eines Platzes oder einer Stra&szlig;e eingeben</b><br/>
                 Du kannst auch einfach den Namen eines Platzes oder einer Stra&szlig;e in Berlin eingeben.<br/>
                 <div id="location-input">
@@ -505,9 +507,9 @@
                 </div>
             </div>
             <div class="search-option a">
-                <h1>C)</h1>
+                <h1 id="c">C)</h1>
                 <b>Grafische Umkreissuche auf der Karte</b><br/>
-                Du kannst den <i>grauen Kreis</i> auf der Karte einfach anfassen, <i>verschieben</i> und ggf. vergr&ouml;&szlig;ern. Probier es mal aus!
+                Du kannst den <i>grauen Kreis</i> auf der <a href="#karte">Karte</a> einfach anfassen, <i>verschieben</i> und ggf. vergr&ouml;&szlig;ern. Probier es mal aus!
             </div>
         </div>
 
@@ -521,7 +523,7 @@
             </div-->
         </div>
 
-        <div id="map-container">
+        <div id="karte">
             <h3 class="location-label"></h3>
             <div id="street-alternatives"></div>
             <div id="message" class="notification">Test test..</div>
