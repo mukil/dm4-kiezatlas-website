@@ -16,6 +16,72 @@ html, body {
     background-color: #EAEAEA;
 }
 
+h3 {
+    color: #002856;
+}
+
+a {
+    color: #002856;
+    text-decoration: underline;
+    text-decoration-color: #8f1414;
+}
+
+.search-option {
+    color: #fff;
+    display: inline-block;
+    max-width: 400px;
+    min-width: 250px;
+    padding: 20px;
+    padding-right: 15px;
+    padding-left: 60px;
+    vertical-align: top;
+    margin: 15px;
+    text-align: left;
+    color: #000;
+    background-color: #fff;
+    position: relative;
+}
+
+.search-option h1 {
+    position: absolute; top: -10px; left: 10px;
+}
+
+.search-option.a h1 {
+    color: #8f1414;
+}
+
+.search-option.b h1 {
+    color: #0078A8;
+}
+
+.search-option.c h1 {
+    color: #eaca8f;
+}
+
+h3.location-label {
+    color: #8f1414;
+}
+
+@media(max-width:700px) {
+    .search-option {
+        max-width: 100%;
+        margin: 0px;
+        margin-bottom: 20px;
+    }
+    h3.location-label {
+        margin-bottom: 0px;
+    }
+    #street-alternatives {
+        margin-left: 15px;
+    }
+    #header .welcome p {
+        width: 75%;
+        margin: auto;
+        margin-bottom: 25px;
+        margin-top: 15px;
+    }
+}
+
 img.more {
     padding: 4px;
 }
@@ -64,6 +130,31 @@ h1.my-title {
     top: 30px;
     font-size: 1.2em;
     text-align: center;
+}
+
+#header ol {
+    text-align: left;
+    width: 75%;
+    margin: auto;
+}
+
+#header .welcome {
+    max-width: 800px;
+    margin: auto;
+}
+
+#header .welcome img {
+    display: inline-block;
+}
+
+#header .welcome h3 {
+    display: inline-block;
+    vertical-align: top;
+    margin-left: 15px;
+}
+
+#header .welcome p {
+    text-align: left;
 }
 
 #bottom {
@@ -117,6 +208,32 @@ h1.my-title {
     display: inline-block;
 }
 
+.prev-location,
+.next-location {
+    margin: 10px;
+    background-color: #fff;
+    padding: 3px;
+    cursor: pointer;
+}
+
+.prev-location {
+    margin-right: 5px;
+    padding-right: 7px;
+    padding-left: 7px;
+}
+
+.next-location {
+    padding-right: 7px;
+    padding-left: 7px;
+    margin-left: 5px;
+}
+
+.prev-location.defused,
+.next-location.defused1 {
+    cursor: auto;
+    opacity: .3em;
+}
+
 #map-container {
     padding-top: 5px;
     padding-bottom: 15px;
@@ -126,6 +243,7 @@ h1.my-title {
 #map-container h3 {
     margin-left: 15px;
     margin-right: 15px;
+    display: inline-block;
 }
 
 #map-container h3 small {
@@ -137,7 +255,7 @@ h1.my-title {
     font-size: 1em;
     border-bottom: 1px solid #FC3;
     border-top: 1px solid #FC3; /** #0078A8;*/
-    height: 400px; /** ### fixed map-height */
+    height: 550px; /** ### fixed map-height */
 }
 
 #map.fullsize {
@@ -147,18 +265,18 @@ h1.my-title {
 
 #spinning-wheel {
     position: absolute; top: 65px;
-    width: 100%; height: 400px; /** ### fixed map-height */
+    width: 100%; height: 550px; /** ### fixed map-height */
     text-align: center;
     display: none;
     background-color: rgba(255, 255, 255, 0.5);
 }
 
 #spinning-wheel img {
-    margin: 175px;
+    margin: 250px;
 }
 
 #location-input .spinning-wheel {
-    position: absolute; top: 15px; right: 10px;
+    position: absolute; top: 40px; right: 10px;
     width: 40px; height: 40px;
     text-align: center;
     display: none;
@@ -170,7 +288,7 @@ h1.my-title {
     /** #D3D3D3; opacity: 0.8; be-link blue #2D509A **/
     /** position: absolute; top: 0px; left: 0px; **/
     z-index: 100;
-    padding: 10px;
+    /** padding: 10px; **/
     /* padding-left: 15px; */
     background-color: #fff;
     margin-left: auto;

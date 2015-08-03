@@ -71,15 +71,15 @@ public class KiezatlasWebsitePlugin extends PluginActivator {
             @PathParam("radius") String radius) {
         double lon = 13.4, lat = 52.5;
         if (coordinates != null && !coordinates.isEmpty() && coordinates.contains(",")) {
-            lat = Double.parseDouble(coordinates.split(",")[0].trim());
-            lon = Double.parseDouble(coordinates.split(",")[1].trim());
+            lon = Double.parseDouble(coordinates.split(",")[0].trim());
+            lat = Double.parseDouble(coordinates.split(",")[1].trim());
         }
         double r;
         r = (radius.isEmpty() || radius.equals("0")) ? 1.0 : Double.parseDouble(radius);
         List<Topic> geoCoordTopics = geospatialService.getTopicsWithinDistance(new GeoCoordinate(lon, lat), r);
         ArrayList<MapEntryView> results = new ArrayList<MapEntryView>();
         for (Topic geoCoordTopic : geoCoordTopics) {
-            GeoCoordinate geoCoord = geomapsService.geoCoordinate(geoCoordTopic);
+            // GeoCoordinate geoCoord = geomapsService.geoCoordinate(geoCoordTopic);
             Topic address = geoCoordTopic.getRelatedTopic("dm4.core.composition", "dm4.core.child", "dm4.core.parent", "dm4.contacts.address");
             if (address != null) {
                 ResultList<RelatedTopic> geoObjects = address.getRelatedTopics("dm4.core.composition", "dm4.core.child", "dm4.core.parent", "ka2.geo_object", 0);

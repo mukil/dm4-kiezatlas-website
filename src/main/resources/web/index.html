@@ -3,7 +3,7 @@
     <head>
         <title>Kiezatlas Website</title>
 
-        <meta charset="utf-8"/>
+        <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0"/>
 
         <!--link rel="stylesheet" href="/de.kiezatlas.website/vendor/jquery/jquery.mobile.theme-1.3.0.min.css"-->
@@ -21,10 +21,11 @@
             
             var kiezatlas = new function () {
 
-                this.default_radius = 500; /* radius in meters*/
+                this.default_radius = 750; /* radius in meters*/
                 this.radius_control = undefined
+                this.max_bounds = L.latLngBounds(L.latLng(52.298000, 12.909336), L.latLng(52.715646, 13.817779))
 
-                this.current_location = { name: "Berlin", coordinate: new L.latLng(52.5, 13.4) }
+                this.current_location = { name: "Neuenburger Straße, Berlin", coordinate: new L.latLng(52.5, 13.4) }
                 this.alternative_items = [] // near-by search street-alternatives
                 this.autocomplete_item = 0
                 //
@@ -51,7 +52,7 @@
                     console.log("Started local storage wrapper (PouchDB)!")
                 }
 
-                this.update_current_location = function () {
+                this.update_current_location_label = function (enforceQuery) {
                     //
                     var latitude, longitude;
                         latitude = kiezatlas.current_location.coordinate.lat
@@ -59,10 +60,12 @@
                     // ### sanity check for bigger berlin area before firing a range-query...
                     $('.location-label').html(kiezatlas.current_location.name
                         + ' <small>('+latitude+' N, '+longitude+' E)</small>')
-                    // update radius control too
-                    kiezatlas.render_radius_control(true)
-                    kiezatlas.query_geo_objects(undefined, undefined, kiezatlas.render_geo_objects)
-                    // then fire query
+                    if (enforceQuery) {
+                        // update radius control too
+                        kiezatlas.render_radius_control(true)
+                        // then fire query
+                        kiezatlas.query_geo_objects(undefined, undefined, kiezatlas.render_geo_objects)
+                    }
                 }
 
                 this.render_radius_control = function (fitBounds) {
@@ -83,14 +86,17 @@
                     kiezatlas.radius_control.on('edit', function (event) {
                         // fire new query
                         var new_radius = event.target._mRadius
+                        kiezatlas.current_location.lat = event.target._latlng.lat
+                        kiezatlas.current_location.lng = event.target._latlng.lng
                         kiezatlas.query_geo_objects(event.target._latlng, new_radius, kiezatlas.render_geo_objects)
+                        kiezatlas.reverse_geocode()
                     })
                     // update viewport to the programmatically set radius-control
                     if (typeof fitBounds !== "undefined") {
                         // kiezatlas.map.fitBounds(kiezatlas.controlGroup.getBounds())
                         kiezatlas.map.setView(
                             kiezatlas.controlGroup.getBounds().getCenter(),
-                            kiezatlas.LEVEL_OF_STREET_ZOOM)
+                            kiezatlas.LEVEL_OF_KIEZ_ZOOM)
                     }
                 }
 
@@ -99,9 +105,9 @@
                     var location_string = ''
                     var radius_value = kiezatlas.default_radius
                     if (typeof location === "undefined") {
-                        location_string = kiezatlas.current_location.coordinate.lat + ', '+kiezatlas.current_location.coordinate.lng
+                        location_string = kiezatlas.current_location.coordinate.lng + ', '+kiezatlas.current_location.coordinate.lat
                     } else {
-                        location_string = location.lat + ', '+location.lng
+                        location_string = location.lng + ', '+location.lat
                     }
                     if (typeof radius !== "undefined") radius_value = radius
                     $.getJSON('/kiezatlas/search/'+encodeURIComponent(location_string)+'/' + (radius_value / 1000),
@@ -277,32 +283,45 @@
                 this.on_location_found = function (e) {
                     kiezatlas.current_location.coordinate.lat = e.latitude
                     kiezatlas.current_location.coordinate.lng = e.longitude
-                    // ### if location not berlin, do something smart
-                    // ### if location in berlin, do something smart (suggest to save location to favourites'db
-                    $.getJSON('/kiezatlas/reverse-geocode/' + e.latitude + ',' + e.longitude, function (geo_names) {
-                            kiezatlas.hide_spinning_wheel(true)
-                            if (geo_names.results.length > 0) {
-                                var first_result = geo_names.results[0]
-                                var components = first_result.address_components
-                                var o = { coordinates : "" + e.latitude + "," + e.longitude }
-                                for (var i in components) {
-                                    var el = components[i]
-                                    if (el.types[0] === "route") {
-                                        o.street = el.long_name
-                                    } else if (el.types[0] === "sublocality_level_2") {
-                                        o.area = el.long_name
-                                    } else if (el.types[0] === "locality") {
-                                        o.city = el.long_name
-                                    } else if (el.types[0] === "postal_code") {
-                                        o.postal_code= el.long_name
-                                    }
+                    // ### if location NOT berlin, do something smart - does NOT WORK
+                    console.log(kiezatlas.max_bounds.contains([e.latitude, e.longitude]))
+                    if (!kiezatlas.max_bounds.contains([e.latitude, e.longitude])) {
+                        kiezatlas.current_location.name = 'Ihr aktueller Standort liegt au&szlig;erhalb '
+                            + 'unseres momentanen Einflu&szlig;bereichs. Wir k&ouml;nnen ihnen aktuell nur Daten aus dem '
+                            + 'Gro&szlig;raum Berlin anbieten. Bitte geben sie z.B.: einen Stra&szlig;ennamen ein.'
+                    } else {
+                        // ### if location in berlin, do something smart (suggest to save location to favourites'db
+                            // ### complete error handling, for geo-name lookup
+                        kiezatlas.reverse_geocode()
+                    }
+                }
+
+                this.reverse_geocode = function (e) {
+                    $.getJSON('/kiezatlas/reverse-geocode/' + kiezatlas.current_location.coordinate.lat
+                            + ',' + kiezatlas.current_location.coordinate.lng, function (geo_names) {
+                        kiezatlas.hide_spinning_wheel(true)
+                        if (geo_names.results.length > 0) {
+                            var first_result = geo_names.results[0]
+                            var components = first_result.address_components
+                            var o = { coordinates : "" + kiezatlas.current_location.coordinate.lat + "," + kiezatlas.current_location.coordinate.lng }
+                            for (var i in components) {
+                                var el = components[i]
+                                if (el.types[0] === "route") {
+                                    o.street = el.long_name
+                                } else if (el.types[0] === "sublocality_level_2") {
+                                    o.area = el.long_name
+                                } else if (el.types[0] === "locality") {
+                                    o.city = el.long_name
+                                } else if (el.types[0] === "postal_code") {
+                                    o.postal_code= el.long_name
                                 }
-                                // console.log("Location detected", o)
-                                kiezatlas.current_location.name = o.street + ", " + o.city + " " +o.area
-                                kiezatlas.update_current_location()
                             }
-                        })
-                        // ### complete error handling, for geo-name lookup
+                            // console.log("Location detected", o)
+                            kiezatlas.current_location.name = o.street + ", " + o.city
+                            if (typeof o.area !== "undefined") kiezatlas.current_location.name += " " + o.area
+                            kiezatlas.update_current_location_label(false)
+                        }
+                    })
                 }
 
                 this.on_location_error = function (e) {
@@ -317,8 +336,8 @@
                 kiezatlas.map = new L.Map('map', {
                     dragging: true, touchZoom: true, scrollWheelZoom: false,
                     doubleClickZoom: true, zoomControl: false, minZoom: 9,
-                    maxBounds: L.latLngBounds(L.latLng(52.298000, 12.909336), L.latLng(52.715646, 13.817779))
-                }).setView(kiezatlas.current_location.coordinate, 14)
+                    maxBounds: kiezatlas.max_bounds
+                })
                 // custom zoom control
                 new L.control.zoom( { position: "topright" }).addTo(kiezatlas.map)
                 L.tileLayer('https://api.tiles.mapbox.com/v4/kiezatlas.m7222ia5/{z}/{x}/{y}.png?access_token=pk.eyJ1Ijoia2llemF0bGFzIiwiYSI6InFmRTdOWlUifQ.VjM4-2Ow6uuWR_7b49Y9Eg', {
@@ -330,8 +349,9 @@
                     imageBounds = kiezatlas.map.getBounds()
                     L.imageOverlay(imageUrl, imageBounds).addTo(kiezatlas.map) **/
                 //
-                kiezatlas.update_current_location()
-                kiezatlas.query_geo_objects(kiezatlas.current_location.coordinate, kiezatlas.default_radius, kiezatlas.render_geo_objects)
+                kiezatlas.update_current_location_label(true) // implicitly queries for geo_objects
+                // correct current default viewport
+                kiezatlas.map.setView(kiezatlas.current_location.coordinate, kiezatlas.LEVEL_OF_KIEZ_ZOOM)
                 // 
                 kiezatlas.map.on('locationfound', kiezatlas.on_location_found)
                 kiezatlas.map.on('locationerror', kiezatlas.on_location_error)
@@ -381,8 +401,9 @@
                     var item = kiezatlas.alternative_items[kiezatlas.autocomplete_item]
                     if (typeof item !== "undefined") {
                         kiezatlas.current_location.coordinate = new L.latLng(item.geometry.location.lat, item.geometry.location.lng)
+                        kiezatlas.default_radius = 900
                         kiezatlas.current_location.name = item['formatted_address']
-                        kiezatlas.update_current_location()
+                        kiezatlas.update_current_location_label(true)
                         // $("#near-by").val(item['formatted_address'])
                         // Display location
                         /** if (kiezatlas.location_circle != undefined) {
@@ -401,7 +422,7 @@
                     var $prev = ""
                     var $next = ""
                     if (typeof prev_location !== "undefined") {
-                        $prev = $('<span class="prev-location btn" title="'+ prev_location['formatted_address'] +'"><</span>')
+                        $prev = $('<input type="button" class="prev-location" title="'+ prev_location['formatted_address'] +'" value="<" />')
                         $prev.click(function(e) {
                             kiezatlas.autocomplete_item = kiezatlas.autocomplete_item - 1
                             focus_current_item()
@@ -409,11 +430,11 @@
                         })
                     } else {
                         // empty prev button
-                        $prev = $('<span class="prev-location" title=""><</span>')
+                        $prev = $('<input type="button" class="prev-location defused" title="" value="<"/>')
                     }
 
                     if (typeof next_location !== "undefined") {
-                        $next = $('<span class="next-location btn" title="'+ next_location['formatted_address'] +'">></span>')
+                        $next = $('<input type="button" class="next-location" title="'+ next_location['formatted_address'] +'" value=">" />')
                         $next.click(function(e) {
                             kiezatlas.autocomplete_item = kiezatlas.autocomplete_item + 1
                             focus_current_item()
@@ -421,11 +442,11 @@
                         })
                     } else {
                         // empty next button
-                        $next = $('<span class="next-location" title="">></span>')
+                        $next = $('<input type="button" value=">" class="next-location defused" title=">" />')
                     }
                     // 
-                    $('#street-alternatives').html($prev).append($next)
-                        .append(kiezatlas.alternative_items.length + ' Standorte gefunden')
+                    $('#street-alternatives').html('Mehrere ('+kiezatlas.alternative_items.length+') Orte gefunden')
+                            .append($prev).append($next)
                     $('#street-alternatives').show()
                 }
                 // if (!checkIfAllCategoriesSelected()) showAllMarker();
@@ -455,9 +476,39 @@
         </div>
         
         <div id="header">
-            <p>
-                Im Kiezatlas findest du <b>Einrichtungen</b> und <b>Angebote</b> unterschiedlichster Art in deiner Umgebung.
-            </p>
+            <div class="welcome">
+                <img src="/de.kiezatlas.website/images/kiezatlas-logo.png" />
+                <h3>Willkommen im Kiezatlas!</h3>
+                <p>
+                    Im Kiezatlas findest du Berliner <i>Einrichtungen</i> und <i>Angebote</i> aus deiner Umgebung.
+                    Wir bieten <b>dir drei</b> M&ouml;glickeiten um Infos aus einer bestimmten Gegend abzufragen:
+                </p>
+            </div>
+            <div class="search-option c">
+                <h1>A)</h1>
+                <b>Deinen aktuellen Standort freigeben</b><br/>
+                Mit Hilfe deines Web-Browsers kannst du einfach per Klick <a href="javascript:kiezatlas.get_browser_location()">deinen aktuellen Standort</a> als Ausgangspunkt f&uuml;r die Umkreissuche benutzen.
+            </div>
+            <div class="search-option b">
+                <h1>B)</h1>
+                <b>Name eines Platzes oder einer Stra&szlig;e eingeben</b><br/>
+                Du kannst auch einfach den Namen eines Platzes oder einer Stra&szlig;e in Berlin eingeben.<br/>
+                <div id="location-input">
+                    <form action="javascript:search_near_by_input()" id="near-by-form" accept-charset="UTF-8">
+                        <!-- label for="near-by" id="near-by-label">In der N&auml;he von</label-->
+                        <input id="near-by" type="text" placeholder="Stra&szlig;enname / Hnr." />
+                        <input id="do-nearby" type="submit" class="btn" value="Ok" />
+                        <div class="spinning-wheel">
+                            <img src="/de.kiezatlas.website/images/ajax-loader.gif" />
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="search-option a">
+                <h1>C)</h1>
+                <b>Grafische Umkreissuche auf der Karte</b><br/>
+                Du kannst den <i>grauen Kreis</i> auf der Karte einfach anfassen, <i>verschieben</i> und ggf. vergr&ouml;&szlig;ern. Probier es mal aus!
+            </div>
         </div>
 
         <div id="filter-container">
@@ -468,21 +519,11 @@
                     <input id="do-search" type="submit" class="btn" value="Ok"></input>
                 </form>
             </div-->
-            <div id="location-input">
-                <form action="javascript:search_near_by_input()" id="near-by-form" accept-charset="UTF-8">
-                    <label for="near-by" id="near-by-label">In der N&auml;he von</label>
-                    <input id="near-by" type="text" placeholder="Stra&szlig;enname / Hnr."></input>
-                    <input id="do-nearby" type="submit" class="btn" value="Ok"></input>
-                    <div class="spinning-wheel">
-                        <img src="/de.kiezatlas.website/images/ajax-loader.gif" />
-                    </div>
-                </form>
-                <div id="street-alternatives"></div>
-            </div>
         </div>
 
         <div id="map-container">
             <h3 class="location-label"></h3>
+            <div id="street-alternatives"></div>
             <div id="message" class="notification">Test test..</div>
             <div id="map" class="fullsize"></div>
             <div id="spinning-wheel">
