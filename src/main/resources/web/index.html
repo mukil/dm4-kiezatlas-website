@@ -93,12 +93,12 @@
                         kiezatlas.reverse_geocode()
                     })
                     // update viewport to the programmatically set radius-control
-                    if (typeof fitBounds !== "undefined") {
+                    /** if (fitBounds) {
                         // kiezatlas.map.fitBounds(kiezatlas.controlGroup.getBounds())
                         kiezatlas.map.setView(
                             kiezatlas.controlGroup.getBounds().getCenter(),
                             kiezatlas.LEVEL_OF_STREET_ZOOM)
-                    }
+                    } **/
                 }
 
                 this.query_geo_objects = function (location, radius, success) {
@@ -342,7 +342,7 @@
                 })
                 // custom zoom control
                 new L.control.zoom( { position: "topright" }).addTo(kiezatlas.map)
-                L.tileLayer('https://api.tiles.mapbox.com/v4/kiezatlas.m7222ia5/{z}/{x}/{y}.png?access_token=pk.eyJ1Ijoia2llemF0bGFzIiwiYSI6InFmRTdOWlUifQ.VjM4-2Ow6uuWR_7b49Y9Eg', {
+                L.tileLayer('https://api.tiles.mapbox.com/v4/kiezatlas.map-feifsq6f/{z}/{x}/{y}.png?access_token=pk.eyJ1Ijoia2llemF0bGFzIiwiYSI6InFmRTdOWlUifQ.VjM4-2Ow6uuWR_7b49Y9Eg', {
                     attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://mapbox.com">Mapbox</a>',
                     id: 'kiezatlas.m7222ia5',
                     accessToken: 'pk.eyJ1Ijoia2llemF0bGFzIiwiYSI6InFmRTdOWlUifQ.VjM4-2Ow6uuWR_7b49Y9Eg'
@@ -353,7 +353,7 @@
                 //
                 kiezatlas.update_current_location_label(true) // implicitly queries for geo_objects
                 // correct current default viewport
-                kiezatlas.map.setView(kiezatlas.current_location.coordinate, kiezatlas.LEVEL_OF_DETAIL_ZOOM)
+                kiezatlas.map.setView(kiezatlas.current_location.coordinate, kiezatlas.LEVEL_OF_STREET_ZOOM)
                 // 
                 kiezatlas.map.on('locationfound', kiezatlas.on_location_found)
                 kiezatlas.map.on('locationerror', kiezatlas.on_location_error)
