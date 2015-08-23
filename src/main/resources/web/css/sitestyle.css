@@ -27,7 +27,6 @@ a {
 }
 
 .search-option {
-    color: #fff;
     display: inline-block;
     max-width: 400px;
     min-width: 250px;
@@ -40,6 +39,8 @@ a {
     color: #000;
     background-color: #fff;
     position: relative;
+    border: 1px solid #a9a9a9;
+    margin-top: 30px;
 }
 
 .search-option h1 {
@@ -54,13 +55,57 @@ a {
     color: #0078A8;
 }
 
+.search-option.c:hover {
+    cursor: pointer;
+    border: 1px solid #EACA8F;
+}
+
+.search-option.b:hover {
+    cursor: pointer;
+    border: 1px solid #0078A8;
+}
+
+.search-option.a:hover {
+    cursor: pointer;
+    border: 1px solid #8F1414;
+}
+
 .search-option.c h1 {
     color: #eaca8f;
+}
+
+.search-option.d {
+    display: none;
 }
 
 h3.location-label {
     color: #8f1414;
 }
+
+img.fav-icon {
+    display: none;
+    height: 24px;
+    cursor: pointer;
+    position: relative;
+    top: 7px;
+}
+
+
+#places {
+    display: none;
+    position: absolute;
+    right: 15px;
+    top: 5px;
+    z-index: 1001;
+}
+
+#places li {
+    cursor: pointer;
+}
+
+/** #places {
+    display: inline-block;
+} **/
 
 img.more {
     padding: 4px;
@@ -100,6 +145,7 @@ h1.my-title {
 #bottom,
 #filter-container,
 #header,
+#main-menu,
 #detail-area {
     position: relative;
     top: 30px;
@@ -129,12 +175,13 @@ h1.my-title {
 }
 
 #header .welcome p {
-    text-align: left;
+    text-align: center;
 }
 
 #bottom {
     padding: 15px;
     background-color: #fff;
+    top: 120px;
 }
 
 #detail-area {
@@ -142,6 +189,7 @@ h1.my-title {
     padding: 15px;
     background-color: #EAEAEA;
     min-height: 400px;
+    display: none;
 }
 
 #detail-area .entry-card {
@@ -209,6 +257,13 @@ h1.my-title {
     opacity: .3em;
 }
 
+#main-menu {
+    width: 100%;
+    text-align: center;
+    margin-top: 70px;
+    margin-bottom: 40px;
+}
+
 #karte {
     position: relative;
     top: 60px;
@@ -228,16 +283,19 @@ h1.my-title {
     font-size: 0.8em;
 }
 
-#map {
-    font-size: 1em;
+#map.outlined  {
     border-bottom: 1px solid #FC3;
     border-top: 1px solid #FC3; /** #0078A8;*/
-    height: 550px; /** ### fixed map-height */
+}
+
+#map {
+    font-size: 1em;
 }
 
 #map.fullsize {
     width: 100%;
     position: relative; bottom: 0px;
+    text-align: center;
 }
 
 #spinning-wheel {
@@ -258,7 +316,6 @@ h1.my-title {
     text-align: center;
     display: none;
     background-color: rgba(255, 255, 255, 0.5);
-    display: none;
 }
 
 #navigation {
@@ -415,11 +472,24 @@ h1.my-title {
 
 /** Portrait, most smartphones. */
 
-@media(max-width:700px) {
+@media(max-width:900px) {
     .search-option {
+        margin-left: 0px;
+        margin-right: 0px;
         max-width: 100%;
-        margin: 0px;
         margin-bottom: 20px;
+        border-left-color: #fff;
+        border-right-color: #fff;
+    }
+    .search-option.c:hover,
+    .search-option.b:hover,
+    .search-option.a:hover {
+        border-left-color: #fff;
+        border-right-color: #fff;
+    }
+    .search-option.d {
+        border-left-color: #a9a9a9;
+        border-right-color: #a9a9a9;
     }
     h3.location-label {
         margin-bottom: 5px;
@@ -427,6 +497,8 @@ h1.my-title {
     #street-alternatives {
         margin-left: 15px;
     }
+    #map p,
+    #main-menu p,
     #header .welcome p {
         width: 75%;
         margin: auto;
@@ -439,7 +511,63 @@ h1.my-title {
         margin-top: -8px;
         margin-left: -8px;
     }
-    #map {
-        height: 400px;
+    #karte {
+        padding-top: 20px;
+    }
+}
+
+@media (max-width:600px) {
+    #header {
+        top: 10px;
+        text-align: left;
+    }
+    #header .welcome img,
+    #header .welcome h3 {
+        display: none;
+    }
+    #header .welcome p {
+        display: inline-block;
+        width: 100%;
+        margin-bottom: 0px;
+        text-align: center;
+    }
+    #filter-container {
+        display: none;
+    }
+    #karte {
+        top: 30px;
+        padding-top: 10px;
+    }
+    #karte .location-label {
+        font-size: 1em;
+        margin-left: 10px;
+        margin-right: 90px;
+        margin-top: 0px;
+        margin-bottom: 9px;
+    }
+    #karte .fav-icon {
+        position: absolute;
+        right: 50px;
+        top: 7px;
+    }
+    #places {
+        right: 10px;
+    }
+    #detail-area {
+        padding: 0px;
+        margin-top: 0px;
+        min-height: 0px;
+    }
+    #detail-area h3 {
+        display: none;
+    }
+    #detail-area .entry-card {
+        font-size: .8em;
+        min-width: 150px;
+        margin: 15px;
+    }
+    #detail-area .entry-card h3 {
+        display: inline-block;
+        margin: 0px;
     }
 }
