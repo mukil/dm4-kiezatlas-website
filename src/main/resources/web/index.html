@@ -9,7 +9,7 @@
         <!--link rel="stylesheet" href="/de.kiezatlas.website/vendor/jquery/jquery.mobile.theme-1.3.0.min.css"-->
         <!--link rel="stylesheet" href="/de.kiezatlas.website/vendor/jquery/jquery.mobile-1.3.0.min.css"-->
         <link rel="stylesheet" href="/de.kiezatlas.website/vendor/leaflet/leaflet.css"/>
-        <link rel="stylesheet" href="/de.kiezatlas.website/vendor/jquery/ui/css/smoothness/jquery-ui-1.9.2.custom.min.css"/>
+        <link rel="stylesheet" href="/de.kiezatlas.website/vendor/jquery/ui/css/kiezatlas/jquery-ui-1.9.2.custom.min.css"/>
         <link rel="stylesheet" href="/de.kiezatlas.website/css/sitestyle.css"/>
 
         <script src="/de.kiezatlas.website/vendor/pouchdb/pouchdb-3.6.0.min.js"></script>
@@ -31,11 +31,11 @@
                 kiezatlas.render_location_button()
             })
             
-            function search_fulltext() {
+            /** function search_fulltext() {
                 var query = $("#fulltext").val()
                     query = encodeURIComponent(query, "UTF-8")
                 kiezatlas.search_geo_objects(query, kiezatlas.render_geo_objects)
-            }
+            } **/
             
             function search_near_by_input () {
                 var streetFocus = $("#near-by").val() + ' Berlin'
@@ -75,7 +75,11 @@
                         kiezatlas.current_location.coordinate = new L.latLng(item.geometry.location.lat, item.geometry.location.lng)
                         kiezatlas.default_radius = 900
                         kiezatlas.current_location.name = item['formatted_address']
-                        kiezatlas.update_current_location_label(true)
+                        kiezatlas.update_current_location_label()
+                        kiezatlas.handle_option_b()
+                        kiezatlas.render_radius_control()
+                        kiezatlas.query_geo_objects(undefined, undefined, kiezatlas.render_geo_objects)
+                        kiezatlas.map.setView(kiezatlas.current_location.coordinate, kiezatlas.LEVEL_OF_STREET_ZOOM)
                         // $("#near-by").val(item['formatted_address'])
                         // Display location
                         /** if (kiezatlas.location_circle != undefined) {
@@ -94,7 +98,7 @@
                     var $prev = ""
                     var $next = ""
                     if (typeof prev_location !== "undefined") {
-                        $prev = $('<input type="button" class="prev-location" title="'+ prev_location['formatted_address'] +'" value="<" />')
+                        $prev = $('<input type="button" class="prev-location ui-button" title="'+ prev_location['formatted_address'] +'" value="<" />')
                         $prev.click(function(e) {
                             kiezatlas.autocomplete_item = kiezatlas.autocomplete_item - 1
                             focus_current_item()
@@ -126,8 +130,8 @@
 
         </script>
     </head>
-    <body>
-        
+    <body class="kiezatlas">
+
         <div id="navigation">
             <!--
             <a href="/" class="active">Home</a>
@@ -169,10 +173,12 @@
 
         <div id="karte">
             <!--input type="text" class="location-input" /-->
-            <h3 class="location-label"></h3>
-            <img class="fav-icon" title="zu Favoriten hinzufügen" alt="Icon: Favourite this location." src="/de.kiezatlas.website/images/1440283474_39.Heart.png"/>
+            <h3 class="location-label">
+                <span class="text"></span>
+                <img class="fav-icon" title="zu Favoriten hinzufügen" alt="Icon: Favourite this location." src="/de.kiezatlas.website/images/1441217865_black_5_favorite_star.png"/>
+            </h3>
             <div id="street-alternatives"></div>
-            <ul id="places"><li class="ui-menu-item"><a href="#"></a><ul class="entries"></ul></li></ul>
+            <ul id="places"><li class="ui-menu-item"><a href="#">Favoriten</a><ul class="entries submenu"></ul></li></ul>
             <div id="message" class="notification">Test test..</div>
             <div id="map" class="fullsize"></div>
             <div id="spinning-wheel">
@@ -193,7 +199,7 @@
                 Du hast drei M&ouml;glickeiten um mit unserer Umkreissuche Informationen aus einer ganz bestimmten Berliner Gegend abzufragen.
             </p>
             <!--p>Bitte teile uns einen Standort mit damit wir Dir Infos aus der Umgebung liefern k&ouml;nnen (A, B) oder nutze (C) unsere grafische Umkreissuche!</p-->
-            <div class="search-option c">
+            <div class="search-option a">
                 <h1 id="a">A)</h1>
                 <b>Deinen aktuellen Standort freigeben</b><br/>
                 Mit Hilfe deines Web-Browsers kannst du einfach per Klick <a href="javascript:kiezatlas.get_browser_location()">deinen aktuellen Standort</a> als Ausgangspunkt f&uuml;r die Umkreissuche benutzen.
@@ -213,7 +219,7 @@
                     </form>
                 </div>
             </div>
-            <div class="search-option a">
+            <div class="search-option c">
                 <h1 id="c">C)</h1>
                 <b>Grafische Umkreissuche auf der Karte</b><br/>
                 Du kannst den <i>grauen Kreis</i> auf der <a href="#karte">Karte</a> einfach anfassen, <i>verschieben</i> und ggf. vergr&ouml;&szlig;ern. Probier es mal aus!

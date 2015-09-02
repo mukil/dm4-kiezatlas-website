@@ -34,23 +34,48 @@ var kiezatlas = new function () {
     this.db = undefined
     
     this.init_location_selection = function () {
-        $('.search-option.a').click(function (e) {
-            // ### initiate map with edible circle control
+        //
+        $('.search-option.a').on('touchend', handle_option_a)
+        $('.search-option.a').on('click', handle_option_a)
+        //
+        $('.search-option.b').on('touchend', _self.focus_location_input_field)
+        $('.search-option.b').on('click', _self.focus_location_input_field)
+        //
+        $('.search-option.c').on('touchend', _self.handle_option_c)
+        $('.search-option.c').on('click', _self.handle_option_c)
+
+        function handle_option_a (e) {
+            // initiaze map on browsers location
             if (typeof _self.map === "undefined") {
-                _self.init_map_area('map')   
+                _self.init_map_area('map', false)
             }
-            _self.map.setZoom(_self.LEVEL_OF_DISTRICT_ZOOM)
-        })
-        $('.search-option.c').click(function (e) {
-            // ### initiaze map on browsers location
-            if (typeof _self.map === "undefined") {
-                _self.init_map_area('map')   
-            }
+            window.document.location.href = window.document.location.origin + "/#karte"
             _self.get_browser_location()
-        })
-        // call handler
-        // if (typeof handler !== "undefined") handler()
-        
+        }
+
+    }
+
+    this.handle_option_c = function (e) {
+        // initiate map with edible circle control
+        if (typeof _self.map === "undefined") {
+            _self.init_map_area('map', true)
+        }
+        window.document.location.href = window.document.location.origin + "/#karte"
+        _self.map.setZoom(_self.LEVEL_OF_DISTRICT_ZOOM)
+    }
+
+    this.handle_option_b = function (e) {
+        // initiate map with edible circle control but focus on street
+        if (typeof _self.map === "undefined") {
+            _self.init_map_area('map', true)
+        }
+        window.document.location.href = window.document.location.origin + "/#karte"
+        _self.map.setZoom(_self.LEVEL_OF_STREET)
+    }
+
+    this.focus_location_input_field = function () {
+        // set focus on text input
+        $('#location-input #near-by').focus()
     }
 
     this.start_local_db = function () {
@@ -62,17 +87,21 @@ var kiezatlas = new function () {
     this.add_entry_to_local_db = function () {
         // ### maybe called twice thanks !!
         // #existence check
+        console.log("put current location to favourites", _self.current_location)
         get_next_id(function (next_id) {
             var entry = { _id : next_id, data: _self.current_location }
             _self.db.put(entry)
+            console.log("> saved place_" + next_id + " to local db..")
             _self.list_entries_in_local_db()
+            console.log("re-rendering list of favs")
         })
-        
         
         function get_next_id (handler) {
             _self.db.allDocs({include_docs: true})
                 .then(function (result) {
-                    handler("place_" + parseInt(result.total_rows))
+                    var next_id = parseInt(result.total_rows)
+                    console.log(" got next id:", next_id)
+                    handler("place_" + next_id)
                 }).catch(function (err) {
                     console.log(err)
                 })
@@ -82,17 +111,14 @@ var kiezatlas = new function () {
     this.list_entries_in_local_db = function () {
         _self.db.allDocs({ include_docs: true, descending: true })
             .then(function (results) {
-                console.log("All entries", results)
                 if (results.total_rows > 0) {
                     $("#places .entries").empty()
                     for (var i in results.rows) {
                         var entry = results.rows[i]
                         if (typeof entry.doc.data !== "undefined") {
-                            var $place_item = $('<li class="ui-menu-item"><a id="'+entry.doc._id+'" href="#">' + entry.doc.data.name + '</a></li>')
+                            var $place_item = $('<li class="ui-menu-item submenu-item"><a id="'+entry.doc._id+'" href="#">' + entry.doc.data.name + '</a></li>')
                                 $place_item.click(function (e) {
-                                    console.log(e)
                                     _self.db.get(e.target.id).then(function (doc) {
-                                        console.log("Go to fav place clicked", doc)
                                         _self.go_to_location(doc.data)
                                     }).catch(function (err) {
                                         console.warn(err)
@@ -100,10 +126,10 @@ var kiezatlas = new function () {
                                 })
                             $("#places .entries").append($place_item)
                         } else {
-                            console.log("Uncorrect entry", entry)
+                            console.warn("Uncorrect entry", entry)
                         }
                     }
-                    $("#places").menu({icons: { submenu: "ui-icon-star" } })
+                    $("#places").menu({icons: { submenu: "ui-icon-grip-dotted-horizontal" } })
                     $("#places").show()
                 }
             }).catch(function (err) {
@@ -112,8 +138,13 @@ var kiezatlas = new function () {
     }
 
     this.go_to_location = function (object) {
+        console.log("go_to", object)
         _self.current_location = object
-        _self.update_current_location_label(true)
+        _self.update_current_location_label()
+        // render radius control at new place
+        _self.render_radius_control()
+        // then fire query
+        _self.query_geo_objects(undefined, undefined, _self.render_geo_objects)
         _self.map.setView(_self.current_location.coordinate, _self.LEVEL_OF_STREET_ZOOM)
     }
     
@@ -137,38 +168,37 @@ var kiezatlas = new function () {
             id: '_self.m7222ia5',
             accessToken: 'pk.eyJ1Ijoia2llemF0bGFzIiwiYSI6InFmRTdOWlUifQ.VjM4-2Ow6uuWR_7b49Y9Eg'
         }).addTo(_self.map)
-        // 
-        _self.update_current_location_label(true)
+        // paint standard location name
+        _self.update_current_location_label()
+        // render radius control at new place
+        _self.render_radius_control()
+        // then fire query
+        _self.query_geo_objects(undefined, undefined, _self.render_geo_objects)
         // correct current default viewport
         _self.map.setView(_self.current_location.coordinate, _self.LEVEL_OF_STREET_ZOOM)
-        // 
+        //
+        _self.render_location_button()
         _self.map.on('locationfound', _self.on_location_found)
-        _self.map.on('locationerror', _self.on_location_error)
+        _self.map.on('locationerror', _self.on_location_error) // ### just if user answers "never"
+        // re-render radius control after every zoomlevel-change
     }
 
-    this.update_current_location_label = function (enforceQuery) {
-        //
+    this.update_current_location_label = function () {
+        // ### remove add to favourites if necessary (used as message bar)
+        // ### help to reset-view
         var latitude, longitude;
             latitude = _self.current_location.coordinate.lat.toFixed(3)
             longitude = _self.current_location.coordinate.lng.toFixed(3)
         // ### sanity check for bigger berlin area before firing a range-query...
-        $('.location-label').html(_self.current_location.name
+        $('.location-label .text').html(_self.current_location.name
             + ' <small>('+latitude+' N, '+longitude+' E)</small>')
         $('img.fav-icon').show()
         $('img.fav-icon').unbind('click')
-        $('img.fav-icon').click(function (e) {
-            // 
-            _self.add_entry_to_local_db()
-        })
+        $('img.fav-icon').click(_self.add_entry_to_local_db)
+        //
         if (typeof _self.map === "undefined") {
-            console.log("Initializing map-area indirectly..")
-            _self.init_map_area('map')
-        }
-        if (enforceQuery) {
-            // update radius control too
-            _self.render_radius_control(true)
-            // then fire query
-            _self.query_geo_objects(undefined, undefined, _self.render_geo_objects)
+            console.log("Initializing map-area indirectly.. with firing a query")
+            _self.init_map_area('map', true)
         }
     }
 
@@ -197,12 +227,12 @@ var kiezatlas = new function () {
             _self.reverse_geocode()
         })
         // update viewport to the programmatically set radius-control
-        /** if (fitBounds) {
+        if (fitBounds) {
             // _self.map.fitBounds(_self.controlGroup.getBounds())
             _self.map.setView(
                 _self.controlGroup.getBounds().getCenter(),
                 _self.LEVEL_OF_STREET_ZOOM)
-        } **/
+        }
     }
 
     this.query_geo_objects = function (location, radius, success) {
@@ -381,29 +411,51 @@ var kiezatlas = new function () {
     }
 
     this.get_browser_location = function (options) {
+        //
+        if (!navigator.geolocation) {
+            console.warn("Geolocation is not supported by your browser")
+            return
+        }
+        //
         if (typeof options === "undefined") { // ??? do this options work for us?
             options =  {
                 "setView" : true, "maxZoom" : _self.LEVEL_OF_DETAIL_ZOOM
             }
         }
         _self.map.locate(options)
-        _self.show_spinning_wheel(true)
     }
 
     this.on_location_found = function (e) {
-        // ### if location NOT berlin, do something smart - does NOT WORK
-        _self.hide_spinning_wheel(true)
         if (!_self.max_bounds.contains([e.latitude, e.longitude])) {
+            // ### enable button for reset-view
             _self.current_location.name = 'Ihr aktueller Standort liegt au&szlig;erhalb '
                 + 'unseres momentanen Einflu&szlig;bereichs. Wir k&ouml;nnen ihnen lediglich Daten aus dem '
-                + 'Gro&szlig;raum Berlin anbieten. Bitte geben sie dazu z.B.: bei <a href="#b">B)</a> einen Stra&szlig;ennamen ein.'
-            _self.update_current_location_label(false)
+                + 'Gro&szlig;raum Berlin anbieten. Bitte geben sie dazu z.B.: bei <a href="javascript:kiezatlas.focus_location_input_field()" '
+                + '>B)</a> einen Stra&szlig;ennamen ein.'
+            _self.update_current_location_label()
+            // correct current map-viewport to default  (after a correct but insane location-query result)
+            _self.map.setView(_self.current_location.coordinate, _self.LEVEL_OF_DISTRICT_ZOOM)
         } else {
             _self.current_location.coordinate.lat = e.latitude
             _self.current_location.coordinate.lng = e.longitude
             // ### if location in berlin, do something smart (suggest to save location to favourites'db
                 // ### complete error handling, for geo-name lookup
             _self.reverse_geocode()
+        }
+    }
+
+    /**
+      * As it turns out this is just called if location will \"never\" be shared with this website
+      * but NOT if user decides to share location \"not this time\" (available in Firefox).
+      */
+    this.on_location_error = function (e) {
+        _self.hide_spinning_wheel(true)
+        _self.map.setView(_self.current_location.coordinate, _self.LEVEL_OF_DISTRICT_ZOOM)
+        if (_self.max_bounds.contains([_self.current_location.coordinate.lat, _self.current_location.coordinate.lng])) {
+            // render radius control at standard place
+            _self.render_radius_control()
+            // then fire query
+            _self.query_geo_objects(undefined, undefined, _self.render_geo_objects)
         }
     }
 
@@ -430,16 +482,9 @@ var kiezatlas = new function () {
                 // console.log("Location detected", o)
                 _self.current_location.name = o.street + ", " + o.city
                 if (typeof o.area !== "undefined") _self.current_location.name += " " + o.area
-                _self.update_current_location_label(false)
+                _self.update_current_location_label()
             }
         })
-    }
-
-    this.on_location_error = function (e) {
-        console.warn("Location could not be detected, error:", e, "Default would be", _self.current_location)
-        _self.hide_spinning_wheel(true)
-        // _self.update_current_location_label()
-        _self.map.setView(_self.current_location.coordinate, _self.LEVEL_OF_DISTRICT_ZOOM)
     }
 
 }
