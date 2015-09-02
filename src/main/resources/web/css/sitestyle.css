@@ -331,6 +331,7 @@ h1.my-title {
 
 #map {
     font-size: 1em;
+    display: none;
 }
 
 #map.fullsize {
@@ -582,17 +583,18 @@ h1.my-title {
     #karte .location-label {
         font-size: 1em;
         margin-left: 10px;
-        margin-right: 90px;
+        margin-right: 110px;
         margin-top: 0px;
         margin-bottom: 9px;
     }
     #karte .fav-icon {
         position: absolute;
-        right: 50px;
+        right: 100px;
         top: 5px;
     }
     #places {
         right: 10px;
+        top: -15px;
     }
     #detail-area {
         padding: 0px;
@@ -610,5 +612,15 @@ h1.my-title {
     #detail-area .entry-card h3 {
         display: inline-block;
         margin: 0px;
+    }
+}
+
+@media (max-height:900px) {
+    #spinning-wheel,
+    #map {
+        height: 400px !important;
+    }
+    #spinning-wheel img {
+        margin: 175px;
     }
 }

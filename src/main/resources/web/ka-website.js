@@ -49,7 +49,7 @@ var kiezatlas = new function () {
             if (typeof _self.map === "undefined") {
                 _self.init_map_area('map', false)
             }
-            window.document.location.href = window.document.location.origin + "/#karte"
+            _self.jump_to_map()
             _self.get_browser_location()
         }
 
@@ -60,7 +60,7 @@ var kiezatlas = new function () {
         if (typeof _self.map === "undefined") {
             _self.init_map_area('map', true)
         }
-        window.document.location.href = window.document.location.origin + "/#karte"
+        _self.jump_to_map()
         _self.map.setZoom(_self.LEVEL_OF_DISTRICT_ZOOM)
     }
 
@@ -69,8 +69,12 @@ var kiezatlas = new function () {
         if (typeof _self.map === "undefined") {
             _self.init_map_area('map', true)
         }
-        window.document.location.href = window.document.location.origin + "/#karte"
+        _self.jump_to_map()
         _self.map.setZoom(_self.LEVEL_OF_STREET)
+    }
+
+    this.jump_to_map = function () {
+        window.document.location.href = window.document.location.protocol + '//' + window.document.location.host + "/#karte"
     }
 
     this.focus_location_input_field = function () {
@@ -152,6 +156,7 @@ var kiezatlas = new function () {
         $('#map').empty()
         $('#map').addClass('outlined')
         $('#map').height('550px')
+        $('#map').show()
         $('.search-option.d').css('display', 'inline-block')
         $('#detail-area').show()
         // initiate map
@@ -181,6 +186,9 @@ var kiezatlas = new function () {
         _self.map.on('locationfound', _self.on_location_found)
         _self.map.on('locationerror', _self.on_location_error) // ### just if user answers "never"
         // re-render radius control after every zoomlevel-change
+        _self.map.on('zoomend', function (e) {
+            _self.render_radius_control(false)
+        })
     }
 
     this.update_current_location_label = function () {
@@ -434,7 +442,7 @@ var kiezatlas = new function () {
                 + '>B)</a> einen Stra&szlig;ennamen ein.'
             _self.update_current_location_label()
             // correct current map-viewport to default  (after a correct but insane location-query result)
-            _self.map.setView(_self.current_location.coordinate, _self.LEVEL_OF_DISTRICT_ZOOM)
+            _self.map.setView(_self.current_location.coordinate, _self.LEVEL_OF_STREET_ZOOM)
         } else {
             _self.current_location.coordinate.lat = e.latitude
             _self.current_location.coordinate.lng = e.longitude
