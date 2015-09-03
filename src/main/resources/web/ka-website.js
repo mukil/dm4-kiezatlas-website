@@ -133,7 +133,7 @@ var kiezatlas = new function () {
                             console.warn("Uncorrect entry", entry)
                         }
                     }
-                    $("#places").menu({icons: { submenu: "ui-icon-grip-dotted-horizontal" } })
+                    $("#places").menu({icons: { "submenu" : "ui-icon-grip-dotted-horizontal" } })
                     $("#places").show()
                 }
             }).catch(function (err) {
@@ -142,7 +142,11 @@ var kiezatlas = new function () {
     }
 
     this.go_to_location = function (object) {
-        console.log("go_to", object)
+        //
+        if (typeof _self.map === "undefined") {
+            _self.init_map_area('map', true)
+        }
+        //
         _self.current_location = object
         _self.update_current_location_label()
         // render radius control at new place
@@ -159,11 +163,21 @@ var kiezatlas = new function () {
         $('#map').show()
         $('.search-option.d').css('display', 'inline-block')
         $('#detail-area').show()
+        $("button.star").show()
+        $("button.star").button()
+        $("button.star").hover(function (e) {
+            //
+            $('button.star img').attr('src', '/de.kiezatlas.website/images/1441217865_black_5_favorite_star-white.png')
+        }, function (e) {
+            //
+            $('button.star img').attr('src', '/de.kiezatlas.website/images/1441217865_black_5_favorite_star.png')
+        })
+        $('div.legende').show()
         // initiate map
         this.map = new L.Map(dom_el_id, {
-            dragging: true, touchZoom: true, scrollWheelZoom: false,
-            doubleClickZoom: true, zoomControl: false, minZoom: 9,
-            maxBounds: _self.max_bounds
+            dragging: true, touchZoom: false, scrollWheelZoom: false,
+            doubleClickZoom: false, zoomControl: false, minZoom: 9,
+            maxBounds: _self.max_bounds,
         })
         // custom zoom control
         new L.control.zoom( { position: "topright" }).addTo(_self.map)
@@ -186,13 +200,14 @@ var kiezatlas = new function () {
         _self.map.on('locationfound', _self.on_location_found)
         _self.map.on('locationerror', _self.on_location_error) // ### just if user answers "never"
         // re-render radius control after every zoomlevel-change
-        _self.map.on('zoomend', function (e) {
+        /** _self.map.on('zoomend', function (e) {
             _self.render_radius_control(false)
-        })
+        }) **/
     }
 
-    this.update_current_location_label = function () {
-        // ### remove add to favourites if necessary (used as message bar)
+    this.update_current_location_label = function (hideStarButton) {
+        console.log("updating current location label", _self.current_location)
+        // ### remove add to favourites if necessary (=used as message bar)
         // ### help to reset-view
         var latitude, longitude;
             latitude = _self.current_location.coordinate.lat.toFixed(3)
@@ -200,9 +215,13 @@ var kiezatlas = new function () {
         // ### sanity check for bigger berlin area before firing a range-query...
         $('.location-label .text').html(_self.current_location.name
             + ' <small>('+latitude+' N, '+longitude+' E)</small>')
-        $('img.fav-icon').show()
-        $('img.fav-icon').unbind('click')
-        $('img.fav-icon').click(_self.add_entry_to_local_db)
+        $('button.star').unbind('click')
+        $('button.star').click(_self.add_entry_to_local_db)
+        if (hideStarButton) {
+            $('button.star').button("disable")
+        } else {
+            $('button.star').button("enable")
+        }
         //
         if (typeof _self.map === "undefined") {
             console.log("Initializing map-area indirectly.. with firing a query")
@@ -230,6 +249,7 @@ var kiezatlas = new function () {
             var new_radius = event.target._mRadius
             _self.current_location.lat = event.target._latlng.lat
             _self.current_location.lng = event.target._latlng.lng
+            console.log("Update circle position event", event, _self.current_location)
             // ### on small screens (here, after dragging) our current center should be the mapcenter (fitBounds..)
             _self.query_geo_objects(event.target._latlng, new_radius, _self.render_geo_objects)
             _self.reverse_geocode()
@@ -440,7 +460,7 @@ var kiezatlas = new function () {
                 + 'unseres momentanen Einflu&szlig;bereichs. Wir k&ouml;nnen ihnen lediglich Daten aus dem '
                 + 'Gro&szlig;raum Berlin anbieten. Bitte geben sie dazu z.B.: bei <a href="javascript:kiezatlas.focus_location_input_field()" '
                 + '>B)</a> einen Stra&szlig;ennamen ein.'
-            _self.update_current_location_label()
+            _self.update_current_location_label(true)
             // correct current map-viewport to default  (after a correct but insane location-query result)
             _self.map.setView(_self.current_location.coordinate, _self.LEVEL_OF_STREET_ZOOM)
         } else {
@@ -490,6 +510,7 @@ var kiezatlas = new function () {
                 // console.log("Location detected", o)
                 _self.current_location.name = o.street + ", " + o.city
                 if (typeof o.area !== "undefined") _self.current_location.name += " " + o.area
+                console.log("Geo coding return ", _self.current_location, o)
                 _self.update_current_location_label()
             }
         })

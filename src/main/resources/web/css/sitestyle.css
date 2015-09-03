@@ -20,6 +20,14 @@ h3 {
     color: #002856;
 }
 
+.leaflet-container a {
+    color: #002856;
+}
+
+.leaflet-container a:hover {
+    color: #8F1414;
+}
+
 a {
     color: #002856;
     text-decoration: underline;
@@ -82,14 +90,6 @@ h3.location-label {
     color: #8f1414;
 }
 
-img.fav-icon {
-    display: none;
-    height: 24px;
-    cursor: pointer;
-    position: relative;
-    top: 5px;
-}
-
 #places {
     display: none;
     position: absolute;
@@ -108,17 +108,15 @@ img.fav-icon {
     text-align: right;
 }
 
-#places li .entries[aria-expanded="true"] {
+#places li.submenu-item {
+    position: relative;
+}
+
+/** #places li .entries[aria-expanded="true"] {
     display: inline-block !important;
     left: 0px !important;
     top: 0px !important;
     background: transparent;
-}
-
-#places li.submenu-item {
-    position: relative;
-    background: #fff;
-    padding: 5px;
 }
 
 #places li .entries.submenu[aria-expanded="true"] {
@@ -133,15 +131,47 @@ img.fav-icon {
     background-color: #fff;
     background: #fff;
     padding: 5px;
-}
+} **/
 
-.ui-menu-item a.ui-state-active,
+/** Overrding jquery ui 1.9.2 flick theme */
+
+/** .ui-menu-item a.ui-state-active,
 .ui-menu-item a.ui-state-focus {
     color: #8F1414;
     background-color: transparent;
     background: transparent;
     border: 0px solid transparent;
     font-weight: normal;
+} **/
+
+.ui-menu .ui-menu-item {
+    width: 110px;
+}
+
+.ui-button-text-only .ui-button-text {
+    padding-bottom: 0px;
+    padding-left: 4px;
+    padding-right: 4px;
+    padding-top: 3px;
+}
+
+button.star.ui-state-hover,
+button.star.ui-state-focus,
+.ui-widget-content .ui-state-hover,
+.ui-widget-content .ui-state-focus {
+    border: 1px solid #002856;
+    background: #002856 url('ui-bg_highlight-soft_100_f6f6f6_1x100.png') no-repeat;
+    color: #fff;
+}
+
+.ui-menu .ui-menu-icon {
+    position: absolute;
+    top: 0.45em;
+    left: 0.4em;
+}
+
+#places .ui-state-active {
+    color: #8F1414;
 }
 
 /** #places {
@@ -267,9 +297,17 @@ h1.my-title {
     padding-left: 7px;
 }
 
-#location-input,
-#street-alternatives {
+#location-input {
     display: inline-block;
+}
+
+#street-alternatives {
+    display: none;
+}
+
+button.star {
+    display: none;
+    cursor: pointer;
 }
 
 .prev-location,
@@ -307,9 +345,9 @@ h1.my-title {
 
 #karte {
     position: relative;
-    top: 60px;
+    top: 45px;
     padding-top: 5px;
-    padding-bottom: 15px;
+    padding-bottom: 3px;
     background-color: #fff;
 }
 
@@ -338,11 +376,12 @@ h1.my-title {
     width: 100%;
     position: relative; bottom: 0px;
     text-align: center;
+    background: #fff;
 }
 
 #spinning-wheel {
-    position: absolute; top: 65px;
-    width: 100%; height: 560px; /** ### fixed map-height */
+    position: absolute; top: 0px;
+    width: 100%; height: 100%;
     text-align: center;
     display: none;
     background-color: rgba(255, 255, 255, 0.5);
@@ -502,6 +541,28 @@ h1.my-title {
     margin-top: -6px !important;
 }
 
+#places li.submenu-item {
+    width: 210px;
+    font-size: 16px;
+}
+
+div.legende {
+    display: none;
+    width: 90%;
+    margin-left: auto;
+    margin-right: auto;
+    color: #343434;
+    padding-bottom: 5px;
+}
+
+div.legende img {
+    display: inline-block;
+    margin-top: 5px;
+    vertical-align: bottom;
+    position: relative;
+    top: 1px;
+}
+
 /** 
   margin-top: 5px; width: 45px; height: 20px;
   childish.. => z-index: 100; position: absolute; top: 10px; left: 10px; 
@@ -513,6 +574,13 @@ h1.my-title {
 } **/
 
 /** Portrait, most smartphones. */
+@media(min-width: 1600px) {
+    #karte {
+        max-width: 70%;
+        margin-left: auto;
+        margin-right: auto;
+    }
+}
 
 @media(max-width:900px) {
     .search-option {
@@ -583,18 +651,18 @@ h1.my-title {
     #karte .location-label {
         font-size: 1em;
         margin-left: 10px;
-        margin-right: 110px;
-        margin-top: 0px;
+        margin-right: 130px;
+        margin-top: 5px;
         margin-bottom: 9px;
     }
-    #karte .fav-icon {
+    #karte button.star {
         position: absolute;
-        right: 100px;
-        top: 5px;
+        right: 125px;
+        top: 1px;
     }
     #places {
-        right: 10px;
-        top: -15px;
+        right: 7px;
+        top: -2px;
     }
     #detail-area {
         padding: 0px;
@@ -615,12 +683,18 @@ h1.my-title {
     }
 }
 
-@media (max-height:900px) {
-    #spinning-wheel,
+@media (max-height:810px) {
     #map {
         height: 400px !important;
     }
     #spinning-wheel img {
         margin: 175px;
+    }
+    #header {
+        display: none;
+    }
+    #karte {
+        top: 0px;
+        padding-top: 0px;
     }
 }

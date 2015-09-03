@@ -164,6 +164,7 @@ public class KiezatlasWebsitePlugin extends PluginActivator {
     public String geoCodeLocationInput(@PathParam("latlng") String latlng) {
         String result = "";
         try {
+            log.info("Start geo coding location ("+latlng+") ...");
             String url = "https://maps.googleapis.com/maps/api/geocode/json?latlng="+latlng+"&language=de";
             // &result_type=street_address|postal_code&key=API_KEY
             URLConnection connection = new URL(url).openConnection();
@@ -178,6 +179,7 @@ public class KiezatlasWebsitePlugin extends PluginActivator {
             }
             rd.close();
             result = sb.toString();
+            log.info("Geo Coded Locatino successfully.");
         } catch (UnsupportedEncodingException ex) {
             log.log(Level.WARNING, "Unsuporrted Encoding Exception", ex);
         } catch (MalformedURLException mux) {

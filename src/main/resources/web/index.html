@@ -98,7 +98,7 @@
                     var $prev = ""
                     var $next = ""
                     if (typeof prev_location !== "undefined") {
-                        $prev = $('<input type="button" class="prev-location ui-button" title="'+ prev_location['formatted_address'] +'" value="<" />')
+                        $prev = $('<a class="prev-location ui-button" title="'+ prev_location['formatted_address'] +'"><</a>')
                         $prev.click(function(e) {
                             kiezatlas.autocomplete_item = kiezatlas.autocomplete_item - 1
                             focus_current_item()
@@ -106,11 +106,11 @@
                         })
                     } else {
                         // empty prev button
-                        $prev = $('<input type="button" class="prev-location defused" title="" value="<"/>')
+                        $prev = $('<a class="prev-location defused" title="" value="<"/>')
                     }
 
                     if (typeof next_location !== "undefined") {
-                        $next = $('<input type="button" class="next-location" title="'+ next_location['formatted_address'] +'" value=">" />')
+                        $next = $('<a class="next-location" title="'+ next_location['formatted_address'] +'">></a>')
                         $next.click(function(e) {
                             kiezatlas.autocomplete_item = kiezatlas.autocomplete_item + 1
                             focus_current_item()
@@ -123,6 +123,7 @@
                     // 
                     $('#street-alternatives').html('Mehrere ('+kiezatlas.alternative_items.length+') Orte gefunden')
                             .append($prev).append($next)
+                    $('#street-alternatives').css("display", "inline-block")
                     $('#street-alternatives').show()
                 }
                 // if (!checkIfAllCategoriesSelected()) showAllMarker();
@@ -175,14 +176,27 @@
             <!--input type="text" class="location-input" /-->
             <h3 class="location-label">
                 <span class="text"></span>
-                <img class="fav-icon" title="zu Favoriten hinzufügen" alt="Icon: Favourite this location." src="/de.kiezatlas.website/images/1441217865_black_5_favorite_star.png"/>
+                <button class="star">
+                    <img class="fav-icon" title="zu Favoriten hinzufügen" alt="Icon: Favourite this location."
+                         src="/de.kiezatlas.website/images/1441217865_black_5_favorite_star.png"/>
+                </button>
             </h3>
             <div id="street-alternatives"></div>
-            <ul id="places"><li class="ui-menu-item"><a href="#">Favoriten</a><ul class="entries submenu"></ul></li></ul>
+            <ul id="places">
+                <li class="ui-menu-item ui-corner-all ui-widget-content">
+                    <a href="#">Favoriten</a>
+                    <ul class="entries submenu"></ul>
+                </li>
+            </ul>
             <div id="message" class="notification">Test test..</div>
-            <div id="map" class="fullsize"></div>
-            <div id="spinning-wheel">
-                <img src="/de.kiezatlas.website/images/ajax-loader.gif" />
+            <div id="map" class="fullsize">
+                <div id="spinning-wheel">
+                    <img src="/de.kiezatlas.website/images/ajax-loader.gif" />
+                </div>
+            </div>
+            <div class="legende">
+                <img src="/de.kiezatlas.website/images/soziale_einrichtung_circle_ye.png" title="Markier: Soziale Einrichtung"/>
+                Soziale Einrichtung
             </div>
         </div>
 
