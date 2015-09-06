@@ -52,7 +52,7 @@
                         kiezatlas.alternative_items = null
                         kiezatlas.alternative_items = obj.results
                         kiezatlas.autocomplete_item = 0
-                        if (kiezatlas.alternative_items.length == 1) {
+                        if (kiezatlas.alternative_items.length === 1) {
                             focus_current_item()
                             render_alternatives()
                             if (kiezatlas.alternative_items.length <= 1) {
@@ -74,6 +74,7 @@
                     if (typeof item !== "undefined") {
                         kiezatlas.current_location.coordinate = new L.latLng(item.geometry.location.lat, item.geometry.location.lng)
                         kiezatlas.default_radius = 900
+                        console.log("geo-coded item", item)
                         kiezatlas.current_location.name = item['formatted_address']
                         kiezatlas.update_current_location_label()
                         kiezatlas.handle_option_b()
@@ -98,7 +99,7 @@
                     var $prev = ""
                     var $next = ""
                     if (typeof prev_location !== "undefined") {
-                        $prev = $('<a class="prev-location ui-button" title="'+ prev_location['formatted_address'] +'"><</a>')
+                        $prev = $('<a class="prev-location" title="'+ prev_location['formatted_address'] +'"><</a>')
                         $prev.click(function(e) {
                             kiezatlas.autocomplete_item = kiezatlas.autocomplete_item - 1
                             focus_current_item()
@@ -106,7 +107,7 @@
                         })
                     } else {
                         // empty prev button
-                        $prev = $('<a class="prev-location defused" title="" value="<"/>')
+                        $prev = $('<a class="prev-location defused" title=""><</a>')
                     }
 
                     if (typeof next_location !== "undefined") {
@@ -118,10 +119,10 @@
                         })
                     } else {
                         // empty next button
-                        $next = $('<input type="button" value=">" class="next-location defused" title=">" />')
+                        $next = $('<a class="next-location defused" title="">></a>')
                     }
                     // 
-                    $('#street-alternatives').html('Mehrere ('+kiezatlas.alternative_items.length+') Orte gefunden')
+                    $('#street-alternatives').html(kiezatlas.alternative_items.length + ' Orte gefunden')
                             .append($prev).append($next)
                     $('#street-alternatives').css("display", "inline-block")
                     $('#street-alternatives').show()
@@ -195,7 +196,7 @@
                 </div>
             </div>
             <div class="legende">
-                <img src="/de.kiezatlas.website/images/soziale_einrichtung_circle_ye.png" title="Markier: Soziale Einrichtung"/>
+                <img src="/de.kiezatlas.website/images/soziale_einrichtung_circle_ye.png" title="Markierer: Soziale Einrichtung"/>
                 Soziale Einrichtung
             </div>
         </div>

@@ -89,22 +89,17 @@ var kiezatlas = new function () {
     }
     
     this.add_entry_to_local_db = function () {
-        // ### maybe called twice thanks !!
-        // #existence check
-        console.log("put current location to favourites", _self.current_location)
+        // ### perform some kind of existence check
         get_next_id(function (next_id) {
             var entry = { _id : next_id, data: _self.current_location }
             _self.db.put(entry)
-            console.log("> saved place_" + next_id + " to local db..")
             _self.list_entries_in_local_db()
-            console.log("re-rendering list of favs")
         })
         
         function get_next_id (handler) {
             _self.db.allDocs({include_docs: true})
                 .then(function (result) {
                     var next_id = parseInt(result.total_rows)
-                    console.log(" got next id:", next_id)
                     handler("place_" + next_id)
                 }).catch(function (err) {
                     console.log(err)
@@ -205,10 +200,13 @@ var kiezatlas = new function () {
         }) **/
     }
 
+    /** object.name, object.lat, object.lng */
     this.update_current_location_label = function (hideStarButton) {
-        console.log("updating current location label", _self.current_location)
-        // ### remove add to favourites if necessary (=used as message bar)
         // ### help to reset-view
+        if (!_self.current_location.hasOwnProperty("name")) console.warn("Current location has no name")
+        if (!_self.current_location.coordinate.hasOwnProperty("lat")) console.warn("Current location has no lat")
+        if (!_self.current_location.coordinate.hasOwnProperty("lng")) console.warn("Current location has no lng")
+        //
         var latitude, longitude;
             latitude = _self.current_location.coordinate.lat.toFixed(3)
             longitude = _self.current_location.coordinate.lng.toFixed(3)
@@ -217,15 +215,15 @@ var kiezatlas = new function () {
             + ' <small>('+latitude+' N, '+longitude+' E)</small>')
         $('button.star').unbind('click')
         $('button.star').click(_self.add_entry_to_local_db)
+        //
+        if (typeof _self.map === "undefined") {
+            _self.init_map_area('map', true)
+        }
+        //
         if (hideStarButton) {
             $('button.star').button("disable")
         } else {
             $('button.star').button("enable")
-        }
-        //
-        if (typeof _self.map === "undefined") {
-            console.log("Initializing map-area indirectly.. with firing a query")
-            _self.init_map_area('map', true)
         }
     }
 
@@ -247,9 +245,9 @@ var kiezatlas = new function () {
         _self.radius_control.on('edit', function (event) {
             // fire a new query
             var new_radius = event.target._mRadius
-            _self.current_location.lat = event.target._latlng.lat
-            _self.current_location.lng = event.target._latlng.lng
-            console.log("Update circle position event", event, _self.current_location)
+            _self.current_location.coordinate.lat = event.target._latlng.lat
+            _self.current_location.coordinate.lng = event.target._latlng.lng
+            // console.log("Update circle position event TO", event, _self.current_location)
             // ### on small screens (here, after dragging) our current center should be the mapcenter (fitBounds..)
             _self.query_geo_objects(event.target._latlng, new_radius, _self.render_geo_objects)
             _self.reverse_geocode()
@@ -501,16 +499,16 @@ var kiezatlas = new function () {
                         o.street = el.long_name
                     } else if (el.types[0] === "sublocality_level_2") {
                         o.area = el.long_name
+                    } else if (el.types[0] === "street_number") {
+                        o.street_nr = el.long_name
                     } else if (el.types[0] === "locality") {
                         o.city = el.long_name
                     } else if (el.types[0] === "postal_code") {
                         o.postal_code= el.long_name
                     }
                 }
-                // console.log("Location detected", o)
-                _self.current_location.name = o.street + ", " + o.city
+                _self.current_location.name = o.street + " " + o.street_nr + ", " + o.city
                 if (typeof o.area !== "undefined") _self.current_location.name += " " + o.area
-                console.log("Geo coding return ", _self.current_location, o)
                 _self.update_current_location_label()
             }
         })

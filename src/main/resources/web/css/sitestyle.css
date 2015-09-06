@@ -93,11 +93,12 @@ h3.location-label {
 #places {
     display: none;
     position: absolute;
-    right: 15px;
-    top: 5px;
+    right: 8px;
+    top: 20px;
     z-index: 1001;
     border: 1px solid transparent;
     padding-left: 0px;
+    background: transparent;
 }
 
 #places li {
@@ -149,19 +150,36 @@ h3.location-label {
 }
 
 .ui-button-text-only .ui-button-text {
-    padding-bottom: 0px;
-    padding-left: 4px;
-    padding-right: 4px;
-    padding-top: 3px;
+    padding: 0px 3px;
 }
 
+button.star {
+    display: none;
+    cursor: pointer;
+    position: relative;
+    top: 2px;
+}
+
+button.star img {
+    position: relative;
+    top: 2px;
+}
+
+a.next-location:hover,
+a.prev-location:hover,
 button.star.ui-state-hover,
 button.star.ui-state-focus,
 .ui-widget-content .ui-state-hover,
 .ui-widget-content .ui-state-focus {
     border: 1px solid #002856;
-    background: #002856 url('ui-bg_highlight-soft_100_f6f6f6_1x100.png') no-repeat;
+    background: #002856;
     color: #fff;
+}
+
+a.next-location.defused:hover,
+a.prev-location.defused:hover {
+    background-color: #fff;
+    border: 1px solid transparent;
 }
 
 .ui-menu .ui-menu-icon {
@@ -261,6 +279,7 @@ h1.my-title {
     padding: 15px;
     background-color: #EAEAEA;
     display: none;
+    min-height: 300px;
 }
 
 #detail-area .entry-card {
@@ -305,17 +324,13 @@ h1.my-title {
     display: none;
 }
 
-button.star {
-    display: none;
-    cursor: pointer;
-}
-
 .prev-location,
 .next-location {
     margin: 10px;
     background-color: #fff;
     padding: 3px;
     cursor: pointer;
+    border: 1px solid transparent;
 }
 
 .prev-location {
@@ -331,9 +346,10 @@ button.star {
 }
 
 .prev-location.defused,
-.next-location.defused1 {
+.next-location.defused {
     cursor: auto;
-    opacity: .3em;
+    opacity: .3;
+    text-decoration: none;
 }
 
 #main-menu {
@@ -348,7 +364,7 @@ button.star {
     top: 45px;
     padding-top: 5px;
     padding-bottom: 3px;
-    background-color: #fff;
+    /** background-color: #fff; **/
 }
 
 #karte h3 {
@@ -548,11 +564,13 @@ button.star {
 
 div.legende {
     display: none;
-    width: 90%;
     margin-left: auto;
     margin-right: auto;
     color: #343434;
-    padding-bottom: 5px;
+    padding-bottom: 8px;
+    padding-left: 10%;
+    padding-right: 10%;
+    background: #fff;
 }
 
 div.legende img {
@@ -579,6 +597,11 @@ div.legende img {
         max-width: 70%;
         margin-left: auto;
         margin-right: auto;
+    }
+    #map {
+        -webkit-box-shadow: 3px 0px 11px 0px rgba(50, 50, 50, 0.75);
+        -moz-box-shadow:    3px 0px 11px 0px rgba(50, 50, 50, 0.75);
+        box-shadow:         3px 0px 11px 0px rgba(50, 50, 50, 0.75);
     }
 }
 
