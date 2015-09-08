@@ -170,8 +170,8 @@ var kiezatlas = new function () {
         $('div.legende').show()
         // initiate map
         this.map = new L.Map(dom_el_id, {
-            dragging: true, touchZoom: false, scrollWheelZoom: false,
-            doubleClickZoom: false, zoomControl: false, minZoom: 9,
+            dragging: true, touchZoom: true, scrollWheelZoom: false,
+            doubleClickZoom: true, zoomControl: false, minZoom: 9,
             maxBounds: _self.max_bounds,
         })
         // custom zoom control
@@ -236,7 +236,7 @@ var kiezatlas = new function () {
         _self.radius_control = new L.CircleEditor(_self.current_location.coordinate, _self.default_radius, {
             color: "#343434", weight: 3, fillColor: "#FFCC33", /** #666 **/
             fillOpacity: .1, extendedIconClass: "extend-icon-medium",
-            className: "leaflet-radius-control", clickable: false
+            className: "leaflet-radius-control", clickable: false, zIndexOffset: 101
         })
         // add raduis control to map
         _self.controlGroup.addLayer(_self.radius_control)
@@ -296,6 +296,15 @@ var kiezatlas = new function () {
             })
     }
 
+    this.show_marker_name_info = function (name) {
+        $('#marker-name').html('<b>' + name + '</b>')
+        $('#marker-name').show()
+    }
+
+    this.hide_marker_name_info = function () {
+        $('#marker-name').hide()
+    }
+
     this.render_geo_objects = function (data, set_view_to_bounds) {
         // ### if we do not clear markers (which would be nice), we should not render any duplicates ..
         var list_of_markers = []
@@ -309,14 +318,22 @@ var kiezatlas = new function () {
                         color: "#FFCC33", strokeOpacity: 1, weight: 2, opacity: .5, fillColor: "#FC3", title: result["name"],
                         alt: "Markierung von " + result["name"], location_id: result["address_id"],
                         geo_object_id: result["id"], uri: result["uri"], name: result["name"],// riseOnHover: true,
-                        bezirksregion_uri: result["bezirksregion_uri"]
-                    })
-                    // ### Level: 14 > 8px e.g. Level: 13 > 5px
-                    circle.setRadius(10)
-                    // circle.bindPopup(result.name)
-                    circle.on('click', function (e) {
-                        _self.select_map_entry(e.target)
-                    })
+                        bezirksregion_uri: result["bezirksregion_uri"], z_indexOffset: 1001
+                    })// .bindPopup('<b>' + result["name"] + '</b>')
+                // ### Level: 14 > 8px e.g. Level: 13 > 5px
+                circle.setRadius(10)
+                circle.on('click', function (e) {
+                    _self.select_map_entry(e.target)
+                })
+                circle.on('mouseover', function (e) {
+                    console.log("mouseover", e)
+                    // ### display all geo_objects at this markers location
+                    // var geo_objects_under_marker = _self.find_all_geo_objects(marker.options['location_id'])
+                    _self.show_marker_name_info(e.target.options.name)
+                })
+                circle.on('mouseout', function (e) {
+                    _self.hide_marker_name_info()
+                })
                     // ### on hover show name in In-Map detail-window
                 list_of_markers.push(circle)
             }
@@ -500,7 +517,7 @@ var kiezatlas = new function () {
                     } else if (el.types[0] === "sublocality_level_2") {
                         o.area = el.long_name
                     } else if (el.types[0] === "street_number") {
-                        o.street_nr = el.long_name
+                        if (typeof el.long_name !== "undefined") o.street_nr = el.long_name
                     } else if (el.types[0] === "locality") {
                         o.city = el.long_name
                     } else if (el.types[0] === "postal_code") {
