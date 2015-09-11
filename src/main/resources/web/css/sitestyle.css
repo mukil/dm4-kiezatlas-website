@@ -289,11 +289,25 @@ h1.my-title {
     vertical-align: top;
     min-width: 320px;
     max-width: 640px;
+    text-align: left;
+    margin: 30px;
+}
+
+#detail-area .entry-card h3 {
+    padding-left: 15px; padding-right: 10px;
+    padding-top: 10px; padding-bottom: 10px;
+    margin-bottom: 0px;
+}
+
+#detail-area .details {
     background-color: #fff;
     box-shadow: 1px 2px 3px 0px #666;
-    text-align: left;
     padding: 15px;
-    margin: 30px;
+}
+
+#detail-area .details p {
+    margin-bottom: 10px;
+    margin-top: 5px;
 }
 
 #detail-area a img {
@@ -316,9 +330,11 @@ h1.my-title {
 #location-input input {
     padding: 5px;
     padding-left: 7px;
+    font-size: 1em;
 }
 
 #location-input {
+    margin-top: 10px;
     display: inline-block;
 }
 
@@ -731,5 +747,9 @@ div.legende img {
     #karte {
         top: 0px;
         padding-top: 0px;
+    }
+    #detail-area {
+        top: 0px;
+        margin-top: 0px;
     }
 }

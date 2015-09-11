@@ -17,10 +17,10 @@ import org.codehaus.jettison.json.JSONObject;
 public class MapEntryView implements JSONEnabled {
     
     Topic geoObject = null;
+    // location
     GeoCoordinate geoCoordinate = null;
     Topic bezirk = null;
     Topic bezirksregion = null;
-    List<Topic> thema = null;   
     Topic addressTopic = null;
     
     Logger log = Logger.getLogger(MapEntryView.class.getName());
@@ -75,7 +75,7 @@ public class MapEntryView implements JSONEnabled {
                 if (bezirksregion != null) {
                     object.put("bezirksregion_uri", bezirksregion.getUri());
                     object.put("bezirksregion_name", bezirksregion.getSimpleValue());   
-                }   
+                }
             }
             return object;
         } catch (JSONException ex) {

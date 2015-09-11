@@ -29,6 +29,7 @@ var kiezatlas = new function () {
     // 
     this.markerGroup = undefined
     this.controlGroup = L.featureGroup()
+    this.districtGroup = L.featureGroup()
     // model of all geo-domain object in client
     this.items = []
     this.db = undefined
@@ -61,7 +62,7 @@ var kiezatlas = new function () {
             _self.init_map_area('map', true)
         }
         _self.jump_to_map()
-        _self.map.setZoom(_self.LEVEL_OF_DISTRICT_ZOOM)
+        _self.map.setZoom(_self.LEVEL_OF_KIEZ_ZOOM)
     }
 
     this.handle_option_b = function (e) {
@@ -70,7 +71,7 @@ var kiezatlas = new function () {
             _self.init_map_area('map', true)
         }
         _self.jump_to_map()
-        _self.map.setZoom(_self.LEVEL_OF_STREET)
+        _self.map.setZoom(_self.LEVEL_OF_STREET_ZOOM)
     }
 
     this.jump_to_map = function () {
@@ -200,6 +201,15 @@ var kiezatlas = new function () {
         }) **/
     }
 
+    /** this.render_districts_layer = function () {
+        // 
+        _self.districtGroup.addLayer(L.GeoJSON('/de.kiezatlas.website/berlin-districts.geojson',
+            function (data) {
+                console.log("GeoJSON Layer", data)
+            }))
+        _self.districtGroup.addTo(_self.map)
+    } */
+
     /** object.name, object.lat, object.lng */
     this.update_current_location_label = function (hideStarButton) {
         // ### help to reset-view
@@ -296,8 +306,12 @@ var kiezatlas = new function () {
             })
     }
 
-    this.show_marker_name_info = function (name) {
-        $('#marker-name').html('<b>' + name + '</b>')
+    this.show_marker_name_info = function (objects) {
+        var names_html = ""
+        for (var o in objects) {
+            names_html += "<b>" + objects[o].options.name + "</b><br/>"
+        }
+        $('#marker-name').html(names_html)
         $('#marker-name').show()
     }
 
@@ -326,10 +340,10 @@ var kiezatlas = new function () {
                     _self.select_map_entry(e.target)
                 })
                 circle.on('mouseover', function (e) {
-                    console.log("mouseover", e)
                     // ### display all geo_objects at this markers location
-                    // var geo_objects_under_marker = _self.find_all_geo_objects(marker.options['location_id'])
-                    _self.show_marker_name_info(e.target.options.name)
+                    var geo_objects_under_marker = _self.find_all_geo_objects(e.target.options['location_id'])
+                    // console.log("hovering all", geo_objects_under_marker)
+                    _self.show_marker_name_info(geo_objects_under_marker)
                 })
                 circle.on('mouseout', function (e) {
                     _self.hide_marker_name_info()
@@ -370,7 +384,7 @@ var kiezatlas = new function () {
     }
 
     this.render_selected_details = function (result_list) {
-        // console.log("> render details for", result_list)
+        if (result_list.length > 0) $('#detail-area h3.help').remove()
         for (var i in result_list) {
             $.getJSON('/kiezatlas/topic/'+result_list[i].options['geo_object_id'],
                 function (geo_object) {
@@ -379,9 +393,42 @@ var kiezatlas = new function () {
                         if (typeof geo_object.bezirksregion_uri !== "undefined") {
                             var web_alias = geo_object.bezirksregion_uri.slice(18)
                             var topic_id = geo_object.uri.slice(19)
+                            // var description = geo_object.beschreibung
+                            var contact = geo_object.kontakt
+                            var opening_hours = geo_object.oeffnungszeiten
+                            //
+                            var body_text = ""
+                            // if (typeof description !== "undefined") body_text += '<b>Info</b> ' + description
+                            if (typeof contact !== "undefined" && contact.value.length > 0) {
+                                // var fax = undefined, email = undefined, telefon = undefined, person = undefined
+                                var contact_text = ""
+                                if (contact.childs.hasOwnProperty('ka2.kontakt.ansprechpartner')) {
+                                    contact_text += '&nbsp;' + contact.childs['ka2.kontakt.ansprechpartner'].value  + '<br/>'
+                                }
+                                if (contact.childs.hasOwnProperty('ka2.kontakt.email')
+                                    && contact.childs['ka2.kontakt.email'].value.length > 0) {
+                                    contact_text += 'E-Mail: <a href="mailto:' + contact.childs['ka2.kontakt.email'].value
+                                        + '">' + contact.childs['ka2.kontakt.email'].value + '</a><br/>'
+                                }
+                                if (contact.childs.hasOwnProperty('ka2.kontakt.telefon')
+                                    && contact.childs['ka2.kontakt.telefon'].value.length > 0) {
+                                    contact_text += 'Tel.: ' + contact.childs['ka2.kontakt.telefon'].value  + '<br/>'
+                                }
+                                if (contact.childs.hasOwnProperty('ka2.kontakt.fax')
+                                    && contact.childs['ka2.kontakt.fax'].value.length > 0) {
+                                    contact_text += 'Fax: ' + contact.childs['ka2.kontakt.fax'].value
+                                }
+                                body_text += '<p><b>Kontakt</b>' + contact_text + '</p>'
+                            }
+                            if (typeof opening_hours !== "undefined"
+                                && opening_hours.length > 0) body_text += '<p><b>&Ouml;ffnungszeiten</b>' + opening_hours + '</p>'
+                            // append to dom
                             $('#detail-area').append('<div class="entry-card">'
                                 + '<h3>'+geo_object.name+'</h3>'
-                                + '<div class="details"><p>'+geo_object.address_name.toString()
+                                + '<div class="details">'
+                                + '<p>'
+                                    + geo_object.address_name.toString() + '<br/>'
+                                    + '' + body_text + ''
                                 + '</p>'
                                 + '<a href="http://www.kiezatlas.de/map/'+web_alias+'/p/'+topic_id+'">Mehr Infos im Stadtplan</a>'
                                 + '<a href="https://fahrinfo.bvg.de/Fahrinfo/bin/query.bin/dn?Z='+geo_object.address_name.toString()+'&REQ0JourneyStopsZA1=2&start=1&pk_campaign=_self.de"><img src="/de.kiezatlas.website/images/fahrinfo.gif"></a>'
@@ -481,6 +528,12 @@ var kiezatlas = new function () {
         } else {
             _self.current_location.coordinate.lat = e.latitude
             _self.current_location.coordinate.lng = e.longitude
+            // render radius control at new place
+            _self.render_radius_control()
+            // then fire query
+            _self.query_geo_objects(undefined, undefined, _self.render_geo_objects)
+            // correct current default viewport
+            _self.map.setView(_self.current_location.coordinate, _self.LEVEL_OF_STREET_ZOOM)
             // ### if location in berlin, do something smart (suggest to save location to favourites'db
                 // ### complete error handling, for geo-name lookup
             _self.reverse_geocode()

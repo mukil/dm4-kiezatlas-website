@@ -23,9 +23,15 @@ public class EntryView implements JSONEnabled {
     GeoCoordinate geoCoordinate = null;
     Topic bezirk = null;
     Topic bezirksregion = null;
+    //
     ResultList<RelatedTopic> relatedTopics = null;
     ResultList<RelatedTopic> relatedAudiences = null;
     ResultList<RelatedTopic> relatedServices = null;
+    // sonstiges
+    Topic beschreibung = null;
+    Topic contact = null;
+    Topic opening_hours = null;
+    Topic lor_nr = null;
     
     Logger log = Logger.getLogger(EntryView.class.getName());
     
@@ -54,6 +60,11 @@ public class EntryView implements JSONEnabled {
         relatedTopics = geoObject.getRelatedTopics("dm4.core.aggregation", "dm4.core.parent", "dm4.core.child", "ka2.criteria.thema", 0);
         relatedAudiences = geoObject.getRelatedTopics("dm4.core.aggregation", "dm4.core.parent", "dm4.core.child", "ka2.criteria.zielgruppe", 0);
         relatedServices = geoObject.getRelatedTopics("dm4.core.aggregation", "dm4.core.parent", "dm4.core.child", "ka2.criteria.angebot", 0);
+        // fetch other details
+        this.beschreibung = geoObject.getRelatedTopic("dm4.core.composition", "dm4.core.parent", "dm4.core.child", "ka2.beschreibung");
+        this.contact = geoObject.getRelatedTopic("dm4.core.composition", "dm4.core.parent", "dm4.core.child", "ka2.kontakt");
+        this.opening_hours = geoObject.getRelatedTopic("dm4.core.composition", "dm4.core.parent", "dm4.core.child", "ka2.oeffnungszeiten");
+        this.lor_nr = geoObject.getRelatedTopic("dm4.core.composition", "dm4.core.parent", "dm4.core.child", "ka2.lor_nummer");
     }
 
     public JSONObject toJSON() {
@@ -85,6 +96,19 @@ public class EntryView implements JSONEnabled {
                             .put("related_topic_name", relatedTopic.getSimpleValue().toString()));
                     }
                     object.put("related_topics", related);
+                }
+                if (beschreibung != null) {
+                    object.put("beschreibung", beschreibung.getSimpleValue());
+                }
+                if (contact != null) {
+                    contact.loadChildTopics();
+                    object.put("kontakt", contact.getModel().toJSON());
+                }
+                if (opening_hours != null) {
+                    object.put("oeffnungszeiten", opening_hours.getSimpleValue());
+                }
+                if (lor_nr != null) {
+                    object.put("lor_id", lor_nr.getSimpleValue());
                 }
             }
             return object;
