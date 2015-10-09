@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>Kiezatlas Website</title>
+        <title>Kiezatlas 2 Website</title>
 
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0"/>
@@ -30,6 +30,8 @@
                 //
                 // kiezatlas.update_current_location_label(true) // implicitly queries for geo_objects
                 kiezatlas.render_location_button()
+                kiezatlas.query_districts()
+                kiezatlas.query_subdistricts()
             })
             
             /** function search_fulltext() {
@@ -262,6 +264,13 @@
                 <a href="/page/open-source">Open Source</a><br/>
                 <a href="/page/links">Links</a><br/>
             </p>
+        </div>
+
+        <div class="district-area">
+            <h4>Bezirke im Kiezatlas</h4>
+            <ul class="bezirke"></ul>
+            <h4>Bezirksregionen</h4>
+            <ul class="bezirksregionen"></ul>
         </div>
 
         <img src="http://stats.kiezatlas.de/piwik.php?idsite=2&amp;rec=1&action_name=kiezatlas-Kreise" style="border:0 display: none;" alt="" />

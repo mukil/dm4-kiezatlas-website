@@ -30,6 +30,11 @@
             <version>2.1.6</version>
         </dependency>
         <dependency>
+            <groupId>de.kiezatlas</groupId>
+            <artifactId>dm44-kiezatlas-etl</artifactId>
+            <version>0.2</version>
+        </dependency>
+        <dependency>
             <groupId>de.deepamehta</groupId>
             <artifactId>deepamehta-geomaps</artifactId>
             <version>4.4.3</version>

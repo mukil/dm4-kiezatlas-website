@@ -244,6 +244,50 @@ h1.my-title {
     text-align: center;
 }
 
+.district-area {
+    position: relative;
+    top: 100px;
+    font-size: 1.2em;
+    padding-left: 75px;
+    padding-right: 75px;
+    padding-top: 30px; padding-bottom: 30px;
+    background: #eaeaea;
+    text-align: center;
+    color: #343434;
+}
+
+.district-area ul.bezirke li {
+    color: #002856;
+    margin: 15px;
+    display: inline-block;
+    margin-left: 0px;
+    padding: 5px;
+    padding-left: 8px;
+    padding-right: 8px;
+}
+
+.district-area ul.bezirksregionen li {
+    margin: 15px;
+    display: inline-block;
+    margin-left: 0px;
+    font-size: .8em;
+    color: #343434;
+    padding: 5px;
+    padding-left: 7px;
+    padding-right: 7px;
+}
+
+.district-area ul li:hover {
+    cursor: pointer;
+    background: #fff;
+}
+
+.district-area ul.bezirke,
+.district-area ul.bezirksregionen {
+    list-style-type: none;
+    padding-left: 0px;
+}
+
 #header ol {
     text-align: left;
     width: 75%;

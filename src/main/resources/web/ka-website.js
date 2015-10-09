@@ -32,6 +32,8 @@ var kiezatlas = new function () {
     this.districtGroup = L.featureGroup()
     // model of all geo-domain object in client
     this.items = []
+    this.districts = []
+    this.subdistricts = []
     this.db = undefined
     
     this.init_location_selection = function () {
@@ -150,6 +152,30 @@ var kiezatlas = new function () {
         // then fire query
         _self.query_geo_objects(undefined, undefined, _self.render_geo_objects)
         _self.map.setView(_self.current_location.coordinate, _self.LEVEL_OF_STREET_ZOOM)
+    }
+
+    this.query_districts = function () {
+        $.getJSON('/kiezatlas/bezirk',
+            function (districts) {
+                _self.districts = districts.items.sort(_self.name_sort_asc)
+                console.log("ka_districts", _self.districts)
+                for (var i in _self.districts) {
+                    $('ul.bezirke').append('<li id="'+_self.districts[i].id+'" '
+                        + 'class="bezirk">' + _self.districts[i].value + '</li>')
+                }
+            })
+    }
+
+    this.query_subdistricts = function () {
+        $.getJSON('/kiezatlas/bezirksregion',
+            function (districts) {
+                _self.subdistricts = districts.items.sort(_self.name_sort_asc)
+                console.log("ka_subdistricts", _self.subdistricts)
+                for (var i in _self.subdistricts) {
+                    $('ul.bezirksregionen').append('<li id="'+_self.subdistricts[i].id+'" '
+                        + 'class="bezirksregion">' + _self.subdistricts[i].value + '</li>')
+                }
+            })
     }
     
     this.init_map_area = function (dom_el_id) {
@@ -284,6 +310,7 @@ var kiezatlas = new function () {
         $.getJSON('/kiezatlas/search/'+encodeURIComponent(location_string)+'/' + (radius_value / 1000),
             function (geo_objects) {
                 _self.items = geo_objects
+                console.log("map_entry_view items", _self.items)
                 if (typeof success !== "undefined") {
                     _self.clear_markers()
                     _self.hide_spinning_wheel()
@@ -390,6 +417,7 @@ var kiezatlas = new function () {
                 function (geo_object) {
                     if (typeof geo_object !== "undefined") {
                         // make linkage work
+                        console.log("entry_view", geo_object)
                         if (typeof geo_object.bezirksregion_uri !== "undefined") {
                             var web_alias = geo_object.bezirksregion_uri.slice(18)
                             var topic_id = geo_object.uri.slice(19)
@@ -582,6 +610,17 @@ var kiezatlas = new function () {
                 _self.update_current_location_label()
             }
         })
+    }
+
+    this.name_sort_asc = function (a, b) {
+        var nameA = a.value
+        var nameB = b.value
+        //
+        if (nameA.toLowerCase() > nameB.toLowerCase()) // sort string descending
+          return 1
+        if (nameA.toLowerCase() < nameB.toLowerCase())
+          return -1
+        return 0 //default return value (no sorting)
     }
 
 }
