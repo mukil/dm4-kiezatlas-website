@@ -87,7 +87,7 @@ var kiezatlas = new function () {
 
     this.start_local_db = function () {
         // PouchDB.debug.enable('*')
-        PouchDB.debug.disable()
+        // PouchDB.debug.disable()
         _self.db = new PouchDB('kiezatlas_favourites')
     }
     
@@ -133,6 +133,7 @@ var kiezatlas = new function () {
                     }
                     $("#places").menu({icons: { "submenu" : "ui-icon-grip-dotted-horizontal" } })
                     $("#places").show()
+                    $("button.star").removeClass('no-favs')
                 }
             }).catch(function (err) {
                 console.log(err)
@@ -158,7 +159,7 @@ var kiezatlas = new function () {
         $.getJSON('/kiezatlas/bezirk',
             function (districts) {
                 _self.districts = districts.items.sort(_self.name_sort_asc)
-                console.log("ka_districts", _self.districts)
+                // console.log("ka_districts", _self.districts)
                 for (var i in _self.districts) {
                     $('ul.bezirke').append('<li id="'+_self.districts[i].id+'" '
                         + 'class="bezirk">' + _self.districts[i].value + '</li>')
@@ -170,7 +171,7 @@ var kiezatlas = new function () {
         $.getJSON('/kiezatlas/bezirksregion',
             function (districts) {
                 _self.subdistricts = districts.items.sort(_self.name_sort_asc)
-                console.log("ka_subdistricts", _self.subdistricts)
+                // console.log("ka_subdistricts", _self.subdistricts)
                 for (var i in _self.subdistricts) {
                     $('ul.bezirksregionen').append('<li id="'+_self.subdistricts[i].id+'" '
                         + 'class="bezirksregion">' + _self.subdistricts[i].value + '</li>')

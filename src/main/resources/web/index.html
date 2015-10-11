@@ -77,7 +77,7 @@
                     if (typeof item !== "undefined") {
                         kiezatlas.current_location.coordinate = new L.latLng(item.geometry.location.lat, item.geometry.location.lng)
                         kiezatlas.default_radius = 900
-                        console.log("geo-coded item", item)
+                        // console.log("geo-coded item", item)
                         kiezatlas.current_location.name = item['formatted_address']
                         kiezatlas.update_current_location_label()
                         kiezatlas.handle_option_b()
@@ -180,7 +180,7 @@
             <!--input type="text" class="location-input" /-->
             <h3 class="location-label">
                 <span class="text"></span>
-                <button class="star">
+                <button class="star no-favs">
                     <img class="fav-icon" title="zu Favoriten hinzufügen" alt="Icon: Favourite this location."
                          src="/de.kiezatlas.website/images/1441217865_black_5_favorite_star.png"/>
                 </button>
@@ -247,22 +247,48 @@
             </p>
         </div>
 
+        <div id="pages">
+            <ul>
+                <li><a href="/page/aktuelles">Aktuelles</a></li>
+                <li><a href="/page/projektbeschreibung">Projektbeschreibung</a></li>
+                <li><a href="/page/dies-das">Dies und Das</a></li>
+                <li><a href="/page/weitere-atlanten">Weitere Atlanten</a></li>
+                <li><a href="http://pax.spinnenwerk.de/~kiezatlas/index.php?id=6">Impressum</a></li>
+                <li><a href="/page/datenschutzhinweise">Datenschutzhinweise</a></li>
+                <li><a href="/page/api-documentation">API</a></li>
+                <li><a href="/page/open-source">Open Source</a></li>
+                <li><a href="/page/links">Links</a></li>                
+            </ul>
+            <p></p>
+        </div>
+
         <div id="bottom">
-            <a href="/page/weitere-atlanten">Weitere Atlanten</a>
+            <div class="sozialraumdaten">
+                <h3>Datenbank lebensweltlich orientierte R&auml;ume (LOR)</h3>
+                <p>
+                    Ein Herzst&uuml;ck sind die <a href="http://sozialraumdaten.kiezatlas.de/" title="Öffnet externen Link in neuem Fenster" target="_blank" class="external-link">
+                    Lebensweltlich orientierten Planungsraum = LOR &ndash; Daten</a>, die wir in Kooperation vom Amt für Statistik Berlin-Brandenburg für das Projekt Kiezatlas erhalten und aufbereiten.
+                    <br/><br/>
+                    Aktueller Stand: Dezember 2014
+                </p>
+                <div class="link-area">
+                    <a href="http://sozialraumdaten.kiezatlas.de/">
+                        <img src="/de.kiezatlas.website/images/lor_sozialraumdaten_diagramm_green467_pure.png" style="border: 0px;" alt="Grafik: Diagramm zur Altersverteilung im Kiez Victoriastadt">
+                        <br/>Link zu den Sozialraumdaten
+                    </a>
+                </div>
+                <div class="link-area">
+                    <a href="http://sozialraumdaten.kiezatlas.de/seiten/" title="Kartograpischer Zugang zu den LOR-Auswertungen">
+                        <img src="/de.kiezatlas.website/images/lor_sozialraumdaten_einstiegskarte_445.jpg" style="border: 0px;" alt="Grafik: Diagramm zur Altersverteilung der 40-45j&auml;hrigen">
+                        <br/>Geographische Auswertung der LOR&ndash;Seiten
+                    </a>
+                </div>
+            </div>
             <p>
                 <b>Kontakt</b><br/>
                 GskA &ndash; Projekt Network, Tucholskystr. 11, 10117 Berlin<br/>
                 Fon: 030 / 280 961 10<br/>
                 E-Mail: <a href="mailto:info@kiezatlas.de">info@kiezatlas.de</a><br/>
-            </p>
-            <p>
-                <a href="http://pax.spinnenwerk.de/~kiezatlas/index.php?id=6">Impressum</a><br/>
-                <a href="/page/datenschutzhinweise">Datenschutzhinweise</a><br/>
-            </p>
-            <p>
-                <a href="/page/api-documentation">Developers</a><br/>
-                <a href="/page/open-source">Open Source</a><br/>
-                <a href="/page/links">Links</a><br/>
             </p>
         </div>
 
@@ -273,7 +299,18 @@
             <ul class="bezirksregionen"></ul>
         </div>
 
-        <img src="http://stats.kiezatlas.de/piwik.php?idsite=2&amp;rec=1&action_name=kiezatlas-Kreise" style="border:0 display: none;" alt="" />
+        <!-- Piwik -->
+        <script type="text/javascript">
+        var pkBaseURL = "http://stats.kiezatlas.de/";
+        document.write(unescape("%3Cscript src='" + pkBaseURL + "piwik.js' type='text/javascript'%3E%3C/script%3E"));
+        </script><script type="text/javascript">
+        try {
+        var piwikTracker = Piwik.getTracker(pkBaseURL + "piwik.php", 2);
+        piwikTracker.trackPageView();
+        piwikTracker.enableLinkTracking();
+        } catch( err ) {}
+        </script><noscript><p><img src="http://stats.kiezatlas.de/piwik.php?idsite=2" style="border:0" alt="" /></p></noscript>
+        <!-- End Piwik Tracking Code -->
 
     </body>
 </html>

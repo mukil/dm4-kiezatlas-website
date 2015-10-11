@@ -95,7 +95,7 @@ h3.location-label {
     display: none;
     position: absolute;
     right: 8px;
-    top: 20px;
+    top: 18px;
     z-index: 1001;
     border: 1px solid transparent;
     padding-left: 0px;
@@ -233,6 +233,7 @@ h1.my-title {
     cursor: pointer;
 }
 
+#pages,
 #bottom,
 #filter-container,
 #header,
@@ -242,6 +243,40 @@ h1.my-title {
     top: 30px;
     font-size: 1.2em;
     text-align: center;
+}
+
+#pages {
+    text-align: left;
+    width: 90%;
+    margin: auto;
+    padding: 15px;
+    text-align: center;
+}
+
+#pages ul {
+    list-style-type: none;
+    font-size: 1.2em;
+}
+
+#pages ul li {
+    display: inline-block;
+    background-color: #fff;
+    padding: 7px;
+    padding-left: 10px;
+    padding-right: 10px;
+    margin-right: 15px;
+    margin-top: 15px;
+}
+
+.sozialraumdaten a,
+#pages ul li a {
+    text-decoration: none;
+}
+
+.sozialraumdaten a:hover,
+#pages ul li:hover a {
+    text-decoration: underline;
+    text-decoration-color: #8f1414;
 }
 
 .district-area {
@@ -317,7 +352,6 @@ h1.my-title {
 #bottom {
     padding: 15px;
     background-color: #fff;
-    top: 120px;
 }
 
 #detail-area {
@@ -656,6 +690,15 @@ div.legende img {
     top: 1px;
 }
 
+div.link-area {
+    display: inline-block;
+    margin: 30px;
+}
+
+.sozialraumdaten p {
+    max-width: 890px;
+    margin: auto;
+}
 /** 
   margin-top: 5px; width: 45px; height: 20px;
   childish.. => z-index: 100; position: absolute; top: 10px; left: 10px; 
@@ -722,6 +765,21 @@ div.legende img {
     #karte {
         padding-top: 20px;
     }
+    div.link-area {
+        margin: 0px;
+        text-align: center;
+        max-width: 100%;
+    }
+    div.link-area img {
+        width: 100%;
+    }
+    .district-area ul.bezirksregionen li,
+    .district-area ul.bezirke li {
+        margin: 5px;
+    }
+    .sozialraumdaten p {
+        max-width: 90%;
+    }
 }
 
 @media (max-width:600px) {
@@ -742,6 +800,9 @@ div.legende img {
     #filter-container {
         display: none;
     }
+    #karte button.star.no-favs {
+        right: 10px;
+    }
     #karte {
         top: 30px;
         padding-top: 10px;
@@ -749,18 +810,18 @@ div.legende img {
     #karte .location-label {
         font-size: 1em;
         margin-left: 10px;
-        margin-right: 130px;
-        margin-top: 5px;
+        margin-right: 160px;
+        margin-top: 10px;
         margin-bottom: 9px;
     }
     #karte button.star {
         position: absolute;
         right: 125px;
-        top: 1px;
+        top: 3px;
     }
     #places {
         right: 7px;
-        top: -2px;
+        top: 0px;
     }
     #detail-area {
         padding: 0px;
@@ -781,9 +842,19 @@ div.legende img {
     }
 }
 
+@media (max-height:1300px) {
+    #karte {
+        top: 30px;
+        padding-top: 0px;
+    }
+    #map {
+        height: 450px !important;
+    }
+}
+
 @media (max-height:810px) {
     #map {
-        height: 400px !important;
+        height: 350px !important;
     }
     #header {
         display: none;

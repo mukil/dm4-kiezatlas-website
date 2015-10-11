@@ -219,7 +219,6 @@ public class KiezatlasWebsitePlugin extends PluginActivator {
 		if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
 		String result = "";
 		try {
-			log.info("Start geo coding location (" + latlng + ") ...");
 			String url = "https://maps.googleapis.com/maps/api/geocode/json?latlng="
 			    + latlng + "&language=de";
 			// &result_type=street_address|postal_code&key=API_KEY
@@ -236,7 +235,7 @@ public class KiezatlasWebsitePlugin extends PluginActivator {
 			}
 			rd.close();
 			result = sb.toString();
-			log.info("Geo Coded Locatino successfully.");
+			log.info("Reverse Geo Coded Location ("+latlng+") successfully.");
 		} catch (UnsupportedEncodingException ex) {
 			log.log(Level.WARNING, "Unsuporrted Encoding Exception", ex);
 		} catch (MalformedURLException mux) {
@@ -251,7 +250,7 @@ public class KiezatlasWebsitePlugin extends PluginActivator {
 
 	private boolean isValidReferer (String ref) {
 		if (ref == null) return false;
-		if (ref.contains(".kiezatlas.de/") ||  ref.contains("http://localhost/")) {
+		if (ref.contains(".kiezatlas.de/") ||  ref.contains("localhost")) {
 			return true;
 		} else {
 			return false;
