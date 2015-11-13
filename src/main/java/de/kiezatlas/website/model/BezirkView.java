@@ -10,26 +10,25 @@ import org.codehaus.jettison.json.JSONObject;
 
 import java.util.logging.Logger;
 
-public class BezirksView implements JSONEnabled {
+public class BezirkView implements JSONEnabled {
 
-	Logger log = Logger.getLogger(EntryView.class.getName());
+	Logger log = Logger.getLogger(GeoObjectDetailsView.class.getName());
 
 	private Topic topic;
 	private JSONObject json = new JSONObject();
 
-	public BezirksView(Topic bezirk) {
+	public BezirkView(Topic bezirk) {
 		this.topic = bezirk;
 	}
 
-	private String getBezirksname() {
-		return topic.getSimpleValue().toString();
+    private String getBezirksname() {
+        return topic.getSimpleValue().toString();
 	}
 
-	private long getBezirksId() {
-		return topic.getId();
-	}
-
-	private String getBezirksURI() { return topic.getUri(); }
+    private Topic getImprintLink() {
+        return this.topic.getRelatedTopic("dm4.core.association", "dm4.core.default", "dm4.core.default", "dm4" +
+                ".webbrowser.web_resource");
+    }
 
 	private JSONArray getBezirksregionen() {
 		JSONArray regionen = new JSONArray();
@@ -48,11 +47,6 @@ public class BezirksView implements JSONEnabled {
 		return regionen;
 	}
 
-	private Topic getImprintLink() {
-		return this.topic.getRelatedTopic("dm4.core.association", "dm4.core.default", "dm4.core.default", "dm4" +
-				".webbrowser.web_resource");
-	}
-
 	public JSONObject toJSON() {
 		try {
 			Topic link = getImprintLink();
@@ -60,17 +54,17 @@ public class BezirksView implements JSONEnabled {
 			if (link != null) {
 				imprint = link.getSimpleValue().toString();
 			} else if (link == null) {
-				log.warning("Bezirk \"" + this.topic.getSimpleValue() + "\" has now \"Web Resource\" associated " +
-						"(default, default) which we could use as an Imprint!");
+				log.warning("### Fallback because district \"" + this.topic.getSimpleValue() + "\" has now \"Web " +
+                        "Resource\" associated (default, default) which we could use as an Imprint!");
 			}
 			this.json.put("imprint", imprint);
 			this.json.put("value", getBezirksname());
 			this.json.put("childs", getBezirksregionen());
-			this.json.put("uri", getBezirksURI());
-			this.json.put("id", getBezirksId());
+			this.json.put("uri", this.topic.getUri());
+			this.json.put("id", this.topic.getId());
 			return this.json;
 		} catch (JSONException ex) {
-			throw new RuntimeException("Constructing a Bezirksregione FAILED");
+			throw new RuntimeException("Constructing a BezirkView FAILED");
 		}
 	}
 
