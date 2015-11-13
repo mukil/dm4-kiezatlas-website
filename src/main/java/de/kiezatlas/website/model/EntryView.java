@@ -117,6 +117,7 @@ public class EntryView implements JSONEnabled {
 				}
 				if (contact != null) {
 					contact.loadChildTopics();
+					// just telefon und fax
 					object.put("kontakt", contact.getModel().toJSON());
 				}
 				if (opening_hours != null) {

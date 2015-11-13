@@ -299,22 +299,57 @@ h1.my-title {
     padding: 5px;
     padding-left: 8px;
     padding-right: 8px;
+    vertical-align: top;
+    text-align: left;
 }
 
-.district-area ul.bezirksregionen li {
-    margin: 15px;
-    display: inline-block;
+.district-area ul.bezirke li a {
+    text-decoration: none;
+    margin-left: 0px;
+    padding: 7px;
+}
+
+.district-area ul.bezirke li a.link-out:hover {
+    background-color: #fff;
+    color: #8F1414;
+}
+
+.district-area li ul.bezirksregionen {
+    border-top: 1px solid #8F1414;
+}
+
+.district-area li ul.bezirksregionen {
+    text-align: left;
+    font-size: 0.9em;
+    margin-top: 7px;
+}
+
+.district-area li ul.bezirksregionen li {
+    margin: 5px 0px 0px 0px;
+    display: block;
     margin-left: 0px;
     font-size: .8em;
     color: #343434;
     padding: 5px;
     padding-left: 7px;
     padding-right: 7px;
+    border-bottom: 0px solid transparent;
+}
+
+.district-area li ul.bezirksregionen li a {
+    text-decoration: none;
+    margin-left: 0px;
+    color: #343434;
 }
 
 .district-area ul li:hover {
     cursor: pointer;
+    /** background: #fff; **/
+}
+
+.district-area li ul.bezirksregionen li:hover {
     background: #fff;
+    background-color: #fff;
 }
 
 .district-area ul.bezirke,
@@ -375,6 +410,12 @@ h1.my-title {
     padding-left: 15px; padding-right: 10px;
     padding-top: 10px; padding-bottom: 10px;
     margin-bottom: 0px;
+}
+
+#detail-area .entry-card .imprint {
+    text-align: right;
+    /** padding-right: 5px; **/
+    padding-top: 7px;
 }
 
 #detail-area .details {

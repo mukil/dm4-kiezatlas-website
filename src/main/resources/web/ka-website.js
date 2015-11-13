@@ -49,35 +49,33 @@ var kiezatlas = new function () {
 
         function handle_option_a (e) {
             // initiaze map on browsers location
-            if (typeof _self.map === "undefined") {
-                _self.init_map_area('map', false)
-            }
-            _self.jump_to_map()
-            _self.get_browser_location()
+            _self.init_map_dialog(true, null, true)
         }
 
+    }
+
+    this.init_map_dialog = function(detectLocation, zoomLevel, jumpToMap) {
+        // initiaze map on browsers location
+        if (typeof _self.map === "undefined") {
+            _self.init_map_area('map', false)
+        }
+        if (jumpToMap) _self.jump_to_map()
+        if (detectLocation) _self.get_browser_location()
+        if (zoomLevel) _self.map.setZoom(zoomLevel)
     }
 
     this.handle_option_c = function (e) {
         // initiate map with edible circle control
-        if (typeof _self.map === "undefined") {
-            _self.init_map_area('map', true)
-        }
-        _self.jump_to_map()
-        _self.map.setZoom(_self.LEVEL_OF_KIEZ_ZOOM)
+        _self.init_map_dialog(false, _self.LEVEL_OF_KIEZ_ZOOM, true)
     }
 
     this.handle_option_b = function (e) {
         // initiate map with edible circle control but focus on street
-        if (typeof _self.map === "undefined") {
-            _self.init_map_area('map', true)
-        }
-        _self.jump_to_map()
-        _self.map.setZoom(_self.LEVEL_OF_STREET_ZOOM)
+        _self.init_map_dialog(false, _self.LEVEL_OF_STREET_ZOOM, true)
     }
 
     this.jump_to_map = function () {
-        window.document.location.href = window.document.location.protocol + '//' + window.document.location.host + "/#karte"
+        window.document.location.href = window.document.location.protocol + '//' + window.document.location.host + "/de.kiezatlas.website/#karte"
     }
 
     this.focus_location_input_field = function () {
@@ -158,26 +156,38 @@ var kiezatlas = new function () {
     this.query_districts = function () {
         $.getJSON('/kiezatlas/bezirk',
             function (districts) {
-                _self.districts = districts.items.sort(_self.name_sort_asc)
+                _self.districts = districts.sort(_self.value_sort_asc)
                 // console.log("ka_districts", _self.districts)
                 for (var i in _self.districts) {
-                    $('ul.bezirke').append('<li id="'+_self.districts[i].id+'" '
-                        + 'class="bezirk">' + _self.districts[i].value + '</li>')
+                    var district = _self.districts[i]
+                    var bezirke_html = '<li ' + 'class="bezirk">'
+                            bezirke_html += '<a class="link-out" id="' + district.id + '">' + district["value"] + '</a>'
+                        bezirke_html += '<ul class="bezirksregionen">'
+                        var subdistricts = district.childs.sort(_self.name_sort_asc)
+                        for (var k in subdistricts) {
+                            var region = subdistricts[k]
+                            // console.log("ka_subdistrict", region)
+                            bezirke_html += '<li><a id="' + region["id"] + '">' + region["name"] + '</a></li>'
+                        }
+                        bezirke_html += '</ul>'
+                        bezirke_html += '</li>'
+                    var $bezirke = $(bezirke_html)
+                    $('ul.bezirke').append($bezirke)
                 }
             })
     }
 
-    this.query_subdistricts = function () {
+    /** this.query_subdistricts = function () {
         $.getJSON('/kiezatlas/bezirksregion',
             function (districts) {
-                _self.subdistricts = districts.items.sort(_self.name_sort_asc)
+                _self.subdistricts = districts.items.sort(_self.value_sort_asc)
                 // console.log("ka_subdistricts", _self.subdistricts)
                 for (var i in _self.subdistricts) {
                     $('ul.bezirksregionen').append('<li id="'+_self.subdistricts[i].id+'" '
                         + 'class="bezirksregion">' + _self.subdistricts[i].value + '</li>')
                 }
             })
-    }
+    } **/
     
     this.init_map_area = function (dom_el_id) {
         $('#map').empty()
@@ -412,33 +422,32 @@ var kiezatlas = new function () {
     }
 
     this.render_selected_details = function (result_list) {
+        // ### impressums link je nach bezirk
         if (result_list.length > 0) $('#detail-area h3.help').remove()
         for (var i in result_list) {
             $.getJSON('/kiezatlas/topic/'+result_list[i].options['geo_object_id'],
                 function (geo_object) {
                     if (typeof geo_object !== "undefined") {
-                        // make linkage work
-                        console.log("entry_view", geo_object)
                         if (typeof geo_object.bezirksregion_uri !== "undefined") {
-                            var web_alias = geo_object.bezirksregion_uri.slice(18)
-                            var topic_id = geo_object.uri.slice(19)
-                            // var description = geo_object.beschreibung
+                            // ### just render item if data has bezirksregion set
+                            console.log("entry_view", geo_object)
+                            // construct resp. impressum
+                            var imprint_html = _self.get_imprint_html(geo_object)
+                            // make linkage work
+                            var web_alias = geo_object.bezirksregion_uri.slice(18) // ### number of chars the prefix has
+                            var topic_id = geo_object.uri.slice(19) // ### number of chars the prefix has)
+                            var description = geo_object.beschreibung
                             var contact = geo_object.kontakt
                             var opening_hours = geo_object.oeffnungszeiten
                             //
                             var body_text = ""
-                            // if (typeof description !== "undefined") body_text += '<b>Info</b> ' + description
+                            if (typeof description !== "undefined") {
+                                body_text += '<p><b>Info</b> ' + description + '</p>'
+                            }
                             if (typeof contact !== "undefined" && contact.value.length > 0) {
                                 // var fax = undefined, email = undefined, telefon = undefined, person = undefined
-                                var contact_text = ""
-                                if (contact.childs.hasOwnProperty('ka2.kontakt.ansprechpartner')) {
-                                    contact_text += '&nbsp;' + contact.childs['ka2.kontakt.ansprechpartner'].value  + '<br/>'
-                                }
-                                if (contact.childs.hasOwnProperty('ka2.kontakt.email')
-                                    && contact.childs['ka2.kontakt.email'].value.length > 0) {
-                                    contact_text += 'E-Mail: <a href="mailto:' + contact.childs['ka2.kontakt.email'].value
-                                        + '">' + contact.childs['ka2.kontakt.email'].value + '</a><br/>'
-                                }
+                                var contact_text = "<br/>"
+                                // skipping ansprechpartner and email
                                 if (contact.childs.hasOwnProperty('ka2.kontakt.telefon')
                                     && contact.childs['ka2.kontakt.telefon'].value.length > 0) {
                                     contact_text += 'Tel.: ' + contact.childs['ka2.kontakt.telefon'].value  + '<br/>'
@@ -462,6 +471,7 @@ var kiezatlas = new function () {
                                 + '<a href="http://www.kiezatlas.de/map/'+web_alias+'/p/'+topic_id+'">Mehr Infos im Stadtplan</a>'
                                 + '<a href="https://fahrinfo.bvg.de/Fahrinfo/bin/query.bin/dn?Z='+geo_object.address_name.toString()+'&REQ0JourneyStopsZA1=2&start=1&pk_campaign=_self.de"><img src="/de.kiezatlas.website/images/fahrinfo.gif"></a>'
                                 + '</div>'
+                                + imprint_html
                             + '</div>')   
                         } else {
                             console.warn("Geo Object Bezirksregionen URI undefined", geo_object)
@@ -469,6 +479,22 @@ var kiezatlas = new function () {
                     }
                 }
             )
+        }
+    }
+
+    this.get_imprint_html = function(entry) {
+        var bezirk = _self.get_bezirks_topic(entry.bezirk_uri)
+        // console.log("found bezirk", bezirk, bezirk.imprint)
+        var html = '<div class="imprint">'
+            + '<a href="' + bezirk.imprint + '" title="Impressum: Bezirksamt ' + bezirk.value + '">Impressum</a></div>'
+        return html
+    }
+
+    this.get_bezirks_topic = function(uri) {
+        // console.log("Searching for bezirk in", _self.districts)
+        for (var i in _self.districts) {
+            var element = _self.districts[i]
+            if (element.uri === uri) return element
         }
     }
 
@@ -613,9 +639,20 @@ var kiezatlas = new function () {
         })
     }
 
-    this.name_sort_asc = function (a, b) {
+    this.value_sort_asc = function (a, b) {
         var nameA = a.value
         var nameB = b.value
+        //
+        if (nameA.toLowerCase() > nameB.toLowerCase()) // sort string descending
+          return 1
+        if (nameA.toLowerCase() < nameB.toLowerCase())
+          return -1
+        return 0 //default return value (no sorting)
+    }
+
+    this.name_sort_asc = function (a, b) {
+        var nameA = a.name
+        var nameB = b.name
         //
         if (nameA.toLowerCase() > nameB.toLowerCase()) // sort string descending
           return 1

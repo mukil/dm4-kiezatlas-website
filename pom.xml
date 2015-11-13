@@ -7,21 +7,14 @@
     <name>DeepaMehta 4 Kiezatlas - Website</name>
     <groupId>de.kiezatlas</groupId>
     <artifactId>dm44-kiezatlas-website</artifactId>
-    <version>0.1-SNAPSHOT</version>
+    <version>0.2-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <parent>
         <groupId>de.deepamehta</groupId>
         <artifactId>deepamehta-plugin-parent</artifactId>
-        <version>4.4</version>
+        <version>4.4.3</version>
     </parent>
-    
-    <repositories>
-        <repository>
-            <id>deepamehta-public-repository</id>
-            <url>http://m2.deepamehta.de</url>
-        </repository>
-    </repositories>
 
     <dependencies>
         <dependency>
@@ -32,8 +25,18 @@
         <dependency>
             <groupId>de.kiezatlas</groupId>
             <artifactId>dm44-kiezatlas-etl</artifactId>
-            <version>0.2</version>
+            <version>0.2.1-SNAPSHOT</version>
         </dependency>
+        <!--dependency>
+            <groupId>de.mikromedia</groupId>
+            <artifactId>dm44-webpages</artifactId>
+            <version>0.2-SNAPSHOT</version>
+        </dependency-->
+        <!--dependency>
+            <groupId>de.deepamehta</groupId>
+            <artifactId>dm44-deepamehta-images</artifactId>
+            <version>0.9.3</version>
+        </dependency-->
         <dependency>
             <groupId>de.deepamehta</groupId>
             <artifactId>deepamehta-geomaps</artifactId>

@@ -1,5 +1,6 @@
 package de.kiezatlas.website;
 
+import java.text.MessageFormat;
 import java.util.logging.Logger;
 import java.util.List;
 import java.util.ArrayList;
@@ -20,15 +21,14 @@ import de.deepamehta.core.service.Transactional;
 import de.deepamehta.plugins.geomaps.model.GeoCoordinate;
 import de.deepamehta.plugins.geomaps.service.GeomapsService;
 import de.deepamehta.plugins.geospatial.service.GeospatialService;
+// import de.mikromedia.webpages.service.WebpagePluginService;
 import de.kiezatlas.service.KiezatlasService;
+import de.kiezatlas.website.model.BezirksView;
 import de.kiezatlas.website.model.EntryView;
 import de.kiezatlas.website.model.MapEntryView;
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLEncoder;
@@ -43,18 +43,26 @@ import javax.ws.rs.core.Response;
  * @website http://github.com/mukil/dm4-kiezatlas-website
  * @version 0.2-SNAPSHOT - compatible with DeepaMehta 4.4
  */
-@Path("/")
+@Path("/kiezatlas")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 public class KiezatlasWebsitePlugin extends PluginActivator {
 
-	private Logger log = Logger.getLogger(getClass().getName());
+	private final Logger log = Logger.getLogger(getClass().getName());
 
 	@Inject KiezatlasService kiezService;
+
+	// @Inject WebpagePluginService pageService;
 
 	@Inject GeospatialService spatialService;
 
 	@Inject GeomapsService geomapsService;
+
+	/** @Override
+	public void init() {
+		log.info("Setting new Frontpage Resource via WebpagePluginService");
+		pageService.setFrontpageResource("/web/index.html", "de.kiezatlas.website");
+	} **/
 
 	@GET
 	@Produces(MediaType.TEXT_HTML)
@@ -63,17 +71,17 @@ public class KiezatlasWebsitePlugin extends PluginActivator {
 	}
 
 	@GET
-	@Path("/kiezatlas/topic/{topicId}")
+	@Path("/topic/{topicId}")
 	public EntryView getKiezatlasTopicView(@HeaderParam("Referer") String referer,
-	    @PathParam("topicId") long topicId) {
+		@PathParam("topicId") long topicId) {
 		if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
 		return new EntryView(dms.getTopic(topicId), geomapsService);
 	}
 
 	@GET
-	@Path("/kiezatlas/search/{coordinatePair}/{radius}")
+	@Path("/search/{coordinatePair}/{radius}")
 	public List<MapEntryView> getGeoObjectsNearBy(@PathParam("coordinatePair") String coordinates,
-	    @PathParam("radius") String radius) {
+		@PathParam("radius") String radius) {
 		double lon = 13.4, lat = 52.5;
 		if (coordinates != null && !coordinates.isEmpty() && coordinates.contains(",")) {
 			lon = Double.parseDouble(coordinates.split(",")[0].trim());
@@ -94,35 +102,62 @@ public class KiezatlasWebsitePlugin extends PluginActivator {
 					results.add(new MapEntryView(geoObject, geomapsService));
 				}
 			} else {
-				log.info("No Address Entry found for geocoordinate " + geoCoordTopic.getSimpleValue());
+				log.log(Level.INFO, "No Address Entry found for geocoordinate {0}", geoCoordTopic.getSimpleValue());
 			}
 		}
 		return results;
 	}
 
 	@GET
-	@Path("/kiezatlas/search")
+	@Path("/search")
 	@Transactional
-	public List<MapEntryView> searchTopics(@HeaderParam("Referer") String referer,
-	    @QueryParam("search") String query) {
+	public List<MapEntryView> searchGeoObjectTopics(@HeaderParam("Referer") String referer,
+		@QueryParam("search") String query) {
 		if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
 		try {
-			log.info("> query=\"" + query + "\"");
+			log.log(Level.INFO, "> query=\"{0}\"", query);
 			ArrayList<MapEntryView> results = new ArrayList<MapEntryView>();
 			if (query.isEmpty()) {
 				log.warning("No search term entered, returning empty resultset");
 				return results;
 			}
 			List<Topic> singleTopics = dms.searchTopics(query, null);
-			log.info(singleTopics.size() + " topics found");
+			log.log(Level.INFO, "{0} topics found", singleTopics.size());
 			for (Topic topic : singleTopics) {
 				if (topic.getTypeUri().equals("ka2.geo_object.name")) {
 					Topic geoObject = topic.getRelatedTopic("dm4.core.composition",
 					    "dm4.core.child", "dm4.core.parent", "ka2.geo_object");
 					results.add(new MapEntryView(geoObject, geomapsService));
 				} else {
-					log.info("### NO-MATCH: Found " + topic.getTypeUri() + " data-entry");
+					log.log(Level.INFO, "### NO Geo Object MATCH for query="+query+", just a "+topic.getTypeUri()
+							+"-data-entry");
 				}
+			}
+			return results;
+		} catch (Exception e) {
+			throw new RuntimeException("Searching geo object topics failed", e);
+		}
+	}
+
+	@GET
+	@Path("/by_name")
+	public List<MapEntryView> getGeoObjectsByName(@HeaderParam("Referer") String referer,
+		@QueryParam("query") String query) {
+		if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
+		try {
+			log.log(Level.INFO, "> nameQuery=\"{0}\"", query);
+			String queryValue = query.trim();
+			ArrayList<MapEntryView> results = new ArrayList<MapEntryView>();
+			if (queryValue.isEmpty()) {
+				log.warning("No search term entered, returning empty resultset");
+				return results;
+			}
+			List<Topic> singleTopics = dms.searchTopics(queryValue, "ka2.geo_object.name");
+			log.log(Level.INFO, "{0} name topics found", singleTopics.size());
+			for (Topic topic : singleTopics) {
+				Topic geoObject = topic.getRelatedTopic("dm4.core.composition",
+					"dm4.core.child", "dm4.core.parent", "ka2.geo_object");
+				results.add(new MapEntryView(geoObject, geomapsService));
 			}
 			return results;
 		} catch (Exception e) {
@@ -130,18 +165,22 @@ public class KiezatlasWebsitePlugin extends PluginActivator {
 		}
 	}
 
-	// --- Kiezatlas City Resources
+	// --- Kiezatlas City Resources: Bezirk and Bezirksregion
 
 	@GET
-	@Path("/kiezatlas/bezirk")
-	public ResultList<RelatedTopic> getKiezatlasDistricts() {
-		return dms.getTopics("ka2.bezirk", 0);
+	@Path("/bezirk")
+	public List<BezirksView> getKiezatlasDistricts() {
+		ArrayList<BezirksView> results = new ArrayList<BezirksView>();
+		for (RelatedTopic bezirk : dms.getTopics("ka2.bezirk", 0)) {
+			results.add(new BezirksView(bezirk));
+		}
+		return results;
 	}
 
 	@GET
-	@Path("/kiezatlas/bezirk/{topicId}")
+	@Path("/bezirk/{topicId}")
 	public List<MapEntryView> getKiezatlasMapEntriesByDistrict(@HeaderParam("Referer") String referer,
-	    @PathParam("topicId") long bezirkId) {
+		@PathParam("topicId") long bezirkId) {
 		if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
 		ArrayList<MapEntryView> results = new ArrayList<MapEntryView>();
 		Topic bezirk = dms.getTopic(bezirkId);
@@ -154,15 +193,15 @@ public class KiezatlasWebsitePlugin extends PluginActivator {
 	}
 
 	@GET
-	@Path("/kiezatlas/bezirksregion")
+	@Path("/bezirksregion")
 	public ResultList<RelatedTopic> getKiezatlasSubregions() {
 		return dms.getTopics("ka2.bezirksregion", 0);
 	}
 
 	@GET
-	@Path("/kiezatlas/bezirksregion/{topicId}")
+	@Path("/bezirksregion/{topicId}")
 	public List<MapEntryView> getKiezatlasMapEntriesBySubdistrict(@HeaderParam("Referer") String referer,
-	    @PathParam("topicId") long bezirksregionId) {
+		@PathParam("topicId") long bezirksregionId) {
 		if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
 		ArrayList<MapEntryView> results = new ArrayList<MapEntryView>();
 		Topic bezirksregion = dms.getTopic(bezirksregionId);
@@ -174,12 +213,12 @@ public class KiezatlasWebsitePlugin extends PluginActivator {
 		return results;
 	}
 
-	// --- Geo Coding Utiltiy Resources
+	// --- Geo Coding Utiltiy Resources (Google Wrapper)
 
 	@GET
-	@Path("/kiezatlas/geocode/{input}")
+	@Path("/geocode/{input}")
 	public String geoCodeAddressInput(@HeaderParam("Referer") String referer,
-	    @PathParam("input") String input) {
+		@PathParam("input") String input) {
 		if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
 		String query = input;
 		String result = "";
@@ -202,20 +241,16 @@ public class KiezatlasWebsitePlugin extends PluginActivator {
 			}
 			rd.close();
 			result = sb.toString();
-		} catch (UnsupportedEncodingException ex) {
-			log.log(Level.WARNING, "Unsuporrted Encoding Exception", ex);
-		} catch (MalformedURLException mux) {
-			log.log(Level.WARNING, "Malformed URL Exception", mux);
-		} catch (IOException ioex) {
-			log.log(Level.WARNING, "IOException", ioex);
+		} catch (Exception ex) {
+			throw new RuntimeException(ex);
 		}
 		return result;
 	}
 
 	@GET
-	@Path("/kiezatlas/reverse-geocode/{latlng}")
+	@Path("/reverse-geocode/{latlng}")
 	public String geoCodeLocationInput(@HeaderParam("Referer") String referer,
-	    @PathParam("latlng") String latlng) {
+		@PathParam("latlng") String latlng) {
 		if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
 		String result = "";
 		try {
@@ -236,12 +271,8 @@ public class KiezatlasWebsitePlugin extends PluginActivator {
 			rd.close();
 			result = sb.toString();
 			log.info("Reverse Geo Coded Location ("+latlng+") successfully.");
-		} catch (UnsupportedEncodingException ex) {
-			log.log(Level.WARNING, "Unsuporrted Encoding Exception", ex);
-		} catch (MalformedURLException mux) {
-			log.log(Level.WARNING, "Malformed URL Exception", mux);
-		} catch (IOException ioex) {
-			log.log(Level.WARNING, "IOException", ioex);
+		} catch (Exception ex) {
+			throw new RuntimeException(ex);
 		}
 		return result;
 	}
