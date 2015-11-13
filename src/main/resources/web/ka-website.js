@@ -76,7 +76,7 @@ var kiezatlas = new function () {
     }
 
     this.jump_to_map = function () {
-        window.document.location.href = window.document.location.protocol + '//' + window.document.location.host + "/de.kiezatlas.website/#karte"
+        window.document.location.href = window.document.location.protocol + '//' + window.document.location.host + "/#karte"
     }
 
     this.focus_location_input_field = function () {
@@ -226,7 +226,7 @@ var kiezatlas = new function () {
         // then fire query
         _self.query_geo_objects(undefined, undefined, _self.render_geo_objects)
         // correct current default viewport
-        _self.map.setView(_self.current_location.coordinate, _self.LEVEL_OF_STREET_ZOOM)
+        _self.map.setView(_self.current_location.coordinate, _self.LEVEL_OF_KIEZ_ZOOM)
         //
         _self.render_location_button()
         _self.map.on('locationfound', _self.on_location_found)
@@ -243,13 +243,19 @@ var kiezatlas = new function () {
                 _self.render_radius_control()
             }
         })
+        if (_self.isMapCircleLocked) $('.leaflet-editing-icon').hide() // ### duplicate, fix circle initialization
     }
 
     this.toggle_radius_control_lock = function(e) {
         _self.isMapCircleLocked = (_self.isMapCircleLocked) ? false : true;
         if (_self.isMapCircleLocked) {
             $('.lock-control').text('Unlock circle')
+            $('.leaflet-editing-icon').hide()
+            _self.current_location.coordinate = _self.map.getCenter()
+            _self.default_radius = _self.radius_control.getRadius()
+            _self.render_radius_control()
         } else {
+            $('.leaflet-editing-icon').show()
             $('.lock-control').text('Lock circle')
         }
     }
@@ -322,6 +328,7 @@ var kiezatlas = new function () {
                 _self.controlGroup.getBounds().getCenter(),
                 _self.LEVEL_OF_STREET_ZOOM)
         }
+        if (_self.isMapCircleLocked) $('.leaflet-editing-icon').hide()
     }
 
     this.query_geo_objects = function (location, radius, success) {

@@ -28,7 +28,7 @@
                 kiezatlas.list_entries_in_local_db()
                 kiezatlas.init_location_selection()
                 //
-                kiezatlas.init_map_dialog(true, kiezatlas.LEVEL_OF_KIEZ_ZOOM, false)
+                kiezatlas.init_map_dialog(true, undefined, false)
                 // kiezatlas.update_current_location_label(true) // implicitly queries for geo_objects
                 // ### kiezatlas.render_location_button()
                 kiezatlas.query_districts()
@@ -209,7 +209,7 @@
         <div id="detail-area">
             <h3 class="help">Ausgew&auml;hlter Ort</h3>
             <div class="search-option d">
-                Bitte klicke auf einen der gelben Punkte in der <a href="/de.kiezatlas.website/#karte">Karte</a> um
+                Bitte klicke auf einen der gelben Punkte in der <a href="#karte">Karte</a> um
                 Details zu diesem Ort angezeigt zu bekommen.
             </div>
         </div>
@@ -243,7 +243,7 @@
             <div class="search-option c">
                 <h1 id="c">C)</h1>
                 <b>Grafische Umkreissuche auf der Karte</b><br/>
-                Du kannst den <i>grauen Kreis</i> auf der <a href="/de.kiezatlas.website/#karte">Karte</a> einfach
+                Du kannst den <i>grauen Kreis</i> auf der <a href="#karte">Karte</a> einfach
                 anfassen,
                 <i>
                 verschieben</i> und ggf. vergr&ouml;&szlig;ern. Probier es mal aus!
