@@ -731,6 +731,12 @@ div.legende img {
     top: 1px;
 }
 
+div.legent a.lock-control {
+    position: absolute;
+    right: 10px;
+    bottom: 12px;
+}
+
 div.link-area {
     display: inline-block;
     margin: 30px;

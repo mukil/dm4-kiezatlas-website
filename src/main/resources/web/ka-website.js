@@ -30,6 +30,7 @@ var kiezatlas = new function () {
     this.markerGroup = undefined
     this.controlGroup = L.featureGroup()
     this.districtGroup = L.featureGroup()
+    this.isMapCircleLocked = true
     // model of all geo-domain object in client
     this.items = []
     this.districts = []
@@ -199,10 +200,8 @@ var kiezatlas = new function () {
         $("button.star").show()
         $("button.star").button()
         $("button.star").hover(function (e) {
-            //
             $('button.star img').attr('src', '/de.kiezatlas.website/images/1441217865_black_5_favorite_star-white.png')
         }, function (e) {
-            //
             $('button.star img').attr('src', '/de.kiezatlas.website/images/1441217865_black_5_favorite_star.png')
         })
         $('div.legende').show()
@@ -232,10 +231,27 @@ var kiezatlas = new function () {
         _self.render_location_button()
         _self.map.on('locationfound', _self.on_location_found)
         _self.map.on('locationerror', _self.on_location_error) // ### just if user answers "never"
-        // re-render radius control after every zoomlevel-change
-        /** _self.map.on('zoomend', function (e) {
-            _self.render_radius_control(false)
-        }) **/
+        _self.map.on('moveend', function(e) {
+            if (_self.isMapCircleLocked) {
+                _self.query_geo_objects(undefined, undefined, _self.render_geo_objects)
+            }
+        })
+        _self.map.on('move', function(e) {
+            if (_self.isMapCircleLocked) {
+                _self.current_location.coordinate = _self.map.getCenter()
+                _self.render_radius_control()
+            }
+        })
+    }
+
+    this.toggle_radius_control_lock = function(e) {
+        console.log("switching ", _self.isMapCircleLocked)
+        _self.isMapCircleLocked = (_self.isMapCircleLocked) ? false : true;
+        if (_self.isMapCircleLocked) {
+            $('.lock-control').text('Unlock circle')
+        } else {
+            $('.lock-control').text('Lock circle')
+        }
     }
 
     /** this.render_districts_layer = function () {
@@ -321,7 +337,6 @@ var kiezatlas = new function () {
         $.getJSON('/kiezatlas/search/'+encodeURIComponent(location_string)+'/' + (radius_value / 1000),
             function (geo_objects) {
                 _self.items = geo_objects
-                console.log("map_entry_view items", _self.items)
                 if (typeof success !== "undefined") {
                     _self.clear_markers()
                     _self.hide_spinning_wheel()
