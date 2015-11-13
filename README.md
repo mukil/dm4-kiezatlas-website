@@ -6,8 +6,9 @@ This DeepaMehta 4 Plugin is the software module for ship- and development of the
 
 It builds on our work of last year, especially on the 
 
- * [dm4-kiezatlas](http://github.com/jri/dm4-kiezatlas) module
- * [dm4-geospatial](http://github.com/jri/dm4-geospatial) module
+ * [dm4-kiezatlas](http://github.com/mukil/dm4-kiezatlas) module
+ * [dm4-kiezatlas-etl](http://github.com/mukil/dm4-kiezatlas-etl) module
+ * [dm4-geospatial](http://github.com/mukil/dm4-geospatial) module
 
 but also on other open source software, such as
 

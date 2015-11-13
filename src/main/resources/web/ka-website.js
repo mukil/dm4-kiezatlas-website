@@ -239,13 +239,13 @@ var kiezatlas = new function () {
         _self.map.on('move', function(e) {
             if (_self.isMapCircleLocked) {
                 _self.current_location.coordinate = _self.map.getCenter()
+                _self.default_radius = _self.radius_control.getRadius()
                 _self.render_radius_control()
             }
         })
     }
 
     this.toggle_radius_control_lock = function(e) {
-        console.log("switching ", _self.isMapCircleLocked)
         _self.isMapCircleLocked = (_self.isMapCircleLocked) ? false : true;
         if (_self.isMapCircleLocked) {
             $('.lock-control').text('Unlock circle')
