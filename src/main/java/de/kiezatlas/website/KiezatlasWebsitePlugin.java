@@ -20,7 +20,7 @@ import de.deepamehta.core.service.Transactional;
 import de.deepamehta.plugins.geomaps.model.GeoCoordinate;
 import de.deepamehta.plugins.geomaps.service.GeomapsService;
 import de.deepamehta.plugins.geospatial.service.GeospatialService;
-// import de.mikromedia.webpages.service.WebpagePluginService;
+import de.mikromedia.webpages.service.WebpagePluginService;
 import de.kiezatlas.service.KiezatlasService;
 import de.kiezatlas.website.model.BezirkView;
 import de.kiezatlas.website.model.GeoObjectDetailsView;
@@ -51,17 +51,17 @@ public class KiezatlasWebsitePlugin extends PluginActivator {
 
     @Inject KiezatlasService kiezService;
 
-    // @Inject WebpagePluginService pageService;
+    @Inject WebpagePluginService pageService;
 
     @Inject GeospatialService spatialService;
 
     @Inject GeomapsService geomapsService;
 
-    /** @Override
+    @Override
     public void init() {
         log.info("Setting new Frontpage Resource via WebpagePluginService");
         pageService.setFrontpageResource("/web/index.html", "de.kiezatlas.website");
-    } **/
+    }
 
     @GET
     @Produces(MediaType.TEXT_HTML)

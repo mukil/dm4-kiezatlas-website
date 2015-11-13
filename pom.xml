@@ -27,11 +27,11 @@
             <artifactId>dm44-kiezatlas-etl</artifactId>
             <version>0.2.1-SNAPSHOT</version>
         </dependency>
-        <!--dependency>
+        <dependency>
             <groupId>de.mikromedia</groupId>
             <artifactId>dm44-webpages</artifactId>
             <version>0.2-SNAPSHOT</version>
-        </dependency-->
+        </dependency>
         <!--dependency>
             <groupId>de.deepamehta</groupId>
             <artifactId>dm44-deepamehta-images</artifactId>
