@@ -215,38 +215,41 @@
         </div>
 
         <div id="main-menu">
-            <h3>Standortangabe</h3>
-            <p>
-                Du hast drei M&ouml;glickeiten um mit unserer Umkreissuche Informationen aus einer ganz bestimmten Berliner Gegend abzufragen.
-            </p>
-            <!--p>Bitte teile uns einen Standort mit damit wir Dir Infos aus der Umgebung liefern k&ouml;nnen (A, B) oder nutze (C) unsere grafische Umkreissuche!</p-->
-            <div class="search-option a">
-                <h1 id="a">A)</h1>
-                <b>Deinen aktuellen Standort freigeben</b><br/>
-                Mit Hilfe deines Web-Browsers kannst du einfach per Klick <a href="javascript:kiezatlas.get_browser_location()">deinen aktuellen Standort</a> als Ausgangspunkt f&uuml;r die Umkreissuche benutzen.
-            </div>
-            <div class="search-option b">
-                <h1 id="b">B)</h1>
-                <b>Name eines Platzes oder einer Stra&szlig;e eingeben</b><br/>
-                Du kannst auch einfach den Namen eines Platzes oder einer Stra&szlig;e in Berlin eingeben.<br/>
-                <div id="location-input">
-                    <form action="javascript:search_near_by_input()" id="near-by-form" accept-charset="UTF-8">
-                        <!-- label for="near-by" id="near-by-label">In der N&auml;he von</label-->
-                        <input id="near-by" type="text" placeholder="Stra&szlig;enname / Hnr." />
-                        <input id="do-nearby" type="submit" class="btn" value="Ok" />
-                        <div class="spinning-wheel">
-                            <img src="/de.kiezatlas.website/images/ajax-loader.gif" />
-                        </div>
-                    </form>
+            <h3><a href="javascript:kiezatlas.toggle_location_menu();">In der N&auml;he von</a>...</h3>
+            <div class="options">
+                <p>
+                    Du hast drei M&ouml;glichkeiten um mit unserer Umkreissuche Informationen aus einer ganz
+                    bestimmten Berliner Gegend abzufragen.
+                </p>
+                <!--p>Bitte teile uns einen Standort mit damit wir Dir Infos aus der Umgebung liefern k&ouml;nnen (A, B) oder nutze (C) unsere grafische Umkreissuche!</p-->
+                <div class="search-option a">
+                    <h1 id="a">A)</h1>
+                    <b>Deinen aktuellen Standort freigeben</b><br/>
+                    Mit Hilfe deines Web-Browsers kannst du einfach per Klick <a href="javascript:kiezatlas.get_browser_location()">deinen aktuellen Standort</a> als Ausgangspunkt f&uuml;r die Umkreissuche benutzen.
                 </div>
-            </div>
-            <div class="search-option c">
-                <h1 id="c">C)</h1>
-                <b>Grafische Umkreissuche auf der Karte</b><br/>
-                Du kannst den <i>grauen Kreis</i> auf der <a href="#karte">Karte</a> einfach
-                anfassen,
-                <i>
-                verschieben</i> und ggf. vergr&ouml;&szlig;ern. Probier es mal aus!
+                <div class="search-option b">
+                    <h1 id="b">B)</h1>
+                    <b>Name eines Platzes oder einer Stra&szlig;e eingeben</b><br/>
+                    Du kannst auch einfach den Namen eines Platzes oder einer Stra&szlig;e in Berlin eingeben.<br/>
+                    <div id="location-input">
+                        <form action="javascript:search_near_by_input()" id="near-by-form" accept-charset="UTF-8">
+                            <!-- label for="near-by" id="near-by-label">In der N&auml;he von</label-->
+                            <input id="near-by" type="text" placeholder="Stra&szlig;enname / Hnr." />
+                            <input id="do-nearby" type="submit" class="btn" value="Ok" />
+                            <div class="spinning-wheel">
+                                <img src="/de.kiezatlas.website/images/ajax-loader.gif" />
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <div class="search-option c">
+                    <h1 id="c">C)</h1>
+                    <b>Grafische Umkreissuche auf der Karte</b><br/>
+                    Du kannst den <i>grauen Kreis</i> auf der <a href="#karte">Karte</a> einfach
+                    anfassen,
+                    <i>
+                        verschieben</i> und ggf. vergr&ouml;&szlig;ern. Probier es mal aus!
+                </div>
             </div>
             <p>
                 <b>Tipp:</b> Eine Liste von Lieblingsstandorten kannst du mit unserer Favoriten-Funktion in deinem Browser speichern. Diese Standorte speichern wir dann nur in deinem Browser und nicht bei Kiezatlas.

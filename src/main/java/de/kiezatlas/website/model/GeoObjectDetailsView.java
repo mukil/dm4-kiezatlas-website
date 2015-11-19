@@ -14,9 +14,12 @@ import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 
 /**
+ * A data-transfer object wrapping a <code>Geo Object</code>.<br/>
+ * Used to display details about a place.
+
  *
- * @author Malte Reißig <malte@mikromedia.de>
- */
+ * @author Malte Reißig (<a href="mailto:malte@mikromedia.de">Contact</a>)
+ * */
 public class GeoObjectDetailsView implements JSONEnabled {
 
     GeoObjectView geoObjectView = null;

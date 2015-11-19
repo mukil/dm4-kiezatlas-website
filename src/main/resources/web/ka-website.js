@@ -3,20 +3,33 @@
  * 
  * @type @new;_L5
  */
-var kiezatlas = new function () {
+var kiezatlas = new function() {
     
     var _self = this
 
     this.default_radius = 750; /* radius in meters*/
     this.radius_control = undefined
+    // TODO: Increase max_bounds
     this.max_bounds = L.latLngBounds(L.latLng(52.298000, 12.909336), L.latLng(52.715646, 13.817779))
+
+    // kiezatlas hex colors
+    this.ka_blue = "#002856";
+    this.ka_red = "#8f1414";
+    this.ka_gold = "#EACA8F";
+    this.darkgrey = "#343434";
+    this.bright_grey = "#a9a9a9";
+    this.grey = "#868686";
+    this.yellow = "#FFCC00";
 
     this.current_location = { name: "Neuenburger Straße, Berlin", coordinate: new L.latLng(52.5, 13.4) }
     this.alternative_items = [] // near-by search street-alternatives
     this.autocomplete_item = 0
+    // Note: once a "district" set, no graphical query and circle dialog are available anymore
+    // & all further queries get the district parameter appended!
+    this.district = undefined
     //
-    this.LEVEL_OF_DETAIL_ZOOM = 15 // the map focus when a mapinternal infoWindow is rendered
-    this.LEVEL_OF_STREET_ZOOM = 14 // the map focus when a mapinternal infoWindow is rendered
+    this.LEVEL_OF_DETAIL_ZOOM = 15 // the map focus when a map internal info Window is rendered
+    this.LEVEL_OF_STREET_ZOOM = 14
     this.LEVEL_OF_KIEZ_ZOOM = 13
     this.LEVEL_OF_DISTRICT_ZOOM = 12
     this.LEVEL_OF_CITY_ZOOM = 11
@@ -34,10 +47,9 @@ var kiezatlas = new function () {
     // model of all geo-domain object in client
     this.items = []
     this.districts = []
-    this.subdistricts = []
-    this.db = undefined
+    this.db = undefined // Does not work with IE / Breaks support for IE
     
-    this.init_location_selection = function () {
+    this.init_location_selection = function() {
         //
         $('.search-option.a').on('touchend', handle_option_a)
         $('.search-option.a').on('click', handle_option_a)
@@ -49,7 +61,7 @@ var kiezatlas = new function () {
         $('.search-option.c').on('click', _self.handle_option_c)
 
         function handle_option_a (e) {
-            // initiaze map on browsers location
+            // initialize map on browsers location
             _self.init_map_dialog(true, null, true)
         }
 
@@ -65,32 +77,37 @@ var kiezatlas = new function () {
         if (zoomLevel) _self.map.setZoom(zoomLevel)
     }
 
-    this.handle_option_c = function (e) {
+    this.handle_option_c = function(e) {
         // initiate map with edible circle control
         _self.init_map_dialog(false, _self.LEVEL_OF_KIEZ_ZOOM, true)
     }
 
-    this.handle_option_b = function (e) {
+    this.handle_option_b = function(e) {
         // initiate map with edible circle control but focus on street
         _self.init_map_dialog(false, _self.LEVEL_OF_STREET_ZOOM, true)
     }
 
-    this.jump_to_map = function () {
+    this.jump_to_map = function(custom_anchor) {
         window.document.location.href = window.document.location.protocol + '//' + window.document.location.host + "/#karte"
+        if (custom_anchor) {
+            window.document.location.href = window.document.location.protocol + '//' + window.document.location.host + "/" + custom_anchor
+        }
     }
 
-    this.focus_location_input_field = function () {
+    this.focus_location_input_field = function() {
         // set focus on text input
         $('#location-input #near-by').focus()
     }
 
-    this.start_local_db = function () {
+    this.start_local_db = function() {
         // PouchDB.debug.enable('*')
         // PouchDB.debug.disable()
+        // TODO: Try/Catch and check if IE is supported!
         _self.db = new PouchDB('kiezatlas_favourites')
     }
     
-    this.add_entry_to_local_db = function () {
+    this.add_entry_to_local_db = function() {
+        // TODO; Use POST not PUT to auto-generate IDs
         // ### perform some kind of existence check
         get_next_id(function (next_id) {
             var entry = { _id : next_id, data: _self.current_location }
@@ -98,7 +115,7 @@ var kiezatlas = new function () {
             _self.list_entries_in_local_db()
         })
         
-        function get_next_id (handler) {
+        function get_next_id(handler) {
             _self.db.allDocs({include_docs: true})
                 .then(function (result) {
                     var next_id = parseInt(result.total_rows)
@@ -109,7 +126,7 @@ var kiezatlas = new function () {
         }
     }
     
-    this.list_entries_in_local_db = function () {
+    this.list_entries_in_local_db = function() {
         _self.db.allDocs({ include_docs: true, descending: true })
             .then(function (results) {
                 if (results.total_rows > 0) {
@@ -139,7 +156,7 @@ var kiezatlas = new function () {
             })
     }
 
-    this.go_to_location = function (object) {
+    this.go_to_location = function(object) {
         //
         if (typeof _self.map === "undefined") {
             _self.init_map_area('map', true)
@@ -154,43 +171,7 @@ var kiezatlas = new function () {
         _self.map.setView(_self.current_location.coordinate, _self.LEVEL_OF_STREET_ZOOM)
     }
 
-    this.query_districts = function () {
-        $.getJSON('/kiezatlas/bezirk',
-            function (districts) {
-                _self.districts = districts.sort(_self.value_sort_asc)
-                // console.log("ka_districts", _self.districts)
-                for (var i in _self.districts) {
-                    var district = _self.districts[i]
-                    var bezirke_html = '<li ' + 'class="bezirk">'
-                            bezirke_html += '<a class="link-out" id="' + district.id + '">' + district["value"] + '</a>'
-                        bezirke_html += '<ul class="bezirksregionen">'
-                        var subdistricts = district.childs.sort(_self.name_sort_asc)
-                        for (var k in subdistricts) {
-                            var region = subdistricts[k]
-                            // console.log("ka_subdistrict", region)
-                            bezirke_html += '<li><a id="' + region["id"] + '">' + region["name"] + '</a></li>'
-                        }
-                        bezirke_html += '</ul>'
-                        bezirke_html += '</li>'
-                    var $bezirke = $(bezirke_html)
-                    $('ul.bezirke').append($bezirke)
-                }
-            })
-    }
-
-    /** this.query_subdistricts = function () {
-        $.getJSON('/kiezatlas/bezirksregion',
-            function (districts) {
-                _self.subdistricts = districts.items.sort(_self.value_sort_asc)
-                // console.log("ka_subdistricts", _self.subdistricts)
-                for (var i in _self.subdistricts) {
-                    $('ul.bezirksregionen').append('<li id="'+_self.subdistricts[i].id+'" '
-                        + 'class="bezirksregion">' + _self.subdistricts[i].value + '</li>')
-                }
-            })
-    } **/
-    
-    this.init_map_area = function (dom_el_id) {
+    this.init_map_area = function(dom_el_id) {
         $('#map').empty()
         $('#map').addClass('outlined')
         $('#map').height('550px')
@@ -208,8 +189,9 @@ var kiezatlas = new function () {
         // initiate map
         this.map = new L.Map(dom_el_id, {
             dragging: true, touchZoom: true, scrollWheelZoom: false,
-            doubleClickZoom: true, zoomControl: false, minZoom: 9,
-            maxBounds: _self.max_bounds,
+            doubleClickZoom: true, zoomControl: false, minZoom: 9//,
+            // TODO: Increase max_bounds to not interfere with a locked circle
+            // maxBounds: _self.max_bounds,
         })
         // custom zoom control
         new L.control.zoom( { position: "topright" }).addTo(_self.map)
@@ -232,18 +214,94 @@ var kiezatlas = new function () {
         _self.map.on('locationfound', _self.on_location_found)
         _self.map.on('locationerror', _self.on_location_error) // ### just if user answers "never"
         _self.map.on('moveend', function(e) {
-            if (_self.isMapCircleLocked) {
+            if (_self.isMapCircleLocked && !_self.district) {
                 _self.query_geo_objects(undefined, undefined, _self.render_geo_objects)
+                _self.reverse_geocode()
             }
         })
         _self.map.on('move', function(e) {
-            if (_self.isMapCircleLocked) {
+            if (_self.isMapCircleLocked) { // #### && !_self.district
                 _self.current_location.coordinate = _self.map.getCenter()
                 _self.default_radius = _self.radius_control.getRadius()
-                _self.render_radius_control()
+                _self.render_radius_control(false)
             }
         })
         if (_self.isMapCircleLocked) $('.leaflet-editing-icon').hide() // ### duplicate, fix circle initialization
+        // ### && !_self.district
+    }
+
+    this.query_districts = function() {
+        $.getJSON('/kiezatlas/bezirk',
+            function (districts) {
+                _self.districts = districts.sort(_self.value_sort_asc)
+                // console.log("ka_districts", _self.districts)
+                for (var i in _self.districts) {
+                    var district = _self.districts[i]
+                    var bezirke_html = '<li ' + 'class="bezirk">'
+                            bezirke_html += '<a class="link-out" id="' + district.id
+                            + '" href="javascript:kiezatlas.render_district_page('+district.id+')">' + district["value"]
+                            + '</a>'
+                        bezirke_html += '<ul class="bezirksregionen">'
+                        var subdistricts = district.childs.sort(_self.name_sort_asc)
+                        for (var k in subdistricts) {
+                            var region = subdistricts[k]
+                            // console.log("ka_subdistrict", region)
+                            bezirke_html += '<li><a id="' + region["id"] + '">' + region["name"] + '</a></li>'
+                        }
+                        bezirke_html += '</ul>'
+                        bezirke_html += '</li>'
+                    var $bezirke = $(bezirke_html)
+                    $('ul.bezirke').append($bezirke)
+                }
+            })
+    }
+
+    this.render_district_page = function(topic_id) {
+        var bezirk = _self.get_bezirks_topic_by_id(topic_id)
+        console.log("rendering page for bezirk", bezirk)
+        // set page in "district" mode
+        _self.district = bezirk
+        // TODO: rewrite "unlock circle" label
+        $('div.legende').append('<a class="district-control" '
+            + 'href="javascript:kiezatlas.unset_district();">"Mitte" Filter aufheben</a>')
+        $('a.lock-control').text('Berlinweite Umkreissuche')
+        $('a.lock-control').click(_self.start_graphical_search)
+        // TODO: activate doubleClick to zoom on map
+        var anchor_name = '#' + encodeURIComponent(bezirk.value.toLowerCase())
+        _self.jump_to_map(anchor_name)
+        _self.remove_radius_control()
+        _self.show_spinning_wheel()
+        // _self.load_district_html()
+        _self.render_districts_layer()
+        // TODO: Query geo objects in a bunch of hundred items
+        $.getJSON('/kiezatlas/bezirk/' + topic_id, function (response) {
+            console.log("render all geo objects", response)
+            _self.clear_map_marker_group()
+            _self.hide_spinning_wheel()
+            _self.render_geo_objects(response, true)
+        })
+    }
+
+    this.render_districts_layer = function () {
+        // TODO: deactivate clicking on bezirks feature
+        $.getJSON('/de.kiezatlas.website/berlin_bezirke.geojson',
+            function (data) {
+                var geoJson = L.geoJson(data, {
+                    style: function (feature) {
+                        return {
+                            "color": _self.ka_red, "width" : 1, "dashArray" : "15, 10, 5, 10",
+                            "fillColor": "transparent", "fillOpacity": 0, "opacity": 0.2
+                        }
+                    },
+                    onEachFeature: function (feature, layer) {
+                        // console.log("GeoJSON Feature", feature)
+                        // layer.bindPopup(feature.properties["name"])
+                    }
+                }).addTo(_self.map)
+                // .geometryToLayer(data)
+                // _self.districtGroup
+            })
+        // _self.districtGroup.addTo(_self.map)
     }
 
     this.toggle_radius_control_lock = function(e) {
@@ -260,14 +318,9 @@ var kiezatlas = new function () {
         }
     }
 
-    /** this.render_districts_layer = function () {
-        // 
-        _self.districtGroup.addLayer(L.GeoJSON('/de.kiezatlas.website/berlin-districts.geojson',
-            function (data) {
-                console.log("GeoJSON Layer", data)
-            }))
-        _self.districtGroup.addTo(_self.map)
-    } */
+    this.toggle_location_menu = function() {
+        $('#main-menu .options').toggle()
+    }
 
     /** object.name, object.lat, object.lng */
     this.update_current_location_label = function (hideStarButton) {
@@ -302,33 +355,43 @@ var kiezatlas = new function () {
             _self.controlGroup.removeLayer(_self.radius_control)
             _self.map.removeLayer(_self.controlGroup)
         }
-        _self.radius_control = new L.CircleEditor(_self.current_location.coordinate, _self.default_radius, {
-            color: "#343434", weight: 3, fillColor: "#FFCC33", /** #666 **/
-            fillOpacity: .1, extendedIconClass: "extend-icon-medium",
-            className: "leaflet-radius-control", clickable: false, zIndexOffset: 101
-        })
-        // add raduis control to map
-        _self.controlGroup.addLayer(_self.radius_control)
-        _self.controlGroup.addTo(_self.map)
-        // add event handler to radius control
-        _self.radius_control.on('edit', function (event) {
-            // fire a new query
-            var new_radius = event.target._mRadius
-            _self.current_location.coordinate.lat = event.target._latlng.lat
-            _self.current_location.coordinate.lng = event.target._latlng.lng
-            // console.log("Update circle position event TO", event, _self.current_location)
-            // ### on small screens (here, after dragging) our current center should be the mapcenter (fitBounds..)
-            _self.query_geo_objects(event.target._latlng, new_radius, _self.render_geo_objects)
-            _self.reverse_geocode()
-        })
-        // update viewport to the programmatically set radius-control
-        if (fitBounds) {
-            // _self.map.fitBounds(_self.controlGroup.getBounds())
-            _self.map.setView(
-                _self.controlGroup.getBounds().getCenter(),
-                _self.LEVEL_OF_STREET_ZOOM)
+        if (!_self.district) {
+            console.log("working in freestyle mode, no district set!")
+            _self.radius_control = new L.CircleEditor(_self.current_location.coordinate, _self.default_radius, {
+                color: _self.yellow, weight: 3, fillColor: _self.yellow, fillOpacity: 0,
+                fillOpacity: .1, extendedIconClass: "extend-icon-medium",
+                className: "leaflet-radius-control", clickable: false, zIndexOffset: 101
+            })
+            // add raduis control to map
+            _self.controlGroup.addLayer(_self.radius_control)
+            _self.controlGroup.addTo(_self.map)
+            // add event handler to radius control
+            _self.radius_control.on('edit', function (event) {
+                // fire a new query
+                var new_radius = event.target._mRadius
+                _self.current_location.coordinate.lat = event.target._latlng.lat
+                _self.current_location.coordinate.lng = event.target._latlng.lng
+                // console.log("Update circle position event TO", event, _self.current_location)
+                // ### on small screens (here, after dragging) our current center should be the mapcenter (fitBounds..)
+                _self.query_geo_objects(event.target._latlng, new_radius, _self.render_geo_objects)
+                _self.reverse_geocode()
+            })
+            // update viewport to the programmatically set radius-control
+            if (fitBounds) {
+                // _self.map.fitBounds(_self.controlGroup.getBounds())
+                _self.map.setView(
+                    _self.controlGroup.getBounds().getCenter(),
+                    _self.LEVEL_OF_STREET_ZOOM)
+            }
+            if (_self.isMapCircleLocked) $('.leaflet-editing-icon').hide()
         }
-        if (_self.isMapCircleLocked) $('.leaflet-editing-icon').hide()
+    }
+
+    this.remove_radius_control = function() {
+        if (typeof _self.radius_control !== "undefined") {
+            _self.controlGroup.removeLayer(_self.radius_control)
+            _self.map.removeLayer(_self.controlGroup)
+        }
     }
 
     this.query_geo_objects = function (location, radius, success) {
@@ -379,39 +442,28 @@ var kiezatlas = new function () {
         $('#marker-name').hide()
     }
 
+    this.clear_map_marker_group = function() {
+        _self.markerGroup.eachLayer(function (marker){
+            _self.map.removeLayer(marker)
+        })
+        _self.markerGroup = undefined
+    }
+
     this.render_geo_objects = function (data, set_view_to_bounds) {
         // ### if we do not clear markers (which would be nice), we should not render any duplicates ..
         var list_of_markers = []
+        // TODO: Keep previously selected markers (when in range)
+        // -- PREPARE NEW MARKER
         for (var el in data) {
-            var result = data[el]
-            if (result.hasOwnProperty("geo_coordinate_lat") && 
-                result.hasOwnProperty("geo_coordinate_lon")) { // client-side sanity check of search results
-                var coordinate = L.latLng(result["geo_coordinate_lat"], result["geo_coordinate_lon"])
-                /** brighter blue #5a78f3, blue: "#1944fc" **/
-                var circle = L.circleMarker(coordinate, {
-                        color: "#FFCC33", strokeOpacity: 1, weight: 2, opacity: .5, fillColor: "#FC3", title: result["name"],
-                        alt: "Markierung von " + result["name"], location_id: result["address_id"],
-                        geo_object_id: result["id"], uri: result["uri"], name: result["name"],// riseOnHover: true,
-                        bezirksregion_uri: result["bezirksregion_uri"], z_indexOffset: 1001
-                    })// .bindPopup('<b>' + result["name"] + '</b>')
-                // ### Level: 14 > 8px e.g. Level: 13 > 5px
-                circle.setRadius(10)
-                circle.on('click', function (e) {
-                    _self.select_map_entry(e.target)
-                })
-                circle.on('mouseover', function (e) {
-                    // ### display all geo_objects at this markers location
-                    var geo_objects_under_marker = _self.find_all_geo_objects(e.target.options['location_id'])
-                    // console.log("hovering all", geo_objects_under_marker)
-                    _self.show_marker_name_info(geo_objects_under_marker)
-                })
-                circle.on('mouseout', function (e) {
-                    _self.hide_marker_name_info()
-                })
-                    // ### on hover show name in In-Map detail-window
-                list_of_markers.push(circle)
+            var geo_object= data[el]
+            if (geo_object == null || !geo_object) {
+                console.warn("Skipping geo object response entry [" + el+ "]", geo_object)
+            } else {
+                var circle_marker = _self.create_circle_marker(geo_object)
+                list_of_markers.push(circle_marker)
             }
         }
+        // -- MERGE EXISTING WITH NEW MARKER
         // maintain also all previously added markers
         if (typeof _self.markerGroup !== "undefined") {
             _self.markerGroup.eachLayer(function (marker) {
@@ -420,6 +472,7 @@ var kiezatlas = new function () {
                 }
             })
         }
+        // -- FINALIZE ALL MARKER IN NEW MARKER GROUP
         // create updated/new feature/markerGroup
         _self.markerGroup = L.featureGroup(list_of_markers)
         _self.markerGroup.addTo(_self.map)
@@ -429,12 +482,46 @@ var kiezatlas = new function () {
         }
     }
 
+    this.create_circle_marker = function(geo_object) {
+        if (geo_object.hasOwnProperty("geo_coordinate_lat") ||
+            geo_object.hasOwnProperty("geo_coordinate_lon")) { // client-side sanity check of search results
+            var result = geo_object // ### refactor name
+            var coordinate = L.latLng(result["geo_coordinate_lat"], result["geo_coordinate_lon"])
+            /** brighter blue #5a78f3, blue: "#1944fc" yellow: "#FFCC33"**/
+            var circle = L.circleMarker(coordinate, {
+                    color: _self.grey, strokeOpacity: 1, weight: 2, opacity: .5,
+                    fillColor: _self.grey, fillOpacity: .2, title: result["name"],
+                    alt: "Markierung von " + result["name"], location_id: result["address_id"],
+                    geo_object_id: result["id"], uri: result["uri"], name: result["name"],// riseOnHover: true,
+                    bezirksregion_uri: result["bezirksregion_uri"], z_indexOffset: 1001
+                })// .bindPopup('<b>' + result["name"] + '</b>')
+            // ### Level: 14 > 8px e.g. Level: 13 > 5px
+            circle.setRadius(10)
+            circle.on('click', function (e) {
+                _self.select_map_entry(e.target)
+            })
+            circle.on('mouseover', function (e) {
+                // ### display all geo_objects at this markers location
+                var geo_objects_under_marker = _self.find_all_geo_objects(e.target.options['location_id'])
+                // console.log("hovering all", geo_objects_under_marker)
+                _self.show_marker_name_info(geo_objects_under_marker)
+            })
+            circle.on('mouseout', function (e) {
+                _self.hide_marker_name_info()
+            })
+            return circle
+        } else {
+            console.warn("Could not create circle marker caused by missing geo coordinates")
+        }
+    }
+
     this.select_map_entry = function (marker) {
         _self.markerGroup.eachLayer(function (el) {
-            el.setStyle({ color: "#FFCC33", fillColor: "#FC3" })
+            el.setStyle({ color: _self.grey, fillColor: _self.grey, fillOpacity: .2 })
             if (el.options['geo_object_id'] === marker.options['geo_object_id']) {
                 // ### adding class name to path does not work
-                marker.setStyle({ color: "#1944fc", weight: 3, fillColor: "#1944fc", className: "selected" })
+                marker.setStyle({ color: _self.grey, weight: 4, opacity: .7,
+                fillColor: _self.yellow, fillOpacity: 1, className: "selected" })
                 // marker.redraw()
             }
         })
@@ -490,8 +577,11 @@ var kiezatlas = new function () {
                                     + geo_object.address_name.toString() + '<br/>'
                                     + '' + body_text + ''
                                 + '</p>'
-                                + '<a href="http://www.kiezatlas.de/map/'+web_alias+'/p/'+topic_id+'">Mehr Infos im Stadtplan</a>'
-                                + '<a href="https://fahrinfo.bvg.de/Fahrinfo/bin/query.bin/dn?Z='+geo_object.address_name.toString()+'&REQ0JourneyStopsZA1=2&start=1&pk_campaign=_self.de"><img src="/de.kiezatlas.website/images/fahrinfo.gif"></a>'
+                                + '<a href="http://www.kiezatlas.de/map/'+web_alias+'/p/'+topic_id+'" title="Diesen'
+                                    + ' Datensatz in seinem ursprünglichen Stadtplan anzeigen">Details im Stadtplan</a>'
+                                + '<a href="https://fahrinfo.bvg.de/Fahrinfo/bin/query.bin/dn?Z=' + geo_object.address_name.toString()
+                                    + '&REQ0JourneyStopsZA1=2&start=1&pk_campaign=_self.de">'
+                                    + '<img src="/de.kiezatlas.website/images/fahrinfo.gif"></a>'
                                 + '</div>'
                                 + imprint_html
                             + '</div>')   
@@ -517,6 +607,13 @@ var kiezatlas = new function () {
         for (var i in _self.districts) {
             var element = _self.districts[i]
             if (element.uri === uri) return element
+        }
+    }
+
+    this.get_bezirks_topic_by_id = function(id) {
+        // console.log("Searching for bezirk in", _self.districts)
+        for (var i in _self.districts) {
+            if (_self.districts[i].id === id) return _self.districts[i]
         }
     }
 

@@ -10,8 +10,10 @@ import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 
 /**
+ * A data-transfer object wrapping a <code>Geo Object</code> displayable on a map.<br/>
+ * Used as index to more detailed data.
  *
- * @author Malte Reißig <malte@mikromedia.de>
+ * @author Malte Reißig (<a href="mailto:malte@mikromedia.de">Contact</a>)
  */
 public class GeoObjectView implements JSONEnabled {
 

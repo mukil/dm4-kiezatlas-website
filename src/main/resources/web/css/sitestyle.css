@@ -492,8 +492,23 @@ h1.my-title {
 #main-menu {
     width: 100%;
     text-align: center;
-    margin-top: 70px;
     margin-bottom: 40px;
+}
+
+#main-menu h3 {
+    font-weight: normal;
+}
+
+#main-menu h3 a {
+    cursor: pointer;
+    padding: 10px;
+    border: 1px solid #EACA8F;
+    background-color: #fff;
+}
+
+
+#main-menu .options {
+    display:none;
 }
 
 #karte {
@@ -731,6 +746,12 @@ div.legende img {
     top: 1px;
 }
 
+div.legende a.district-control {
+    position: absolute;
+    right: 215px;
+    bottom: 12px;
+}
+
 div.legende a.lock-control {
     position: absolute;
     right: 10px;
@@ -771,6 +792,15 @@ div.link-area {
 }
 
 @media(max-width:900px) {
+    #main-menu h3 {
+        border: 1px solid #EACA8F;
+        background-color: #fff;
+        padding: 10px;
+    }
+    #main-menu h3 a {
+        border: 1px solid #fff;
+        padding: 7px;
+    }
     .search-option {
         margin-left: 0px;
         margin-right: 0px;

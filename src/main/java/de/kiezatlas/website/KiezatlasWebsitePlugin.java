@@ -38,9 +38,13 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 
 /**
- * @author Malte Reißig (<malte@mikromedia.de>)
- * @website http://github.com/mukil/dm4-kiezatlas-website
- * @version 0.2-SNAPSHOT - compatible with DeepaMehta 4.4
+ * The module shipping the Kiezatlas 2 Website.<br/>
+ * Based on dm44-kiezatlas-2.1.6 and dm44-kiezatlas-etl-0.0.2<br/>
+ * Compatible with DeepaMehta 4.4.
+ * <a href="http://github.com/mukil/dm4-kiezatlas-website">Source Code</a>
+ *
+ * @author Malte Reißig (<a href="mailto:malte@mikromedia.de">Contact</a>)
+ * @version 0.2-SNAPSHOT
  */
 @Path("/kiezatlas")
 @Consumes(MediaType.APPLICATION_JSON)

@@ -1,4 +1,6 @@
 /target/
 .idea
 *iml
-
+src/main/resources/web/images/unused/
+*flick
+*flick.zip
