@@ -115,27 +115,65 @@ public class KiezatlasWebsitePlugin extends PluginActivator {
     @Path("/search")
     @Transactional
     public List<GeoObjectView> searchGeoObjectTopics(@HeaderParam("Referer") String referer,
-													 @QueryParam("search") String query) {
+                                                     @QueryParam("search") String query) {
         if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
+        // TODO: Maybe it is also desirable that we wrap the users query into quotation marks
+        // (to allow users to search for a combination of words)
         try {
-            log.log(Level.INFO, "> query=\"{0}\"", query);
             ArrayList<GeoObjectView> results = new ArrayList<GeoObjectView>();
             if (query.isEmpty()) {
                 log.warning("No search term entered, returning empty resultset");
                 return results;
             }
-            List<Topic> singleTopics = dms.searchTopics(query, null);
-            log.log(Level.INFO, "{0} topics found", singleTopics.size());
+            List<Topic> singleTopics = searchInGeoObjectChildsByText(query);
+            // iterate over merged results
             for (Topic topic : singleTopics) {
-                if (topic.getTypeUri().equals("ka2.geo_object.name")) {
-                    Topic geoObject = topic.getRelatedTopic("dm4.core.composition",
-                        "dm4.core.child", "dm4.core.parent", "ka2.geo_object");
+                // check for geo object as aggregated or composite parent
+                Topic geoObject = getGeoObjectParentTopic(topic);
+                if (geoObject != null) {
                     results.add(new GeoObjectView(geoObject, geomapsService));
                 } else {
                     log.log(Level.INFO, "### NO Geo Object MATCH for query="+query+", just a "+topic.getTypeUri()
                             +"-data-entry");
                 }
             }
+            log.info("Filtered " + results.size() + " geo objects across all districts");
+            return results;
+        } catch (Exception e) {
+            throw new RuntimeException("Searching geo object topics failed", e);
+        }
+    }
+
+    @GET
+    @Path("/search/{districtId}")
+    @Transactional
+    public List<GeoObjectView> searchGeoObjectTopicsInDistrict(@HeaderParam("Referer") String referer,
+                                                               @PathParam ("districtId") long districtId,
+                                                               @QueryParam("search") String query) {
+        if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
+        try {
+            ArrayList<GeoObjectView> results = new ArrayList<GeoObjectView>();
+            if (query.isEmpty()) {
+                log.warning("No search term entered, returning empty resultset");
+                return results;
+            }
+            List<Topic> nameResults = searchInGeoObjectChildsByText(query);
+            log.info("Found " + nameResults.size() + " overall results for \""+query+"\". Filter by district now.");
+            // iterate over merged results
+            for (Topic resultEntry : nameResults) {
+                // check for geo object as aggregated or composite parent
+                Topic geoObject = getGeoObjectParentTopic(resultEntry);
+                if (geoObject != null) {
+                    // check for district
+                    if (hasRelatedBezirk(geoObject, districtId)) {
+                        results.add(new GeoObjectView(geoObject, geomapsService));
+                    }
+                } else {
+                    log.log(Level.INFO, "### NO Geo Object MATCH for query="+query+", just a "+resultEntry.getTypeUri()
+                            +"-data-entry");
+                }
+            }
+            log.info("Filtered " + results.size() + " geo objects in district=\""+districtId+"\"");
             return results;
         } catch (Exception e) {
             throw new RuntimeException("Searching geo object topics failed", e);
@@ -282,7 +320,34 @@ public class KiezatlasWebsitePlugin extends PluginActivator {
 
     // --- Private Utility Methods
 
-    private boolean isValidReferer (String ref) {
+    private List<Topic> searchInGeoObjectChildsByText(String query) {
+        // ### Todo: Fetch for ka2.ansprechpartner, dm4.tags.tag and maybe category-names too
+        List<Topic> nameResults = dms.searchTopics(query, "ka2.geo_object.name");
+        List<Topic> descrResults = dms.searchTopics(query, "ka2.beschreibung"); // Todo: check index modes
+        List<Topic> stichworteResults = dms.searchTopics(query, "ka2.stichworte"); // Todo: check index modes
+        // List<Topic> sonstigesResults = dms.searchTopics(query, "ka2.sonstiges");
+        // List<Topic> traegerNameResults = dms.searchTopics(query, "ka2.traeger.name");
+        log.info("> " + nameResults.size() + ", "+ descrResults.size() +", "+stichworteResults.size()
+                + " results in three types for query=\""+query+"\" in DISTRICT");
+        // merge search results
+        nameResults.addAll(descrResults);
+        nameResults.addAll(stichworteResults);
+        return nameResults;
+    }
+
+    private Topic getGeoObjectParentTopic(Topic entry) {
+        return entry.getRelatedTopic(null, "dm4.core.child", "dm4.core.parent", "ka2.geo_object");
+    }
+
+    private boolean hasRelatedBezirk(Topic geoObject, long bezirksId) {
+        Topic relatedBezirk = geoObject.getRelatedTopic("dm4.core.aggregation", "dm4.core.parent",
+                "dm4.core.child", "ka2.bezirk");
+        if (relatedBezirk == null) return false;
+        if (relatedBezirk.getId() == bezirksId) return true;
+        return false;
+    }
+
+    private boolean isValidReferer(String ref) {
         if (ref == null) return false;
         if (ref.contains(".kiezatlas.de/") ||  ref.contains("localhost")) {
             return true;

@@ -33,6 +33,10 @@ public class GeoObjectView implements JSONEnabled {
         getGeoCoordinate(geomaps);
     }
 
+    public String getName() {
+        return this.geoObject.getSimpleValue().toString();
+    }
+
     public Topic getBezirksregion() {
         bezirksregion = geoObject.getRelatedTopic("dm4.core.aggregation", "dm4.core.parent",
                 "dm4.core.child", "ka2.bezirksregion"); // ### many?
@@ -131,7 +135,7 @@ public class GeoObjectView implements JSONEnabled {
             return new JSONObject()
                     .put("uri", geoObject.getUri())
                     .put("id", geoObject.getId())
-                    .put("name", geoObject.getSimpleValue().toString())
+                    .put("name", getName())
                     .put("address_id", getAggregatedAddressTopicId())
                     .put("geo_coordinate_lat", getGeoCoordinateLatValue())
                     .put("geo_coordinate_lon", getGeoCoordinateLngValue())

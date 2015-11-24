@@ -35,11 +35,11 @@
                 // kiezatlas.query_subdistricts()
             })
             
-            /** function search_fulltext() {
+            function search_fulltext() {
                 var query = $("#fulltext").val()
                     query = encodeURIComponent(query, "UTF-8")
                 kiezatlas.search_geo_objects(query, kiezatlas.render_geo_objects)
-            } **/
+            }
             
             function search_near_by_input () {
                 var streetFocus = $("#near-by").val() + ' Berlin'
@@ -168,13 +168,13 @@
         </div>
 
         <div id="filter-container">
-            <!-- div id="fulltext-input">
+            <div id="fulltext-input">
                 <form action="javascript:search_fulltext()" id="fulltext-form" accept-charset="UTF-8">
                     <label for="fulltext" id="fulltext-label">Volltextsuche</label>
                     <input id="fulltext" type="text" placeholder="Name"></input>
                     <input id="do-search" type="submit" class="btn" value="Ok"></input>
                 </form>
-            </div-->
+            </div>
         </div>
 
         <div id="karte">
@@ -215,7 +215,7 @@
         </div>
 
         <div id="main-menu">
-            <h3><a href="javascript:kiezatlas.toggle_location_menu();">In der N&auml;he von</a>...</h3>
+            <h3><a href="javascript:kiezatlas.toggle_location_menu();">In der N&auml;he von...</a></h3>
             <div class="options">
                 <p>
                     Du hast drei M&ouml;glichkeiten um mit unserer Umkreissuche Informationen aus einer ganz

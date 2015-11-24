@@ -189,7 +189,7 @@ var kiezatlas = new function() {
         // initiate map
         this.map = new L.Map(dom_el_id, {
             dragging: true, touchZoom: true, scrollWheelZoom: false,
-            doubleClickZoom: true, zoomControl: false, minZoom: 9//,
+            doubleClickZoom: false, zoomControl: false, minZoom: 9//,
             // TODO: Increase max_bounds to not interfere with a locked circle
             // maxBounds: _self.max_bounds,
         })
@@ -258,13 +258,14 @@ var kiezatlas = new function() {
 
     this.render_district_page = function(topic_id) {
         var bezirk = _self.get_bezirks_topic_by_id(topic_id)
-        console.log("rendering page for bezirk", bezirk)
+        console.log("set district filter to", bezirk.value)
         // set page in "district" mode
         _self.district = bezirk
-        // TODO: rewrite "unlock circle" label
+        // TODO: rewrite filter button container
         $('div.legende').append('<a class="district-control" '
-            + 'href="javascript:kiezatlas.unset_district();">"Mitte" Filter aufheben</a>')
+            + 'href="javascript:kiezatlas.unset_district();">"'+bezirk.value+'" Filter aufheben</a>')
         $('a.lock-control').text('Berlinweite Umkreissuche')
+        // TODO: implement start_graphical_search
         $('a.lock-control').click(_self.start_graphical_search)
         // TODO: activate doubleClick to zoom on map
         var anchor_name = '#' + encodeURIComponent(bezirk.value.toLowerCase())
@@ -272,7 +273,7 @@ var kiezatlas = new function() {
         _self.remove_radius_control()
         _self.show_spinning_wheel()
         // _self.load_district_html()
-        _self.render_districts_layer()
+        // _self.render_districts_layer()
         // TODO: Query geo objects in a bunch of hundred items
         $.getJSON('/kiezatlas/bezirk/' + topic_id, function (response) {
             console.log("render all geo objects", response)
@@ -280,6 +281,12 @@ var kiezatlas = new function() {
             _self.hide_spinning_wheel()
             _self.render_geo_objects(response, true)
         })
+    }
+
+    this.unset_district = function() {
+        // reset district filter for subsequent fulltext-searches
+        _self.district = undefined
+        // Todo: plus all the rest
     }
 
     this.render_districts_layer = function () {
@@ -416,15 +423,23 @@ var kiezatlas = new function() {
     }
 
     this.search_geo_objects = function (text, success) {
+        // TODO: maybe we should encode the search query
+        var queryUrl = '/kiezatlas/search/?search='+text
+        if (_self.district) {
+            queryUrl = '/kiezatlas/search/'+_self.district.id+'/?search='+text;
+        }
         _self.show_spinning_wheel()
-        $.getJSON('/kiezatlas/search/?search='+encodeURIComponent(text), 
+        $.getJSON(queryUrl,
             function (geo_objects) {
+                console.log("> Text based search returned", geo_objects)
+                // TODO: If search results are zero
                 _self.items = geo_objects
                 if (typeof success !== "undefined") {
                     // clear markers after fulltext-search
-                    _self.clear_markers()
+                    _self.clear_map_marker_group()
                     _self.hide_spinning_wheel()
-                    success(geo_objects, true) // ####
+                    // TODO: for resultsets bigger than 100 implement a incremental rendering method
+                    _self.render_geo_objects(geo_objects, true)
                 }
             })
     }
@@ -539,7 +554,7 @@ var kiezatlas = new function() {
                     if (typeof geo_object !== "undefined") {
                         if (typeof geo_object.bezirksregion_uri !== "undefined") {
                             // ### just render item if data has bezirksregion set
-                            console.log("entry_view", geo_object)
+                            // console.log("entry_view", geo_object)
                             // construct resp. impressum
                             var imprint_html = _self.get_imprint_html(geo_object)
                             // make linkage work
