@@ -47,7 +47,7 @@
                 var query = $("#fulltext-search").val()
                 if (query.length >= 1) {
                     query = encodeURIComponent(query + "*", "UTF-8")
-                    kiezatlas.search_geo_objects(query, kiezatlas.render_geo_objects)
+                    kiezatlas.do_text_search_geo_objects(query, kiezatlas.render_geo_objects)
                 } else {
                     console.log("Text query was empty, skipping search")
                 }
@@ -95,8 +95,8 @@
                         kiezatlas.current_location.name = item['formatted_address']
                         kiezatlas.update_current_location_label()
                         kiezatlas.handle_option_b()
-                        kiezatlas.render_radius_control()
-                        kiezatlas.query_geo_objects(undefined, undefined, kiezatlas.render_geo_objects)
+                        kiezatlas.render_circle_search_control()
+                        kiezatlas.do_circle_search(undefined, undefined, kiezatlas.render_geo_objects)
                         kiezatlas.map.setView(kiezatlas.current_location.coordinate, kiezatlas.LEVEL_OF_STREET_ZOOM)
                         // $("#near-by").val(item['formatted_address'])
                         // Display location
@@ -192,7 +192,6 @@
             </div>
 
             <!-- Leaflet Area -->
-            <div id="marker-name"></div>
             <div id="map" class="fullsize"></div>
 
             <!--- Filter & Map Controls Area -->
@@ -208,7 +207,7 @@
                         <input id="fulltext-do" type="submit" class="btn" value="Suchen" />
                     </form>
                 </div>
-                <a href="javascript:kiezatlas.toggle_radius_control_lock()" class="lock-control">Unlock Circle</a>
+                <a href="javascript:kiezatlas.toggle_circle_search_lock_button()" class="lock-control">Unlock Circle</a>
             </div>
 
         </div>

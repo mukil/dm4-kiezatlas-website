@@ -394,7 +394,7 @@ h1.my-title {
     padding: 15px;
     background-color: #EAEAEA;
     display: none;
-    min-height: 300px;
+    min-height: 200px;
 }
 
 #detail-area .entry-card {
@@ -460,6 +460,8 @@ h1.my-title {
 
 #fulltext-search-form input[type="text"] {
     margin-left: 15px;
+    width: 360px;
+    margin-right: 5px;
 }
 
 #fulltext-search-form input,
@@ -586,7 +588,7 @@ h1.my-title {
     display: none;
     border-radius: 2px;
     position: absolute;
-    top: 85px;
+    top: 10px;
     left: 10px;
     background: #fff;
     z-index: 2000;
@@ -763,6 +765,7 @@ div.legende {
 div.legende .text-search-control {
     display: inline-block;
     margin: auto;
+    margin-right: 100px;
 }
 
 div.legende .text-search-control img {
@@ -799,12 +802,20 @@ div.link-area {
   position: relative; top: -25px; left: 25px;
 } **/
 
-/** Portrait, most smartphones. */
 @media(min-width: 1600px) {
     #karte {
         max-width: 70%;
         margin-left: auto;
         margin-right: auto;
+    }
+}
+
+@media(max-width: 1200px) {
+    div.legende {
+        text-align: left;
+    }
+    #fulltext-search-form input[type="text"] {
+        width: 230px;
     }
 }
 
