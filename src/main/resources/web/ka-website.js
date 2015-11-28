@@ -439,6 +439,7 @@ var kiezatlas = new function() {
                 return undefined
             }
             if (geo_object["bezirksregion_uri"] == "") {
+                console.info("Invalid Geo Object - Missing Bezirksregion URI", geo_object["name"])
                 return undefined
             }
             // start creating marker
@@ -496,11 +497,10 @@ var kiezatlas = new function() {
         var description = geo_object.beschreibung
         var contact = geo_object.kontakt
         var opening_hours = geo_object.oeffnungszeiten
+        var lor_link = _self.get_lor_link(geo_object)
         // build up dom for geo object details
         var body_text = ""
-        if (typeof description !== "undefined") {
-            body_text += '<p><b>Info</b> ' + description + '</p>'
-        }
+        // if (description) body_text += '<p><b>Info</b> ' + description + '</p>'
         if (typeof contact !== "undefined" && contact.value.length > 0) {
             // var fax = undefined, email = undefined, telefon = undefined, person = undefined
             var contact_text = "<br/>"
@@ -531,6 +531,7 @@ var kiezatlas = new function() {
                 + '&REQ0JourneyStopsZA1=2&start=1&pk_campaign=_self.de">'
                 + '<img src="/de.kiezatlas.website/images/fahrinfo.gif"></a>'
             + '</div>'
+            + lor_link
             + imprint_html
         + '</div>')
     }
@@ -588,14 +589,20 @@ var kiezatlas = new function() {
 
     this.get_imprint_html = function(entry) {
         var bezirk = _self.get_bezirks_topic(entry.bezirk_uri)
-        // console.log("found bezirk", bezirk, bezirk.imprint)
         var html = '<div class="imprint">'
             + '<a href="' + bezirk.imprint + '" title="Impressum: Bezirksamt ' + bezirk.value + '">Impressum</a></div>'
         return html
     }
 
+    this.get_lor_link = function(entry) {
+        if (!entry.hasOwnProperty("lor_id")) return ""
+        var html = '<div class="lor-link">'
+            + '<a href="http://sozialraumdaten.kiezatlas.de/seiten/2014/12/?lor=' + entry.lor_id
+            + '" title="zur Einwohnerstatistik des Raums (LOR Nr. ' + entry.lor_id +')">Sozialraumdaten</a></div>'
+        return html
+    }
+
     this.get_bezirks_topic = function(uri) {
-        // console.log("Searching for bezirk in", _self.districts)
         for (var i in _self.districts) {
             var element = _self.districts[i]
             if (element.uri === uri) return element
@@ -856,6 +863,7 @@ var kiezatlas = new function() {
         if (_self.district) {
             queryUrl = '/kiezatlas/search/'+_self.district.id+'/?search='+text;
         }
+        _self.clear_details_area()
         _self.show_spinning_wheel()
         $.getJSON(queryUrl,
             function (geo_objects) {

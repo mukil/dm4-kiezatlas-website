@@ -60,7 +60,7 @@ public class BezirkView implements JSONEnabled {
                 imprint = link.getSimpleValue().toString();
             } else if (link == null) {
                 log.warning("### Fallback because district \"" + this.topic.getSimpleValue() + "\" has now \"Web " +
-                        "Resource\" associated (default, default) which we could use as an Imprint!");
+                        "Resource\" associated (default, default) which we could use as an IMPRINT!");
             }
             this.json.put("imprint", imprint);
             this.json.put("value", getBezirksname());

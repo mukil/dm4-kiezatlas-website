@@ -394,16 +394,19 @@ h1.my-title {
     padding: 15px;
     background-color: #EAEAEA;
     display: none;
-    min-height: 200px;
+    min-height: 300px;
+    margin-bottom: 70px;
 }
 
 #detail-area .entry-card {
     display: inline-block;
     vertical-align: top;
     min-width: 320px;
-    max-width: 640px;
+    max-width: 370px;
     text-align: left;
-    margin: 30px;
+    margin: 10px 20px 10px 20px;
+    font-size: 1em;
+    position: relative;
 }
 
 #detail-area .entry-card h3 {
@@ -413,9 +416,15 @@ h1.my-title {
 }
 
 #detail-area .entry-card .imprint {
-    text-align: right;
-    /** padding-right: 5px; **/
-    padding-top: 7px;
+    position: absolute;
+    bottom: -30px;
+    right: 15px;
+}
+
+#detail-area .entry-card .lor-link {
+    position: absolute;
+    bottom: -30px;
+    left: 15px;
 }
 
 #detail-area .details {
@@ -462,6 +471,12 @@ h1.my-title {
     margin-left: 15px;
     width: 360px;
     margin-right: 5px;
+    border: #eaeaea solid 1px;
+    color: #343434;
+}
+
+#fulltext-search-form input[type="submit"] {
+    padding: 3px;
 }
 
 #fulltext-search-form input,
@@ -513,7 +528,6 @@ h1.my-title {
     width: 100%;
     text-align: center;
     margin-bottom: 40px;
-    /** top: 0px; **/
 }
 
 #main-menu h3 {
@@ -594,6 +608,7 @@ h1.my-title {
     z-index: 2000;
     max-width: 300px;
     padding: 10px;
+    text-align: left;
 }
 
 #location-input .spinning-wheel {
@@ -947,13 +962,23 @@ div.link-area {
     }
 }
 
-@media (max-height:1300px) {
+@media (min-height:1201px) {
     #karte {
         top: 30px;
         padding-top: 0px;
     }
     #map {
-        height: 450px !important;
+        height: 650px !important;
+    }
+}
+
+@media (max-height:1200px) {
+    #karte {
+        top: 30px;
+        padding-top: 0px;
+    }
+    #map {
+        height: 550px !important;
     }
 }
 

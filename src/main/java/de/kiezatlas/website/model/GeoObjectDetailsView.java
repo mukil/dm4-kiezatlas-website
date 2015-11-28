@@ -52,7 +52,7 @@ public class GeoObjectDetailsView implements JSONEnabled {
             "dm4.core.child", "ka2.kontakt");
         this.opening_hours = geoObject.getRelatedTopic("dm4.core.composition", "dm4.core.parent",
             "dm4.core.child", "ka2.oeffnungszeiten");
-        this.lor_nr = geoObject.getRelatedTopic("dm4.core.composition", "dm4.core.parent",
+        this.lor_nr = geoObject.getRelatedTopic("dm4.core.aggregation", "dm4.core.parent",
             "dm4.core.child", "ka2.lor_nummer");
     }
 
