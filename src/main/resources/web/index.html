@@ -21,27 +21,40 @@
         <script src="/de.kiezatlas.website/ka-website.js"></script>
 
         <script type="text/javascript">
-            
+
+            // App initialization
             $(document).ready(function(e) {
-                // kiezatlas.init_map_area('map')
-                kiezatlas.start_local_db()
-                kiezatlas.list_entries_in_local_db()
-                kiezatlas.init_location_selection()
-                //
-                kiezatlas.init_map_dialog(true, undefined, false)
-                // kiezatlas.update_current_location_label(true) // implicitly queries for geo_objects
-                // ### kiezatlas.render_location_button()
-                kiezatlas.query_districts()
-                // kiezatlas.query_subdistricts()
+                if (!isMSIE()) {
+                    kiezatlas.start_local_db()
+                    kiezatlas.list_entries_in_local_db()
+                } else {
+                    // ### Update GUI accordingly
+                    console.warn("Favourite places feature is unavailable for users of Microsoft Internet Explorer")
+                }
+                // render all components of the page requested
+                kiezatlas.render_page()
             })
-            
-            function search_fulltext() {
-                var query = $("#fulltext").val()
-                    query = encodeURIComponent(query, "UTF-8")
-                kiezatlas.search_geo_objects(query, kiezatlas.render_geo_objects)
+
+            // Current MSIE Check courtesy of http://www.javascriptkit.com
+            function isMSIE() {
+                var ie11andabove = navigator.userAgent.indexOf('Trident') != -1 && navigator.userAgent.indexOf('MSIE') == -1 // IE11 or above Boolean
+                var ie10andbelow = navigator.userAgent.indexOf('MSIE') != -1 // IE10 or below Boolean
+                return (ie11andabove || ie10andbelow)
             }
-            
-            function search_near_by_input () {
+
+            // Fulltext Search Handler
+            function search_fulltext() {
+                var query = $("#fulltext-search").val()
+                if (query.length >= 1) {
+                    query = encodeURIComponent(query + "*", "UTF-8")
+                    kiezatlas.search_geo_objects(query, kiezatlas.render_geo_objects)
+                } else {
+                    console.log("Text query was empty, skipping search")
+                }
+            }
+
+            // Near-By Search Handler
+            function search_near_by_input() {
                 var streetFocus = $("#near-by").val() + ' Berlin'
                     streetFocus = encodeURIComponent(streetFocus, "UTF-8")
                 kiezatlas.show_spinning_wheel(true)
@@ -73,7 +86,7 @@
                     }
                 })
 
-                function focus_current_item () {
+                function focus_current_item() {
                     var item = kiezatlas.alternative_items[kiezatlas.autocomplete_item]
                     if (typeof item !== "undefined") {
                         kiezatlas.current_location.coordinate = new L.latLng(item.geometry.location.lat, item.geometry.location.lng)
@@ -96,7 +109,7 @@
                     }
                 }
 
-                function render_alternatives () {
+                function render_alternatives() {
                     // 
                     var prev_location = kiezatlas.alternative_items[kiezatlas.autocomplete_item - 1]
                     var next_location = kiezatlas.alternative_items[kiezatlas.autocomplete_item + 1]
@@ -138,24 +151,7 @@
     </head>
     <body class="kiezatlas">
 
-        <div id="navigation">
-            <!--
-            <a href="/" class="active">Home</a>
-            <a href="/aktuelles">Aktuelles</a>
-            <a href="/projekt">Projektbeschreibung</a>
-            <a href="/bezirke">Bezirke</a>
-            <a href="/weitere-atlanten">Weitere Atlanten</a>
-                <!--a href="/weitere-atlanten/wip">WIP</a-->
-                <!--a href="/weitere-atlanten/archiv">Archiv</a-->
-            <!--a href="/dies-und-das">Dies & Das</a-->
-                <!--a href="/dies-und-das/archiv">Archiv</a-->
-            <!--a href="/tipps-und-tricks">Tipps & Tricks</a>
-            <a href="/impressum">Impressum</a>
-            <!-- a href="/suche">Suche</a-->
-            <!--a href="/links">Links</a>
-            <a href="/kontakt">Kontakt</a>
-            <a href="/open-source">Open Source</a-->
-        </div>
+        <div id="navigation"></div>
         
         <div id="header">
             <div class="welcome">
@@ -167,18 +163,11 @@
             </div>
         </div>
 
-        <div id="filter-container">
-            <div id="fulltext-input">
-                <form action="javascript:search_fulltext()" id="fulltext-form" accept-charset="UTF-8">
-                    <label for="fulltext" id="fulltext-label">Volltextsuche</label>
-                    <input id="fulltext" type="text" placeholder="Name"></input>
-                    <input id="do-search" type="submit" class="btn" value="Ok"></input>
-                </form>
-            </div>
-        </div>
+        <div id="filter-container"></div>
 
         <div id="karte">
-            <!--input type="text" class="location-input" /-->
+
+            <!-- Favourite locations dialog -->
             <h3 class="location-label">
                 <span class="text"></span>
                 <button class="star no-favs">
@@ -186,6 +175,8 @@
                          src="/de.kiezatlas.website/images/1441217865_black_5_favorite_star.png"/>
                 </button>
             </h3>
+
+            <!-- Location detection by text delivers alternatives -->
             <div id="street-alternatives"></div>
             <ul id="places">
                 <li class="ui-menu-item ui-corner-all ui-widget-content">
@@ -193,27 +184,45 @@
                     <ul class="entries submenu"></ul>
                 </li>
             </ul>
+
+            <!-- Something happens area -->
             <div id="message" class="notification">Test test..</div>
             <div id="spinning-wheel">
                 <img src="/de.kiezatlas.website/images/ajax-loader.gif" />
             </div>
+
+            <!-- Leaflet Area -->
             <div id="marker-name"></div>
             <div id="map" class="fullsize"></div>
+
+            <!--- Filter & Map Controls Area -->
             <div class="legende">
-                <img src="/de.kiezatlas.website/images/soziale_einrichtung_circle_ye.png" title="Markierer: Soziale Einrichtung"/>
-                Soziale Einrichtung
+                <div class="text-search-control">
+                    <form action="javascript:search_fulltext()" id="fulltext-search-form"
+                                        accept-charset="UTF-8">
+                        <img src="/de.kiezatlas.website/images/soziale_einrichtung_circle_ye.png" title="Markierer: Einrichtungen"/> Einrichtungen
+                        <img src="/de.kiezatlas.website/images/soziale_einrichtung_circle_ye.png"
+                             title="Markierer: Angebote"/> Angebote
+                        <!--label for="fulltext" id="fulltext-search-label"></label-->
+                        <input id="fulltext-search" type="text" placeholder="Volltextsuche" />
+                        <input id="fulltext-do" type="submit" class="btn" value="Suchen" />
+                    </form>
+                </div>
                 <a href="javascript:kiezatlas.toggle_radius_control_lock()" class="lock-control">Unlock Circle</a>
             </div>
+
         </div>
 
+        <!-- Info area -->
         <div id="detail-area">
-            <h3 class="help">Ausgew&auml;hlter Ort</h3>
+            <!--h3 class="help">Ausgew&auml;hlter Ort</h3-->
             <div class="search-option d">
-                Bitte klicke auf einen der gelben Punkte in der <a href="#karte">Karte</a> um
-                Details zu diesem Ort angezeigt zu bekommen.
+                Bitte w&auml;hlen sie einen Markierer auf der <a href="#karte">Karte</a> aus um weitere Details zu
+                erhalten.
             </div>
         </div>
 
+        <!-- Location detection menu -->
         <div id="main-menu">
             <h3><a href="javascript:kiezatlas.toggle_location_menu();">In der N&auml;he von...</a></h3>
             <div class="options">
@@ -256,6 +265,7 @@
             </p>
         </div>
 
+        <!-- Kiezatlas Standard Website section -->
         <div id="pages">
             <ul>
                 <li><a href="/aktuelles">Aktuelles</a></li>
@@ -300,13 +310,14 @@
             </p>
         </div>
 
+        <!-- Kiezatlas District Menu -->
         <div class="district-area">
             <h4>Bezirke im Kiezatlas und ihre Stadtpl&auml;ne</h4>
             <ul class="bezirke"></ul>
         </div>
 
         <!-- Piwik -->
-        <script type="text/javascript">
+        <!-- script type="text/javascript">
         var pkBaseURL = "http://stats.kiezatlas.de/";
         document.write(unescape("%3Cscript src='" + pkBaseURL + "piwik.js' type='text/javascript'%3E%3C/script%3E"));
         </script><script type="text/javascript">

@@ -435,16 +435,34 @@ h1.my-title {
     padding-top: 0px;
 }
 
+#fulltext-search-form {
+    margin-left: auto;
+    margin-right: auto;
+    display: inline-block;
+    margin: 8px;
+    margin-top: 5px;
+}
+
+#fulltext-do {
+    cursor: pointer;
+}
+
 #fulltext-input {
     padding: 15px;
 }
 
+#fulltext-search-form input,
 #fulltext-input,
 #location-input {
     display: inline-block;
     position: relative;
 }
 
+#fulltext-search-form input[type="text"] {
+    margin-left: 15px;
+}
+
+#fulltext-search-form input,
 #fulltext-input input,
 #location-input input {
     padding: 5px;
@@ -493,6 +511,7 @@ h1.my-title {
     width: 100%;
     text-align: center;
     margin-bottom: 40px;
+    /** top: 0px; **/
 }
 
 #main-menu h3 {
@@ -533,6 +552,9 @@ h1.my-title {
 #map.outlined  {
     border-bottom: 1px solid #FC3;
     border-top: 1px solid #FC3; /** #0078A8;*/
+    -webkit-box-shadow: 3px 0px 11px 0px rgba(50, 50, 50, 0.75);
+    -moz-box-shadow:    3px 0px 11px 0px rgba(50, 50, 50, 0.75);
+    box-shadow:         3px 0px 11px 0px rgba(50, 50, 50, 0.75);
 }
 
 #map {
@@ -732,30 +754,30 @@ div.legende {
     margin-left: auto;
     margin-right: auto;
     color: #343434;
-    padding-bottom: 8px;
-    padding-left: 10%;
-    padding-right: 10%;
+    /* padding-left: 10%;
+    padding-right: 10%; */
     background: #fff;
+    text-align: center;
 }
 
-div.legende img {
+div.legende .text-search-control {
     display: inline-block;
-    margin-top: 5px;
-    vertical-align: bottom;
+    margin: auto;
+}
+
+div.legende .text-search-control img {
+    display: inline-block;
     position: relative;
-    top: 1px;
+    top: 5px;
+    margin-left: 5px;
 }
 
-div.legende a.district-control {
-    position: absolute;
-    right: 215px;
-    bottom: 12px;
-}
-
+div.legende a.district-control,
 div.legende a.lock-control {
     position: absolute;
-    right: 10px;
-    bottom: 12px;
+    right: 17px;
+    /** bottom: 12px; */
+    bottom: 18px;
 }
 
 div.link-area {
@@ -783,11 +805,6 @@ div.link-area {
         max-width: 70%;
         margin-left: auto;
         margin-right: auto;
-    }
-    #map {
-        -webkit-box-shadow: 3px 0px 11px 0px rgba(50, 50, 50, 0.75);
-        -moz-box-shadow:    3px 0px 11px 0px rgba(50, 50, 50, 0.75);
-        box-shadow:         3px 0px 11px 0px rgba(50, 50, 50, 0.75);
     }
 }
 
