@@ -27,7 +27,7 @@ var kiezatlas = new function() {
     this.yellow = "#FFCC33";
 
     this.current_location = { name: "Neuenburger Straße, Berlin", coordinate: new L.latLng(52.5, 13.4) }
-    this.alternative_items = [] // near-by search street-alternatives
+    this.locationsearch_results = [] // near-by search street-alternatives
     this.autocomplete_item = 0
     // Note: once a "district" set, no graphical query and circle dialog are available anymore
     // & all further queries get the district parameter appended!
@@ -81,7 +81,7 @@ var kiezatlas = new function() {
 
     this.render_district_page = function(topic_id) {
         var bezirk = _self.get_bezirks_topic_by_id(topic_id)
-        $('.location-label .text').html("Berlin " + bezirk.value) // duplicate, see update_current_location_label
+        $('.location-label .text').html("Berlin " + bezirk.value) // duplicate, use render_current_location_label
         _self.update_document_title(undefined, bezirk.value)
         $('button.star').hide()
         // set page in "district" mode
@@ -199,7 +199,7 @@ var kiezatlas = new function() {
         }
         //
         _self.current_location = object
-        _self.update_current_location_label()
+        _self.render_current_location_label()
         // render radius control at new place
         _self.render_circle_search_control()
         // then fire query
@@ -245,7 +245,7 @@ var kiezatlas = new function() {
         _self.map.on('drag', _self.on_map_drag)
         // ### refactor from here on
         // show our standard location name
-        _self.update_current_location_label()
+        _self.render_current_location_label()
         // render radius control at first place
         _self.render_circle_search_control()
         // correct current default viewport
@@ -293,8 +293,76 @@ var kiezatlas = new function() {
         // _self.districtGroup.addTo(_self.map)
     }
 
+    this.focus_locationsearch_result = function() {
+        var item = _self.locationsearch_results[_self.autocomplete_item]
+        if (item) {
+            if (!_self.max_bounds.contains([item.geometry.location.lat, item.geometry.location.lng])) {
+                _self.current_location.name = 'Der erste gefundene Standort liegt au&szlig;erhalb '
+                    + 'von Berlin, bitte w&auml;hlen sie eine der Alternativen rechts:'
+                _self.render_current_location_label(true)
+                _self.jump_to_map()
+                // correct current map-viewport to default after a seemingly correct (but not sane location-query result)
+                _self.map.setView(_self.current_location.coordinate, _self.LEVEL_OF_STREET_ZOOM)
+            } else {
+                _self.current_location.coordinate = new L.latLng(item.geometry.location.lat, item.geometry.location.lng)
+                _self.default_radius = 900 // adapt circle size for this search a bit
+                _self.current_location.name = item['formatted_address']
+                _self.jump_to_map()
+                _self.render_current_location_label()
+                _self.render_circle_search_control()
+                _self.do_circle_search(undefined, undefined)
+                _self.map.panTo(_self.current_location.coordinate)
+            }
+            /*** $("#near-by").val(item['formatted_address'])
+            // Display marker at found location
+            if (_self.location_circle) _self.map.removeLayer(_self.location_circle)
+            _self.location_circle = new L.circle(item.geometry.location, 200, {"stroke": true,
+                "clickable": false, "color": "#dae3f8", "fillOpacity": 0.6, "opacity": 0.8, "weight":10})
+            _self.map.addLayer(_self.location_circle, {"clickable" : false}) **/
+        } else {
+            throw new Error("Autocomplete item is undefined", item, _self.autocomplete_item)
+        }
+    }
+
+    this.render_locationsearch_alternatives = function() {
+        //
+        var prev_location = _self.locationsearch_results[_self.autocomplete_item - 1]
+        var next_location = _self.locationsearch_results[_self.autocomplete_item + 1]
+        var $prev = ""
+        var $next = ""
+        if (prev_location) {
+            $prev = $('<a class="prev-location" title="'+ prev_location['formatted_address'] +'"><</a>')
+            $prev.click(function(e) {
+                _self.autocomplete_item = _self.autocomplete_item - 1
+                _self.focus_locationsearch_result()
+                _self.render_locationsearch_alternatives()
+            })
+        } else {
+            // empty prev button
+            $prev = $('<a class="prev-location defused" title=""><</a>')
+        }
+
+        if (next_location) {
+            $next = $('<a class="next-location" title="'+ next_location['formatted_address'] +'">></a>')
+            $next.click(function(e) {
+                _self.autocomplete_item = _self.autocomplete_item + 1
+                _self.focus_locationsearch_result()
+                _self.render_locationsearch_alternatives()
+            })
+        } else {
+            // empty next button
+            $next = $('<a class="next-location defused" title="">></a>')
+        }
+        //
+        $('#street-alternatives').html(_self.locationsearch_results.length + ' Ergebnisse').append($prev)
+        .append
+        ($next)
+        $('#street-alternatives').css("display", "inline-block")
+        $('#street-alternatives').show()
+    }
+
     /** object.name, object.lat, object.lng */
-    this.update_current_location_label = function(hideStarButton) {
+    this.render_current_location_label = function(hideFavBtn) {
         // ### help to reset-view
         if (!_self.current_location.hasOwnProperty("name")) console.warn("Current location has no name")
         if (!_self.current_location.coordinate.hasOwnProperty("lat")) console.warn("Current location has no lat")
@@ -314,7 +382,7 @@ var kiezatlas = new function() {
             _self.setup_leaflet_dom('map', true)
         }
         //
-        if (hideStarButton) {
+        if (hideFavBtn) {
             $('button.star').button("disable")
         } else {
             $('button.star').button("enable")
@@ -343,6 +411,7 @@ var kiezatlas = new function() {
             _self.controlGroup.addTo(_self.map)
             // add event handler to radius control
             _self.circle_search_control.on('edit', function(event) {
+                console.log("edit fires...")
                 // fire a new query
                 var new_radius = event.target._mRadius
                 _self.current_location.coordinate.lat = event.target._latlng.lat
@@ -445,7 +514,7 @@ var kiezatlas = new function() {
             // start creating marker
             var coordinate = L.latLng(result["geo_coordinate_lat"], result["geo_coordinate_lon"])
             var circle = L.circleMarker(coordinate, {
-                    color: _self.ka_gold, weight: 2, opacity: .8, fillColor: _self.ka_gold, fillOpacity: .4,
+                    color: _self.ka_gold, weight: 2, opacity: .8, fillColor: _self.ka_gold, fillOpacity: .6,
                     title: result["name"], alt: "Markierung von " + result["name"], location_id: result["address_id"],
                     geo_object_id: result["id"], uri: result["uri"], name: result["name"],// riseOnHover: true,
                     bezirksregion_uri: result["bezirksregion_uri"], z_indexOffset: 1001
@@ -553,7 +622,11 @@ var kiezatlas = new function() {
         }
     }
 
-    this.toggle_location_menu = function() {
+    this.toggle_location_menu = function(show) {
+        if (show) {
+            $('#main-menu .options').show()
+            return
+        }
         $('#main-menu .options').toggle()
     }
 
@@ -704,6 +777,7 @@ var kiezatlas = new function() {
 
     this.focus_location_input_field = function() {
         // set focus on text input
+        _self.toggle_location_menu(true)
         $('#location-input #near-by').focus()
     }
 
@@ -721,6 +795,28 @@ var kiezatlas = new function() {
         } else {
             $('#spinning-wheel').hide()
         }
+    }
+
+    this.show_message = function(message, timeout) {
+        $('#notification').show(200, "linear", function(e) {
+            // set message (if any)
+            if (message) {
+                $('.message', this).html(message)
+            }
+            timer = (timeout) ? timeout : 4500
+            // hide automatically
+            setTimeout(function(e) {
+                _self.hide_message_window(100)
+            }, timer)
+        })
+    }
+
+    this.close_message_window = function() {
+        _self.hide_message_window(100)
+    }
+
+    this.hide_message_window = function(timeout) {
+        $('#notification').hide(timeout, "linear")
     }
 
     this.render_browser_location_button = function() {
@@ -752,14 +848,14 @@ var kiezatlas = new function() {
     }
 
     this.on_browser_location_found = function(e) {
+        _self.jump_to_map()
         if (!_self.max_bounds.contains([e.latitude, e.longitude])) {
             // ### enable button for reset-view
-            _self.current_location.name = 'Ihr aktueller Standort liegt au&szlig;erhalb '
-                + 'unseres momentanen Einflu&szlig;bereichs. Wir k&ouml;nnen ihnen lediglich Daten aus dem '
-                + 'Gro&szlig;raum Berlin anbieten. Bitte geben sie dazu z.B.: bei <a href="javascript:kiezatlas.focus_location_input_field()" '
-                + '>B)</a> einen Stra&szlig;ennamen ein.'
-            _self.update_current_location_label(true)
-            // correct current map-viewport to default  (after a correct but insane location-query result)
+            _self.current_location.name = 'Ihr Standort liegt au&szlig;erhalb von Berlin, '
+                + 'bitte nutzen sie die Umkreissuche auf der Karte um Einrichtungen zu finden oder '
+                + '<a href="javascript:kiezatlas.focus_location_input_field()" '+ '>die Texteingabe</a>.'
+            _self.render_current_location_label(true)
+            // correct current map-viewport to default after a seemingly correct (but not sane location-query result)
             _self.map.setView(_self.current_location.coordinate, _self.LEVEL_OF_STREET_ZOOM)
         } else {
             _self.current_location.coordinate.lat = e.latitude
@@ -783,13 +879,15 @@ var kiezatlas = new function() {
       */
     this.on_browser_location_error = function(e) {
         _self.hide_spinning_wheel(true)
-        _self.map.setView(_self.current_location.coordinate, _self.LEVEL_OF_DISTRICT_ZOOM)
+        // _self.map.setView(_self.current_location.coordinate, _self.LEVEL_OF_DISTRICT_ZOOM)
         if (_self.max_bounds.contains([_self.current_location.coordinate.lat, _self.current_location.coordinate.lng])) {
             // render radius control at standard place
             _self.render_circle_search_control()
             // then fire query
             _self.do_circle_search(undefined, undefined)
         }
+        _self.show_message("Tipp zur Umkreissuche:<br/>Bewegen sie den Kartenausschnitt oder w&auml;hlen sie "
+            + "<em>Unlock Circle</em> um Einrichtungen in einer ganz bestimmten Gegend aufzudecken")
     }
 
     // Kiezatlas API Service helper
@@ -803,9 +901,9 @@ var kiezatlas = new function() {
                 for (var i in _self.districts) {
                     var district = _self.districts[i]
                     var bezirke_html = '<li ' + 'class="bezirk">'
-                            bezirke_html += '<a class="link-out" id="' + district.id
-                            + '" href="javascript:kiezatlas.render_district_page('+district.id+')">' + district["value"]
-                            + '</a>'
+                            bezirke_html += '<a class="district-button" id="' + district.id
+                            + '" title="zur Bezirksseite '+ district.value +'" href="javascript:kiezatlas.render_district_page('
+                            + district.id + ')">' + district["value"] + '</a>'
                         bezirke_html += '<ul class="bezirksregionen">'
                         var subdistricts = district.childs.sort(_self.name_sort_asc)
                         for (var k in subdistricts) {
@@ -869,13 +967,17 @@ var kiezatlas = new function() {
             function (geo_objects) {
                 console.log("> Text based search returned", geo_objects)
                 // TODO: If search results are zero
-                _self.items = geo_objects
-                if (typeof success !== "undefined") {
-                    // clear marker group completely after fulltext-search
-                    _self.clear_circle_marker_group()
-                    _self.hide_spinning_wheel()
-                    // TODO: for resultsets bigger than 100 implement a incremental rendering method
-                    _self.render_geo_objects(geo_objects, true)
+                if (geo_objects.length > 0) {
+                    _self.items = geo_objects
+                    if (typeof success !== "undefined") {
+                        // clear marker group completely after fulltext-search
+                        _self.clear_circle_marker_group()
+                        _self.hide_spinning_wheel()
+                        // TODO: for resultsets bigger than 100 implement a incremental rendering method
+                        _self.render_geo_objects(geo_objects, true)
+                    }
+                } else {
+                    _self.show_message('Keine Treffer f&uuml;r diese Suche')
                 }
             })
     }
@@ -904,7 +1006,7 @@ var kiezatlas = new function() {
                 }
                 _self.current_location.name = o.street + " " + o.street_nr + ", " + o.city
                 if (typeof o.area !== "undefined") _self.current_location.name += " " + o.area
-                _self.update_current_location_label()
+                _self.render_current_location_label()
             }
         })
     }

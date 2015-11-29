@@ -3,7 +3,7 @@
     <head>
         <title>Kiezatlas 2 Website</title>
 
-        <meta charset="utf-8">
+        <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0"/>
 
         <!--link rel="stylesheet" href="/de.kiezatlas.website/vendor/jquery/jquery.mobile.theme-1.3.0.min.css"-->
@@ -43,7 +43,7 @@
             }
 
             // Fulltext Search Handler
-            function search_fulltext() {
+            function search_fulltext_geo_objects() {
                 var query = $("#fulltext-search").val()
                 if (query.length >= 1) {
                     query = encodeURIComponent(query + "*", "UTF-8")
@@ -54,97 +54,39 @@
             }
 
             // Near-By Search Handler
-            function search_near_by_input() {
-                var streetFocus = $("#near-by").val() + ' Berlin'
+            function search_location_by_text() {
+                var streetFocus = $("#near-by").val() + ' Berlin, Deutschland'
                     streetFocus = encodeURIComponent(streetFocus, "UTF-8")
+                $('.location-search-info').hide()
                 kiezatlas.show_spinning_wheel(true)
                 $.ajax({
-                    type: "GET", url: "/kiezatlas/geocode/" + streetFocus,
-                    /** beforeSend: function(xhr) {
-                        xhr.setRequestHeader("Content-Type", "application/json")
-                        xhr.setRequestHeader("Charset", "UTF-8")
-                    }, **/
+                    type: "GET", url: "/kiezatlas/geocode?query=" + streetFocus,
                     success: function(obj) {
                         kiezatlas.hide_spinning_wheel(true)
-                        kiezatlas.alternative_items = null
-                        kiezatlas.alternative_items = obj.results
-                        kiezatlas.autocomplete_item = 0
-                        if (kiezatlas.alternative_items.length === 1) {
-                            focus_current_item()
-                            render_alternatives()
-                            if (kiezatlas.alternative_items.length <= 1) {
-                                $('#street-alternatives').hide()
-                            }
-                        } else if (kiezatlas.alternative_items.length > 1) {
-                            focus_current_item() // focus the first result
-                            render_alternatives()
+                        kiezatlas.locationsearch_results = null
+                        kiezatlas.locationsearch_results = obj.results
+                        console.log(kiezatlas.locationsearch_results.length + " items found")
+                        kiezatlas.autocomplete_item = 0 // focus the first entry
+                        if (kiezatlas.locationsearch_results.length === 1) {
+                            kiezatlas.focus_locationsearch_result()
+                            $('#street-alternatives').hide()
+                        } else if (kiezatlas.locationsearch_results.length > 1) {
+                            kiezatlas.focus_locationsearch_result()
+                            kiezatlas.render_locationsearch_alternatives()
+                        } else {
+                            $('.location-search-info').html('Keinen Ort f&uuml;r diese Anfrage gefunden')
+                            $('.location-search-info').show()
                         }
                     },
                     error: function(x, s, e) {
                         console.warn("ERROR", "x: " + x + " s: " + s + " e: " + e)
+                        $('.location-search-info').html('Es ist in Fehler bei der Suche aufgetreten bitte probieren'
+                            + ' sie es erneut. Sollte dieser Fehler wiederholt auftreten bitte informieren sie uns per'
+                            + ' Email unter <a href="mailto:support@kiezatlas.de">support@kiezatlas.de</a>.')
+                        $('.location-search-info').show()
                         kiezatlas.hide_spinning_wheel(true)
                     }
                 })
-
-                function focus_current_item() {
-                    var item = kiezatlas.alternative_items[kiezatlas.autocomplete_item]
-                    if (typeof item !== "undefined") {
-                        kiezatlas.current_location.coordinate = new L.latLng(item.geometry.location.lat, item.geometry.location.lng)
-                        kiezatlas.default_radius = 900
-                        // console.log("geo-coded item", item)
-                        kiezatlas.current_location.name = item['formatted_address']
-                        kiezatlas.update_current_location_label()
-                        kiezatlas.handle_option_b()
-                        kiezatlas.render_circle_search_control()
-                        kiezatlas.do_circle_search(undefined, undefined, kiezatlas.render_geo_objects)
-                        kiezatlas.map.setView(kiezatlas.current_location.coordinate, kiezatlas.LEVEL_OF_STREET_ZOOM)
-                        // $("#near-by").val(item['formatted_address'])
-                        // Display location
-                        /** if (kiezatlas.location_circle != undefined) {
-                            kiezatlas.map.removeLayer(kiezatlas.location_circle);
-                        }
-                        kiezatlas.location_circle = new L.circle(item.geometry.location, 200, {"stroke": true,
-                            "clickable": false, "color": "#dae3f8", "fillOpacity": 0.6, "opacity": 0.8, "weight":10});
-                        kiezatlas.map.addLayer(kiezatlas.location_circle, {"clickable" : false}); **/
-                    }
-                }
-
-                function render_alternatives() {
-                    // 
-                    var prev_location = kiezatlas.alternative_items[kiezatlas.autocomplete_item - 1]
-                    var next_location = kiezatlas.alternative_items[kiezatlas.autocomplete_item + 1]
-                    var $prev = ""
-                    var $next = ""
-                    if (typeof prev_location !== "undefined") {
-                        $prev = $('<a class="prev-location" title="'+ prev_location['formatted_address'] +'"><</a>')
-                        $prev.click(function(e) {
-                            kiezatlas.autocomplete_item = kiezatlas.autocomplete_item - 1
-                            focus_current_item()
-                            render_alternatives()
-                        })
-                    } else {
-                        // empty prev button
-                        $prev = $('<a class="prev-location defused" title=""><</a>')
-                    }
-
-                    if (typeof next_location !== "undefined") {
-                        $next = $('<a class="next-location" title="'+ next_location['formatted_address'] +'">></a>')
-                        $next.click(function(e) {
-                            kiezatlas.autocomplete_item = kiezatlas.autocomplete_item + 1
-                            focus_current_item()
-                            render_alternatives()
-                        })
-                    } else {
-                        // empty next button
-                        $next = $('<a class="next-location defused" title="">></a>')
-                    }
-                    // 
-                    $('#street-alternatives').html(kiezatlas.alternative_items.length + ' Orte gefunden')
-                            .append($prev).append($next)
-                    $('#street-alternatives').css("display", "inline-block")
-                    $('#street-alternatives').show()
-                }
-                // if (!checkIfAllCategoriesSelected()) showAllMarker();
             }
 
         </script>
@@ -185,8 +127,6 @@
                 </li>
             </ul>
 
-            <!-- Something happens area -->
-            <div id="message" class="notification">Test test..</div>
             <div id="spinning-wheel">
                 <img src="/de.kiezatlas.website/images/ajax-loader.gif" />
             </div>
@@ -197,8 +137,7 @@
             <!--- Filter & Map Controls Area -->
             <div class="legende">
                 <div class="text-search-control">
-                    <form action="javascript:search_fulltext()" id="fulltext-search-form"
-                                        accept-charset="UTF-8">
+                    <form action="javascript:search_fulltext_geo_objects()" id="fulltext-search-form" accept-charset="ISO-8859-15">
                         <img src="/de.kiezatlas.website/images/soziale_einrichtung_circle_ye.png" title="Markierer: Einrichtungen"/> Einrichtungen
                         <!--img src="/de.kiezatlas.website/images/soziale_einrichtung_circle_ye.png"
                              title="Markierer: Angebote"/> Angebote -->
@@ -212,7 +151,13 @@
 
         </div>
 
-        <!-- Info area -->
+        <!-- Notification area -->
+        <div id="notification" onclick="javascript:kiezatlas.close_message_window()">
+            <span class="message">Hi!</span>
+            <!-- a href="javascript:kiezatlas.close_message_window()">(x)</a-->
+        </div>
+
+        <!-- Details Area -->
         <div id="detail-area">
             <!--h3 class="help">Ausgew&auml;hlter Ort</h3-->
             <div class="search-option d">
@@ -238,22 +183,23 @@
                 <div class="search-option b">
                     <h1 id="b">B)</h1>
                     <b>Name eines Platzes oder einer Stra&szlig;e eingeben</b><br/>
-                    Du kannst auch einfach den Namen eines Platzes oder einer Stra&szlig;e in Berlin eingeben.<br/>
+                    Suchen sie eine Stra&szlig;e oder Platz in Berlin mit Hilfe der Google Geo Location API:<br/>
                     <div id="location-input">
-                        <form action="javascript:search_near_by_input()" id="near-by-form" accept-charset="UTF-8">
+                        <form action="javascript:search_location_by_text()" id="near-by-form" accept-charset="UTF-8">
                             <!-- label for="near-by" id="near-by-label">In der N&auml;he von</label-->
                             <input id="near-by" type="text" placeholder="Stra&szlig;enname / Hnr." />
-                            <input id="do-nearby" type="submit" class="btn" value="Ok" />
+                            <input id="do-nearby" type="submit" class="btn" value="Suche" />
                             <div class="spinning-wheel">
                                 <img src="/de.kiezatlas.website/images/ajax-loader.gif" />
                             </div>
+                            <div class="location-search-info"></div>
                         </form>
                     </div>
                 </div>
                 <div class="search-option c">
                     <h1 id="c">C)</h1>
                     <b>Grafische Umkreissuche auf der Karte</b><br/>
-                    Du kannst den <i>grauen Kreis</i> auf der <a href="#karte">Karte</a> einfach
+                    Du kannst den <i>blauen Kreis</i> auf der <a href="#karte">Karte</a> einfach
                     anfassen,
                     <i>
                         verschieben</i> und ggf. vergr&ouml;&szlig;ern. Probier es mal aus!

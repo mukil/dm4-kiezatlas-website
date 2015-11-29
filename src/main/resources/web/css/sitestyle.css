@@ -95,7 +95,7 @@ h3.location-label {
     display: none;
     position: absolute;
     right: 8px;
-    top: 18px;
+    top: 8px;
     z-index: 1001;
     border: 1px solid transparent;
     padding-left: 0px;
@@ -206,23 +206,22 @@ h1.my-title {
     margin: 10px 10px;
 }
 
-#message {
-    padding: 20px;
-    padding-bottom: 50px;
-}
-
-.notification {
-    position: fixed; bottom: 50px; left: 0px;
+#notification {
+    padding: 20px; padding-bottom: 50px;
+    position: fixed; bottom: 100px; left: 0px;
     color: #343434; padding: 10px;
     font-size: 1.2em;
     line-height: 1.4; font-weight: bold;
     z-index: 1002; display: none;
-    background: linear-gradient(rgb(252, 237, 167), rgb(251, 239, 126)) repeat scroll 0% 0% rgb(250, 219, 78)
+    background: linear-gradient(rgb(252, 237, 167), rgb(251, 239, 126)) repeat scroll 0% 0% rgb(250, 219, 78);
+    max-width: 370px;
 }
 
-#message.notification a {
-    text-decoration: underline;
-    color: #343434;
+/** Unused */
+#notification a {
+    text-decoration: none;
+    color: #8f1414;
+    display: block;
 }
 
 #close {
@@ -309,7 +308,7 @@ h1.my-title {
     padding: 7px;
 }
 
-.district-area ul.bezirke li a.link-out:hover {
+.district-area ul.bezirke li a.district-button:hover {
     background-color: #fff;
     color: #8F1414;
 }
@@ -340,6 +339,7 @@ h1.my-title {
     text-decoration: none;
     margin-left: 0px;
     color: #343434;
+    opacity: .2;
 }
 
 .district-area ul li:hover {
@@ -347,10 +347,10 @@ h1.my-title {
     /** background: #fff; **/
 }
 
-.district-area li ul.bezirksregionen li:hover {
+/** .district-area li ul.bezirksregionen li:hover {
     background: #fff;
     background-color: #fff;
-}
+} **/
 
 .district-area ul.bezirke,
 .district-area ul.bezirksregionen {
@@ -467,6 +467,7 @@ h1.my-title {
     position: relative;
 }
 
+#location-input input[type="text"],
 #fulltext-search-form input[type="text"] {
     margin-left: 15px;
     width: 360px;
@@ -475,6 +476,7 @@ h1.my-title {
     color: #343434;
 }
 
+#location-input input[type="submit"],
 #fulltext-search-form input[type="submit"] {
     padding: 3px;
 }
@@ -485,6 +487,11 @@ h1.my-title {
     padding: 5px;
     padding-left: 7px;
     font-size: 1em;
+}
+
+#location-input input[type="text"] {
+    width: 60%;
+    margin-left: 0px;
 }
 
 #location-input {
@@ -612,11 +619,17 @@ h1.my-title {
 }
 
 #location-input .spinning-wheel {
-    position: absolute; top: 40px; right: 10px;
+    position: absolute; top: 3px; right: 8px;
     width: 40px; height: 40px;
     text-align: center;
     display: none;
     background-color: rgba(255, 255, 255, 0.5);
+}
+
+#location-input .location-search-info {
+    display: none;
+    margin-top: 10px;
+    color: #ff0000;
 }
 
 #navigation {
@@ -970,6 +983,9 @@ div.link-area {
     #map {
         height: 650px !important;
     }
+    #notification {
+        bottom: 250px;
+    }
 }
 
 @media (max-height:1200px) {
@@ -979,6 +995,19 @@ div.link-area {
     }
     #map {
         height: 550px !important;
+    }
+    #notification {
+        bottom: 150px;
+    }
+}
+
+@media (max-height:1100px) {
+    #karte {
+        top: 30px;
+        padding-top: 0px;
+    }
+    #map {
+        height: 450px !important;
     }
 }
 
