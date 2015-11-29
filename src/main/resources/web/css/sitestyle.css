@@ -210,7 +210,7 @@ h1.my-title {
     padding: 20px; padding-bottom: 50px;
     position: fixed; bottom: 100px; left: 0px;
     color: #343434; padding: 10px;
-    font-size: 1.2em;
+    font-size: 1em;
     line-height: 1.4; font-weight: bold;
     z-index: 1002; display: none;
     background: linear-gradient(rgb(252, 237, 167), rgb(251, 239, 126)) repeat scroll 0% 0% rgb(250, 219, 78);
@@ -394,7 +394,7 @@ h1.my-title {
     padding: 15px;
     background-color: #EAEAEA;
     display: none;
-    min-height: 300px;
+    min-height: 150px;
     margin-bottom: 70px;
 }
 

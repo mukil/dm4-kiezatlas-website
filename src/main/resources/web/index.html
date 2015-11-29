@@ -58,6 +58,8 @@
                 var streetFocus = $("#near-by").val() + ' Berlin, Deutschland'
                     streetFocus = encodeURIComponent(streetFocus, "UTF-8")
                 $('.location-search-info').hide()
+                // if district filter is set, remove it
+                if (kiezatlas.district) kiezatlas.clear_district_filter_control()
                 kiezatlas.show_spinning_wheel(true)
                 $.ajax({
                     type: "GET", url: "/kiezatlas/geocode?query=" + streetFocus,
@@ -65,7 +67,7 @@
                         kiezatlas.hide_spinning_wheel(true)
                         kiezatlas.locationsearch_results = null
                         kiezatlas.locationsearch_results = obj.results
-                        console.log(kiezatlas.locationsearch_results.length + " items found")
+                        console.log(kiezatlas.locationsearch_results.length + " places found", kiezatlas.locationsearch_results)
                         kiezatlas.autocomplete_item = 0 // focus the first entry
                         if (kiezatlas.locationsearch_results.length === 1) {
                             kiezatlas.focus_locationsearch_result()

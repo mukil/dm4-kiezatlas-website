@@ -88,11 +88,15 @@ var kiezatlas = new function() {
         _self.district = bezirk
         // TODO: rewrite filter button container
         if ($('div.legende').children('a.district-control').length == 0) {
-            $('div.legende').append('<a class="district-control" href="javascript:kiezatlas.unset_district_page();">'
+            $('div.legende').append('<a class="district-control" href="javascript:kiezatlas.clear_district_page()">'
                 + 'Bezirksfilter aufheben</a>')
         }
         $('#fulltext-search').attr("placeholder", "Volltextsuche für " + bezirk.value)
         $('a.lock-control').hide()
+        //
+        _self.show_message("Hinweis: Die Volltextsuche liefert ab jetzt nur noch Ergebnisse aus dem Bezirk <em>"
+            + bezirk.value + "</em>. W&auml;hlen sie <em>Bezirksfilter aufheben</em> um wieder Berlinweit"
+            + " Einrichtungen zu finden.", 7000)
         // TODO: activate doubleClick to zoom on map
         _self.map.doubleClickZoom.enable();
         var anchor_name = '#' + encodeURIComponent(bezirk.value.toLowerCase())
@@ -109,15 +113,23 @@ var kiezatlas = new function() {
         })
     }
 
-    this.unset_district_page = function() {
-        // reset district filter for subsequent fulltext-searches
+    this.clear_district_page = function() {
+        _self.clear_district_filter_control()
+        _self.do_current_center_circle_search()
+    }
+
+    this.clear_district_filter_control = function() {
+        // 1) reset district filter for subsequent fulltext-searches
         _self.district = undefined
         $('#fulltext-search').attr("placeholder", "Volltextsuche")
-        // update gui accordingly
+        // 2) update gui accordingly
         $('a.district-control').remove()
         $('a.lock-control').show()
         _self.map.doubleClickZoom.disable();
         _self.clear_circle_marker_group()
+    }
+
+    this.do_current_center_circle_search = function() {
         _self.current_location.coordinate = _self.map.getCenter()
         _self.render_circle_search_control() // fitBounds=false
         _self.do_circle_search(undefined, undefined)
@@ -268,29 +280,6 @@ var kiezatlas = new function() {
             _self.do_circle_search(undefined, undefined)
             _self.reverse_geocode()
         }
-    }
-
-    /** Note: Unused method */
-    this.render_districts_layer = function() {
-        // TODO: deactivate clicking on bezirks feature
-        $.getJSON('/de.kiezatlas.website/berlin_bezirke.geojson',
-            function (data) {
-                var geoJson = L.geoJson(data, {
-                    style: function (feature) {
-                        return {
-                            "color": _self.ka_red, "width" : 1, "dashArray" : "15, 10, 5, 10",
-                            "fillColor": "transparent", "fillOpacity": 0, "opacity": 0.2
-                        }
-                    },
-                    onEachFeature: function (feature, layer) {
-                        // console.log("GeoJSON Feature", feature)
-                        // layer.bindPopup(feature.properties["name"])
-                    }
-                }).addTo(_self.map)
-                // .geometryToLayer(data)
-                // _self.districtGroup
-            })
-        // _self.districtGroup.addTo(_self.map)
     }
 
     this.focus_locationsearch_result = function() {
@@ -451,9 +440,9 @@ var kiezatlas = new function() {
     }
 
     this.clear_circle_marker_group = function() {
-        // return straight for e.g. init via districts page
+        // TODO revise this (returns straight for e.g. init via districts page)
         if (!_self.markerGroup) return
-        // clear complete marker group, e.g. via fulltext_search
+        // clear complete marker group, e.g. for fulltext_search
         _self.markerGroup.eachLayer(function (marker){
             _self.map.removeLayer(marker)
         })
@@ -806,7 +795,7 @@ var kiezatlas = new function() {
             timer = (timeout) ? timeout : 4500
             // hide automatically
             setTimeout(function(e) {
-                _self.hide_message_window(100)
+                _self.hide_message_window(500)
             }, timer)
         })
     }
@@ -815,8 +804,8 @@ var kiezatlas = new function() {
         _self.hide_message_window(100)
     }
 
-    this.hide_message_window = function(timeout) {
-        $('#notification').hide(timeout, "linear")
+    this.hide_message_window = function(duration) {
+        $('#notification').hide(duration, "linear")
     }
 
     this.render_browser_location_button = function() {
@@ -827,7 +816,7 @@ var kiezatlas = new function() {
 
     this.clear_details_area = function() {
         $('.search-option.d').remove()
-        $('.entry-card').remove()
+        $('.entry-card').hide(200, "linear", function (e) { this.remove() })
     }
 
     // Location based service helper
@@ -886,8 +875,31 @@ var kiezatlas = new function() {
             // then fire query
             _self.do_circle_search(undefined, undefined)
         }
-        _self.show_message("Tipp zur Umkreissuche:<br/>Bewegen sie den Kartenausschnitt oder w&auml;hlen sie "
-            + "<em>Unlock Circle</em> um Einrichtungen in einer ganz bestimmten Gegend aufzudecken")
+        _self.show_message("Tipp: Bewegen sie den Kartenausschnitt oder w&auml;hlen sie "
+            + "<em>Unlock Circle</em>, so k&ouml;nnen sie Einrichtungen in einer ganz bestimmten Gegend aufdecken.",
+            7000)
+    }
+
+    /** Note: Unused method */
+    this.render_districts_layer = function() {
+        $.getJSON('/de.kiezatlas.website/vendor/berlin_bezirke.geojson',
+            function (data) {
+                var geoJson = L.geoJson(data, {
+                    style: function (feature) {
+                        return {
+                            "color": _self.ka_red, "width" : 1, "dashArray" : "15, 10, 5, 10",
+                            "fillColor": "transparent", "fillOpacity": 0, "opacity": 0.2
+                        }
+                    },
+                    onEachFeature: function (feature, layer) {
+                        // console.log("GeoJSON Feature", feature)
+                        // layer.bindPopup(feature.properties["name"])
+                    }
+                }).addTo(_self.map)
+                // .geometryToLayer(data)
+                // _self.districtGroup
+            })
+        // _self.districtGroup.addTo(_self.map)
     }
 
     // Kiezatlas API Service helper
