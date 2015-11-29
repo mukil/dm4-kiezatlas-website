@@ -257,6 +257,7 @@ public class KiezatlasWebsitePlugin extends PluginActivator {
         for (RelatedTopic geoObject : geoObjects) {
             results.add(new GeoObjectView(geoObject, geomapsService));
         }
+        log.info("Populating cached list of geo object for district " + bezirkId);
         // insert new result into cache
         districtsCache.put(bezirkId, results);
         districtCachedAt.put(bezirkId, new Date().getTime());
