@@ -1,5 +1,7 @@
 package de.kiezatlas.website;
 
+import java.util.Date;
+import java.util.HashMap;
 import java.util.logging.Logger;
 import java.util.List;
 import java.util.ArrayList;
@@ -60,6 +62,10 @@ public class KiezatlasWebsitePlugin extends PluginActivator {
     @Inject GeospatialService spatialService;
 
     @Inject GeomapsService geomapsService;
+
+    // Application Cache of District Overview Resultsets
+    HashMap<Long, List<GeoObjectView>> districtsCache = new HashMap<Long, List<GeoObjectView>>();
+    HashMap<Long, Long> districtCachedAt = new HashMap<Long, Long>();
 
     @Override
     public void init() {
@@ -218,11 +224,32 @@ public class KiezatlasWebsitePlugin extends PluginActivator {
         return results;
     }
 
+    /**
+     * We cache subsequent requests to this method, which means that on the district pages it will take 6 hours until
+     * a new index will be generated (and newly added geo objects will appear on the map).
+     *
+     * Details of existing (but updated) geo objects are not affected by this cache.
+     * @param referer
+     * @param bezirkId
+     * @return
+     */
     @GET
     @Path("/bezirk/{topicId}")
-    public List<GeoObjectView> getKiezatlasMapEntriesByDistrict(@HeaderParam("Referer") String referer,
-																@PathParam("topicId") long bezirkId) {
+    public List<GeoObjectView> getGeoObjectsInDistrict(@HeaderParam("Referer") String referer,
+                                                       @PathParam("topicId") long bezirkId) {
         if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
+        // reuse cache
+        if (districtsCache.containsKey(bezirkId)) {
+            // caching lifetime is 30 000 or 12 000 ms for testing purposes
+            if (districtCachedAt.get(bezirkId) > new Date().getTime() - 21600000) { // 21600000 for approx. 6hr in ms
+                log.info("Returning cached list of geo object for district " + bezirkId);
+                return districtsCache.get(bezirkId);
+            }
+            // invalidate cache
+            districtsCache.remove(bezirkId);
+            districtCachedAt.remove(bezirkId);
+        }
+        // populate new resultset
         ArrayList<GeoObjectView> results = new ArrayList<GeoObjectView>();
         Topic bezirk = dms.getTopic(bezirkId);
         ResultList<RelatedTopic> geoObjects = bezirk.getRelatedTopics("dm4.core.aggregation",
@@ -230,6 +257,9 @@ public class KiezatlasWebsitePlugin extends PluginActivator {
         for (RelatedTopic geoObject : geoObjects) {
             results.add(new GeoObjectView(geoObject, geomapsService));
         }
+        // insert new result into cache
+        districtsCache.put(bezirkId, results);
+        districtCachedAt.put(bezirkId, new Date().getTime());
         return results;
     }
 
@@ -241,8 +271,8 @@ public class KiezatlasWebsitePlugin extends PluginActivator {
 
     @GET
     @Path("/bezirksregion/{topicId}")
-    public List<GeoObjectView> getKiezatlasMapEntriesBySubdistrict(@HeaderParam("Referer") String referer,
-																   @PathParam("topicId") long bezirksregionId) {
+    public List<GeoObjectView> getGeoObjectsInSubdistrict(@HeaderParam("Referer") String referer,
+                                                          @PathParam("topicId") long bezirksregionId) {
         if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
         ArrayList<GeoObjectView> results = new ArrayList<GeoObjectView>();
         Topic bezirksregion = dms.getTopic(bezirksregionId);
@@ -257,15 +287,15 @@ public class KiezatlasWebsitePlugin extends PluginActivator {
     // --- Geo Coding Utiltiy Resources (Google Wrapper)
 
     @GET
-    @Path("/geocode/{input}")
+    @Path("/geocode")
     public String geoCodeAddressInput(@HeaderParam("Referer") String referer,
-        @PathParam("input") String input) {
+                                      @QueryParam("query") String input) {
         if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
         String query = input;
         String result = "";
-        query = query.substring(2, query.length() - 1);
         try {
             // Encoded url to open
+            log.info("Requested geo code query=\"" + query + "\" - Processing");
             query = URLEncoder.encode(query, "UTF-8");
             String url = "http://maps.googleapis.com/maps/api/geocode/json?address="
                 + query + "&sensor=false&locale=de";
@@ -291,7 +321,7 @@ public class KiezatlasWebsitePlugin extends PluginActivator {
     @GET
     @Path("/reverse-geocode/{latlng}")
     public String geoCodeLocationInput(@HeaderParam("Referer") String referer,
-        @PathParam("latlng") String latlng) {
+                                       @PathParam("latlng") String latlng) {
         if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
         String result = "";
         try {
