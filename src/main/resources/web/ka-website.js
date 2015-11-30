@@ -127,6 +127,7 @@ var kiezatlas = new function() {
         $('a.lock-control').show()
         _self.map.doubleClickZoom.disable();
         _self.clear_circle_marker_group()
+        _self.jump_to_map() // ### this updates address bar too
     }
 
     this.do_current_center_circle_search = function() {
@@ -500,6 +501,7 @@ var kiezatlas = new function() {
                 console.info("Invalid Geo Object - Missing Bezirksregion URI", geo_object["name"])
                 return undefined
             }
+            // TODO: prevent rendering of duplicates here client side (and not on server side)
             // start creating marker
             var coordinate = L.latLng(result["geo_coordinate_lat"], result["geo_coordinate_lon"])
             var circle = L.circleMarker(coordinate, {
@@ -989,6 +991,7 @@ var kiezatlas = new function() {
                         _self.render_geo_objects(geo_objects, true)
                     }
                 } else {
+                    _self.hide_spinning_wheel()
                     _self.show_message('Keine Treffer f&uuml;r diese Suche')
                 }
             })
