@@ -255,6 +255,9 @@ var kiezatlas = new function() {
         _self.map.on('locationfound', _self.on_browser_location_found)
         _self.map.on('locationerror', _self.on_browser_location_error) // ### just if user answers "never"
         _self.map.on('dragend', _self.on_map_drag_end)
+        _self.map.on('zoomend', function(e) {
+            console.log("map zoom level > ", _self.map.getZoom())
+        })
         _self.map.on('drag', _self.on_map_drag)
         // ### refactor from here on
         // show our standard location name
@@ -436,8 +439,20 @@ var kiezatlas = new function() {
             if (el.hasOwnProperty('options') && el.options.hasOwnProperty('geo_object_id')) {
                 _self.map.removeLayer(el)
             }
-            _self.map.addLayer(_self.controlGroup)
+            _self.map.addLayer(_self.controlGroup) // ### Todo: This should never be called from this method!
         })
+    }
+
+    // Removes all geo objects from markerClusterGroup.
+    this.clear_geo_object_cluster_group = function() {
+        if (_self.markerGroup) {
+            _self.markerGroup.eachLayer(function (el) {
+                // do not remove control group, just items with a geo_object id
+                if (el.hasOwnProperty('options') && el.options.hasOwnProperty('geo_object_id')) {
+                    _self.markerGroup.removeLayer(el)
+                }
+            })
+        }
     }
 
     this.clear_circle_marker_group = function() {
@@ -472,10 +487,32 @@ var kiezatlas = new function() {
                 }
             })
         }
+        // clear marker on map
+        _self.clear_geo_object_cluster_group()
         // -- FINALIZE ALL MARKER IN NEW MARKER GROUP
         // create updated/new feature/markerGroup
-        _self.markerGroup = L.featureGroup(list_of_markers)
-        _self.markerGroup.addTo(_self.map)
+        // Formerly: _self.markerGroup = L.featureGroup(list_of_markers)
+        // Formerly: _self.markerGroup.addTo(_self.map)
+        _self.markerGroup = L.markerClusterGroup({
+            "spiderfyOnMaxZoom": true,
+            "spiderLegPolylineOptions": { weight: 0.5, color: _self.ka_gold, opacity: 0.5 },
+            "maxClusterRadius": function() {
+                console.log("_maxClusterRadius", el);
+                return 15;
+            }
+            /* iconCreateFunction: function(cluster) {
+                 console.log("_cluster", cluster)
+                return L.divIcon({ html: '<div class="marker-cluster-medium">' + cluster.getChildCount() + '</div>',
+                    className: 'marker-cluster' })
+            }, **/
+        })
+        //
+        for (var el in list_of_markers) {
+            var topic = list_of_markers[el]
+             _self.markerGroup.addLayer(topic)
+        }
+        _self.map.addLayer(_self.markerGroup)
+        //
         if (set_view_to_bounds && list_of_markers.length > 0) {
             // _self.map.setMaxBounds(_self.markerGroup.getBounds())
             _self.map.fitBounds(_self.markerGroup.getBounds())
