@@ -22,11 +22,13 @@
         <script src="/de.kiezatlas.website/vendor/leaflet/markercluster/dist/leaflet.markercluster.js"></script>
         <!--script src="/de.kiezatlas.website/vendor/jquery/jquery.mobile-1.3.0.min.js"></script-->
         <script src="/de.kiezatlas.website/ka-website.js"></script>
+        <script src="/de.deepamehta.accesscontrol/script/vendor/sha256.js"></script>
 
         <script type="text/javascript">
 
             // App initialization
             $(document).ready(function(e) {
+                //
                 if (!isMSIE()) {
                     kiezatlas.start_local_db()
                     kiezatlas.list_entries_in_local_db()
@@ -36,6 +38,11 @@
                 }
                 // render all components of the page requested
                 kiezatlas.render_page()
+                // testing
+                // kiezatlas.auth(function() { console.log("Done app authentication") })
+                kiezatlas.is_logged_in(function(response) {
+                    kiezatlas.render_user_menu(response)
+                })
             })
 
             // Current MSIE Check courtesy of http://www.javascriptkit.com
@@ -98,7 +105,14 @@
     </head>
     <body class="kiezatlas">
 
-        <div id="navigation"></div>
+        <div id="navigation">
+            <ul>
+                <li class="register"><a href="/sign-up/">Registrieren</a></li>
+                <li class="login"><a href="/sign-up/login">Anmelden</a></li>
+                <li class="angebote"><a href="/kiezatlas/angebot/">Meine Angebote</a></li>
+                <li class="logout"><a href="/#logout/" onclick="javascript:kiezatlas.logout()">Abmelden</a></li>
+            </ul>
+        </div>
         
         <div id="header">
             <div class="welcome">
@@ -143,7 +157,10 @@
             <div class="legende">
                 <div class="text-search-control">
                     <form action="javascript:search_fulltext_geo_objects()" id="fulltext-search-form" accept-charset="ISO-8859-15">
-                        <img src="/de.kiezatlas.website/images/soziale_einrichtung_circle_ye.png" title="Markierer: Einrichtungen"/> Einrichtungen
+                        <span class="elements">
+                            <img src="/de.kiezatlas.website/images/soziale_einrichtung_circle_ye.png"
+                                title="Markierer: Einrichtungen"/> Einrichtungen
+                        </span>
                         <!--img src="/de.kiezatlas.website/images/soziale_einrichtung_circle_ye.png"
                              title="Markierer: Angebote"/> Angebote -->
                         <!--label for="fulltext" id="fulltext-search-label"></label-->

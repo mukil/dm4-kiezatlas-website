@@ -252,30 +252,46 @@ h1.my-title {
     text-align: center;
 }
 
+#navigation ul {
+    margin-top: 0px;
+}
+
+#navigation ul,
 #pages ul {
     list-style-type: none;
     font-size: 1.2em;
 }
 
+#navigation ul li,
 #pages ul li {
-    display: inline-block;
     background-color: #fff;
+    display: inline-block;
     padding: 7px;
     padding-left: 10px;
     padding-right: 10px;
     margin-right: 15px;
+}
+
+#pages ul li {
     margin-top: 15px;
 }
 
+#navigation ul li a,
 .sozialraumdaten a,
 #pages ul li a {
     text-decoration: none;
 }
 
+#navigation ul li:hover a,
 .sozialraumdaten a:hover,
 #pages ul li:hover a {
     text-decoration: underline;
     text-decoration-color: #8f1414;
+}
+
+#navigation .logout,
+#navigation .angebote {
+    display: none;
 }
 
 .district-area {
@@ -637,36 +653,21 @@ h1.my-title {
     /** position: absolute; top: 0px; left: 0px; **/
     z-index: 100;
     /** padding: 10px; **/
-    /* padding-left: 15px; */
-    background-color: #fff;
+    /* padding-left: 15px; background-color: #fff; */
     margin-left: auto;
     margin-right: auto;
     /** border-bottom: 1px solid #FC3; */
 }
 
-#navigation a {
-    color: #343434;
-    text-decoration: none; 
+/* #navigation a {
+    text-decoration: none;
     padding-top: 10px; padding-bottom: 9px;
     padding-left: 10px; padding-right: 10px;
 }
 
-#navigation a.active {
-    background-color: #343434;
-    color: #fff;
-}
-
-#navigation a:hover {
-    text-decoration: underline;
-    color: #006;
-    cursor: pointer;
-/** border-bottom: 1px solid #fff; **/
-/** border-top: 4px solid #333; **/
-}
-
 #navigation a.active:hover {
     color: #fff;
-}
+} **/
 
 #loading-area {
     margin-right: auto; margin-left: auto;
@@ -820,6 +821,181 @@ div.link-area {
     max-width: 890px;
     margin: auto;
 }
+
+
+/** ------------------------------------------------------------------ Sign-up Dialogs --- */
+
+.sign-up {
+    margin: 20px;
+    font-family: serif;
+    color: rgba(39, 99, 140, 1.0);
+    font-size: 16px;
+}
+
+.sign-up label {
+    margin-left: 5px;
+    color: #343434;
+    padding-left: 5px;
+}
+
+.sign-up p {
+    line-height: 1.2em;
+}
+
+.sign-up #receipt-view p {
+    margin-left: 15px;
+}
+
+#account-info,
+#private-info {
+    display: none;
+}
+
+#pre-text {
+    font-size: small;
+    margin: 30px;
+}
+
+#page-header {
+    text-align: left;
+    margin: 30px;
+}
+
+#page-header a {
+    text-decoration: none;
+}
+
+#page-footer {
+    width: 360px;
+    font-size: small;
+    color: #a9a9a9;
+    text-align: left;
+    position: relative;
+    margin: 30px;
+}
+
+#pre-text a,
+#page-footer a {
+    text-decoration: none;
+}
+
+#page-header img.webapp-logo {
+    margin-top: 30px;
+    margin-bottom: 30px;
+}
+
+#page-header .project-title {
+    margin-top: 20px;
+    font-size: 2.5em;
+    font-weight: bold;
+    color: #27638C;
+}
+
+#page-footer .plus {
+    font-size: 3em;
+    font-weight: bold;
+    color: #a9a9a9;
+    position: relative;
+    top: -60px;
+    margin-right: 10px;
+}
+
+#receipt-view,
+#sign-up-view,
+#log-in-view {
+    padding: 0px 30px 30px 15px;
+    border-radius: 3px;
+    text-align: left;
+    max-width: 610px; /** 30px Margin */
+}
+
+#receipt-view h2,
+#sign-up-view h2,
+#log-in-view h2 {
+    margin-left: 15px;
+}
+
+#sign-up-view form,
+#log-in-view form {
+    padding: 15px;
+    position: relative;
+}
+
+#log-in-view form {
+    text-align: left;
+}
+
+#log-in-view form input[type="text"],
+#log-in-view form input[type="password"] {
+    width: 90%;
+}
+
+#sign-up-view form input[type="text"],
+#sign-up-view form input[type="password"] {
+    width: 90%;
+}
+
+#sign-up-view form input[type="checkbox"] {
+    cursor: pointer;
+}
+
+/** #receipt-view h2,
+#sign-up-view h2,
+#log-in-view h2 {
+ text-align: center;
+ color: #666;
+ margin: 0 0 30px 0;
+ position: relative;
+ /** font: normal 26px/1 Verdana, Helvetica;
+} **/
+
+input.log-in,
+input.sign-up {
+    font-size: 20px;
+    padding: 10px 15px 10px 15px;
+    margin: 0 0 15px 0;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    color: #555;
+    -moz-box-shadow: 0 1px 1px #ccc inset, 0 1px 0 #fff;
+    -webkit-box-shadow: 0 1px 1px #ccc inset, 0 1px 0 #fff;
+    box-shadow: 0 1px 1px #ccc inset, 0 1px 0 #fff;
+}
+
+input.log-in.ok,
+input.sign-up.ok {
+    margin-top: 20px;
+    background-color: rgba(39, 99, 140, 1.0);
+    color: rgba(255, 255, 255, 1.0);
+    cursor: pointer;
+    display: inline-block;
+}
+
+input[disabled] {
+    background-color: rgba(99, 99, 99, 1.0);
+}
+
+#message {
+    color: rgba(200, 0, 0, 1.0);
+    line-height: 1.8em;
+}
+
+#message-view {
+    padding: 5px;
+    margin-bottom: 10px;
+    color: rgba(39, 99, 140, 1.0);
+}
+
+
+/** Webclient specific styles */
+
+#sign-up-button {
+ margin-right: 1em;
+}
+
+
+
+
 /** 
   margin-top: 5px; width: 45px; height: 20px;
   childish.. => z-index: 100; position: absolute; top: 10px; left: 10px; 
@@ -915,7 +1091,7 @@ div.link-area {
     }
 }
 
-@media (max-width:600px) {
+@media (max-width:600px), (max-width:720px) {
     #header {
         top: 10px;
         text-align: left;
@@ -972,6 +1148,15 @@ div.link-area {
     #detail-area .entry-card h3 {
         display: inline-block;
         margin: 0px;
+    }
+    .legende .elements {
+        display: none;
+    }
+    #fulltext-search-form input[type="text"] {
+        width: 60%;
+    }
+    #navigation ul {
+        margin-left: 0px;
     }
 }
 

@@ -17,10 +17,10 @@ import de.deepamehta.core.service.Inject;
 import de.deepamehta.core.service.ResultList;
 import de.deepamehta.core.service.Transactional;
 import de.deepamehta.plugins.geomaps.model.GeoCoordinate;
-import de.deepamehta.plugins.geomaps.service.GeomapsService;
-import de.deepamehta.plugins.geospatial.service.GeospatialService;
-import de.mikromedia.webpages.service.WebpagePluginService;
-import de.kiezatlas.service.KiezatlasService;
+import de.deepamehta.plugins.geomaps.GeomapsService;
+import de.deepamehta.plugins.geospatial.GeospatialService;
+import de.mikromedia.webpages.WebpagePluginService;
+import de.kiezatlas.KiezatlasService;
 import de.kiezatlas.website.model.BezirkView;
 import de.kiezatlas.website.model.GeoObjectDetailsView;
 import de.kiezatlas.website.model.GeoObjectView;
@@ -53,7 +53,9 @@ public class KiezatlasWebsitePlugin extends PluginActivator {
 
     private final Logger log = Logger.getLogger(getClass().getName());
 
-    @Inject KiezatlasService kiezService;
+    //
+    //
+    // @Inject KiezatlasService kiezService;
 
     @Inject WebpagePluginService pageService;
 
@@ -74,7 +76,7 @@ public class KiezatlasWebsitePlugin extends PluginActivator {
     @GET
     @Produces(MediaType.TEXT_HTML)
     public InputStream getKiezatlasWebsite() {
-        return getStaticResource("web/index.html");
+        return getStaticResource("web/menu.html");
     }
 
     @GET

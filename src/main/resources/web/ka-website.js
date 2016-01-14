@@ -10,7 +10,6 @@ var kiezatlas = new function() {
     this.default_radius = 750; /* default radius for circle search control (in meter) */
     this.circle_search_control = undefined
     // TODO: Increase max_bounds
-    this.max_bounds = L.latLngBounds(L.latLng(52.298000, 12.909336), L.latLng(52.715646, 13.817779))
     this.webapp_title = "Kiezatlas 2 Website"
 
     // kiezatlas hex colors
@@ -26,7 +25,15 @@ var kiezatlas = new function() {
     this.grey = "#868686";
     this.yellow = "#FFCC33";
 
-    this.current_location = { name: "Neuenburger Straße, Berlin", coordinate: new L.latLng(52.5, 13.4) }
+    // Leaflet Map Defaults
+    if (typeof L !== "undefined") {
+        this.max_bounds = L.latLngBounds(L.latLng(52.298000, 12.909336), L.latLng(52.715646, 13.817779))
+        this.current_location = { name: "Neuenburger Straße, Berlin", coordinate: new L.latLng(52.5, 13.4) }
+        this.markerGroup = undefined
+        this.controlGroup = L.featureGroup()
+        this.districtGroup = L.featureGroup()
+    }
+
     this.locationsearch_results = [] // near-by search street-alternatives
     this.autocomplete_item = 0
     // Note: once a "district" set, no graphical query and circle dialog are available anymore
@@ -44,10 +51,7 @@ var kiezatlas = new function() {
     this.historyApiSupported = window.history.pushState
     //
     this.map = undefined
-    // 
-    this.markerGroup = undefined
-    this.controlGroup = L.featureGroup()
-    this.districtGroup = L.featureGroup()
+    //
     this.isMapCircleLocked = true
     // model of all geo-domain object in client
     this.items = []
@@ -77,6 +81,20 @@ var kiezatlas = new function() {
         }
         // add click and touch handlers on our "three near by options"
         _self.add_nearby_button_handler()
+    }
+
+    this.render_user_menu = function(state) {
+        if (state) {
+            $('li.register').hide()
+            $('li.login').hide()
+            $('li.angebote').attr('style', 'display: inline-block;')
+            $('li.logout').attr('style', 'display: inline-block;')
+        } else {
+            $('li.register').show()
+            $('li.login').show()
+            $('li.angebote').hide()
+            $('li.logout').hide()
+        }
     }
 
     this.render_district_page = function(topic_id) {
@@ -491,21 +509,21 @@ var kiezatlas = new function() {
         _self.clear_geo_object_cluster_group()
         // -- FINALIZE ALL MARKER IN NEW MARKER GROUP
         // create updated/new feature/markerGroup
-        // Formerly: _self.markerGroup = L.featureGroup(list_of_markers)
-        // Formerly: _self.markerGroup.addTo(_self.map)
-        _self.markerGroup = L.markerClusterGroup({
+        _self.markerGroup = L.featureGroup(list_of_markers)
+        _self.markerGroup.addTo(_self.map)
+        /** _self.markerGroup = L.markerClusterGroup({
             "spiderfyOnMaxZoom": true,
             "spiderLegPolylineOptions": { weight: 0.5, color: _self.ka_gold, opacity: 0.5 },
-            "maxClusterRadius": function() {
+            "maxClusterRadius": 5 /** function() {
                 console.log("_maxClusterRadius", el);
                 return 15;
-            }
+            } **/
             /* iconCreateFunction: function(cluster) {
                  console.log("_cluster", cluster)
                 return L.divIcon({ html: '<div class="marker-cluster-medium">' + cluster.getChildCount() + '</div>',
                     className: 'marker-cluster' })
-            }, **/
-        })
+            },
+        }) **/
         //
         for (var el in list_of_markers) {
             var topic = list_of_markers[el]
@@ -1061,6 +1079,53 @@ var kiezatlas = new function() {
                 _self.render_current_location_label()
             }
         })
+    }
+
+    this.is_logged_in = function(callback) {
+        $.get('/accesscontrol/user', function(username) {
+            if (username) {
+                if (username.length > 0) {
+                    callback(true)
+                    return
+                }
+            }
+            callback(false)
+        })
+    }
+
+    this.logout = function() {
+        $.post('/accesscontrol/logout', function(username) {
+            if (!username) kiezatlas.render_user_menu(false)
+        })
+    }
+
+    this.auth = function(handler) {
+        // var id = "ka-website"
+        // "-SHA256-" + SHA256("test")
+        // var secret = "-SHA256-9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08"
+        var authorization = authorization()
+        var response = null
+        if (!authorization) return null
+        $.ajax({
+            type: "POST", url: "/accesscontrol/login", headers: {"Authorization": authorization,
+                "Content-Type": "application/json"}, async: false
+        }).done(function(e) {
+            //
+            response = e
+            console.log("Login success!", e)
+            if (handler) handler()
+        }).fail(function(e) {
+            console.warn(e)
+            response = null
+            throw new Error("401 - Sorry, the application ccould not establish an authenticated session.")
+        }).always(function(e) {
+            console.log("response", response, e)
+            return response
+        })
+
+        function authorization() {
+            return "Basic " + "a2Etd2Vic2l0ZTp0ZXN0" // btoa(id + ":" + secret)
+        }
     }
 
 }

@@ -3,7 +3,7 @@ package de.kiezatlas.website.model;
 import de.deepamehta.core.JSONEnabled;
 import de.deepamehta.core.Topic;
 import de.deepamehta.plugins.geomaps.model.GeoCoordinate;
-import de.deepamehta.plugins.geomaps.service.GeomapsService;
+import de.deepamehta.plugins.geomaps.GeomapsService;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.codehaus.jettison.json.JSONException;

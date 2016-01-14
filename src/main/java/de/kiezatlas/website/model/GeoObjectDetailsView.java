@@ -5,7 +5,7 @@ import de.deepamehta.core.RelatedTopic;
 import de.deepamehta.core.Topic;
 import de.deepamehta.core.service.ResultList;
 import de.deepamehta.plugins.geomaps.model.GeoCoordinate;
-import de.deepamehta.plugins.geomaps.service.GeomapsService;
+import de.deepamehta.plugins.geomaps.GeomapsService;
 import java.util.logging.Level;
 import java.lang.RuntimeException;
 import java.util.logging.Logger;
