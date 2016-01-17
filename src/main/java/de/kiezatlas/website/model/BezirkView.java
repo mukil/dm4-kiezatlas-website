@@ -35,6 +35,11 @@ public class BezirkView implements JSONEnabled {
                 ".webbrowser.web_resource");
     }
 
+    private Topic getBezirksHTML() {
+        return this.topic.getRelatedTopic("dm4.core.association", "dm4.core.default", "dm4.core.default",
+                "ka2.website.bezirk_info");
+    }
+
     private JSONArray getBezirksregionen() {
         JSONArray regionen = new JSONArray();
         ResultList<RelatedTopic> topics = this.topic.getRelatedTopics("dm4.core.association",
@@ -59,10 +64,20 @@ public class BezirkView implements JSONEnabled {
             if (link != null) {
                 imprint = link.getSimpleValue().toString();
             } else if (link == null) {
-                log.warning("### Fallback because district \"" + this.topic.getSimpleValue() + "\" has now \"Web " +
+                log.warning("### Fallback because district \"" + this.topic.getSimpleValue() + "\" has no \"Web " +
                         "Resource\" associated (default, default) which we could use as an IMPRINT!");
             }
+            Topic html = getBezirksHTML();
+            String body = "<h3>Willkommen auf der Kiezatlas-Seite des Bezirks " + getBezirksname() +
+                    "</h3><p><a href=\""+link+"\">Impressum</a></p>";
+            if (html != null) {
+                body = html.getSimpleValue().toString();
+            } else if (html == null) {
+                log.warning("### Fallback because district \"" + this.topic.getSimpleValue() + "\" has no " +
+                        "\"Bezirk Info Area\" associated (default, default) which we could use as content!");
+            }
             this.json.put("imprint", imprint);
+            this.json.put("html", body);
             this.json.put("value", getBezirksname());
             this.json.put("childs", getBezirksregionen());
             this.json.put("uri", this.topic.getUri());

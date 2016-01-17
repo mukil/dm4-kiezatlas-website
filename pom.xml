@@ -32,6 +32,11 @@
             <artifactId>dm47-webpages</artifactId>
             <version>0.4-SNAPSHOT</version>
         </dependency>
+        <dependency>
+            <groupId>de.deepamehta</groupId>
+            <artifactId>deepamehta-workspaces</artifactId>
+            <version>4.7</version>
+        </dependency>
         <!--dependency>
             <groupId>de.deepamehta</groupId>
             <artifactId>dm44-deepamehta-images</artifactId>

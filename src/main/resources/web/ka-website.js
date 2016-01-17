@@ -58,6 +58,10 @@ var kiezatlas = new function() {
     this.districts = []
     this.db = undefined // Does not work with IE / Breaks support for IE
 
+    /** Renders either the
+     *  - Standard Frontpage or (Berlin wide)
+     *  - District Frontpage (District Infos, District Fulltext search)
+     **/
     this.render_page = function() {
         // get current page alias
         var hash = window.location.hash
@@ -99,6 +103,7 @@ var kiezatlas = new function() {
 
     this.render_district_page = function(topic_id) {
         var bezirk = _self.get_bezirks_topic_by_id(topic_id)
+        var bezirk_html = bezirk.html
         $('.location-label .text').html("Berlin " + bezirk.value) // duplicate, use render_current_location_label
         _self.update_document_title(undefined, bezirk.value)
         $('button.star').hide()
@@ -112,11 +117,12 @@ var kiezatlas = new function() {
         $('#fulltext-search').attr("placeholder", "Volltextsuche für " + bezirk.value)
         $('a.lock-control').hide()
         //
+        $('#district-area').html(bezirk_html)
+        $('#district-area').show()
         _self.show_message("Hinweis: Die Volltextsuche liefert ab jetzt nur noch Ergebnisse aus dem Bezirk <em>"
             + bezirk.value + "</em>. W&auml;hlen sie <em>Bezirksfilter aufheben</em> um wieder Berlinweit"
             + " Einrichtungen zu finden.", 7000)
-        // TODO: activate doubleClick to zoom on map
-        _self.map.doubleClickZoom.enable();
+        // _self.map.doubleClickZoom.enable();
         var anchor_name = '#' + encodeURIComponent(bezirk.value.toLowerCase())
         _self.jump_to_map(anchor_name)
         _self.remove_circle_search_control()
@@ -134,6 +140,7 @@ var kiezatlas = new function() {
     this.clear_district_page = function() {
         _self.clear_district_filter_control()
         _self.do_current_center_circle_search()
+        $('#district-area').hide()
     }
 
     this.clear_district_filter_control = function() {
@@ -143,7 +150,7 @@ var kiezatlas = new function() {
         // 2) update gui accordingly
         $('a.district-control').remove()
         $('a.lock-control').show()
-        _self.map.doubleClickZoom.disable();
+        // _self.map.doubleClickZoom.disable();
         _self.clear_circle_marker_group()
         _self.jump_to_map() // ### this updates address bar too
     }
@@ -256,7 +263,7 @@ var kiezatlas = new function() {
         // initiate map
         this.map = new L.Map(dom_el_id, {
             dragging: true, touchZoom: true, scrollWheelZoom: false,
-            doubleClickZoom: false, zoomControl: false, minZoom: 9//,
+            doubleClickZoom: true, zoomControl: false, minZoom: 9//,
             // TODO: Increase max_bounds to not interfere with a locked circle
             // maxBounds: _self.max_bounds,
         })
@@ -991,6 +998,9 @@ var kiezatlas = new function() {
 
     this.load_geo_object_details = function(result_list) {
         // rendering all geo objects sharing this very geo coordinate
+        if (result_list.length > 0) {
+            $('#district-area').hide()
+        }
         for (var i in result_list) {
             $.getJSON('/kiezatlas/topic/'+result_list[i].options['geo_object_id'],
                 function (geo_object) {

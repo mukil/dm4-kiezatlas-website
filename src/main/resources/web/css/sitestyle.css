@@ -244,6 +244,19 @@ h1.my-title {
     text-align: center;
 }
 
+#district-area {
+    font-size: 1.2em;
+    display: none;
+    margin: 50px auto auto;
+    padding-left: 30px;
+    padding-right: 30px;
+}
+
+#district-area span {
+    font-weight: bold;
+    color: #002856;
+}
+
 #pages {
     text-align: left;
     width: 90%;
@@ -408,6 +421,7 @@ h1.my-title {
 #detail-area {
     margin-top: 15px;
     padding: 15px;
+    padding-top: 0px;
     background-color: #EAEAEA;
     display: none;
     min-height: 150px;
@@ -1007,10 +1021,15 @@ input[disabled] {
 } **/
 
 @media(min-width: 1600px) {
+    #district-area,
     #karte {
         max-width: 70%;
         margin-left: auto;
         margin-right: auto;
+    }
+    #district-area {
+        padding-left: 15px;
+        padding-right: 15px;
     }
 }
 

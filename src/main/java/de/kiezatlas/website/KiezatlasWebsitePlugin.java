@@ -19,6 +19,7 @@ import de.deepamehta.core.service.Transactional;
 import de.deepamehta.plugins.geomaps.model.GeoCoordinate;
 import de.deepamehta.plugins.geomaps.GeomapsService;
 import de.deepamehta.plugins.geospatial.GeospatialService;
+import de.deepamehta.plugins.workspaces.WorkspacesService;
 import de.mikromedia.webpages.WebpagePluginService;
 import de.kiezatlas.KiezatlasService;
 import de.kiezatlas.website.model.BezirkView;
@@ -56,6 +57,7 @@ public class KiezatlasWebsitePlugin extends PluginActivator {
     //
     //
     // @Inject KiezatlasService kiezService;
+    @Inject WorkspacesService workspaceService;
 
     @Inject WebpagePluginService pageService;
 
