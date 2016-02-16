@@ -492,9 +492,9 @@ var kiezatlas = new function() {
     }
 
     this.render_geo_objects = function(data, set_view_to_bounds) {
-        // ### We do not clear markers here (which would be nice), we should not render any duplicates ..
+        // Note: Here we decide to not render any duplicates
         var list_of_markers = []
-        // -- PREPARE NEW MARKER
+        // pre-process results
         for (var el in data) {
             var geo_object= data[el]
             if (geo_object == null || !geo_object) {
@@ -504,8 +504,7 @@ var kiezatlas = new function() {
                 if (geo_marker) list_of_markers.push(geo_marker)
             }
         }
-        // -- MERGE EXISTING WITH NEW MARKER
-        // maintain also all previously added markers
+        // merge: maintain also all previously added markers
         if (_self.markerGroup) {
             _self.markerGroup.eachLayer(function (marker) {
                 if (!_self.exist_in_marker_listing(marker.options.geo_object_id, list_of_markers)) {
@@ -515,23 +514,9 @@ var kiezatlas = new function() {
         }
         // clear marker on map
         _self.clear_geo_object_cluster_group()
-        // -- FINALIZE ALL MARKER IN NEW MARKER GROUP
-        // create updated/new feature/markerGroup
+        // build up: create new markerGroup
         _self.markerGroup = L.featureGroup(list_of_markers)
         _self.markerGroup.addTo(_self.map)
-        /** _self.markerGroup = L.markerClusterGroup({
-            "spiderfyOnMaxZoom": true,
-            "spiderLegPolylineOptions": { weight: 0.5, color: _self.ka_gold, opacity: 0.5 },
-            "maxClusterRadius": 5 /** function() {
-                console.log("_maxClusterRadius", el);
-                return 15;
-            } **/
-            /* iconCreateFunction: function(cluster) {
-                 console.log("_cluster", cluster)
-                return L.divIcon({ html: '<div class="marker-cluster-medium">' + cluster.getChildCount() + '</div>',
-                    className: 'marker-cluster' })
-            },
-        }) **/
         //
         for (var el in list_of_markers) {
             var topic = list_of_markers[el]
@@ -543,6 +528,20 @@ var kiezatlas = new function() {
             // _self.map.setMaxBounds(_self.markerGroup.getBounds())
             _self.map.fitBounds(_self.markerGroup.getBounds())
         }
+    }
+
+    this.get_geo_object_topic = function(id) {
+        for (var el in _self.items) {
+            var result_list = _self.items[el]
+            if (typeof result_list === "Object") {
+                if (result_list.id === id) return result_list
+            }
+            for (var element in result_list) {
+                var topic = result_list[element]
+                if (topic.id === id) return topic
+            }
+        }
+        return undefined
     }
 
     this.create_geo_object_marker = function(geo_object) {
@@ -567,12 +566,7 @@ var kiezatlas = new function() {
             // TODO: prevent rendering of duplicates here client side (and not on server side)
             // start creating marker
             var coordinate = L.latLng(result["geo_coordinate_lat"], result["geo_coordinate_lon"])
-            var circle = L.circleMarker(coordinate, {
-                    color: _self.ka_gold, weight: 2, opacity: .8, fillColor: _self.ka_gold, fillOpacity: .6,
-                    title: result["name"], alt: "Markierung von " + result["name"], location_id: result["address_id"],
-                    geo_object_id: result["id"], uri: result["uri"], name: result["name"],// riseOnHover: true,
-                    bezirksregion_uri: result["bezirksregion_uri"], z_indexOffset: 1001
-                })
+            var circle = L.circleMarker(coordinate, _self.calculate_default_circle_options(result))
             // ### Level: 14 > 8px e.g. Level: 13 > 5px
             circle.setRadius(10)
             circle.on('click', function (e) {
@@ -590,15 +584,49 @@ var kiezatlas = new function() {
         }
     }
 
+    this.calculate_default_circle_options = function(result) {
+        var angeboteDashArray = _self.calculate_geo_object_dash_array(result)
+        var hasAngebote = (result["angebote_count"] > 0) ? true : false
+        return {
+            weight: (hasAngebote) ? 3 : 3, opacity: .8, fillColor: _self.ka_gold, fillOpacity: .6, lineCap: 'square',
+            dashArray: angeboteDashArray, color : (hasAngebote) ? _self.m_blue : _self.ka_gold,
+            title: result["name"], alt: "Markierung von " + result["name"], location_id: result["address_id"],
+            geo_object_id: result["id"], uri: result["uri"], name: result["name"],// riseOnHover: true,
+            bezirksregion_uri: result["bezirksregion_uri"], z_indexOffset: 1001
+        }
+    }
+
+    this.calculate_selected_circle_options = function(result) {
+        return {
+            color: _self.ka_gold, weight: 4, opacity: 1,
+            fillColor: _self.m_blue, fillOpacity: 1, className: "selected"
+        }
+    }
+
+    this.calculate_geo_object_dash_array = function(item) {
+        var value = item["angebote_count"]
+        if (value === 0) return [75]
+        if (value === 1) return [2,75]
+        if (value === 2) return [2,5, 2,70]
+        if (value === 3) return [2,5, 2,5, 2,65]
+        if (value === 4) return [2,5, 2,5, 2,5, 2,60]
+        if (value === 5) return [2,5, 2,5, 2,5, 2,5, 2,55]
+        if (value === 6) return [2,5, 2,5, 2,5, 2,5, 2,5, 2,50]
+        if (value === 7) return [2,5, 2,5, 2,5, 2,5, 2,5, 2,5, 2,45]
+        if (value === 8) return [2,5, 2,5, 2,5, 2,5, 2,5, 2,5, 2,5, 2,40]
+        if (value > 8) return [2,5]
+    }
+
     this.select_geo_object_marker = function(marker) {
         // highlight selection
         _self.markerGroup.eachLayer(function (el) {
-            el.setStyle({color: _self.ka_gold, weight: 2, opacity: .8,
-                fillColor: _self.ka_gold,fillOpacity: .4})
+            // default rendering
+            var geo_object = _self.get_geo_object_topic(el.options["geo_object_id"])
+            el.setStyle(_self.calculate_default_circle_options(geo_object))
+            // selected rendering
             if (el.options['geo_object_id'] === marker.options['geo_object_id']) {
                 // ### adding class name to path does not work
-                marker.setStyle({ color: _self.ka_gold, weight: 4, opacity: 1,
-                    fillColor: _self.m_blue, fillOpacity: 1, className: "selected" })
+                marker.setStyle(_self.calculate_selected_circle_options(geo_object))
                 marker.bringToFront()
                 marker.setRadius(12)
             }
@@ -621,9 +649,11 @@ var kiezatlas = new function() {
         var contact = geo_object.kontakt
         var opening_hours = geo_object.oeffnungszeiten
         var lor_link = _self.get_lor_link(geo_object)
-        // ### just renderif there are any angebote..
-        var angebote_link = '<div class="angebote-link">'
-            + '<a class="button" href="javascript:kiezatlas.show_angebotsinfos('+geo_object.id+')">Aktuelle Angebote</a></div>'
+        var angebote_link = ''
+        if (geo_object.angebote_count > 0) {
+            angebote_link = '<div class="angebote-link">'
+                + '<a class="button" href="javascript:kiezatlas.show_angebotsinfos('+geo_object.id+')">Aktuelle Angebote</a></div>'
+        }
         // build up dom for geo object details
         var body_text = ""
         // if (description) body_text += '<p><b>Info</b> ' + description + '</p>'
@@ -1071,7 +1101,7 @@ var kiezatlas = new function() {
         if (radius) radius_value = radius
         $.getJSON('/kiezatlas/search/'+encodeURIComponent(location_string)+'/' + (radius_value / 1000),
             function (geo_objects) {
-                _self.items = geo_objects
+                _self.items.push(geo_objects)
                 // directly removing them from the map without removing them from the markergroup
                 _self.clear_geo_object_marker()
                 _self.hide_spinning_wheel()
@@ -1091,7 +1121,7 @@ var kiezatlas = new function() {
                 console.log("> Text based search returned", geo_objects)
                 // TODO: If search results are zero
                 if (geo_objects.length > 0) {
-                    _self.items = geo_objects
+                    _self.items.push(geo_objects)
                     if (typeof success !== "undefined") {
                         // clear marker group completely after fulltext-search
                         _self.clear_circle_marker_group()

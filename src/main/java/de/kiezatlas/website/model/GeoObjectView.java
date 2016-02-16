@@ -4,9 +4,9 @@ import de.deepamehta.core.JSONEnabled;
 import de.deepamehta.core.Topic;
 import de.deepamehta.plugins.geomaps.model.GeoCoordinate;
 import de.deepamehta.plugins.geomaps.GeomapsService;
+import de.kiezatlas.angebote.AngebotService;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 
 /**
@@ -17,20 +17,24 @@ import org.codehaus.jettison.json.JSONObject;
  */
 public class GeoObjectView implements JSONEnabled {
 
+    // Einrichtung
     Topic geoObject = null;
-    // location
+    // Coordinates
     GeoCoordinate geoCoordinate = null;
     long geoCoordTopicId = -1;
-    //
+    // Kiez
     Topic bezirk = null;
     Topic bezirksregion = null;
     Topic addressTopic = null;
+    // Angebote
+    int angeboteCount = 0;
 
     Logger log = Logger.getLogger(GeoObjectView.class.getName());
 
-    public GeoObjectView(Topic geoObject, GeomapsService geomaps) {
+    public GeoObjectView(Topic geoObject, GeomapsService geomaps, AngebotService angebote) {
         this.geoObject = geoObject;
         getGeoCoordinate(geomaps);
+        this.angeboteCount = angebote.getGeoObjectAngeboteTopics(geoObject).getSize();
     }
 
     public String getName() {
@@ -142,7 +146,8 @@ public class GeoObjectView implements JSONEnabled {
                     .put("bezirk_uri", getBezirkUri())
                     .put("bezirk_name", getBezirkName())
                     .put("bezirksregion_uri", getBezirksregionUri())
-                    .put("bezirksregion_name", getBezirksregionName());
+                    .put("bezirksregion_name", getBezirksregionName())
+                    .put("angebote_count", this.angeboteCount);
         } catch (Exception jex) {
             throw new RuntimeException("Constructing a JSON GeoObjectView FAILED", jex);
         }

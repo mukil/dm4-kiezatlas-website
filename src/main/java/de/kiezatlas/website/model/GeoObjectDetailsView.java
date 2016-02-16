@@ -4,13 +4,10 @@ import de.deepamehta.core.JSONEnabled;
 import de.deepamehta.core.RelatedTopic;
 import de.deepamehta.core.Topic;
 import de.deepamehta.core.service.ResultList;
-import de.deepamehta.plugins.geomaps.model.GeoCoordinate;
 import de.deepamehta.plugins.geomaps.GeomapsService;
-import java.util.logging.Level;
-import java.lang.RuntimeException;
+import de.kiezatlas.angebote.AngebotService;
 import java.util.logging.Logger;
 import org.codehaus.jettison.json.JSONArray;
-import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 
 /**
@@ -22,22 +19,24 @@ import org.codehaus.jettison.json.JSONObject;
  * */
 public class GeoObjectDetailsView implements JSONEnabled {
 
+    // Einrichtung
     GeoObjectView geoObjectView = null;
     long geoCoordinateTopicId = -1;
-    //
+    // Related Categories
     ResultList<RelatedTopic> relatedTopics = null;
     ResultList<RelatedTopic> relatedAudiences = null;
     ResultList<RelatedTopic> relatedServices = null;
-    // sonstiges
+    // Sonstiges
     Topic beschreibung = null;
     Topic contact = null;
     Topic opening_hours = null;
     Topic lor_nr = null;
+    // Angebote
 
     Logger log = Logger.getLogger(GeoObjectDetailsView.class.getName());
 
-    public GeoObjectDetailsView(Topic geoObject, GeomapsService geomaps) {
-        this.geoObjectView = new GeoObjectView(geoObject, geomaps);
+    public GeoObjectDetailsView(Topic geoObject, GeomapsService geomaps, AngebotService angebote) {
+        this.geoObjectView = new GeoObjectView(geoObject, geomaps, angebote);
         // related categories
         relatedTopics = geoObject.getRelatedTopics("dm4.core.aggregation", "dm4.core.parent",
             "dm4.core.child", "ka2.criteria.thema", 0);

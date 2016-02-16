@@ -20,6 +20,7 @@ import de.deepamehta.plugins.geomaps.model.GeoCoordinate;
 import de.deepamehta.plugins.geomaps.GeomapsService;
 import de.deepamehta.plugins.geospatial.GeospatialService;
 import de.deepamehta.plugins.workspaces.WorkspacesService;
+import de.kiezatlas.angebote.AngebotService;
 import de.mikromedia.webpages.WebpagePluginService;
 import de.kiezatlas.website.model.BezirkView;
 import de.kiezatlas.website.model.GeoObjectDetailsView;
@@ -54,11 +55,9 @@ public class WebsitePlugin extends PluginActivator {
     private final Logger log = Logger.getLogger(getClass().getName());
 
     @Inject WorkspacesService workspaceService;
-
     @Inject WebpagePluginService pageService;
-
     @Inject GeospatialService spatialService;
-
+    @Inject AngebotService angeboteService;
     @Inject GeomapsService geomapsService;
 
     // Application Cache of District Overview Resultsets
@@ -108,7 +107,7 @@ public class WebsitePlugin extends PluginActivator {
                 ResultList<RelatedTopic> geoObjects = address.getRelatedTopics("dm4.core.composition",
                     "dm4.core.child", "dm4.core.parent", "ka2.geo_object", 0);
                 for (RelatedTopic geoObject : geoObjects) {
-                    results.add(new GeoObjectView(geoObject, geomapsService));
+                    results.add(new GeoObjectView(geoObject, geomapsService, angeboteService));
                 }
             } else {
                 log.log(Level.INFO, "No Address Entry found for geocoordinate {0}", geoCoordTopic.getSimpleValue());
@@ -140,7 +139,7 @@ public class WebsitePlugin extends PluginActivator {
             // iterate over merged results
             log.info("Start building response for " + geoObjects.size() + " OVERALL");
             for (Topic topic : geoObjects) {
-                results.add(new GeoObjectView(topic, geomapsService));
+                results.add(new GeoObjectView(topic, geomapsService, angeboteService));
             }
             log.info("Build up response " + results.size() + " geo objects across all districts");
             return results;
@@ -172,7 +171,7 @@ public class WebsitePlugin extends PluginActivator {
             for (Topic topic : singleTopics) {
                 Topic geoObject = topic.getRelatedTopic("dm4.core.composition",
                     "dm4.core.child", "dm4.core.parent", "ka2.geo_object");
-                results.add(new GeoObjectView(geoObject, geomapsService));
+                results.add(new GeoObjectView(geoObject, geomapsService, angeboteService));
             }
             return results;
         } catch (Exception e) {
@@ -191,7 +190,7 @@ public class WebsitePlugin extends PluginActivator {
     public GeoObjectDetailsView getKiezatlasTopicView(@HeaderParam("Referer") String referer,
                                                       @PathParam("topicId") long topicId) {
         if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
-        return new GeoObjectDetailsView(dms.getTopic(topicId), geomapsService);
+        return new GeoObjectDetailsView(dms.getTopic(topicId), geomapsService, angeboteService);
     }
 
     // --- Bezirk Specific Resource Search, Overall, Listing
@@ -236,7 +235,7 @@ public class WebsitePlugin extends PluginActivator {
         ResultList<RelatedTopic> geoObjects = bezirk.getRelatedTopics("dm4.core.aggregation",
             "dm4.core.child", "dm4.core.parent", "ka2.geo_object", 0);
         for (RelatedTopic geoObject : geoObjects) {
-            results.add(new GeoObjectView(geoObject, geomapsService));
+            results.add(new GeoObjectView(geoObject, geomapsService, angeboteService));
         }
         log.info("Populating cached list of geo object for district " + bezirkId);
         // insert new result into cache
@@ -270,7 +269,7 @@ public class WebsitePlugin extends PluginActivator {
             for (Topic geoObject: geoObjects) {
                 // check for district
                 if (hasRelatedBezirk(geoObject, districtId)) {
-                    results.add(new GeoObjectView(geoObject, geomapsService));
+                    results.add(new GeoObjectView(geoObject, geomapsService, angeboteService));
                 }
             }
             log.info("Build up response " + results.size() + " geo objects in district=\""+districtId+"\"");
@@ -298,7 +297,7 @@ public class WebsitePlugin extends PluginActivator {
         ResultList<RelatedTopic> geoObjects = bezirksregion.getRelatedTopics("dm4.core.aggregation",
             "dm4.core.child", "dm4.core.parent", "ka2.geo_object", 0);
         for (RelatedTopic geoObject : geoObjects) {
-            results.add(new GeoObjectView(geoObject, geomapsService));
+            results.add(new GeoObjectView(geoObject, geomapsService, angeboteService));
         }
         return results;
     }
