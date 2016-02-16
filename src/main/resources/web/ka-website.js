@@ -56,6 +56,7 @@ var kiezatlas = new function() {
     // model of all geo-domain object in client
     this.items = []
     this.districts = []
+    this.angebote = []
     this.db = undefined // Does not work with IE / Breaks support for IE
 
     /** Renders either the
@@ -616,10 +617,13 @@ var kiezatlas = new function() {
         // prepare citymap link
         var web_alias = geo_object.bezirksregion_uri.slice(18) // ### number of chars the prefix has
         var topic_id = geo_object.uri.slice(19) // ### number of chars the prefix has)
-        var description = geo_object.beschreibung
+        // var description = geo_object.beschreibung
         var contact = geo_object.kontakt
         var opening_hours = geo_object.oeffnungszeiten
         var lor_link = _self.get_lor_link(geo_object)
+        // ### just renderif there are any angebote..
+        var angebote_link = '<div class="angebote-link">'
+            + '<a class="button" href="javascript:kiezatlas.show_angebotsinfos('+geo_object.id+')">Aktuelle Angebote</a></div>'
         // build up dom for geo object details
         var body_text = ""
         // if (description) body_text += '<p><b>Info</b> ' + description + '</p>'
@@ -647,6 +651,7 @@ var kiezatlas = new function() {
                 + geo_object.address_name.toString() + '<br/>'
                 + '' + body_text + ''
             + '</p>'
+            + angebote_link
             + '<a href="http://www.kiezatlas.de/map/'+web_alias+'/p/'+topic_id+'" title="Diesen'
                 + ' Datensatz in seinem ursprünglichen Stadtplan anzeigen">Details im Stadtplan</a>'
             + '<a href="https://fahrinfo.bvg.de/Fahrinfo/bin/query.bin/dn?Z=' + geo_object.address_name.toString()
@@ -996,13 +1001,50 @@ var kiezatlas = new function() {
         )
     }
 
+    this.load_geo_object_angebote = function(geo_object_ids) {
+        $.ajax('/kiezatlas/angebot/list/', {
+            type: "POST", data: JSON.stringify(geo_object_ids),
+            contentType: 'text/plain',
+            error: function(e) {
+                console.log("AJAX POST Error", e)
+                if (e.status === 200) {
+                    _self.angebote = response
+                }
+            },
+            success: function(response) {
+                console.log('Fetched Angebote', response)
+                _self.angebote = response
+            }
+        })
+    }
+
+    this.show_angebotsinfos = function(id) {
+        var infos = _self.get_angebotsinfos_by_geo_object_id(id)
+        console.log("Render Angebotsinfos", infos)
+    }
+
+    this.get_angebotsinfos_by_geo_object_id = function(geo_object_id) {
+        var angebote = []
+        for (var e in _self.angebote) {
+            var angebotsinfo = _self.angebote[e]
+            if (angebotsinfo.assoc.role_1.topic_id === geo_object_id ||
+                angebotsinfo.assoc.role_2.topic_id === geo_object_id) {
+                angebote.push(angebotsinfo)
+            }
+        }
+        return angebote
+    }
+
     this.load_geo_object_details = function(result_list) {
         // rendering all geo objects sharing this very geo coordinate
         if (result_list.length > 0) {
             $('#district-area').hide()
         }
+        var list_geo_object_ids = []
         for (var i in result_list) {
-            $.getJSON('/kiezatlas/topic/'+result_list[i].options['geo_object_id'],
+            var geo_object_id = result_list[i].options['geo_object_id']
+            list_geo_object_ids.push(geo_object_id)
+            $.getJSON('/kiezatlas/topic/' + geo_object_id,
                 function (geo_object) {
                     if (geo_object) {
                         _self.render_geo_object_details_card(geo_object)
@@ -1012,6 +1054,8 @@ var kiezatlas = new function() {
                 }
             )
         }
+        // load angebote of all selected geo objects at once
+        _self.load_geo_object_angebote(list_geo_object_ids)
     }
 
     this.do_circle_search = function(location, radius) {

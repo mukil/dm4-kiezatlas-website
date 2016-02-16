@@ -21,7 +21,6 @@ import de.deepamehta.plugins.geomaps.GeomapsService;
 import de.deepamehta.plugins.geospatial.GeospatialService;
 import de.deepamehta.plugins.workspaces.WorkspacesService;
 import de.mikromedia.webpages.WebpagePluginService;
-import de.kiezatlas.KiezatlasService;
 import de.kiezatlas.website.model.BezirkView;
 import de.kiezatlas.website.model.GeoObjectDetailsView;
 import de.kiezatlas.website.model.GeoObjectView;
@@ -39,24 +38,21 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 
 /**
- * The module shipping the Kiezatlas 2 Website.<br/>
- * Based on dm44-kiezatlas-2.1.6 and dm44-kiezatlas-etl-0.0.2<br/>
- * Compatible with DeepaMehta 4.4.
+ * The module bundline the new Kiezatlas 2 Website.<br/>
+ * Based on dm47-kiezatlas-2.1.7-SNAPSHOT, dm47-kiezatlas-etl-0.2.1-SNAPSHOT and dm47-webpages-0.3.<br/>
+ * Compatible with DeepaMehta 4.7
  * <a href="http://github.com/mukil/dm4-kiezatlas-website">Source Code</a>
  *
  * @author Malte Reißig (<a href="mailto:malte@mikromedia.de">Contact</a>)
- * @version 0.2-SNAPSHOT
+ * @version 0.3-SNAPSHOT
  */
 @Path("/kiezatlas")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
-public class KiezatlasWebsitePlugin extends PluginActivator {
+public class WebsitePlugin extends PluginActivator {
 
     private final Logger log = Logger.getLogger(getClass().getName());
 
-    //
-    //
-    // @Inject KiezatlasService kiezService;
     @Inject WorkspacesService workspaceService;
 
     @Inject WebpagePluginService pageService;
@@ -69,30 +65,32 @@ public class KiezatlasWebsitePlugin extends PluginActivator {
     HashMap<Long, List<GeoObjectView>> districtsCache = new HashMap<Long, List<GeoObjectView>>();
     HashMap<Long, Long> districtCachedAt = new HashMap<Long, Long>();
 
+    /**
+     * Sets the Kiezatlas Website index.html as main resource to be served at "/" by the webpages-module.
+     */
     @Override
     public void init() {
-        log.info("Setting new Frontpage Resource via WebpagePluginService");
         pageService.setFrontpageResource("/web/index.html", "de.kiezatlas.website");
     }
 
+    /**
+     * Responds with the main menu for the Kiezatlas Website at Resource /kiezatlas/.
+     */
     @GET
     @Produces(MediaType.TEXT_HTML)
     public InputStream getKiezatlasWebsite() {
         return getStaticResource("web/menu.html");
     }
 
-    @GET
-    @Path("/topic/{topicId}")
-    public GeoObjectDetailsView getKiezatlasTopicView(@HeaderParam("Referer") String referer,
-													  @PathParam("topicId") long topicId) {
-        if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
-        return new GeoObjectDetailsView(dms.getTopic(topicId), geomapsService);
-    }
-
+    /**
+     * Fetches Geo Objects to be displayed in a map by WGS 84 coordinate pair (Longitude, Latitude) and a radius in km.
+     * @param coordinates
+     * @param radius
+     */
     @GET
     @Path("/search/{coordinatePair}/{radius}")
     public List<GeoObjectView> getGeoObjectsNearBy(@PathParam("coordinatePair") String coordinates,
-												   @PathParam("radius") String radius) {
+                                                   @PathParam("radius") String radius) {
         double lon = 13.4, lat = 52.5;
         if (coordinates != null && !coordinates.isEmpty() && coordinates.contains(",")) {
             lon = Double.parseDouble(coordinates.split(",")[0].trim());
@@ -119,6 +117,11 @@ public class KiezatlasWebsitePlugin extends PluginActivator {
         return results;
     }
 
+    /**
+     * Builds up a list of search results (Geo Objects to be displayed in a map) by text query.
+     * @param referer
+     * @param query
+     */
     @GET
     @Path("/search")
     @Transactional
@@ -146,39 +149,15 @@ public class KiezatlasWebsitePlugin extends PluginActivator {
         }
     }
 
-    @GET
-    @Path("/search/{districtId}")
-    @Transactional
-    public List<GeoObjectView> searchGeoObjectTopicsInDistrict(@HeaderParam("Referer") String referer,
-                                                               @PathParam ("districtId") long districtId,
-                                                               @QueryParam("search") String query) {
-        if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
-        try {
-            ArrayList<GeoObjectView> results = new ArrayList<GeoObjectView>();
-            if (query.isEmpty()) {
-                log.warning("No search term entered, returning empty resultset");
-                return results;
-            }
-            List<Topic> geoObjects = searchInGeoObjectChildsByText(query);
-            // iterate over merged results
-            log.info("Start building response for " + geoObjects.size() + " and FILTER by DISTRICT");
-            for (Topic geoObject: geoObjects) {
-                // check for district
-                if (hasRelatedBezirk(geoObject, districtId)) {
-                    results.add(new GeoObjectView(geoObject, geomapsService));
-                }
-            }
-            log.info("Build up response " + results.size() + " geo objects in district=\""+districtId+"\"");
-            return results;
-        } catch (Exception e) {
-            throw new RuntimeException("Searching geo object topics failed", e);
-        }
-    }
-
+    /**
+     * Fetches a list of Geo Objects to be displayed in a map by name.
+     * @param referer
+     * @param query
+     */
     @GET
     @Path("/by_name")
     public List<GeoObjectView> getGeoObjectsByName(@HeaderParam("Referer") String referer,
-												   @QueryParam("query") String query) {
+                                                   @QueryParam("query") String query) {
         if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
         try {
             log.log(Level.INFO, "> nameQuery=\"{0}\"", query);
@@ -201,7 +180,21 @@ public class KiezatlasWebsitePlugin extends PluginActivator {
         }
     }
 
-    // --- Kiezatlas City Resources: Bezirk and Bezirksregion
+    /**
+     * Fetches details about a Kiezatlas Geo Object.
+     *
+     * @param referer
+     * @param topicId
+     */
+    @GET
+    @Path("/topic/{topicId}")
+    public GeoObjectDetailsView getKiezatlasTopicView(@HeaderParam("Referer") String referer,
+                                                      @PathParam("topicId") long topicId) {
+        if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
+        return new GeoObjectDetailsView(dms.getTopic(topicId), geomapsService);
+    }
+
+    // --- Bezirk Specific Resource Search, Overall, Listing
 
     @GET
     @Path("/bezirk")
@@ -220,7 +213,6 @@ public class KiezatlasWebsitePlugin extends PluginActivator {
      * Details of existing (but updated) geo objects are not affected by this cache.
      * @param referer
      * @param bezirkId
-     * @return
      */
     @GET
     @Path("/bezirk/{topicId}")
@@ -253,6 +245,43 @@ public class KiezatlasWebsitePlugin extends PluginActivator {
         return results;
     }
 
+    /**
+     * Builds up a list of search results (Geo Objects to be displayed in a map) by district topic id and text query.
+     * @param referer
+     * @param districtId
+     * @param query
+     */
+    @GET
+    @Path("/search/{districtId}")
+    @Transactional
+    public List<GeoObjectView> searchGeoObjectTopicsInDistrict(@HeaderParam("Referer") String referer,
+                                                               @PathParam("districtId") long districtId,
+                                                               @QueryParam("search") String query) {
+        if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
+        try {
+            ArrayList<GeoObjectView> results = new ArrayList<GeoObjectView>();
+            if (query.isEmpty()) {
+                log.warning("No search term entered, returning empty resultset");
+                return results;
+            }
+            List<Topic> geoObjects = searchInGeoObjectChildsByText(query);
+            // iterate over merged results
+            log.info("Start building response for " + geoObjects.size() + " and FILTER by DISTRICT");
+            for (Topic geoObject: geoObjects) {
+                // check for district
+                if (hasRelatedBezirk(geoObject, districtId)) {
+                    results.add(new GeoObjectView(geoObject, geomapsService));
+                }
+            }
+            log.info("Build up response " + results.size() + " geo objects in district=\""+districtId+"\"");
+            return results;
+        } catch (Exception e) {
+            throw new RuntimeException("Searching geo object topics failed", e);
+        }
+    }
+
+    // --- Bezirksregionen Resources Listing
+
     @GET
     @Path("/bezirksregion")
     public ResultList<RelatedTopic> getKiezatlasSubregions() {
@@ -274,7 +303,7 @@ public class KiezatlasWebsitePlugin extends PluginActivator {
         return results;
     }
 
-    // --- Geo Coding Utiltiy Resources (Google Wrapper)
+    // --- Utility Resources (Geo Coding and Reverse Geo Coding)
 
     @GET
     @Path("/geocode")
@@ -338,7 +367,7 @@ public class KiezatlasWebsitePlugin extends PluginActivator {
         return result;
     }
 
-    // --- Private Utility Methods
+    // ------------------------------------------------------------------------------------------------- Private Methods
 
     private List<Topic> searchInGeoObjectChildsByText(String query) {
         // ### Todo: Fetch for ka2.ansprechpartner, dm4.tags.tag and maybe category-names too
@@ -362,7 +391,7 @@ public class KiezatlasWebsitePlugin extends PluginActivator {
                 uniqueResults.put(geoObject.getId(), geoObject);
             }
         }
-        log.info("searchedResult Length=" + (searchResults.size()) + ", " + "uniqueResult Length=" + uniqueResults.size());
+        log.info("searchResultLenght=" + (searchResults.size()) + ", " + "uniqueResultLength=" + uniqueResults.size());
         return new ArrayList(uniqueResults.values());
     }
 
@@ -380,7 +409,7 @@ public class KiezatlasWebsitePlugin extends PluginActivator {
 
     private boolean isValidReferer(String ref) {
         if (ref == null) return false;
-        if (ref.contains(".kiezatlas.de/") ||  ref.contains("localhost")) {
+        if (ref.contains(".kiezatlas.de/") || ref.contains("localhost")) {
             return true;
         } else {
             return false;

@@ -290,13 +290,13 @@ h1.my-title {
 }
 
 #navigation ul li a,
-.sozialraumdaten a,
+.entry-card a,
 #pages ul li a {
     text-decoration: none;
 }
 
 #navigation ul li:hover a,
-.sozialraumdaten a:hover,
+.entry-card a:hover,
 #pages ul li:hover a {
     text-decoration: underline;
     text-decoration-color: #8f1414;
@@ -449,6 +449,11 @@ h1.my-title {
     position: absolute;
     bottom: -30px;
     right: 15px;
+}
+
+#detail-area .entry-card .angebote-link {
+    padding-bottom: 15px;
+    padding-top: 10px;
 }
 
 #detail-area .entry-card .lor-link {
@@ -880,7 +885,6 @@ div.link-area {
 }
 
 #page-footer {
-    width: 360px;
     font-size: small;
     color: #a9a9a9;
     text-align: left;

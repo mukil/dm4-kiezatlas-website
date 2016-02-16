@@ -27,6 +27,11 @@
             <artifactId>dm47-kiezatlas-etl</artifactId>
             <version>0.3-SNAPSHOT</version>
         </dependency>
+        <!--dependency>
+            <groupId>de.kiezatlas</groupId>
+            <artifactId>dm47-kiezatlas-angebote</artifactId>
+            <version>0.2-SNAPSHOT</version>
+        </dependency-->
         <dependency>
             <groupId>de.mikromedia</groupId>
             <artifactId>dm47-webpages</artifactId>
@@ -62,7 +67,7 @@
                 <configuration>
                     <instructions>
                         <Bundle-Activator>
-                            de.kiezatlas.website.KiezatlasWebsitePlugin
+                            de.kiezatlas.website.WebsitePlugin
                         </Bundle-Activator>
                         <Bundle-SymbolicName>
                            de.kiezatlas.website
