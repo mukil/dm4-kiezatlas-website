@@ -1,4 +1,27 @@
 
+// kiezatlas hex colors
+var colors = {
+    "ka_blue": "#002856",       // circle control
+    "blue": "#1944fc",          // unused
+    "b_blue": "#5a78f3",        // unused
+    "ka_water": "#ccdddd",      // unused
+    "ka_red": "#8f1414",        // districs layer polygon outline
+    "m_blue": "#5784b8",        // marker: medium blue outline and fill-in (selected)
+    "ka_gold": "#EACA8F",       // marker: yellow fill-ine and outline (selected)
+    "darkgrey": "#343434",      // unused
+    "bright_grey": "#a9a9a9",   // unused
+    "grey": "#868686",          // unused
+    "yellow": "#FFCC33"         // circle control
+}
+
+var mapping = {
+    zoomDetailLevel: 15,
+    zoomStreetLevel: 14,
+    zoomKiezLevel: 13,
+    zoomDistrictLevel : 12,
+    zoomCityLevel: 11
+}
+
 /**
  * 
  * @type @new;_L5
@@ -11,19 +34,6 @@ var kiezatlas = new function() {
     this.circle_search_control = undefined
     // TODO: Increase max_bounds
     this.webapp_title = "Kiezatlas 2 Website"
-
-    // kiezatlas hex colors
-    /** brighter blue #5a78f3, blue: "#1944fc" yellow: "#FFCC00"**/
-    this.ka_blue = "#002856";
-    this.blue = "#1944fc";
-    this.ka_water = "#ccdddd";
-    this.m_blue = "#5784b8";
-    this.ka_red = "#8f1414";
-    this.ka_gold = "#EACA8F";
-    this.darkgrey = "#343434";
-    this.bright_grey = "#a9a9a9";
-    this.grey = "#868686";
-    this.yellow = "#FFCC33";
 
     // Leaflet Map Defaults
     if (typeof L !== "undefined") {
@@ -39,12 +49,6 @@ var kiezatlas = new function() {
     // Note: once a "district" set, no graphical query and circle dialog are available anymore
     // & all further queries get the district parameter appended!
     this.district = undefined
-    //
-    this.LEVEL_OF_DETAIL_ZOOM = 15 // the map focus when a map internal info Window is rendered
-    this.LEVEL_OF_STREET_ZOOM = 14
-    this.LEVEL_OF_KIEZ_ZOOM = 13
-    this.LEVEL_OF_DISTRICT_ZOOM = 12
-    this.LEVEL_OF_CITY_ZOOM = 11
     //
     this.location_circle = undefined
     //
@@ -128,7 +132,6 @@ var kiezatlas = new function() {
         _self.jump_to_map(anchor_name)
         _self.remove_circle_search_control()
         _self.show_spinning_wheel()
-        // _self.load_district_html()
         // _self.render_districts_layer()
         $.getJSON('/kiezatlas/bezirk/' + topic_id, function (response) {
             // TODO: render fetched "geo objects" in groups of hundred
@@ -161,7 +164,7 @@ var kiezatlas = new function() {
         _self.render_circle_search_control() // fitBounds=false
         _self.do_circle_search(undefined, undefined)
         _self.reverse_geocode()
-        _self.map.setZoom(_self.LEVEL_OF_KIEZ_ZOOM)
+        _self.map.setZoom(mapping.zoomKiezLevel)
     }
 
     this.init_map_dialog = function(detectLocation, zoomLevel, jumpToMap) {
@@ -243,7 +246,7 @@ var kiezatlas = new function() {
         _self.render_circle_search_control()
         // then fire query
         _self.do_circle_search(undefined, undefined)
-        _self.map.setView(_self.current_location.coordinate, _self.LEVEL_OF_STREET_ZOOM)
+        _self.map.setView(_self.current_location.coordinate, mapping.zoomStreetLevel)
     }
 
     this.setup_leaflet_dom = function(dom_el_id) {
@@ -271,11 +274,11 @@ var kiezatlas = new function() {
         // custom zoom control
         new L.control.zoom( { position: "topright" }).addTo(_self.map)
         // tile layer
-        L.tileLayer('https://api.tiles.mapbox.com/v4/kiezatlas.map-feifsq6f/{z}/{x}/{y}.png?access_token=pk.eyJ1Ijoia2llemF0bGFzIiwiYSI6InFmRTdOWlUifQ.VjM4-2Ow6uuWR_7b49Y9Eg', {
-            attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://mapbox.com">Mapbox</a>',
-            id: '_self.m7222ia5',
-            accessToken: 'pk.eyJ1Ijoia2llemF0bGFzIiwiYSI6InFmRTdOWlUifQ.VjM4-2Ow6uuWR_7b49Y9Eg'
-        }).addTo(_self.map)
+        L.tileLayer('https://api.tiles.mapbox.com/v4/kiezatlas.map-feifsq6f/{z}/{x}/{y}.png?'
+            + 'access_token=pk.eyJ1Ijoia2llemF0bGFzIiwiYSI6ImNpa3BndjU2ODAwYm53MGxzM3JtOXFmb2IifQ._PcBhOcfLYDD8RP3BS0U_g', {
+            attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors,'
+            + '<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery &#169; <a href="http://mapbox.com">Mapbox</a>',
+            id: '_self.m7222ia5'}).addTo(_self.map)
         // browser location util
         _self.render_browser_location_button()
         _self.map.on('locationfound', _self.on_browser_location_found)
@@ -291,8 +294,7 @@ var kiezatlas = new function() {
         // render radius control at first place
         _self.render_circle_search_control()
         // correct current default viewport
-        _self.map.setView(_self.current_location.coordinate, _self.LEVEL_OF_KIEZ_ZOOM)
-        console.log("> setup leaflet dom with zoomLevel", _self.map.getZoom())
+        _self.map.setView(_self.current_location.coordinate, mapping.zoomKiezLevel)
         if (_self.isMapCircleLocked) $('.leaflet-editing-icon').hide() // ### duplicate, fix circle initialization
         // ### && !_self.district
     }
@@ -321,7 +323,7 @@ var kiezatlas = new function() {
                 _self.render_current_location_label(true)
                 _self.jump_to_map()
                 // correct current map-viewport to default after a seemingly correct (but not sane location-query result)
-                _self.map.setView(_self.current_location.coordinate, _self.LEVEL_OF_STREET_ZOOM)
+                _self.map.setView(_self.current_location.coordinate, mapping.zoomStreetLevel)
             } else {
                 _self.current_location.coordinate = new L.latLng(item.geometry.location.lat, item.geometry.location.lng)
                 _self.default_radius = 900 // adapt circle size for this search a bit
@@ -421,7 +423,7 @@ var kiezatlas = new function() {
         }
         if (!_self.district) {
             _self.circle_search_control = new L.CircleEditor(_self.current_location.coordinate, _self.default_radius, {
-                color: _self.ka_blue, weight: 3, opacity: .5, fillColor: _self.yellow, fillOpacity: 0,
+                color: colors.ka_blue, weight: 3, opacity: .5, fillColor: colors.yellow, fillOpacity: 0,
                 extendedIconClass: "extend-icon-medium", className: "leaflet-radius-control", clickable: false,
                 zIndexOffset: 101
             })
@@ -445,7 +447,7 @@ var kiezatlas = new function() {
                 // _self.map.fitBounds(_self.controlGroup.getBounds())
                 _self.map.setView(
                     _self.controlGroup.getBounds().getCenter(),
-                    _self.LEVEL_OF_STREET_ZOOM)
+                    mapping.zoomStreetLevel)
             }
             if (_self.isMapCircleLocked) $('.leaflet-editing-icon').hide()
         }
@@ -545,26 +547,29 @@ var kiezatlas = new function() {
     }
 
     this.create_geo_object_marker = function(geo_object) {
-        if (geo_object.hasOwnProperty("geo_coordinate_lat") && geo_object.hasOwnProperty("geo_coordinate_lon")) { //sanity check
+        // Sets up an interactive leaflet marker for a "ka2.geo_object"
+        if (geo_object.hasOwnProperty("geo_coordinate_lat")
+            && geo_object.hasOwnProperty("geo_coordinate_lon")) {
+            // 0) pre-process: geo object has geo coordinate
             var result = geo_object
-            // do worldwide check & report
+            // 1) pre-processing: do worldwide coordinate check & log
             if (geo_object.geo_coordinate_lat > 90 || geo_object.geo_coordinate_lon > 180 ||
                 geo_object.geo_coordinate_lat < -90 || geo_object.geo_coordinate_lon < -180 ) {
                 console.info("Invalid WGS 84 coordinates spotted at", geo_object)
                 return undefined
             }
-            // do berlin check & report
+            // 2) pre-processing: do berlin coordinate check & log
             if (geo_object.geo_coordinate_lon < 10 || geo_object.geo_coordinate_lat < 45 ||
                 geo_object.geo_coordinate_lon > 15 || geo_object.geo_coordinate_lat > 55) {
                 console.info("WGS 84 coordinates do look strange in case of Berlin", geo_object)
                 return undefined
             }
-            if (geo_object["bezirksregion_uri"] == "") {
+            // 3) pre-precossing: do kiezatlas deep link check & log
+            if (geo_object["bezirksregion_uri"] === "") {
                 console.info("Invalid Geo Object - Missing Bezirksregion URI", geo_object["name"])
                 return undefined
             }
-            // TODO: prevent rendering of duplicates here client side (and not on server side)
-            // start creating marker
+            // 4) Create a circle marker
             var coordinate = L.latLng(result["geo_coordinate_lat"], result["geo_coordinate_lon"])
             var circle = L.circleMarker(coordinate, _self.calculate_default_circle_options(result))
             // ### Level: 14 > 8px e.g. Level: 13 > 5px
@@ -588,8 +593,8 @@ var kiezatlas = new function() {
         var angeboteDashArray = _self.calculate_geo_object_dash_array(result)
         var hasAngebote = (result["angebote_count"] > 0) ? true : false
         return {
-            weight: (hasAngebote) ? 3 : 3, opacity: .8, fillColor: _self.ka_gold, fillOpacity: .6, lineCap: 'square',
-            dashArray: angeboteDashArray, color : (hasAngebote) ? _self.m_blue : _self.ka_gold,
+            weight: (hasAngebote) ? 3 : 3, opacity: .8, fillColor: colors.ka_gold, fillOpacity: .6, lineCap: 'square',
+            dashArray: angeboteDashArray, color : (hasAngebote) ? colors.m_blue : colors.ka_gold,
             title: result["name"], alt: "Markierung von " + result["name"], location_id: result["address_id"],
             geo_object_id: result["id"], uri: result["uri"], name: result["name"],// riseOnHover: true,
             bezirksregion_uri: result["bezirksregion_uri"], z_indexOffset: 1001
@@ -598,8 +603,8 @@ var kiezatlas = new function() {
 
     this.calculate_selected_circle_options = function(result) {
         return {
-            color: _self.ka_gold, weight: 4, opacity: 1,
-            fillColor: _self.m_blue, fillOpacity: 1, className: "selected"
+            color: colors.ka_gold, weight: 4, opacity: 1,
+            fillColor: colors.m_blue, fillOpacity: 1, className: "selected"
         }
     }
 
@@ -738,12 +743,12 @@ var kiezatlas = new function() {
 
     this.handle_option_c = function(e) {
         // initiate map with edible circle control
-        _self.init_map_dialog(false, _self.LEVEL_OF_KIEZ_ZOOM, true)
+        _self.init_map_dialog(false, mapping.zoomKiezLevel, true)
     }
 
     this.handle_option_b = function(e) {
         // initiate map with edible circle control but focus on street
-        _self.init_map_dialog(false, _self.LEVEL_OF_STREET_ZOOM, true)
+        _self.init_map_dialog(false, mapping.zoomStreetLevel, true)
     }
 
     // Utility Methods for Application Model
@@ -929,7 +934,7 @@ var kiezatlas = new function() {
         //
         if (typeof options === "undefined") { // ??? do this options work for us?
             options =  {
-                "setView" : true, "maxZoom" : _self.LEVEL_OF_DETAIL_ZOOM
+                "setView" : true, "maxZoom" : mapping.zoomDetailLevel
             }
         }
         _self.map.locate(options)
@@ -944,7 +949,7 @@ var kiezatlas = new function() {
                 + '<a href="javascript:kiezatlas.focus_location_input_field()" '+ '>die Texteingabe</a>.'
             _self.render_current_location_label(true)
             // correct current map-viewport to default after a seemingly correct (but not sane location-query result)
-            _self.map.setView(_self.current_location.coordinate, _self.LEVEL_OF_STREET_ZOOM)
+            _self.map.setView(_self.current_location.coordinate, mapping.zoomStreetLevel)
         } else {
             _self.current_location.coordinate.lat = e.latitude
             _self.current_location.coordinate.lng = e.longitude
@@ -953,7 +958,7 @@ var kiezatlas = new function() {
             // then fire query
             _self.do_circle_search(undefined, undefined)
             // correct current default viewport
-            _self.map.setView(_self.current_location.coordinate, _self.LEVEL_OF_STREET_ZOOM)
+            _self.map.setView(_self.current_location.coordinate, mapping.zoomStreetLevel)
             // ### if location in berlin, do something smart (suggest to save location to favourites'db
                 // ### complete error handling, for geo-name lookup
             _self.reverse_geocode()
@@ -967,7 +972,7 @@ var kiezatlas = new function() {
       */
     this.on_browser_location_error = function(e) {
         _self.hide_spinning_wheel(true)
-        // _self.map.setView(_self.current_location.coordinate, _self.LEVEL_OF_DISTRICT_ZOOM)
+        // _self.map.setView(_self.current_location.coordinate, mapping.zoomDistrictLevel)
         if (_self.max_bounds.contains([_self.current_location.coordinate.lat, _self.current_location.coordinate.lng])) {
             // render radius control at standard place
             _self.render_circle_search_control()
@@ -986,7 +991,7 @@ var kiezatlas = new function() {
                 var geoJson = L.geoJson(data, {
                     style: function (feature) {
                         return {
-                            "color": _self.ka_red, "width" : 1, "dashArray" : "15, 10, 5, 10",
+                            "color": colors.ka_red, "width" : 1, "dashArray" : "15, 10, 5, 10",
                             "fillColor": "transparent", "fillOpacity": 0, "opacity": 0.2
                         }
                     },
@@ -1050,7 +1055,7 @@ var kiezatlas = new function() {
 
     this.show_angebotsinfos = function(id) {
         var infos = _self.get_angebotsinfos_by_geo_object_id(id)
-        console.log("Render Angebotsinfos", infos)
+        console.log("- NYE - Render Angebotsinfos", infos)
     }
 
     this.get_angebotsinfos_by_geo_object_id = function(geo_object_id) {
@@ -1181,35 +1186,6 @@ var kiezatlas = new function() {
         $.post('/accesscontrol/logout', function(username) {
             if (!username) kiezatlas.render_user_menu(false)
         })
-    }
-
-    this.auth = function(handler) {
-        // var id = "ka-website"
-        // "-SHA256-" + SHA256("test")
-        // var secret = "-SHA256-9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08"
-        var authorization = authorization()
-        var response = null
-        if (!authorization) return null
-        $.ajax({
-            type: "POST", url: "/accesscontrol/login", headers: {"Authorization": authorization,
-                "Content-Type": "application/json"}, async: false
-        }).done(function(e) {
-            //
-            response = e
-            console.log("Login success!", e)
-            if (handler) handler()
-        }).fail(function(e) {
-            console.warn(e)
-            response = null
-            throw new Error("401 - Sorry, the application ccould not establish an authenticated session.")
-        }).always(function(e) {
-            console.log("response", response, e)
-            return response
-        })
-
-        function authorization() {
-            return "Basic " + "a2Etd2Vic2l0ZTp0ZXN0" // btoa(id + ":" + secret)
-        }
     }
 
 }
