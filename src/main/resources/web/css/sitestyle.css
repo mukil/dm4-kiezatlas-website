@@ -844,11 +844,14 @@ div.link-area {
 
 /** ------------------------------------------------------------------ Sign-up Dialogs --- */
 
-.sign-up {
-    margin: 20px;
+.api-up, .sign-up {
     font-family: serif;
     color: rgba(39, 99, 140, 1.0);
     font-size: 16px;
+}
+
+.sign-up {
+    margin: 20px;
 }
 
 .sign-up label {
@@ -870,9 +873,13 @@ div.link-area {
     display: none;
 }
 
+#api-text,
+#pre-text {
+    margin: 30px;
+}
+
 #pre-text {
     font-size: small;
-    margin: 30px;
 }
 
 #page-header {
@@ -968,6 +975,7 @@ div.link-area {
 } **/
 
 input.log-in,
+input.api-up,
 input.sign-up {
     font-size: 20px;
     padding: 10px 15px 10px 15px;
@@ -981,6 +989,7 @@ input.sign-up {
 }
 
 input.log-in.ok,
+input.api-up,
 input.sign-up.ok {
     margin-top: 20px;
     background-color: rgba(39, 99, 140, 1.0);
@@ -991,6 +1000,13 @@ input.sign-up.ok {
 
 input[disabled] {
     background-color: rgba(99, 99, 99, 1.0);
+}
+
+input.sign-up.ok[disabled],
+input[type="text"][disabled] {
+    color: #999;
+    background-color: #fff;
+    cursor: auto;
 }
 
 #message {
