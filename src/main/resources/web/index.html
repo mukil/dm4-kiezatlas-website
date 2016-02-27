@@ -24,8 +24,8 @@
         <script src="/de.kiezatlas.website/ka-restclient.js"></script>
         <script src="/de.kiezatlas.website/ka-map.js"></script>
         <script src="/de.kiezatlas.website/ka-angebote.js"></script>
-        <script src="/de.kiezatlas.website/ka-website.js"></script>
         <script src="/de.kiezatlas.website/ka-favourites.js"></script>
+        <script src="/de.kiezatlas.website/ka-website.js"></script>
         <script src="/de.deepamehta.accesscontrol/script/vendor/sha256.js"></script>
 
         <script type="text/javascript">
@@ -33,74 +33,25 @@
             // App initialization
             $(document).ready(function(e) {
                 //
-                if (!isMSIE()) {
+                if (!is_msie()) {
                     favourites.start_local_db()
                     favourites.list_entries_in_local_db()
-                } else {
-                    // ### Update GUI accordingly
-                    console.warn("Favourite places feature is unavailable for users of Microsoft Internet Explorer")
                 }
                 // render all components of the page requested
                 kiezatlas.render_page()
-                // testing
-                // kiezatlas.auth(function() { console.log("Done app authentication") })
+                // add click and touch handlers on our "three near by options"
+                kiezatlas.add_nearby_button_handler()
+                // render user menu
                 restc.is_logged_in(function(response) {
                     kiezatlas.render_user_menu(response)
                 })
             })
 
-            // Current MSIE Check courtesy of http://www.javascriptkit.com
-            function isMSIE() {
+            // Current MSIE Check here for our PouchDB Favourite Feature courtesy of http://www.javascriptkit.co
+            function is_msie() {
                 var ie11andabove = navigator.userAgent.indexOf('Trident') != -1 && navigator.userAgent.indexOf('MSIE') == -1 // IE11 or above Boolean
                 var ie10andbelow = navigator.userAgent.indexOf('MSIE') != -1 // IE10 or below Boolean
                 return (ie11andabove || ie10andbelow)
-            }
-
-            // Register Fulltext Search Handler
-            function search_fulltext_geo_objects() {
-                var query = $("#fulltext-search").val()
-                if (query.length >= 1) {
-                    query = encodeURIComponent(query + "*", "UTF-8")
-                    kiezatlas.do_text_search_geo_objects(query, kiezatlas.render_geo_objects)
-                } else {
-                    console.log("Text query was empty, skipping search")
-                }
-            }
-
-            // Register Near-By Text Search Handler
-            function search_location_by_text() {
-                var streetFocus = $("#near-by").val() + ' Berlin, Deutschland'
-                    streetFocus = encodeURIComponent(streetFocus, "UTF-8")
-                $('.location-search-info').hide()
-                // if district filter is set, remove it
-                if (kiezatlas.district) kiezatlas.clear_district_filter_control()
-                kiezatlas.show_spinning_wheel(true)
-                $.ajax({
-                    type: "GET", url: "/kiezatlas/geocode?query=" + streetFocus,
-                    success: function(obj) {
-                        kiezatlas.hide_spinning_wheel(true)
-                        kiezatlas.set_locationsearch_results(obj.results)
-                        kiezatlas.set_autocomplete_item(0) // focus the first entry
-                        if (obj.results.length === 1) {
-                            kiezatlas.focus_locationsearch_result()
-                            $('#street-alternatives').hide()
-                        } else if (obj.results.length > 1) {
-                            kiezatlas.focus_locationsearch_result()
-                            kiezatlas.render_locationsearch_alternatives()
-                        } else {
-                            $('.location-search-info').html('Keinen Ort f&uuml;r diese Anfrage gefunden')
-                            $('.location-search-info').show()
-                        }
-                    },
-                    error: function(x, s, e) {
-                        console.warn("ERROR", "x: " + x + " s: " + s + " e: " + e)
-                        $('.location-search-info').html('Es ist in Fehler bei der Suche aufgetreten bitte probieren'
-                            + ' sie es erneut. Sollte dieser Fehler wiederholt auftreten bitte informieren sie uns per'
-                            + ' Email unter <a href="mailto:support@kiezatlas.de">support@kiezatlas.de</a>.')
-                        $('.location-search-info').show()
-                        kiezatlas.hide_spinning_wheel(true)
-                    }
-                })
             }
 
         </script>

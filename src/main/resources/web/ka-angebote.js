@@ -10,9 +10,17 @@ var angebote = (function($) {
 
     /** Functions */
     api.load_geo_objects_angebote = function(geo_object_ids) {
-        $.ajax('/kiezatlas/angebot/list/', {
-            type: "POST", data: JSON.stringify(geo_object_ids),
-            contentType: 'text/plain',
+        var params = ""
+        var count = 1
+        for (var idx in geo_object_ids) {
+            params += geo_object_ids[idx]
+            if (count < geo_object_ids.length) {
+                params += ";"
+            }
+            count++
+        }
+        $.ajax('/kiezatlas/angebot/list/many/' + params, {
+            type: "GET",
             error: function(e) {
                 console.warn("AJAX POST Error", e)
                 if (e.status === 200) {

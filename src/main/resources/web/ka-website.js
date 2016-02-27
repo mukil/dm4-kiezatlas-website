@@ -1,4 +1,51 @@
 
+// Register Fulltext Search Handler
+function search_fulltext_geo_objects() {
+    var query = $("#fulltext-search").val()
+    if (query.length >= 1) {
+        query = encodeURIComponent(query + "*", "UTF-8")
+        kiezatlas.do_text_search_geo_objects(query)
+    }
+}
+
+// Register Near-By Text Search Handler
+function search_location_by_text() {
+    var streetFocus = $("#near-by").val() + ' Berlin, Deutschland'
+        streetFocus = encodeURIComponent(streetFocus, "UTF-8")
+    $('.location-search-info').hide()
+    // if a district filter is set on the website, remove it
+    if (kiezatlas.district) kiezatlas.clear_district_filter()
+    // GUI
+    kiezatlas.show_spinning_wheel(true)
+    //
+    restc.do_geocode(streetFocus, function(response) {
+        // GUI
+        kiezatlas.hide_spinning_wheel(true)
+        // Handling Response
+        if (response.hasOwnProperty('results')) {
+            // OK
+            kiezatlas.set_locationsearch_results(response.results)
+            kiezatlas.set_autocomplete_item(0) // Select the first
+            if (response.results.length === 1) { // Easy, Focus, Hide Alternatives
+                kiezatlas.focus_locationsearch_result()
+                $('#street-alternatives').hide()
+            } else if (response.results.length > 1) { // Focus, Render Alternatives
+                kiezatlas.focus_locationsearch_result()
+                kiezatlas.show_locationsearch_alternatives()
+            } else {
+                $('.location-search-info').html('Keinen Ort f&uuml;r diese Anfrage gefunden')
+                $('.location-search-info').show()
+            }
+        } else { // ERROR
+            console.warn("ERROR", "x: " + x + " s: " + s + " e: " + e)
+            $('.location-search-info').html('Es ist in Fehler bei der Suche aufgetreten bitte probieren'
+                + ' sie es erneut. Sollte dieser Fehler wiederholt auftreten bitte informieren sie uns per'
+                + ' Email unter <a href="mailto:support@kiezatlas.de">support@kiezatlas.de</a>.')
+            $('.location-search-info').show()
+        }
+    })
+}
+
 // kiezatlas hex colors
 var colors = {
     "ka_blue": "#002856",       // circle control
@@ -19,18 +66,22 @@ var settings = {
     "historyApiSupported" : window.history.pushState
 }
 
-var kiezatlas = (function($, angebote) {
+var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
 
     // Website Application Model
     var model = {
-        "items": [],                  // Geo Objects
-        "districts": [],              // Bezirks- & Bezirksregionen Child Topics
         "district": undefined,        // Selected Bezirk Topic
+        "districts": [],              // Bezirks- & Bezirksregionen Child Topics
         // Note: once a "district" set, no graphical query and circle dialog are available anymore
         // & all further queries get the district parameter appended!
         "locationsearch_results": [], // near-by search street-alternatives
         "autocomplete_item": 0
     }
+
+    this.setDistrict = function(district) { model.district = district }
+    this.getDistrict = function() { return model.district }
+    this.setDistricts = function(districts) { model.districts = districts }
+    this.getDistricts = function() { return model.districts }
 
     var _self = this
 
@@ -43,22 +94,34 @@ var kiezatlas = (function($, angebote) {
         var hash = window.location.hash
         if (!hash || hash == "#karte") {
             // render main kiezatlas page
-            _self.init_map_dialog(true, undefined, false) // detectLocation=true
-            _self.get_district_topics()
+            _self.render_map(true, undefined, false) // detectLocation=true
+            _self.load_district_topics(function(e) {
+                _self.show_district_listing()
+            })
         } else {
             // check if we should render district page
-            _self.get_district_topics(function() {
-                var district = _self.get_bezirks_topic_by_hash(hash)
-                if (district) {
-                    _self.init_map_dialog(false, undefined, false) // detectLocation=false
+            _self.load_district_topics(function() {
+                _self.show_district_listing()
+                var bezirksTopic = _self.get_bezirks_topic_by_hash(hash)
+                _self.setDistrict(bezirksTopic)
+                if (_self.getDistrict()) {
+                    _self.render_map(false, undefined, false) // detectLocation=false
                     // sets mitte filter
-                    _self.render_district_page(district.id)
+                    _self.show_district_page(_self.getDistrict().id)
                 }
             })
             // hash value not in districts
         }
-        // add click and touch handlers on our "three near by options"
-        _self.add_nearby_button_handler()
+    }
+
+    this.render_map = function(detectLocation, zoomLevel, jumpToMap) {
+        // initiaze map on browsers location
+        if (!leafletMap.is_initialized()) {
+            _self.setup_map_area('map', false)
+        }
+        if (jumpToMap) leafletMap.show_anchor()
+        if (detectLocation) _self.get_browser_location()
+        if (zoomLevel) leafletMap.map.setZoom(zoomLevel)
     }
 
     this.render_user_menu = function(state) {
@@ -75,98 +138,73 @@ var kiezatlas = (function($, angebote) {
         }
     }
 
-    this.update_document_title = function(titlePrefix, titleAddon) {
-        if (titlePrefix) window.document.title = titlePrefix + " - " + settings.webappTitle
-        if (titleAddon) window.document.title = settings.webappTitle + " - " + titleAddon
-    }
-
-    this.render_district_page = function(topic_id) {
-        var bezirk = _self.get_bezirks_topic_by_id(topic_id)
-        var bezirk_html = bezirk.html
-        $('.location-label .text').html("Berlin " + bezirk.value) // duplicate, use render_current_location_label
-        _self.update_document_title(undefined, bezirk.value)
+    this.show_district_page = function(topic_id) {
+        _self.setDistrict(_self.get_bezirks_topic_by_id(topic_id))
+        var bezirk_html = _self.getDistrict().html
+        var bezirk_name = _self.getDistrict().value
+        var anchor_name = '#' + encodeURIComponent(bezirk_name.toLowerCase())
+        $('.location-label .text').html("Berlin " + bezirk_name) // duplicate, use render_current_location_label
         $('button.star').hide()
-        // set page in "district" mode
-        model.district = bezirk
         // TODO: rewrite filter button container
         if ($('div.legende').children('a.district-control').length == 0) {
             $('div.legende').append('<a class="district-control" href="javascript:kiezatlas.clear_district_page()">'
                 + 'Bezirksfilter aufheben</a>')
         }
-        $('#fulltext-search').attr("placeholder", "Volltextsuche für " + bezirk.value)
+        $('#fulltext-search').attr("placeholder", "Volltextsuche für " + bezirk_name)
         $('a.lock-control').hide()
-        //
-        $('#district-area').html(bezirk_html)
-        $('#district-area').show()
+        $('#district-area').html(bezirk_html).show()
         _self.show_message("Hinweis: Die Volltextsuche liefert ab jetzt nur noch Ergebnisse aus dem Bezirk <em>"
-            + bezirk.value + "</em>. W&auml;hlen sie <em>Bezirksfilter aufheben</em> um wieder Berlinweit"
+            + bezirk_name + "</em>. W&auml;hlen sie <em>Bezirksfilter aufheben</em> um wieder Berlinweit"
             + " Einrichtungen zu finden.", 7000)
-        // leafletMap.map.doubleClickZoom.enable();
-        var anchor_name = '#' + encodeURIComponent(bezirk.value.toLowerCase())
-        _self.jump_to_map(anchor_name)
-        _self.remove_circle_search_control()
+        // ### leafletMap.map.doubleClickZoom.enable();
+        leafletMap.show_anchor(anchor_name)
+        leafletMap.deactivate_circle_control()
+        leafletMap.remove_circle_search_control()
+        _self.update_document_title(undefined, bezirk_name)
         _self.show_spinning_wheel()
-        // _self.render_districts_layer()
         $.getJSON('/kiezatlas/bezirk/' + topic_id, function (response) {
-            // TODO: render fetched "geo objects" in groups of hundred
-            _self.clear_circle_marker_group()
+            leafletMap.clear_circle_marker()
             _self.hide_spinning_wheel()
-            _self.render_geo_objects(response, true)
+            leafletMap.setItems(response)
+            leafletMap.render_geo_objects(true)
         })
     }
 
     this.clear_district_page = function() {
-        _self.clear_district_filter_control()
-        _self.do_current_center_circle_search()
         $('#district-area').hide()
-    }
-
-    this.clear_district_filter_control = function() {
-        // 1) reset district filter for subsequent fulltext-searches
-        model.district = undefined
-        $('#fulltext-search').attr("placeholder", "Volltextsuche")
-        // 2) update gui accordingly
-        $('a.district-control').remove()
-        $('a.lock-control').show()
-        // leafletMap.map.doubleClickZoom.disable();
-        _self.clear_circle_marker_group()
-        leafletMap.show_anchor() // ### this updates address bar too
-    }
-
-    this.do_current_center_circle_search = function() {
-        mapping.current_location.coordinate = leafletMap.map.getCenter()
-        _self.render_circle_search_control() // fitBounds=false
-        _self.do_circle_search(undefined, undefined)
-        _self.reverse_geocode()
+        _self.clear_district_filter()
+        leafletMap.clear_circle_marker()
+        leafletMap.activate_circle_control()
+        leafletMap.setCurrentLocationCoordinate(leafletMap.map.getCenter())
+        leafletMap.render_circle_search_control() // fitBounds=false
         leafletMap.map.setZoom(mapping.zoomKiezLevel)
-    }
+        _self.do_circle_search(undefined, undefined)
+        _self.do_reverse_geocode()
 
-    this.init_map_dialog = function(detectLocation, zoomLevel, jumpToMap) {
-        // initiaze map on browsers location
-        if (!leafletMap.map) {
-            _self.setup_leaflet_dom('map', false)
+        function clear_district_filter() {
+            // 1) reset district filter for subsequent fulltext-searches
+            _self.setDistrict(undefined)
+            // 2) update gui accordingly
+            $('#fulltext-search').attr("placeholder", "Volltextsuche")
+            $('a.district-control').remove()
+            $('a.lock-control').show()
+            // leafletMap.map.doubleClickZoom.disable();
+            leafletMap.show_anchor() // ### this updates address bar too
         }
-        if (jumpToMap) leafletMap.show_anchor()
-        if (detectLocation) _self.get_browser_location()
-        if (zoomLevel) leafletMap.map.setZoom(zoomLevel)
     }
 
     this.show_favourite_location = function(object) {
-        //
-        if (!leafletMap.map) {
-            _self.setup_leaflet_dom('map', true)
+        if (!leafletMap.is_initialized()) {
+            _self.setup_map_area('map', true)
         }
-        //
-        mapping.current_location = object
-        _self.render_current_location_label()
-        // render radius control at new place
-        _self.render_circle_search_control()
-        // then fire query
+        leafletMap.setCurrentLocation(object)
+        leafletMap.map.setView(leafletMap.getCurrentLocationCoordinate(), mapping.zoomStreetLevel)
+        leafletMap.render_circle_search_control()
         _self.do_circle_search(undefined, undefined)
-        leafletMap.map.setView(mapping.current_location.coordinate, mapping.zoomStreetLevel)
+        _self.render_current_location_label()
     }
 
-    this.setup_leaflet_dom = function(dom_el_id) {
+    this.setup_map_area = function(dom_el_id) {
         console.log("Setting up new Leaflet Map")
         $('#map').empty()
         $('#map').addClass('outlined')
@@ -187,49 +225,80 @@ var kiezatlas = (function($, angebote) {
         // Consume Drag
         leafletMap.listen_to('drag', function(e) {
             if (mapping.isMapCircleLocked) { // #### && !model.district
-                mapping.current_location.coordinate = leafletMap.map.getCenter()
-                mapping.defaultRadiusMeter = mapping.circle_search_control.getRadius()
-                // fire control
-                _self.render_circle_search_control(false)
+                leafletMap.setCurrentLocationCoordinate(leafletMap.map.getCenter())
+                leafletMap.setControlCircleRadiusValue(leafletMap.getControlCircleRadius())
+                leafletMap.render_circle_search_control(false)
             }
         })
         // Consume Drag End
         leafletMap.listen_to('drag_end', function(e) {
-            if (mapping.isMapCircleLocked && !model.district) {
-                console.log("Website recieved drag end..")
+            if (mapping.isMapCircleLocked && !_self.getDistrict()) {
                 _self.do_circle_search(undefined, undefined)
-                _self.reverse_geocode()
+                _self.do_reverse_geocode()
             }
         })
-        // ...
-        // browser location util
+        leafletMap.listen_to('marker_select', function(e) {
+            // prepare gui for new details
+            _self.clear_details_area()
+            // load all details in selection
+            _self.show_selected_details(e.detail)
+        })
+        leafletMap.listen_to('marker_mouseover', function(e) {
+            var geo_objects_under_marker = leafletMap.find_all_geo_objects(e.detail.target.options['location_id'])
+            _self.show_marker_name_info(geo_objects_under_marker)
+        })
+        leafletMap.listen_to('marker_mouseout', function(e) {
+            _self.hide_marker_name_info()
+        })
+        // Listen to an Edit of Circle Control
+        leafletMap.listen_to('circle_control_edit', function(e) {
+            // ### on small screens (here, after dragging) our current center should be the mapcenter (fitBounds..)
+            // ### TODO: dont query if given location and given radius "equals" our latest "query settings"
+            _self.do_circle_search(leafletMap.getCurrentLocationCoordinate(), e.detail)
+            _self.do_reverse_geocode()
+        })
+        leafletMap.listen_to('locating_success', function(e) {
+            console.warn("Browser Location Success", e.detail)
+            map.setCurrentLocationCoordinate(new L.latLng(e.detail.latitude, e.detail.longitude))
+            leafletMap.render_circle_search_control()
+            _self.do_circle_search(undefined, undefined)
+            leafletMap.map.setView(map.getCurrentLocationCoordinate(), mapping.zoomStreetLevel)
+            // ### if location in berlin, do something smart (suggest to save location to favourites'db
+            _self.do_reverse_geocode()
+        })
+        leafletMap.listen_to('locating_error', function(e) {
+            console.warn("Browser Location Error", e.detail)
+            _self.render_current_location_label()
+        })
+        // add "ask for location" button
         _self.render_browser_location_button()
-        // ### refactor from here on
         // show our standard location name
         _self.render_current_location_label()
         // render radius control at first place
-        _self.render_circle_search_control()
+        leafletMap.render_circle_search_control()
     }
 
     this.focus_locationsearch_result = function() {
         var item = model.locationsearch_results[model.autocomplete_item]
         if (item) {
-            if (!mapping.max_bounds.contains([item.geometry.location.lat, item.geometry.location.lng])) {
-                mapping.current_location.name = 'Der erste gefundene Standort liegt au&szlig;erhalb '
-                    + 'von Berlin, bitte w&auml;hlen sie eine der Alternativen rechts:'
+            if (!mapping.maxBounds.contains([item.geometry.location.lat, item.geometry.location.lng])) {
+                // ### What if NOT in Bounds and there is just one result?
+                leafletMap.setCurrentLocationName('Der erste gefundene Standort liegt au&szlig;erhalb '
+                    + 'von Berlin, bitte w&auml;hlen sie eine der Alternativen rechts:')
                 _self.render_current_location_label(true)
                 leafletMap.show_anchor()
-                // correct current map-viewport to default after a seemingly correct (but not sane location-query result)
-                leafletMap.map.setView(mapping.current_location.coordinate, mapping.zoomStreetLevel)
+                leafletMap.map.setView(leafletMap.getCurrentLocationCoordinate(), mapping.zoomStreetLevel)
             } else {
-                mapping.current_location.coordinate = new L.latLng(item.geometry.location.lat, item.geometry.location.lng)
-                mapping.defaultRadiusMeter = 900 // adapt circle size for this search a bit
-                mapping.current_location.name = item['formatted_address']
                 leafletMap.show_anchor()
+                leafletMap.setCurrentLocationCoordinate(new L.latLng(item.geometry.location.lat, item.geometry.location.lng))
+                leafletMap.setControlCircleRadiusValue(900) // adapt circle size for this search a bit ###
+                leafletMap.setCurrentLocationName(item['formatted_address'])
+                leafletMap.activate_circle_control()
+                leafletMap.render_circle_search_control()
+                leafletMap.map.panTo(leafletMap.getCurrentLocationCoordinate())
+                _self.setDistrict(undefined)
                 _self.render_current_location_label()
-                _self.render_circle_search_control()
                 _self.do_circle_search(undefined, undefined)
-                leafletMap.map.panTo(mapping.current_location.coordinate)
             }
             /*** $("#near-by").val(item['formatted_address'])
             // Display marker at found location
@@ -242,21 +311,18 @@ var kiezatlas = (function($, angebote) {
         }
     }
 
-    this.render_locationsearch_alternatives = function() {
-        //
+    this.show_locationsearch_alternatives = function() {
         var prev_location = model.locationsearch_results[model.autocomplete_item - 1]
         var next_location = model.locationsearch_results[model.autocomplete_item + 1]
-        var $prev = ""
-        var $next = ""
+        var $prev = "", $next = ""
         if (prev_location) {
             $prev = $('<a class="prev-location" title="'+ prev_location['formatted_address'] +'"><</a>')
             $prev.click(function(e) {
                 model.autocomplete_item = model.autocomplete_item - 1
                 _self.focus_locationsearch_result()
-                _self.render_locationsearch_alternatives()
+                _self.show_locationsearch_alternatives()
             })
-        } else {
-            // empty prev button
+        } else { // empty "prev" button
             $prev = $('<a class="prev-location defused" title=""><</a>')
         }
 
@@ -265,286 +331,66 @@ var kiezatlas = (function($, angebote) {
             $next.click(function(e) {
                 model.autocomplete_item = model.autocomplete_item + 1
                 _self.focus_locationsearch_result()
-                _self.render_locationsearch_alternatives()
+                _self.show_locationsearch_alternatives()
             })
-        } else {
-            // empty next button
+        } else { // empty "next" button
             $next = $('<a class="next-location defused" title="">></a>')
         }
-        //
-        $('#street-alternatives').html(model.locationsearch_results.length + ' Ergebnisse').append($prev)
-        .append
-        ($next)
+        $('#street-alternatives').html(model.locationsearch_results.length + ' Ergebnisse').append($prev).append($next)
         $('#street-alternatives').css("display", "inline-block")
         $('#street-alternatives').show()
     }
 
-    /** object.name, object.lat, object.lng */
     this.render_current_location_label = function(hideFavBtn) {
-        // ### help to reset-view
-        if (!mapping.current_location.hasOwnProperty("name")) console.warn("Current location has no name")
-        if (!mapping.current_location.coordinate.hasOwnProperty("lat")) console.warn("Current location has no lat")
-        if (!mapping.current_location.coordinate.hasOwnProperty("lng")) console.warn("Current location has no lng")
-        //
+        var currentLocation = leafletMap.getCurrentLocation()
+        if (!currentLocation.hasOwnProperty("name")) console.warn("Current location has no name")
+        if (!currentLocation.coordinate.hasOwnProperty("lat")) console.warn("Current location has no lat")
+        if (!currentLocation.coordinate.hasOwnProperty("lng")) console.warn("Current location has no lng")
         var latitude, longitude;
-            latitude = mapping.current_location.coordinate.lat.toFixed(3)
-            longitude = mapping.current_location.coordinate.lng.toFixed(3)
-        // ### sanity check for bigger berlin area before firing a range-query...
-        $('.location-label .text').html(mapping.current_location.name
+            latitude = leafletMap.getCurrentLocationLatitude().toFixed(3)
+            longitude = leafletMap.getCurrentLocationLongitude().toFixed(3)
+        $('.location-label .text').html(leafletMap.getCurrentLocationName()
             + ' <small>('+latitude+' N, '+longitude+' E)</small>')
-        _self.update_document_title(mapping.current_location.name)
-        $('button.star').unbind('click')
-        $('button.star').click(favourites.add_entry_to_local_db)
-        //
-        if (!leafletMap.map) {
-            _self.setup_leaflet_dom('map', true)
-        }
-        //
+        var $star_button = $('button.star')
+            $star_button.unbind('click')
+            $star_button.click(function(e) {
+                favourites.add_entry_to_local_db(leafletMap.getCurrentLocation())
+            })
         if (hideFavBtn) {
-            $('button.star').button("disable")
+            $star_button.button("disable")
         } else {
-            $('button.star').button("enable")
+            $star_button.button("enable")
         }
+        _self.update_document_title(leafletMap.getCurrentLocationName())
     }
 
-    this.render_circle_search_control = function(fitBounds) {
-        // setup radius control
-        if (mapping.circle_search_control) {
-            mapping.controlGroup.removeLayer(mapping.circle_search_control)
-            leafletMap.map.removeLayer(mapping.controlGroup)
-        }
-        if (!model.district) {
-            mapping.circle_search_control = new L.CircleEditor(mapping.current_location.coordinate, mapping.defaultRadiusMeter, {
-                color: colors.ka_blue, weight: 3, opacity: .5, fillColor: colors.yellow, fillOpacity: 0,
-                extendedIconClass: "extend-icon-medium", className: "leaflet-radius-control", clickable: false,
-                zIndexOffset: 101
-            })
-            // add circle search control to map
-            mapping.controlGroup.addLayer(mapping.circle_search_control)
-            mapping.controlGroup.addTo(leafletMap.map)
-            // add event handler to radius control
-            mapping.circle_search_control.on('edit', function(event) {
-                // fire a new query
-                var new_radius = event.target._mRadius
-                mapping.current_location.coordinate.lat = event.target._latlng.lat
-                mapping.current_location.coordinate.lng = event.target._latlng.lng
-                // console.log("Update circle position event TO", event, mapping.current_location)
-                // ### on small screens (here, after dragging) our current center should be the mapcenter (fitBounds..)
-                _self.do_circle_search(event.target._latlng, new_radius)
-                _self.reverse_geocode()
-            })
-            // update viewport to the programmatically set radius-control
-            if (fitBounds) {
-                // leafletMap.map.fitBounds(mapping.controlGroup.getBounds())
-                leafletMap.map.setView(
-                    mapping.controlGroup.getBounds().getCenter(),
-                    mapping.zoomStreetLevel)
-            }
-            if (mapping.isMapCircleLocked) $('.leaflet-editing-icon').hide()
-        }
-    }
-
-    this.remove_circle_search_control = function() {
-        if (mapping.circle_search_control) {
-            mapping.controlGroup.removeLayer(mapping.circle_search_control)
-            leafletMap.map.removeLayer(mapping.controlGroup)
-        }
-    }
-
-    // Removes all geo object (circle markers) from the map without removing them from _self.markerGroup
-    this.clear_geo_object_marker = function() {
-        leafletMap.map.eachLayer(function (el) {
-            // do not remove control group, just items with a geo_object id
-            if (el.hasOwnProperty('options') && el.options.hasOwnProperty('geo_object_id')) {
-                leafletMap.map.removeLayer(el)
-            }
-            leafletMap.map.addLayer(mapping.controlGroup) // ### Todo: This should never be called from this method!
-        })
-    }
-
-    // Removes all geo objects from markerClusterGroup.
-    this.clear_geo_object_cluster_group = function() {
-        if (_self.markerGroup) {
-            _self.markerGroup.eachLayer(function (el) {
-                // do not remove control group, just items with a geo_object id
-                if (el.hasOwnProperty('options') && el.options.hasOwnProperty('geo_object_id')) {
-                    _self.markerGroup.removeLayer(el)
-                }
+    this.show_selected_details = function(result_list) {
+        if (result_list.length > 0) $('#district-area').hide()
+        var list_geo_object_ids = []
+        for (var i in result_list) {
+            var geo_object_id = result_list[i].options['geo_object_id']
+            list_geo_object_ids.push(geo_object_id)
+            restc.load_geo_object_detail(geo_object_id, function(result) {
+                _self.render_selected_details_card(result)
             })
         }
+        angebote.load_geo_objects_angebote(list_geo_object_ids)
     }
 
-    this.clear_circle_marker_group = function() {
-        // TODO revise this (returns straight for e.g. init via districts page)
-        if (!_self.markerGroup) return
-        // clear complete marker group, e.g. for fulltext_search
-        _self.markerGroup.eachLayer(function (marker){
-            leafletMap.map.removeLayer(marker)
-        })
-        _self.markerGroup = undefined
-    }
-
-    this.render_geo_objects = function(data, set_view_to_bounds) {
-        // Note: Here we decide to not render any duplicates
-        var list_of_markers = []
-        // pre-process results
-        for (var el in data) {
-            var geo_object= data[el]
-            if (geo_object == null || !geo_object) {
-                console.warn("Skipping geo object response entry [" + el+ "]", geo_object)
-            } else {
-                var geo_marker = _self.create_geo_object_marker(geo_object)
-                if (geo_marker) list_of_markers.push(geo_marker)
-            }
-        }
-        // merge: maintain also all previously added markers
-        if (_self.markerGroup) {
-            _self.markerGroup.eachLayer(function (marker) {
-                if (!_self.exist_in_marker_listing(marker.options.geo_object_id, list_of_markers)) {
-                    list_of_markers.push(marker)
-                }
-            })
-        }
-        // clear marker on map
-        _self.clear_geo_object_cluster_group()
-        // build up: create new markerGroup
-        _self.markerGroup = L.featureGroup(list_of_markers)
-        _self.markerGroup.addTo(leafletMap.map)
-        //
-        for (var el in list_of_markers) {
-            var topic = list_of_markers[el]
-             _self.markerGroup.addLayer(topic)
-        }
-        leafletMap.map.addLayer(_self.markerGroup)
-        //
-        if (set_view_to_bounds && list_of_markers.length > 0) {
-            // leafletMap.map.setMaxBounds(_self.markerGroup.getBounds())
-            leafletMap.map.fitBounds(_self.markerGroup.getBounds())
-        }
-    }
-
-    this.create_geo_object_marker = function(geo_object) {
-        // Sets up an interactive leaflet marker for a "ka2.geo_object"
-        if (geo_object.hasOwnProperty("geo_coordinate_lat")
-            && geo_object.hasOwnProperty("geo_coordinate_lon")) {
-            // 0) pre-process: geo object has geo coordinate
-            var result = geo_object
-            // 1) pre-processing: do worldwide coordinate check & log
-            if (geo_object.geo_coordinate_lat > 90 || geo_object.geo_coordinate_lon > 180 ||
-                geo_object.geo_coordinate_lat < -90 || geo_object.geo_coordinate_lon < -180 ) {
-                console.info("Invalid WGS 84 coordinates spotted at", geo_object)
-                return undefined
-            }
-            // 2) pre-processing: do berlin coordinate check & log
-            if (geo_object.geo_coordinate_lon < 10 || geo_object.geo_coordinate_lat < 45 ||
-                geo_object.geo_coordinate_lon > 15 || geo_object.geo_coordinate_lat > 55) {
-                console.info("WGS 84 coordinates do look strange in case of Berlin", geo_object)
-                return undefined
-            }
-            // 3) pre-precossing: do kiezatlas deep link check & log
-            if (geo_object["bezirksregion_uri"] === "") {
-                console.info("Invalid Geo Object - Missing Bezirksregion URI", geo_object["name"])
-                return undefined
-            }
-            // 4) Create a circle marker
-            var coordinate = L.latLng(result["geo_coordinate_lat"], result["geo_coordinate_lon"])
-            var circle = L.circleMarker(coordinate, _self.calculate_default_circle_options(result))
-            // ### Level: 14 > 8px e.g. Level: 13 > 5px
-            circle.setRadius(10)
-            circle.on('click', function (e) {
-                _self.select_geo_object_marker(e.target)
-            })
-            circle.on('mouseover', function (e) {
-                var geo_objects_under_marker = _self.find_all_geo_objects(e.target.options['location_id'])
-                _self.show_marker_name_info(geo_objects_under_marker)
-            })
-            circle.on('mouseout', _self.hide_marker_name_info)
-            return circle
-        } else {
-            console.warn("Could not geo object marker caused by missing geo coordinates")
-            return undefined
-        }
-    }
-
-    this.calculate_default_circle_options = function(result) {
-        var angeboteDashArray = _self.calculate_geo_object_dash_array(result)
-        var hasAngebote = (result["angebote_count"] > 0) ? true : false
-        return {
-            weight: (hasAngebote) ? 3 : 3, opacity: .8, fillColor: colors.ka_gold, fillOpacity: .6, lineCap: 'square',
-            dashArray: angeboteDashArray, color : (hasAngebote) ? colors.m_blue : colors.ka_gold,
-            title: result["name"], alt: "Markierung von " + result["name"], location_id: result["address_id"],
-            geo_object_id: result["id"], uri: result["uri"], name: result["name"],// riseOnHover: true,
-            bezirksregion_uri: result["bezirksregion_uri"], z_indexOffset: 1001
-        }
-    }
-
-    this.calculate_selected_circle_options = function(result) {
-        return {
-            color: colors.ka_gold, weight: 4, opacity: 1,
-            fillColor: colors.m_blue, fillOpacity: 1, className: "selected"
-        }
-    }
-
-    this.calculate_geo_object_dash_array = function(item) {
-        var value = item["angebote_count"]
-        if (value === 0) return [75]
-        if (value === 1) return [2,75]
-        if (value === 2) return [2,5, 2,70]
-        if (value === 3) return [2,5, 2,5, 2,65]
-        if (value === 4) return [2,5, 2,5, 2,5, 2,60]
-        if (value === 5) return [2,5, 2,5, 2,5, 2,5, 2,55]
-        if (value === 6) return [2,5, 2,5, 2,5, 2,5, 2,5, 2,50]
-        if (value === 7) return [2,5, 2,5, 2,5, 2,5, 2,5, 2,5, 2,45]
-        if (value === 8) return [2,5, 2,5, 2,5, 2,5, 2,5, 2,5, 2,5, 2,40]
-        if (value > 8) return [2,5]
-    }
-
-    this.select_geo_object_marker = function(marker) {
-        // highlight selection
-        _self.markerGroup.eachLayer(function (el) {
-            // default rendering
-            var geo_object_id = el.options["geo_object_id"]
-            if (geo_object_id) {
-                var geo_object = _self.get_geo_object_topic(el.options["geo_object_id"])
-                if (geo_object) {
-                    el.setStyle(_self.calculate_default_circle_options(geo_object))
-                    // selected rendering
-                    if (el.options['geo_object_id'] === marker.options['geo_object_id']) {
-                        // ### adding class name to path does not work
-                        marker.setStyle(_self.calculate_selected_circle_options(geo_object))
-                        marker.bringToFront()
-                        marker.setRadius(12)
-                    }
-                } else {
-                    console.warn('Geo Object in Layer Not in Our Model', geo_object_id)
-                }
-            } else {
-                console.warn('Geo Object Topic ID Not Encoded In Selected Element:',
-                    geo_object_id, 'Element', el)
-            }
-        })
-        // gather selection
-        var selected_geo_objects = _self.find_all_geo_objects(marker.options['location_id'])
-        // prepare gui for new details
-        _self.clear_details_area()
-        // load all details in selection
-        _self.load_geo_object_details(selected_geo_objects)
-    }
-
-    this.render_geo_object_details_card = function(geo_object) {
+    this.render_selected_details_card = function(object) {
         // construct impressum for geo object
-        var imprint_html = _self.get_imprint_html(geo_object)
+        var imprint_html = _self.get_imprint_html(object)
         // prepare citymap link
-        var web_alias = geo_object.bezirksregion_uri.slice(18) // ### number of chars the prefix has
-        var topic_id = geo_object.uri.slice(19) // ### number of chars the prefix has)
-        // var description = geo_object.beschreibung
-        var contact = geo_object.kontakt
-        var opening_hours = geo_object.oeffnungszeiten
-        var lor_link = _self.get_lor_link(geo_object)
+        var web_alias = object.bezirksregion_uri.slice(18) // ### number of chars the prefix has
+        var topic_id = object.uri.slice(19) // ### number of chars the prefix has)
+        // var description = object.beschreibung
+        var contact = object.kontakt
+        var opening_hours = object.oeffnungszeiten
+        var lor_link = _self.get_lor_link(object)
         var angebote_link = ''
-        if (geo_object.angebote_count > 0) {
+        if (object.angebote_count > 0) {
             angebote_link = '<div class="angebote-link">'
-                + '<a class="button" href="javascript:angebote.show_angebotsinfos('+geo_object.id+')">Aktuelle Angebote</a></div>'
+                + '<a class="button" href="javascript:angebote.show_angebotsinfos('+object.id+')">Aktuelle Angebote</a></div>'
         }
         // build up dom for geo object details
         var body_text = ""
@@ -567,16 +413,16 @@ var kiezatlas = (function($, angebote) {
             && opening_hours.length > 0) body_text += '<p><b>&Ouml;ffnungszeiten</b>' + opening_hours + '</p>'
         // _append_ to dom
         $('#detail-area').append('<div class="entry-card">'
-            + '<h3>'+geo_object.name+'</h3>'
+            + '<h3>'+object.name+'</h3>'
             + '<div class="details">'
             + '<p>'
-                + geo_object.address_name.toString() + '<br/>'
+                + object.address_name.toString() + '<br/>'
                 + '' + body_text + ''
             + '</p>'
             + angebote_link
             + '<a href="http://www.kiezatlas.de/map/'+web_alias+'/p/'+topic_id+'" title="Diesen'
                 + ' Datensatz in seinem ursprünglichen Stadtplan anzeigen">Details im Stadtplan</a>'
-            + '<a href="https://fahrinfo.bvg.de/Fahrinfo/bin/query.bin/dn?Z=' + geo_object.address_name.toString()
+            + '<a href="https://fahrinfo.bvg.de/Fahrinfo/bin/query.bin/dn?Z=' + object.address_name.toString()
                 + '&REQ0JourneyStopsZA1=2&start=1&pk_campaign=kiezatlas.de">'
                 + '<img src="/de.kiezatlas.website/images/fahrinfo.gif"></a>'
             + '</div>'
@@ -585,17 +431,16 @@ var kiezatlas = (function($, angebote) {
         + '</div>')
     }
 
-    // Simple HTML click handler
+    // --- Simple HTML click handler
 
     this.toggle_circle_search_lock_button = function(e) {
         mapping.isMapCircleLocked = (mapping.isMapCircleLocked) ? false : true;
         if (mapping.isMapCircleLocked) {
             $('.lock-control').text('Unlock circle')
             $('.leaflet-editing-icon').hide()
-            mapping.current_location.coordinate = leafletMap.map.getCenter()
-            mapping.defaultRadiusMeter = mapping.circle_search_control.getRadius()
-            _self.render_circle_search_control()
-            // ### _self.reverse_geocode()
+            leafletMap.setCurrentLocationCoordinate(leafletMap.map.getCenter())
+            leafletMap.setControlCircleRadiusValue(leafletMap.getControlCircleRadius())
+            leafletMap.render_circle_search_control()
         } else {
             $('.leaflet-editing-icon').show()
             $('.lock-control').text('Lock circle')
@@ -611,63 +456,38 @@ var kiezatlas = (function($, angebote) {
     }
 
     this.add_nearby_button_handler = function() {
-        // TODO: Will add up if we call render_page e.g. twice
-        $('.search-option.a').on('touchend', handle_option_a)
-        $('.search-option.a').on('click', handle_option_a)
-        //
-        $('.search-option.b').on('touchend', _self.focus_location_input_field)
-        $('.search-option.b').on('click', _self.focus_location_input_field)
-        //
-        $('.search-option.c').on('touchend', _self.handle_option_c)
-        $('.search-option.c').on('click', _self.handle_option_c)
+        var $option_a = $('.search-option.a')
+            $option_a.on('touchend', handle_option_a)
+            $option_a.on('click', handle_option_a)
+        var $option_b = $('.search-option.b')
+            $option_b.on('touchend', _self.focus_location_input_field)
+            $option_b.on('click', _self.focus_location_input_field)
+        var $option_c = $('.search-option.c')
+            $option_c.on('touchend', _self.handle_option_c)
+            $option_c.on('click', _self.handle_option_c)
 
         function handle_option_a (e) {
-            // initialize map on browsers location
-            _self.init_map_dialog(true, null, true)
+            // initialize map on browser location
+            _self.render_map(true, null, true)
         }
 
     }
 
     this.handle_option_c = function(e) {
         // initiate map with edible circle control
-        _self.init_map_dialog(false, mapping.zoomKiezLevel, true)
+        _self.render_map(false, mapping.zoomKiezLevel, true)
     }
 
     this.handle_option_b = function(e) {
         // initiate map with edible circle control but focus on street
-        _self.init_map_dialog(false, mapping.zoomStreetLevel, true)
+        _self.render_map(false, mapping.zoomStreetLevel, true)
     }
 
-    // Utility Methods for Application Model
-
-    this.get_imprint_html = function(entry) {
-        var bezirk = _self.get_bezirks_topic(entry.bezirk_uri)
-        var html = '<div class="imprint">'
-            + '<a href="' + bezirk.imprint + '" title="Impressum: Bezirksamt ' + bezirk.value + '">Impressum</a></div>'
-        return html
-    }
-
-    this.get_lor_link = function(entry) {
-        if (!entry.hasOwnProperty("lor_id")) return ""
-        var html = '<div class="lor-link">'
-            + '<a href="http://sozialraumdaten.kiezatlas.de/seiten/2014/12/?lor=' + entry.lor_id
-            + '" title="zur Einwohnerstatistik des Raums (LOR Nr. ' + entry.lor_id +')">Sozialraumdaten</a></div>'
-        return html
-    }
-
-    this.find_all_geo_objects = function(coordinate_id) {
-        var results = []
-        _self.markerGroup.eachLayer(function (el) {
-            if (el.options.location_id === coordinate_id) results.push(el)
-        })
-        return results
-    }
-
-    // Utility Methods for manipulating GUI State
+    // --- GUI Manipulation Utility Methods
 
     this.show_marker_name_info = function(objects) {
         var names_html = ""
-        max_count = 4
+        var max_count = 4
         for (var o in objects) {
             names_html += "<b>" + objects[o].options.name + "</b><br/>"
             if (o == max_count) {
@@ -691,7 +511,6 @@ var kiezatlas = (function($, angebote) {
     }
 
     this.focus_location_input_field = function() {
-        // set focus on text input
         _self.toggle_location_menu(true)
         $('#location-input #near-by').focus()
     }
@@ -762,93 +581,72 @@ var kiezatlas = (function($, angebote) {
         leafletMap.map.locate(options)
     }
 
-    // Kiezatlas API Service helper
+    // --- Kiezatlas API Service helper
 
-    this.get_district_topics = function(callback) {
+    this.load_district_topics = function(callback) {
         restc.load_district_topics(function(results) {
-            model.districts = results.sort(_self.value_sort_asc)
-            // console.log("ka_districts", model.districts)
+            _self.setDistricts(results.sort(_self.value_sort_asc))
             if (callback) callback()
-            for (var i in model.districts) {
-                var district = model.districts[i]
-                var bezirke_html = '<li ' + 'class="bezirk">'
-                        bezirke_html += '<a class="district-button" id="' + district.id
-                        + '" title="zur Bezirksseite '+ district.value
-                        + '" href="javascript:kiezatlas.render_district_page('
-                        + district.id + ')">' + district["value"] + '</a>'
-                    bezirke_html += '<ul class="bezirksregionen">'
-                    var subdistricts = district.childs.sort(_self.name_sort_asc)
-                    for (var k in subdistricts) {
-                        var region = subdistricts[k]
-                        // console.log("ka_subdistrict", region)
-                        bezirke_html += '<li><a id="' + region["id"] + '">' + region["name"] + '</a></li>'
-                    }
-                    bezirke_html += '</ul>'
-                    bezirke_html += '</li>'
-                var $bezirke = $(bezirke_html)
-                $('ul.bezirke').append($bezirke)
-            }
         })
     }
 
-    this.load_geo_object_details = function(result_list) {
-        // rendering all geo objects sharing this very geo coordinate
-        if (result_list.length > 0) {
-            $('#district-area').hide()
+    this.show_district_listing = function() {
+        var bezirke = _self.getDistricts()
+        for (var i in bezirke) {
+            var district = bezirke[i]
+            var bezirke_html = '<li ' + 'class="bezirk">'
+                    bezirke_html += '<a class="district-button" id="' + district.id
+                    + '" title="zur Bezirksseite '+ district.value
+                    + '" href="javascript:kiezatlas.show_district_page('
+                    + district.id + ')">' + district["value"] + '</a>'
+                bezirke_html += '<ul class="bezirksregionen">'
+                var subdistricts = district.childs.sort(_self.name_sort_asc)
+                for (var k in subdistricts) {
+                    var region = subdistricts[k]
+                    // console.log("ka_subdistrict", region)
+                    bezirke_html += '<li><a id="' + region["id"] + '">' + region["name"] + '</a></li>'
+                }
+                bezirke_html += '</ul>'
+                bezirke_html += '</li>'
+            var $bezirke = $(bezirke_html)
+            $('ul.bezirke').append($bezirke)
         }
-        var list_geo_object_ids = []
-        for (var i in result_list) {
-            var geo_object_id = result_list[i].options['geo_object_id']
-            list_geo_object_ids.push(geo_object_id)
-            restc.load_geo_object_detail(geo_object_id, function(result) {
-                _self.render_geo_object_details_card(result)
-            })
-        }
-        // load angebote of all selected geo objects at once
-        angebote.load_geo_objects_angebote(list_geo_object_ids)
     }
 
     this.do_circle_search = function(location, radius) {
-        // ### TODO: dont query if given location and given radius "equals" our latest "query settings"
         _self.show_spinning_wheel()
         var location_string = ''
-        var radius_value = mapping.defaultRadiusMeter
+        var radius_value = leafletMap.getControlCircleRadius()
         if (!location) {
-            location_string = mapping.current_location.coordinate.lng + ', '+mapping.current_location.coordinate.lat
+            location_string = leafletMap.getCurrentLocationLongitude() + ', '+ leafletMap.getCurrentLocationLatitude()
         } else {
             location_string = location.lng + ', '+location.lat
         }
         if (radius) radius_value = radius
         $.getJSON('/kiezatlas/search/'+encodeURIComponent(location_string)+'/' + (radius_value / 1000),
             function (geo_objects) {
-                model.items.push(geo_objects)
-                // directly removing them from the map without removing them from the markergroup
-                _self.clear_geo_object_marker()
+                leafletMap.setItems(geo_objects) // ### let markers add up
+                leafletMap.clear_circle_marker()
                 _self.hide_spinning_wheel()
-                _self.render_geo_objects(geo_objects, false)
+                leafletMap.render_geo_objects(false)
             })
     }
 
-    this.do_text_search_geo_objects = function(text, success) {
+    this.do_text_search_geo_objects = function(text) {
         var queryUrl = '/kiezatlas/search/?search='+text
-        if (model.district) {
-            queryUrl = '/kiezatlas/search/'+model.district.id+'/?search='+text;
-        }
+        var district = _self.getDistrict()
+        if (district)  queryUrl = '/kiezatlas/search/' + district.id + '/?search=' + text
         _self.clear_details_area()
         _self.show_spinning_wheel()
-        $.getJSON(queryUrl,
-            function (geo_objects) {
+        $.getJSON(queryUrl, function (geo_objects) {
                 console.log("> Text based search returned", geo_objects)
                 // TODO: If search results are zero
                 if (geo_objects.length > 0) {
-                    model.items.push(geo_objects)
-                    if (typeof success !== "undefined") {
-                        // clear marker group completely after fulltext-search
-                        _self.clear_circle_marker_group()
-                        _self.hide_spinning_wheel()
-                        // TODO: for resultsets bigger than 100 implement a incremental rendering method
-                        _self.render_geo_objects(geo_objects, true)
-                    }
+                    // ### for resultsets bigger than 100 implement an incremental rendering method
+                    leafletMap.setItems(geo_objects)
+                    leafletMap.clear_circle_marker()
+                    leafletMap.render_geo_objects(true)
+                    _self.hide_spinning_wheel()
                 } else {
                     _self.hide_spinning_wheel()
                     _self.show_message('Keine Treffer f&uuml;r diese Suche')
@@ -856,14 +654,14 @@ var kiezatlas = (function($, angebote) {
             })
     }
 
-    this.reverse_geocode = function(e) {
-        $.getJSON('/kiezatlas/reverse-geocode/' + mapping.current_location.coordinate.lat
-                + ',' + mapping.current_location.coordinate.lng, function (geo_names) {
+    this.do_reverse_geocode = function(e) {
+        $.getJSON('/kiezatlas/reverse-geocode/' + leafletMap.getCurrentLocationLatitude()
+                + ',' + leafletMap.getCurrentLocationLongitude(), function (geo_names) {
             _self.hide_spinning_wheel(true)
             if (geo_names.results.length > 0) {
                 var first_result = geo_names.results[0]
                 var components = first_result.address_components
-                var o = { coordinates : "" + mapping.current_location.coordinate.lat + "," + mapping.current_location.coordinate.lng }
+                var o = { coordinates : "" + leafletMap.getCurrentLocationLatitude() + "," + leafletMap.getCurrentLocationLongitude() }
                 for (var i in components) {
                     var el = components[i]
                     if (el.types[0] === "route") {
@@ -878,8 +676,9 @@ var kiezatlas = (function($, angebote) {
                         o.postal_code= el.long_name
                     }
                 }
-                mapping.current_location.name = o.street + " " + o.street_nr + ", " + o.city
-                if (typeof o.area !== "undefined") mapping.current_location.name += " " + o.area
+                var location_name  = o.street + " " + o.street_nr + ", " + o.city
+                if (typeof o.area !== "undefined") location_name += " " + o.area
+                leafletMap.setCurrentLocationName(location_name)
                 _self.render_current_location_label()
             }
         })
@@ -887,16 +686,24 @@ var kiezatlas = (function($, angebote) {
 
     // --- Util
 
-    this.exist_in_marker_listing = function(geo_object_id, listing) {
-        if (typeof listing !== "undefined") {
-            for (var i in listing) {
-                if (listing[i].options.geo_object_id === geo_object_id) {
-                    // console.warn("Skipping to add an (already present) Geo Object ID to marker group list", geo_object_id)
-                    return true
-                }
-            }
-        }
-        return false
+    this.get_imprint_html = function(entry) {
+        var bezirk = _self.get_bezirks_topic(entry.bezirk_uri)
+        var html = '<div class="imprint">'
+            + '<a href="' + bezirk.imprint + '" title="Impressum: Bezirksamt ' + bezirk.value + '">Impressum</a></div>'
+        return html
+    }
+
+    this.get_lor_link = function(entry) {
+        if (!entry.hasOwnProperty("lor_id")) return ""
+        var html = '<div class="lor-link">'
+            + '<a href="http://sozialraumdaten.kiezatlas.de/seiten/2014/12/?lor=' + entry.lor_id
+            + '" title="zur Einwohnerstatistik des Raums (LOR Nr. ' + entry.lor_id +')">Sozialraumdaten</a></div>'
+        return html
+    }
+
+    this.update_document_title = function(titlePrefix, titleAddon) {
+        if (titlePrefix) window.document.title = titlePrefix + " - " + settings.webappTitle
+        if (titleAddon) window.document.title = settings.webappTitle + " - " + titleAddon
     }
 
     this.name_sort_asc = function(a, b) {
@@ -912,44 +719,29 @@ var kiezatlas = (function($, angebote) {
 
     // --- Website Model Operations
 
-    this.get_current_location = function(){
-        return mapping.current_location
-    }
-
-    this.get_geo_object_topic = function(id) {
-        for (var el in model.items) {
-            var result_list = model.items[el]
-            if (typeof result_list === "Object") {
-                if (result_list.id === id) return result_list
-            }
-            for (var element in result_list) {
-                var topic = result_list[element]
-                if (topic.id === id) return topic
-            }
-        }
-        return undefined
+    this.get_current_location = function() {
+        return leafletMap.getCurrentLocation()
     }
 
     this.get_bezirks_topic = function(uri) {
-        for (var i in model.districts) {
-            var element = model.districts[i]
+        for (var i in _self.getDistricts()) {
+            var element = _self.getDistricts()[i]
             if (element.uri === uri) return element
         }
         return undefined
     }
 
     this.get_bezirks_topic_by_id = function(id) {
-        // console.log("Searching for bezirk in", model.districts)
-        for (var i in model.districts) {
-            if (model.districts[i].id === id) return model.districts[i]
+        for (var i in _self.getDistricts()) {
+            if (_self.getDistricts()[i].id === id) return _self.getDistricts()[i]
         }
     }
 
     this.get_bezirks_topic_by_hash = function(hash) {
-        for (var i in model.districts) {
-            var bezirk = model.districts[i]
+        for (var i in _self.getDistricts()) {
+            var bezirk = _self.getDistricts()[i]
             var anchor_name = '#' + encodeURIComponent(bezirk.value.toLowerCase())
-            if (anchor_name == hash) return bezirk
+            if (anchor_name === hash) return bezirk
         }
     }
 
@@ -962,7 +754,6 @@ var kiezatlas = (function($, angebote) {
     }
 
     this.set_locationsearch_results = function(results) {
-        console.log(results.length  + " items found in Place Search", _self.get_locationsearch_results())
         model.locationsearch_results = results
     }
 
@@ -972,4 +763,4 @@ var kiezatlas = (function($, angebote) {
 
     return this
 
-})($, angebote)
+})($, angebote, leafletMap, restc, favourites)

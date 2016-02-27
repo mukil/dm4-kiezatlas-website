@@ -15,6 +15,18 @@ var restc = (function($) {
 
     var restc = {}
     
+    restc.do_geocode = function(streetValue, callback) {
+        $.ajax({
+            type: "GET", url: "/kiezatlas/geocode?query=" + streetValue,
+            success: function(obj) {
+                callback(obj)
+            },
+            error: function(x, s, e) {
+                callback(e)
+            }
+        })
+    }
+
     restc.load_district_topics = function(callback) {
         $.getJSON('/kiezatlas/bezirk', function(results) {
                 results.sort(value_sort_asc)

@@ -1,5 +1,5 @@
 
-var favourites = (function($, kiezatlas, PouchDB) {
+var favourites = (function($, PouchDB) {
     console.log("Favourites API Script loaded")
 
     var api = {}
@@ -15,11 +15,11 @@ var favourites = (function($, kiezatlas, PouchDB) {
         _db = new PouchDB('kiezatlas_favourites')
     }
 
-    api.add_entry_to_local_db = function() {
+    api.add_entry_to_local_db = function(location) {
         // TODO; Use POST not PUT to auto-generate IDs
         // ### perform some kind of existence check
         get_next_id(function (next_id) {
-            var entry = { _id : next_id, data: kiezatlas.get_current_location() }
+            var entry = { _id : next_id, data: location }
             _db.put(entry)
             api.list_entries_in_local_db()
         })
@@ -67,4 +67,4 @@ var favourites = (function($, kiezatlas, PouchDB) {
 
     return api
     
-}($, kiezatlas, PouchDB))
+}($, PouchDB))
