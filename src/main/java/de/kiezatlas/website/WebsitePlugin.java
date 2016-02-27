@@ -21,6 +21,7 @@ import de.deepamehta.plugins.geomaps.GeomapsService;
 import de.deepamehta.plugins.geospatial.GeospatialService;
 import de.deepamehta.plugins.workspaces.WorkspacesService;
 import de.kiezatlas.angebote.AngebotService;
+import de.kiezatlas.angebote.model.AngebotViewModel;
 import de.mikromedia.webpages.WebpagePluginService;
 import de.kiezatlas.website.model.BezirkView;
 import de.kiezatlas.website.model.GeoObjectDetailsView;
@@ -123,7 +124,6 @@ public class WebsitePlugin extends PluginActivator {
      */
     @GET
     @Path("/search")
-    @Transactional
     public List<GeoObjectView> searchGeoObjectTopics(@HeaderParam("Referer") String referer,
                                                      @QueryParam("search") String query) {
         if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
@@ -177,6 +177,30 @@ public class WebsitePlugin extends PluginActivator {
         } catch (Exception e) {
             throw new RuntimeException("Searching topics failed", e);
         }
+    }
+
+    @GET
+    @Path("/angebote/current")
+    public List<GeoObjectView> getCurrentKiezatlasAngebote() {
+        List<AngebotViewModel> offers = angeboteService.getAllAngebotsinfosByNow(new Date().getTime());
+        List<GeoObjectView> results = new ArrayList<GeoObjectView>();
+        for (AngebotViewModel angebote : offers) {
+            results.add(new GeoObjectView(angebote.getGeoObjectTopic(), geomapsService, angeboteService));
+        }
+        return results;
+    }
+
+    @GET
+    @Path("/angebote/search")
+    public List<GeoObjectView> getKiezatlasAngeboteByText(@QueryParam("search") String query) {
+        List<AngebotViewModel> offers = angeboteService.searchAngebotsinfosByText(query);
+        List<GeoObjectView> results = new ArrayList<GeoObjectView>();
+        for (AngebotViewModel angebot : offers) {
+            log.info("> Found Angebot " + angebot.toJSON().toString());
+            Topic einrichtung = angebot.getGeoObjectTopic();
+            if (einrichtung != null) results.add(new GeoObjectView(einrichtung, geomapsService, angeboteService));
+        }
+        return results;
     }
 
     /**
@@ -377,7 +401,7 @@ public class WebsitePlugin extends PluginActivator {
         // List<Topic> sonstigesResults = dms.searchTopics(query, "ka2.sonstiges");
         // List<Topic> traegerNameResults = dms.searchTopics(query, "ka2.traeger.name");
         log.info("> " + searchResults.size() + ", "+ descrResults.size() +", "+stichworteResults.size()
-                + " results in three types for query=\""+query+"\" in DISTRICT");
+                + " results in three types for query=\""+query+"\" in FULLTEXT");
         // merge all three types in search results
         searchResults.addAll(descrResults);
         searchResults.addAll(stichworteResults);
@@ -390,7 +414,7 @@ public class WebsitePlugin extends PluginActivator {
                 uniqueResults.put(geoObject.getId(), geoObject);
             }
         }
-        log.info("searchResultLenght=" + (searchResults.size()) + ", " + "uniqueResultLength=" + uniqueResults.size());
+        log.info("searchResultLength=" + (searchResults.size()) + ", " + "uniqueResultLength=" + uniqueResults.size());
         return new ArrayList(uniqueResults.values());
     }
 

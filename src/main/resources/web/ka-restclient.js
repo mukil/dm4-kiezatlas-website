@@ -27,6 +27,13 @@ var restc = (function($) {
         })
     }
 
+    restc.load_current_angebotsinfos = function(callback) {
+        $.getJSON('/kiezatlas/angebote/current', function(results) {
+                callback(results)
+            }
+        )
+    }
+
     restc.load_district_topics = function(callback) {
         $.getJSON('/kiezatlas/bezirk', function(results) {
                 results.sort(value_sort_asc)
