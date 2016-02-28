@@ -804,8 +804,6 @@ div.legende {
     margin-left: auto;
     margin-right: auto;
     color: #343434;
-    /* padding-left: 10%;
-    padding-right: 10%; */
     background: #fff;
     text-align: center;
 }
@@ -823,11 +821,11 @@ div.legende .text-search-control img {
     margin-left: 5px;
 }
 
+div.legende a.angebote-control,
 div.legende a.district-control,
 div.legende a.lock-control {
     position: absolute;
     right: 17px;
-    /** bottom: 12px; */
     bottom: 18px;
 }
 

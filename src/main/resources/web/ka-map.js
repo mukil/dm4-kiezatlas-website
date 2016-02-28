@@ -7,15 +7,15 @@ var mapping = {
     "zoomCityLevel": 11,
     "circleMarkerRadius": 10,
     "circleMarkerSelectedRadius": 12,
-    "controlCircleRadius": 750,
-    "isMapCircleLocked": true,
-    "maxBounds": L.latLngBounds(L.latLng(52.298000, 12.909336), L.latLng(52.715646, 13.817779)),
+    "circleSearchRadius": 750,
+    "circleSearchControl": undefined,
+    "circleSearchActive": true,
+    "circleSearchLocked": true,
     "currentLocation": { name: "Neuenburger Straße, Berlin", coordinate: new L.latLng(52.5, 13.4) },
+    "maxBounds": L.latLngBounds(L.latLng(52.234807, 12.976094), L.latLng(52.843370, 13.958482)),
     "markerGroup": undefined,
     "controlGroup": L.featureGroup(),
-    "districtGroup": L.featureGroup(),
-    "circleSearchControl": undefined,
-    "isCircleControlActive": true
+    "districtGroup": L.featureGroup() // Not in use
 }
 
 var leafletMap = (function($, L) {
@@ -24,13 +24,10 @@ var leafletMap = (function($, L) {
     var items = []
 
     map.setup = function(elementId) {
-        // Iinitiate Leaflet Map Object
         map.elementId = elementId
         map.map = new L.Map(elementId, {
-            dragging: true, touchZoom: true, scrollWheelZoom: false,
-            doubleClickZoom: true, zoomControl: false, minZoom: 9//,
-            // TODO: Increase max_bounds to not interfere with a locked circle
-            // maxBounds: _self.max_bounds,
+            dragging: true, touchZoom: true, scrollWheelZoom: false, doubleClickZoom: true,
+            zoomControl: false, minZoom: 9, maxBounds: mapping.maxBounds,
         })
         new L.control.zoom( { position: "topright" }).addTo(map.map)
         L.tileLayer('https://api.tiles.mapbox.com/v4/kiezatlas.map-feifsq6f/{z}/{x}/{y}.png?'
@@ -38,17 +35,15 @@ var leafletMap = (function($, L) {
             attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors,'
             + '<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery &#169; <a href="http://mapbox.com">Mapbox</a>',
             id: 'kiezatlas.m7222ia5'}).addTo(map.map)
-        // register handlers
         map.map.on('locationfound', map.on_browser_location_found)
         map.map.on('locationerror', map.on_browser_location_error) // ### just if user answers "never"
         map.map.on('dragend', map.on_map_drag_end)
+        map.map.on('drag', map.on_map_drag)
         /** map.map.on('zoomend', function(e) {
             console.log("map zoom level > ", leafletMap.map.getZoom())
         }) **/
-        map.map.on('drag', map.on_map_drag)
-        // correct current default viewport
+        mapping.controlGroup.addTo(leafletMap.map)
         leafletMap.map.setView(map.getCurrentLocationCoordinate(), mapping.zoomKiezLevel)
-        if (mapping.isMapCircleLocked) $('.leaflet-editing-icon').hide() // ### duplicate, fix circle initialization
     }
 
     map.clear_circle_marker = function() {
@@ -58,46 +53,40 @@ var leafletMap = (function($, L) {
         mapping.markerGroup.eachLayer(function (marker){
             leafletMap.map.removeLayer(marker)
         })
+        map.map.removeLayer(mapping.markerGroup)
         mapping.markerGroup = undefined
     }
 
     map.render_circle_search_control = function(fitBounds) {
-        // setup radius control
         if (mapping.circleSearchControl) {
             mapping.controlGroup.removeLayer(mapping.circleSearchControl)
-            leafletMap.map.removeLayer(mapping.controlGroup)
         }
-        if (mapping.isCircleControlActive) {
+        if (mapping.circleSearchActive) {
             mapping.circleSearchControl = new L.CircleEditor(
-                map.getCurrentLocationCoordinate(), mapping.controlCircleRadius, {
+                map.getCurrentLocationCoordinate(), mapping.circleSearchRadius, {
                 color: colors.ka_blue, weight: 3, opacity: .5, fillColor: colors.yellow, fillOpacity: 0,
                 extendedIconClass: "extend-icon-medium", className: "leaflet-radius-control", clickable: false,
                 zIndexOffset: 101
             })
-            // add circle search control to map
             mapping.controlGroup.addLayer(mapping.circleSearchControl)
-            mapping.controlGroup.addTo(leafletMap.map)
-            // add event handler to radius control
+            // mapping.controlGroup.addTo(leafletMap.map)
             mapping.circleSearchControl.on('edit', function(event) {
-                // fire a new query
                 var new_radius = event.target._mRadius
                 map.setCurrentLocationCoordinate(event.target._latlng)
                 map.fire_circle_edit(new_radius)
             })
-            // update viewport to the programmatically set radius-control
             if (fitBounds) {
-                // leafletMap.map.fitBounds(mapping.controlGroup.getBounds())
-                leafletMap.map.setView(
-                    mapping.controlGroup.getBounds().getCenter(), mapping.zoomStreetLevel)
+                leafletMap.map.fitBounds(mapping.controlGroup.getBounds())
+                /** leafletMap.map.setView(
+                    mapping.controlGroup.getBounds().getCenter(), mapping.zoomStreetLevel) */
             }
-            if (mapping.isMapCircleLocked) $('.leaflet-editing-icon').hide()
+            if (mapping.circleSearchLocked) $('.leaflet-editing-icon').hide()
         }
     }
 
     map.remove_circle_search_control = function() {
         if (mapping.circleSearchControl) {
             mapping.controlGroup.removeLayer(mapping.circleSearchControl)
-            map.map.removeLayer(mapping.controlGroup)
         }
     }
     
@@ -128,14 +117,12 @@ var leafletMap = (function($, L) {
         leafletMap.clear_circle_marker()
         // build up: create new markerGroup
         mapping.markerGroup = L.featureGroup(list_of_markers)
-        mapping.markerGroup.addTo(leafletMap.map)
         //
         for (var el in list_of_markers) {
             var geoMarker = list_of_markers[el]
              mapping.markerGroup.addLayer(geoMarker)
         }
         leafletMap.map.addLayer(mapping.markerGroup)
-        //
         if (set_view_to_bounds && list_of_markers.length > 0) {
             // leafletMap.map.setMaxBounds(mapping.markerGroup.getBounds())
             leafletMap.map.fitBounds(mapping.markerGroup.getBounds())
@@ -239,11 +226,11 @@ var leafletMap = (function($, L) {
     }
 
     map.deactivate_circle_control = function() {
-        mapping.isCircleControlActive = false
+        mapping.circleSearchActive = false
     }
 
     map.activate_circle_control = function() {
-        mapping.isCircleControlActive = true
+        mapping.circleSearchActive = true
     }
 
     map.show_anchor = function(custom_anchor) {
@@ -272,7 +259,7 @@ var leafletMap = (function($, L) {
     }
 
     map.setControlCircleRadiusValue = function(meterVal) {
-        mapping.controlCircleRadius = meterVal
+        mapping.circleSearchRadius = meterVal
     }
 
     map.getCurrentLocation = function() {
