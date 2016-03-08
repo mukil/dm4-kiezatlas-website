@@ -49,7 +49,17 @@ var angebote = (function($) {
     // TODO: Move Rendering Angebotsinfos to Ka-Website Module
     api.show_angebotsinfos = function(id) {
         var infos = api.get_angebotsinfos_by_geo_object_id(id)
-        console.log("- NYE - Render Angebotsinfos", infos)
+        var $listing = $('#details-' + id + ' .angebote-listing')
+        if ($listing.children().length === 0) {
+            $listing = $('<div class="angebote-listing">')
+            $('.angebote-link').append($listing)
+        }
+        $listing.empty()
+        for (var aidx in infos) {
+            var angebotsinfo = infos[aidx]
+            $listing.append('<span>' + angebotsinfo.value + "</span><br/>")
+            console.log("- NYE - Render Angebotsinfo", angebotsinfo)
+        }
     }
     
     return api

@@ -100,14 +100,19 @@ var leafletMap = (function($, L) {
             if (geo_object === "null" || !geo_object) {
                 console.warn("Skipping geo object response entry [" + el+ "]", geo_object)
             } else {
-                var geo_marker = map.create_geo_object_marker(geo_object)
-                if (geo_marker) list_of_markers.push(geo_marker)
+                // preventing circle marker duplicates (in result set, e.g. Angebotsinfos)
+                if (!map.exist_marker_in_listing(geo_object.id, list_of_markers)) {
+                    var geo_marker = map.create_geo_object_marker(geo_object)
+                    if (geo_marker) {
+                        list_of_markers.push(geo_marker)
+                    }
+                }
             }
         }
         // merge: maintain also all previously added markers
         if (mapping.markerGroup) {
             mapping.markerGroup.eachLayer(function (marker) {
-                // preventing duplicates
+                // preventing circle marker duplicates (during merge of result sets)
                 if (!map.exist_marker_in_listing(marker.options.geo_object_id, list_of_markers)) {
                     list_of_markers.push(marker)
                 }
@@ -297,7 +302,7 @@ var leafletMap = (function($, L) {
     map.getItemById = function(id) {
         for (var el in items) {
             var object = items[el]
-            if (object.id == id) return object
+            if (object.id === id) return object
         }
         return undefined
     }
@@ -311,7 +316,7 @@ var leafletMap = (function($, L) {
     }
 
     map.exist_marker_in_listing = function(geo_object_id, listing) {
-        if (!listing) {
+        if (listing) {
             for (var i in listing) {
                 if (listing[i].options.geo_object_id === geo_object_id) {
                     return true

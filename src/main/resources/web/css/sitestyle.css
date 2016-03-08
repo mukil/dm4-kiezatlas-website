@@ -29,6 +29,8 @@ h3 {
     color: #8F1414;
 }
 
+#detail-area .entry-card .angebote-link .button,
+span.angebote-btn,
 a {
     color: #002856;
     text-decoration: underline;
@@ -228,6 +230,7 @@ h1.my-title {
     margin: 10px;
 }
 
+span.angebote-btn,
 #do-nearby {
     cursor: pointer;
 }
@@ -454,6 +457,10 @@ h1.my-title {
 #detail-area .entry-card .angebote-link {
     padding-bottom: 15px;
     padding-top: 10px;
+}
+
+#detail-area .entry-card .angebote-listing {
+    margin-top: 5px;
 }
 
 #detail-area .entry-card .lor-link {
