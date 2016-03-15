@@ -5,7 +5,7 @@ var mapping = {
     "zoomKiezLevel": 13,
     "zoomDistrictLevel" : 12,
     "zoomCityLevel": 11,
-    "circleMarkerRadius": 10,
+    "circleMarkerRadius": 5,
     "circleMarkerSelectedRadius": 12,
     "circleSearchRadius": 750,
     "circleSearchControl": undefined,
@@ -30,7 +30,7 @@ var leafletMap = (function($, L) {
             zoomControl: false, minZoom: 9, maxBounds: mapping.maxBounds,
         })
         new L.control.zoom( { position: "topright" }).addTo(map.map)
-        L.tileLayer('https://api.tiles.mapbox.com/v4/kiezatlas.map-feifsq6f/{z}/{x}/{y}.png?'
+        L.tileLayer('https://api.tiles.mapbox.com/v4/kiezatlas.pd8lkp64/{z}/{x}/{y}.png?' // old style id="kiezatlas.map-feifsq6f"
             + 'access_token=pk.eyJ1Ijoia2llemF0bGFzIiwiYSI6ImNpa3BndjU2ODAwYm53MGxzM3JtOXFmb2IifQ._PcBhOcfLYDD8RP3BS0U_g', {
             attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors,'
             + '<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery &#169; <a href="http://mapbox.com">Mapbox</a>',
@@ -39,11 +39,29 @@ var leafletMap = (function($, L) {
         map.map.on('locationerror', map.on_browser_location_error) // ### just if user answers "never"
         map.map.on('dragend', map.on_map_drag_end)
         map.map.on('drag', map.on_map_drag)
-        /** map.map.on('zoomend', function(e) {
-            console.log("map zoom level > ", leafletMap.map.getZoom())
-        }) **/
+        //
         mapping.controlGroup.addTo(leafletMap.map)
-        leafletMap.map.setView(map.getCurrentLocationCoordinate(), mapping.zoomKiezLevel)
+        map.map.setView(map.getCurrentLocationCoordinate(), mapping.zoomKiezLevel)
+        //
+        map.map.on('zoomend', function(e) {
+            if (map.map.getZoom() <= 12) {
+                mapping.circleMarkerRadius = 3
+                mapping.circleMarkerSelectedRadius = 5
+            } else if (map.map.getZoom() === 13) {
+                mapping.circleMarkerRadius = 5
+                mapping.circleMarkerSelectedRadius = 7
+            } else if (map.map.getZoom() === 14) {
+                mapping.circleMarkerRadius = 7
+                mapping.circleMarkerSelectedRadius = 9
+            } else if (map.map.getZoom() === 15) {
+                mapping.circleMarkerRadius = 8
+                mapping.circleMarkerSelectedRadius = 10
+            } else if (map.map.getZoom() >= 16) {
+                mapping.circleMarkerRadius = 10
+                mapping.circleMarkerSelectedRadius = 12
+            }
+            map.update_geo_object_marker_radius()
+        })
     }
 
     map.clear_circle_marker = function() {
@@ -64,12 +82,10 @@ var leafletMap = (function($, L) {
         if (mapping.circleSearchActive) {
             mapping.circleSearchControl = new L.CircleEditor(
                 map.getCurrentLocationCoordinate(), mapping.circleSearchRadius, {
-                color: colors.ka_blue, weight: 3, opacity: .5, fillColor: colors.yellow, fillOpacity: 0,
-                extendedIconClass: "extend-icon-medium", className: "leaflet-radius-control", clickable: false,
-                zIndexOffset: 101
+                color: colors.ka_gold, weight: 3, opacity: .4, extendedIconClass: "extend-icon-medium",
+                className: "leaflet-search-control", clickable: false, zIndexOffset: 101, fillColor: colors.ka_gold
             })
             mapping.controlGroup.addLayer(mapping.circleSearchControl)
-            // mapping.controlGroup.addTo(leafletMap.map)
             mapping.circleSearchControl.on('edit', function(event) {
                 var new_radius = event.target._mRadius
                 map.setCurrentLocationCoordinate(event.target._latlng)
@@ -171,6 +187,17 @@ var leafletMap = (function($, L) {
         }
     }
 
+    map.update_geo_object_marker_radius = function() {
+        if (mapping.markerGroup) {
+            mapping.markerGroup.eachLayer(function (el) {
+                var geo_object_id = el.options["geo_object_id"]
+                if (geo_object_id) {
+                    el.setRadius(mapping.circleMarkerRadius)
+                }
+            })
+        }
+    }
+
     map.select_geo_object_marker = function(marker) {
         // apply default styles to all the rest
         mapping.markerGroup.eachLayer(function (el) {
@@ -194,12 +221,13 @@ var leafletMap = (function($, L) {
     }
 
     map.calculate_default_circle_options = function(result) {
-        var angeboteDashArray = map.calculate_geo_object_dash_array(result)
         var hasAngebote = (result["angebote_count"] > 0) ? true : false
-        return {
-            weight: (hasAngebote) ? 3 : 3, opacity: .8, fillColor: colors.ka_gold, fillOpacity: .6, lineCap: 'square',
-            dashArray: angeboteDashArray, color : (hasAngebote) ? colors.m_blue : colors.ka_gold,
-            title: result["name"], alt: "Markierung von " + result["name"], location_id: result["address_id"],
+        var angeboteDashArray = map.calculate_geo_object_dash_array(result)
+        return { // ### improve new colors for angebote rendering
+            weight: (hasAngebote) ? 3 : 2, opacity: .6, fillColor: (hasAngebote) ? colors.ka_red : colors.bright_grey,
+            fillOpacity: (hasAngebote) ? 0.3 : 0.2, lineCap: 'square', dashArray: angeboteDashArray,
+            color : (hasAngebote) ? colors.ka_gold : colors.ka_red, title: result["name"],
+            alt: "Markierung von " + result["name"], location_id: result["address_id"],
             geo_object_id: result["id"], uri: result["uri"], name: result["name"],// riseOnHover: true,
             bezirksregion_uri: result["bezirksregion_uri"], z_indexOffset: 1001
         }
@@ -207,8 +235,8 @@ var leafletMap = (function($, L) {
 
     map.calculate_selected_circle_options = function() {
         return {
-            color: colors.ka_gold, weight: 4, opacity: 1,
-            fillColor: colors.m_blue, fillOpacity: 1, className: "selected"
+            color: colors.ka_gold, weight: 3, opacity: 1,
+            fillColor: colors.ka_red, fillOpacity: 1, className: "selected"
         }
     }
 
@@ -260,11 +288,18 @@ var leafletMap = (function($, L) {
     }
 
     map.getControlCircleRadius = function() {
-        return mapping.circleSearchControl.getRadius()
+        if (mapping.circleSearchControl) {
+            return mapping.circleSearchControl.getRadius()
+        }
+        return mapping.circleSearchRadius
     }
 
     map.setControlCircleRadiusValue = function(meterVal) {
-        mapping.circleSearchRadius = meterVal
+        if (mapping.circleSearchRadius) {
+            mapping.circleSearchRadius = meterVal
+        } else {
+            console.warn("Circle Search Control is curerntly INACTIVE")
+        }
     }
 
     map.getCurrentLocation = function() {
@@ -396,12 +431,12 @@ var leafletMap = (function($, L) {
     }
 
     function handle_locating_error() {
-        map.fire_location_error('Ihr Standort ist a&uszlig;erhalb von Berlin.')
         map.setCurrentLocationName('Ihr Standort liegt au&szlig;erhalb von Berlin, '
             + 'bitte nutzen sie die Umkreissuche oder '
             + '<a href="javascript:kiezatlas.focus_location_input_field()" '+ '>die Texteingabe</a>.')
         map.map.setView(map.getCurrentLocationCoordinate())
         map.map.setZoom(mapping.zoomKiezLevel)
+        map.fire_location_error('Ihr Standort ist a&uszlig;erhalb von Berlin.')
     }
 
     return map

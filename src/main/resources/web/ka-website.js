@@ -299,13 +299,18 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
         })
         leafletMap.listen_to('locating_success', function(e) {
             leafletMap.setCurrentLocationCoordinate(new L.latLng(e.detail.latitude, e.detail.longitude))
+            leafletMap.activate_circle_control()
             leafletMap.render_circle_search_control()
             leafletMap.map.setView(map.getCurrentLocationCoordinate(), mapping.zoomStreetLevel)
+            _self.setDistrict(undefined)
             _self.do_circle_search(undefined, undefined)
             _self.do_reverse_geocode()
         })
         leafletMap.listen_to('locating_error', function(e) {
+            leafletMap.render_circle_search_control()
             _self.render_current_location_label()
+            _self.do_circle_search(undefined, undefined)
+            _self.do_reverse_geocode()
         })
         _self.render_browser_location_button()
         _self.render_current_location_label()
@@ -497,13 +502,13 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
     this.do_circle_search = function(location, radius) {
         _self.show_spinning_wheel()
         var location_string = ''
-        var radius_value = leafletMap.getControlCircleRadius()
+        var radius_value = radius
+        if (!radius) radius_value = leafletMap.getControlCircleRadius()
         if (!location) {
             location_string = leafletMap.getCurrentLocationLongitude() + ', '+ leafletMap.getCurrentLocationLatitude()
         } else {
             location_string = location.lng + ', '+location.lat
         }
-        if (radius) radius_value = radius
         $.getJSON('/kiezatlas/search/'+encodeURIComponent(location_string)+'/' + (radius_value / 1000),
             function (geo_objects) {
                 leafletMap.setItems(geo_objects) // ### let markers add up
@@ -536,7 +541,7 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
     }
 
     this.do_text_search_angebotsinfos = function(text) { // Remove Duplicate Lines
-        var queryUrl = '/kiezatlas/angebote/search/?search=' + text
+        var queryUrl = '/kiezatlas/angebot/search/geoobjects/?search=' + text
         _self.clear_details_area()
         _self.show_spinning_wheel()
         $.getJSON(queryUrl, function (geo_objects) {

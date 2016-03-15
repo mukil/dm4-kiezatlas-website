@@ -167,6 +167,7 @@ public class WebsitePlugin extends PluginActivator {
                 return results;
             }
             List<Topic> singleTopics = dms.searchTopics(queryValue, "ka2.geo_object.name");
+            // ### beschreibung, straßenname?
             log.log(Level.INFO, "{0} name topics found", singleTopics.size());
             for (Topic topic : singleTopics) {
                 Topic geoObject = topic.getRelatedTopic("dm4.core.composition",
@@ -177,30 +178,6 @@ public class WebsitePlugin extends PluginActivator {
         } catch (Exception e) {
             throw new RuntimeException("Searching topics failed", e);
         }
-    }
-
-    @GET
-    @Path("/angebote/current")
-    public List<GeoObjectView> getCurrentKiezatlasAngebote() {
-        List<AngebotViewModel> offers = angeboteService.getAllAngebotsinfosByNow(new Date().getTime());
-        List<GeoObjectView> results = new ArrayList<GeoObjectView>();
-        for (AngebotViewModel angebote : offers) {
-            results.add(new GeoObjectView(angebote.getGeoObjectTopic(), geomapsService, angeboteService));
-        }
-        return results;
-    }
-
-    @GET
-    @Path("/angebote/search")
-    public List<GeoObjectView> getKiezatlasAngeboteByText(@QueryParam("search") String query) {
-        List<AngebotViewModel> offers = angeboteService.searchAngebotsinfosByText(query);
-        List<GeoObjectView> results = new ArrayList<GeoObjectView>();
-        for (AngebotViewModel angebot : offers) {
-            log.info("> Found Angebot " + angebot.toJSON().toString());
-            Topic einrichtung = angebot.getGeoObjectTopic();
-            if (einrichtung != null) results.add(new GeoObjectView(einrichtung, geomapsService, angeboteService));
-        }
-        return results;
     }
 
     /**
@@ -392,6 +369,7 @@ public class WebsitePlugin extends PluginActivator {
 
     // ------------------------------------------------------------------------------------------------- Private Methods
 
+    /** ### TODO: Move implementation into the Kiezatlas Plugin Service */
     private List<Topic> searchInGeoObjectChildsByText(String query) {
         // ### Todo: Fetch for ka2.ansprechpartner, dm4.tags.tag and maybe category-names too
         HashMap<Long, Topic> uniqueResults = new HashMap<Long, Topic>();
