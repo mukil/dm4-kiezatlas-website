@@ -114,7 +114,7 @@ var leafletMap = (function($, L) {
         for (var el in elements) {
             var geo_object = elements[el]
             if (geo_object === "null" || !geo_object) {
-                console.warn("Skipping geo object response entry [" + el+ "]", geo_object)
+                console.warn("Skipping Geo Object View Model [" + el+ "]", geo_object)
             } else {
                 // preventing circle marker duplicates (in result set, e.g. Angebotsinfos)
                 if (!map.exist_marker_in_listing(geo_object.id, list_of_markers)) {
@@ -203,12 +203,15 @@ var leafletMap = (function($, L) {
         mapping.markerGroup.eachLayer(function (el) {
             var geo_object_id = el.options["geo_object_id"]
             if (geo_object_id) {
-                var geo_object = map.getItemById(geo_object_id)
-                if (geo_object) {
-                    el.setStyle(map.calculate_default_circle_options(geo_object))
-                    el.setRadius(mapping.circleMarkerRadius)
+                var geo_object_view_model = {
+                    "address_id": el.options.address_id, "name": el.options.name,
+                    "angebote_count": el.options.angebote_count, "bezirksregion_uri": el.options.bezirksregion_uri,
+                    "uri": el.options.uri, "id": geo_object_id
                 }
+                el.setStyle(map.calculate_default_circle_options(geo_object_view_model))
+                el.setRadius(mapping.circleMarkerRadius)
             }
+            dummyObject = el.options
         })
         // highlight selected marker
         marker.setStyle(map.calculate_selected_circle_options())
@@ -220,16 +223,17 @@ var leafletMap = (function($, L) {
         map.fire_marker_select(selected_geo_objects)
     }
 
-    map.calculate_default_circle_options = function(result) {
-        var hasAngebote = (result["angebote_count"] > 0) ? true : false
-        var angeboteDashArray = map.calculate_geo_object_dash_array(result)
+    map.calculate_default_circle_options = function(marker_topic) {
+        var hasAngebote = (marker_topic["angebote_count"] > 0) ? true : false
+        var angeboteDashArray = map.calculate_geo_object_dash_array(marker_topic)
         return { // ### improve new colors for angebote rendering
             weight: (hasAngebote) ? 3 : 2, opacity: .6, fillColor: (hasAngebote) ? colors.ka_red : colors.bright_grey,
             fillOpacity: (hasAngebote) ? 0.3 : 0.2, lineCap: 'square', dashArray: angeboteDashArray,
-            color : (hasAngebote) ? colors.ka_gold : colors.ka_red, title: result["name"],
-            alt: "Markierung von " + result["name"], location_id: result["address_id"],
-            geo_object_id: result["id"], uri: result["uri"], name: result["name"],// riseOnHover: true,
-            bezirksregion_uri: result["bezirksregion_uri"], z_indexOffset: 1001
+            color : (hasAngebote) ? colors.ka_gold : colors.ka_red, title: marker_topic["name"],
+            alt: "Markierung von " + marker_topic["name"], location_id: marker_topic["address_id"],
+            geo_object_id: marker_topic["id"], uri: marker_topic["uri"], name: marker_topic["name"],// riseOnHover: true,
+            bezirksregion_uri: marker_topic["bezirksregion_uri"], z_indexOffset: 1001, uri: marker_topic["uri"],
+            angebote_count: marker_topic["angebote_count"], id: marker_topic["id"], address_id: marker_topic["address_id"]
         }
     }
 
@@ -277,6 +281,7 @@ var leafletMap = (function($, L) {
 
     map.setItems = function(itemList) {
         items = itemList
+        console.log("Map Set Items (" + items.length + ")", items)
     }
 
     map.addItems = function(itemList) {
@@ -292,6 +297,10 @@ var leafletMap = (function($, L) {
             return mapping.circleSearchControl.getRadius()
         }
         return mapping.circleSearchRadius
+    }
+
+    map.getControlCircleBounds = function() {
+        return mapping.circleSearchControl.getBounds()
     }
 
     map.setControlCircleRadiusValue = function(meterVal) {
@@ -335,9 +344,14 @@ var leafletMap = (function($, L) {
     }
 
     map.getItemById = function(id) {
-        for (var el in items) {
-            var object = items[el]
-            if (object.id === id) return object
+        var elements = map.getItems()
+        for (var el in elements) {
+            var object = elements[el]
+            if (object) {
+                if (object.id === id) return object
+            } else {
+                console.warn("Geo Object View Model NOT in Map Items", object)
+            }
         }
         return undefined
     }

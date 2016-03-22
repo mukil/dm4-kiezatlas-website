@@ -301,9 +301,9 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
             leafletMap.setCurrentLocationCoordinate(new L.latLng(e.detail.latitude, e.detail.longitude))
             leafletMap.activate_circle_control()
             leafletMap.render_circle_search_control()
-            leafletMap.map.setView(map.getCurrentLocationCoordinate(), mapping.zoomStreetLevel)
             _self.setDistrict(undefined)
-            _self.do_circle_search(undefined, undefined)
+            _self.do_circle_search(leafletMap.getCurrentLocationCoordinate(), undefined)
+            leafletMap.map.fitBounds(leafletMap.getControlCircleBounds())
             _self.do_reverse_geocode()
         })
         leafletMap.listen_to('locating_error', function(e) {
@@ -390,15 +390,17 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
             longitude = leafletMap.getCurrentLocationLongitude().toFixed(3)
         $('.location-label .text').html(leafletMap.getCurrentLocationName()
             + ' <small>('+latitude+' N, '+longitude+' E)</small>')
-        var $star_button = $('button.star')
-            $star_button.unbind('click')
-            $star_button.click(function(e) {
-                favourites.add_entry_to_local_db(leafletMap.getCurrentLocation())
-            })
-        if (hideFavBtn) {
-            $star_button.button("disable")
-        } else {
-            $star_button.button("enable")
+        if (favourites.is_available()) {
+            var $star_button = $('button.star')
+                $star_button.unbind('click')
+                $star_button.click(function(e) {
+                    favourites.add_entry_to_local_db(leafletMap.getCurrentLocation())
+                })
+            if (hideFavBtn) {
+                $star_button.button("disable")
+            } else {
+                $star_button.button("enable")
+            }
         }
         _self.update_document_title(leafletMap.getCurrentLocationName())
     }
