@@ -11,7 +11,7 @@ var mapping = {
     "circleSearchControl": undefined,
     "circleSearchActive": true,
     "circleSearchLocked": true,
-    "currentLocation": { name: "Neuenburger Straße, Berlin", coordinate: new L.latLng(52.5, 13.4) },
+    "currentLocation": { name: "Tucholskystraße, 10117 Berlin", coordinate: new L.latLng(52.524256, 13.392192) },
     "maxBounds": L.latLngBounds(L.latLng(52.234807, 12.976094), L.latLng(52.843370, 13.958482)),
     "markerGroup": undefined,
     "controlGroup": L.featureGroup(),
@@ -29,7 +29,8 @@ var leafletMap = (function($, L) {
             dragging: true, touchZoom: true, scrollWheelZoom: false, doubleClickZoom: true,
             zoomControl: false, minZoom: 9, maxBounds: mapping.maxBounds,
         })
-        new L.control.zoom( { position: "topright" }).addTo(map.map)
+        L.control.zoom( { position: "topright" }).addTo(map.map)
+        L.control.scale( { imperial: false, updateWhenIdle: true } ).addTo(map.map)
         L.tileLayer('https://api.tiles.mapbox.com/v4/kiezatlas.pd8lkp64/{z}/{x}/{y}.png?' // old style id="kiezatlas.map-feifsq6f"
             + 'access_token=pk.eyJ1Ijoia2llemF0bGFzIiwiYSI6ImNpa3BndjU2ODAwYm53MGxzM3JtOXFmb2IifQ._PcBhOcfLYDD8RP3BS0U_g', {
             attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors,'
@@ -227,8 +228,8 @@ var leafletMap = (function($, L) {
         var hasAngebote = (marker_topic["angebote_count"] > 0) ? true : false
         var angeboteDashArray = map.calculate_geo_object_dash_array(marker_topic)
         return { // ### improve new colors for angebote rendering
-            weight: (hasAngebote) ? 3 : 2, opacity: .6, fillColor: (hasAngebote) ? colors.ka_red : colors.bright_grey,
-            fillOpacity: (hasAngebote) ? 0.3 : 0.2, lineCap: 'square', dashArray: angeboteDashArray,
+            weight: (hasAngebote) ? 3 : 2, opacity: (hasAngebote) ? 1 : 0.6, fillColor: (hasAngebote) ? colors.ka_red : colors.bright_grey,
+            fillOpacity: (hasAngebote) ? 0.6 : 0.2, lineCap: 'square', dashArray: angeboteDashArray,
             color : (hasAngebote) ? colors.ka_gold : colors.ka_red, title: marker_topic["name"],
             alt: "Markierung von " + marker_topic["name"], location_id: marker_topic["address_id"],
             geo_object_id: marker_topic["id"], uri: marker_topic["uri"], name: marker_topic["name"],// riseOnHover: true,
@@ -255,7 +256,8 @@ var leafletMap = (function($, L) {
         if (value === 6) return [2,5, 2,5, 2,5, 2,5, 2,5, 2,50]
         if (value === 7) return [2,5, 2,5, 2,5, 2,5, 2,5, 2,5, 2,45]
         if (value === 8) return [2,5, 2,5, 2,5, 2,5, 2,5, 2,5, 2,5, 2,40]
-        if (value > 8) return [2,5]
+        if (value === 9) return [2,5, 2,5, 2,5, 2,5, 2,5, 2,5, 2,5, 2,5, 2,40]
+        if (value > 9) return [2,5]
     }
 
     map.is_initialized = function() {
