@@ -30,7 +30,6 @@ h3 {
 }
 
 #detail-area .entry-card .angebote-link .button,
-span.angebote-btn,
 a {
     color: #002856;
     text-decoration: underline;
@@ -230,6 +229,7 @@ h1.my-title {
     margin: 10px;
 }
 
+span.einrichtungen-btn,
 span.angebote-btn,
 #do-nearby {
     cursor: pointer;

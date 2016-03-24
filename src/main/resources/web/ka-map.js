@@ -386,42 +386,49 @@ var leafletMap = (function($, L) {
 
     map.fire_drag_end = function() {
         var domElement = document.getElementById(map.elementId)
-        domElement.dispatchEvent(new CustomEvent('drag_end'))
+        // domElement.dispatchEvent(new CustomEvent('drag_end'))
+        fire_custom_event(domElement, 'drag_end')
     }
 
     map.fire_drag = function() {
         var domElement = document.getElementById(map.elementId)
-        domElement.dispatchEvent(new CustomEvent('drag'))
+        // domElement.dispatchEvent(new CustomEvent('drag'))
+        fire_custom_event(domElement, 'drag')
     }
 
     map.fire_marker_select = function(selection) {
         var domElement = document.getElementById(map.elementId)
-        domElement.dispatchEvent(new CustomEvent('marker_select', {"detail": selection }))
+        // domElement.dispatchEvent(new CustomEvent('marker_select', {"detail": selection }))
+        fire_custom_event(domElement, 'marker_select', selection)
     }
 
     map.fire_marker_mouseover = function(element) {
         var domElement = document.getElementById(map.elementId)
-        domElement.dispatchEvent(new CustomEvent('marker_mouseover', {"detail": element }))
+        // domElement.dispatchEvent(new CustomEvent('marker_mouseover', {"detail": element }))
+        fire_custom_event(domElement, 'marker_mouseover', element)
     }
 
     map.fire_marker_mouseout = function(element) {
         var domElement = document.getElementById(map.elementId)
-        domElement.dispatchEvent(new CustomEvent('marker_mouseout', {"detail": element }))
+        // domElement.dispatchEvent(new CustomEvent('marker_mouseout', {"detail": element }))
+        fire_custom_event(domElement, 'marker_mouseout', element)
     }
 
     map.fire_circle_edit = function(new_radius) {
         var domElement = document.getElementById(map.elementId)
-        domElement.dispatchEvent(new CustomEvent('circle_control_edit', {"detail": new_radius} ))
+        // domElement.dispatchEvent(new CustomEvent('circle_control_edit', {"detail": new_radius} ))
+        fire_custom_event(domElement, 'circle_control_edit', new_radius)
     }
 
     map.fire_location_found = function(valueObj) {
         var domElement = document.getElementById(map.elementId)
-        domElement.dispatchEvent(new CustomEvent('locating_success', {"detail": valueObj} ))
+        // domElement.dispatchEvent(new CustomEvent('locating_success', {"detail": valueObj} ))
+        fire_custom_event(domElement, 'locating_success', valueObj)
     }
 
     map.fire_location_error = function(message) {
         var domElement = document.getElementById(map.elementId)
-        domElement.dispatchEvent(new CustomEvent('locating_error', {"detail": message} ))
+        fire_custom_event(domElement, 'locating_error', message)
     }
 
     map.on_map_drag = function(e) {
@@ -453,6 +460,23 @@ var leafletMap = (function($, L) {
         map.map.setView(map.getCurrentLocationCoordinate())
         map.map.setZoom(mapping.zoomKiezLevel)
         map.fire_location_error('Ihr Standort ist a&uszlig;erhalb von Berlin.')
+    }
+
+    function fire_custom_event(element, eventName, details) {
+        if (is_msie) {
+            var customEvent = document.createEvent('CustomEvent')
+                customEvent.initCustomEvent(eventName, true, false, details)
+            element.dispatchEvent(customEvent)
+        } else {
+            element.dispatchEvent(new CustomEvent(eventName, {"detail": details} ))
+        }
+    }
+
+    // Current MSIE Check here for our PouchDB Favourite Feature courtesy of http://www.javascriptkit.co
+    function is_msie() {
+        var ie11andabove = navigator.userAgent.indexOf('Trident') != -1 && navigator.userAgent.indexOf('MSIE') == -1 // IE11 or above Boolean
+        var ie10andbelow = navigator.userAgent.indexOf('MSIE') != -1 // IE10 or below Boolean
+        return (ie11andabove || ie10andbelow)
     }
 
     return map
