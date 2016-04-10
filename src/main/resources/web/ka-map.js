@@ -169,9 +169,9 @@ var leafletMap = (function($, L) {
                 console.warn("WGS 84 coordinates do look strange in case of Berlin", geo_object)
                 return undefined
             }
-            // 3) pre-precossing: do kiezatlas deep link check & log
-            if (geo_object["bezirksregion_uri"] === "") {
-                console.warn("Invalid Geo Object - Missing Bezirksregion URI", geo_object["name"])
+            // 3) pre-precossing: if topic is neither in a bezirks-citymap nor in a bezirksregion citymap
+            if (geo_object["bezirksregion_uri"] === "" && geo_object["bezirk_uri"] === "") {
+                console.warn("Invalid Geo Object - Missing Bezirksregion & Bezirk URI", geo_object["name"])
                 return undefined
             }
             // 4) Create a circle marker
@@ -231,7 +231,7 @@ var leafletMap = (function($, L) {
             weight: (hasAngebote) ? 3 : 2, opacity: (hasAngebote) ? 1 : 0.6, fillColor: (hasAngebote) ? colors.ka_red : colors.bright_grey,
             fillOpacity: (hasAngebote) ? 0.6 : 0.2, lineCap: 'square', dashArray: angeboteDashArray,
             color : (hasAngebote) ? colors.ka_gold : colors.ka_red, title: marker_topic["name"],
-            alt: "Markierung von " + marker_topic["name"], location_id: marker_topic["address_id"],
+            alt: "Markierung von " + marker_topic["name"], location_id: marker_topic["address_id"], bezirk_uri: marker_topic["bezirk_uri"],
             geo_object_id: marker_topic["id"], uri: marker_topic["uri"], name: marker_topic["name"],// riseOnHover: true,
             bezirksregion_uri: marker_topic["bezirksregion_uri"], z_indexOffset: 1001, uri: marker_topic["uri"],
             angebote_count: marker_topic["angebote_count"], id: marker_topic["id"], address_id: marker_topic["address_id"]

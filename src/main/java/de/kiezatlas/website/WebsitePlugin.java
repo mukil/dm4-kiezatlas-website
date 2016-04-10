@@ -20,8 +20,8 @@ import de.deepamehta.plugins.geomaps.model.GeoCoordinate;
 import de.deepamehta.plugins.geomaps.GeomapsService;
 import de.deepamehta.plugins.geospatial.GeospatialService;
 import de.deepamehta.plugins.workspaces.WorkspacesService;
+import de.kiezatlas.KiezatlasService;
 import de.kiezatlas.angebote.AngebotService;
-import de.kiezatlas.angebote.model.AngebotViewModel;
 import de.mikromedia.webpages.WebpagePluginService;
 import de.kiezatlas.website.model.BezirkView;
 import de.kiezatlas.website.model.GeoObjectDetailsView;
@@ -40,7 +40,7 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 
 /**
- * The module bundline the new Kiezatlas 2 Website.<br/>
+ * The module bundling the Kiezatlas 2 Website.<br/>
  * Based on dm47-kiezatlas-2.1.7-SNAPSHOT, dm47-kiezatlas-etl-0.2.1-SNAPSHOT and dm47-webpages-0.3.<br/>
  * Compatible with DeepaMehta 4.7
  * <a href="http://github.com/mukil/dm4-kiezatlas-website">Source Code</a>
@@ -51,7 +51,7 @@ import javax.ws.rs.core.Response;
 @Path("/kiezatlas")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
-public class WebsitePlugin extends PluginActivator {
+public class WebsitePlugin extends PluginActivator implements WebsiteService {
 
     private final Logger log = Logger.getLogger(getClass().getName());
 
@@ -60,6 +60,7 @@ public class WebsitePlugin extends PluginActivator {
     @Inject GeospatialService spatialService;
     @Inject AngebotService angeboteService;
     @Inject GeomapsService geomapsService;
+    // @Inject KiezatlasService kiezatlas;
 
     // Application Cache of District Overview Resultsets
     HashMap<Long, List<GeoObjectView>> districtsCache = new HashMap<Long, List<GeoObjectView>>();
@@ -135,7 +136,7 @@ public class WebsitePlugin extends PluginActivator {
                 log.warning("No search term entered, returning empty resultset");
                 return results;
             }
-            List<Topic> geoObjects = searchInGeoObjectChildsByText(query);
+            List<Topic> geoObjects = searchFulltextInGeoObjectChilds(query);
             // iterate over merged results
             log.info("Start building response for " + geoObjects.size() + " OVERALL");
             for (Topic topic : geoObjects) {
@@ -148,13 +149,47 @@ public class WebsitePlugin extends PluginActivator {
         }
     }
 
+    @Override
+    public List<Topic> searchFulltextInGeoObjectChilds(String query) {
+        // ### Todo: Fetch for ka2.ansprechpartner, traeger name, too
+        HashMap<Long, Topic> uniqueResults = new HashMap<Long, Topic>();
+        List<Topic> searchResults = dms.searchTopics(query, "ka2.geo_object.name");
+        List<Topic> descrResults = dms.searchTopics(query, "ka2.beschreibung");
+        List<Topic> stichworteResults = dms.searchTopics(query, "ka2.stichworte");
+        // List<Topic> sonstigesResults = dms.searchTopics(query, "ka2.sonstiges");
+        List<Topic> bezirksregionResults = dms.searchTopics(query, "ka2.bezirksregion");
+        // List<Topic> traegerNameResults = dms.searchTopics(query, "ka2.traeger.name");
+        // List<Topic> traegerNameResults = dms.searchTopics(query, "dm4.contacts.street");
+        log.info("> " + searchResults.size() + ", "+ descrResults.size() +", "+stichworteResults.size() + ", " + bezirksregionResults.size()
+                + " results in four child types for query=\""+query+"\" in FULLTEXT");
+        // merge all three types in search results
+        searchResults.addAll(descrResults);
+        searchResults.addAll(stichworteResults);
+        // searchResults.addAll(sonstigesResults);
+        searchResults.addAll(bezirksregionResults);
+        // searchResults.addAll(traegerNameResults);
+        // make search results only contain unique geo object topics
+        log.info("Building up unique search resultset of fulltext search...");
+        Iterator<Topic> iterator = searchResults.iterator();
+        while (iterator.hasNext()) {
+            Topic next = iterator.next();
+            Topic geoObject = getParentGeoObjectTopic(next);
+            if (!uniqueResults.containsKey(geoObject.getId())) {
+                uniqueResults.put(geoObject.getId(), geoObject);
+            }
+        }
+        log.info("searchResultLength=" + (searchResults.size()) + ", " + "uniqueResultLength=" + uniqueResults.size());
+        return new ArrayList(uniqueResults.values());
+    }
+
     /**
      * Fetches a list of Geo Objects to be displayed in a map by name.
+     * Ditch searchGeoObjectNames in KiezatlasPlugin (used by Famportal-Angular service).
      * @param referer
      * @param query
      */
     @GET
-    @Path("/by_name")
+    @Path("/search/by_name")
     public List<GeoObjectView> getGeoObjectsByName(@HeaderParam("Referer") String referer,
                                                    @QueryParam("query") String query) {
         if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
@@ -167,7 +202,6 @@ public class WebsitePlugin extends PluginActivator {
                 return results;
             }
             List<Topic> singleTopics = dms.searchTopics(queryValue, "ka2.geo_object.name");
-            // ### beschreibung, straßenname?
             log.log(Level.INFO, "{0} name topics found", singleTopics.size());
             for (Topic topic : singleTopics) {
                 Topic geoObject = topic.getRelatedTopic("dm4.core.composition",
@@ -176,7 +210,7 @@ public class WebsitePlugin extends PluginActivator {
             }
             return results;
         } catch (Exception e) {
-            throw new RuntimeException("Searching topics failed", e);
+            throw new RuntimeException("Searching geo object topics by name failed", e);
         }
     }
 
@@ -219,7 +253,7 @@ public class WebsitePlugin extends PluginActivator {
     public List<GeoObjectView> getGeoObjectsInDistrict(@HeaderParam("Referer") String referer,
                                                        @PathParam("topicId") long bezirkId) {
         if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
-        // reuse cache
+        // use cache
         if (districtsCache.containsKey(bezirkId)) {
             // caching lifetime is 30 000 or 12 000 ms for testing purposes
             if (districtCachedAt.get(bezirkId) > new Date().getTime() - 21600000) { // 21600000 for approx. 6hr in ms
@@ -264,7 +298,7 @@ public class WebsitePlugin extends PluginActivator {
                 log.warning("No search term entered, returning empty resultset");
                 return results;
             }
-            List<Topic> geoObjects = searchInGeoObjectChildsByText(query);
+            List<Topic> geoObjects = searchFulltextInGeoObjectChilds(query);
             // iterate over merged results
             log.info("Start building response for " + geoObjects.size() + " and FILTER by DISTRICT");
             for (Topic geoObject: geoObjects) {
@@ -369,34 +403,7 @@ public class WebsitePlugin extends PluginActivator {
 
     // ------------------------------------------------------------------------------------------------- Private Methods
 
-    /** ### TODO: Move implementation into the Kiezatlas Plugin Service */
-    private List<Topic> searchInGeoObjectChildsByText(String query) {
-        // ### Todo: Fetch for ka2.ansprechpartner, dm4.tags.tag and maybe category-names too
-        HashMap<Long, Topic> uniqueResults = new HashMap<Long, Topic>();
-        List<Topic> searchResults = dms.searchTopics(query, "ka2.geo_object.name");
-        List<Topic> descrResults = dms.searchTopics(query, "ka2.beschreibung"); // Todo: check index modes
-        List<Topic> stichworteResults = dms.searchTopics(query, "ka2.stichworte"); // Todo: check index modes
-        // List<Topic> sonstigesResults = dms.searchTopics(query, "ka2.sonstiges");
-        // List<Topic> traegerNameResults = dms.searchTopics(query, "ka2.traeger.name");
-        log.info("> " + searchResults.size() + ", "+ descrResults.size() +", "+stichworteResults.size()
-                + " results in three types for query=\""+query+"\" in FULLTEXT");
-        // merge all three types in search results
-        searchResults.addAll(descrResults);
-        searchResults.addAll(stichworteResults);
-        // make search results only contain unique geo object topics
-        Iterator<Topic> iterator = searchResults.iterator();
-        while (iterator.hasNext()) {
-            Topic next = iterator.next();
-            Topic geoObject = getGeoObjectParentTopic(next); // now this is never null
-            if (!uniqueResults.containsKey(geoObject.getId())) {
-                uniqueResults.put(geoObject.getId(), geoObject);
-            }
-        }
-        log.info("searchResultLength=" + (searchResults.size()) + ", " + "uniqueResultLength=" + uniqueResults.size());
-        return new ArrayList(uniqueResults.values());
-    }
-
-    private Topic getGeoObjectParentTopic(Topic entry) {
+    private Topic getParentGeoObjectTopic(Topic entry) {
         return entry.getRelatedTopic(null, "dm4.core.child", "dm4.core.parent", "ka2.geo_object");
     }
 

@@ -761,7 +761,12 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
     this.get_imprint_html = function(entry) {
         var bezirk = _self.get_bezirks_topic(entry.bezirk_uri)
         var html = '<div class="imprint">'
-            + '<a href="' + bezirk.imprint + '" title="Impressum: Bezirksamt ' + bezirk.value + '">Impressum</a></div>'
+        if (bezirk) {
+            html += '<a href="' + bezirk.imprint + '" title="Impressum: Bezirksamt ' + bezirk.value + '">Impressum</a></div>'
+        } else {
+            console.warn("Missing Bezirks URI", entry)
+            html += '</div>'
+        }
         return html
     }
 
