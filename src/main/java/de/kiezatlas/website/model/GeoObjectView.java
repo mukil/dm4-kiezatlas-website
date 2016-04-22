@@ -34,7 +34,7 @@ public class GeoObjectView implements JSONEnabled {
     public GeoObjectView(Topic geoObject, GeomapsService geomaps, AngebotService angebote) {
         this.geoObject = geoObject;
         getGeoCoordinate(geomaps);
-        this.angeboteCount = angebote.getGeoObjectAngeboteTopics(geoObject).getSize();
+        this.angeboteCount = angebote.getAngeboteTopicsByGeoObject(geoObject).getSize();
     }
 
     public String getName() {

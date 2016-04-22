@@ -20,7 +20,6 @@ import de.deepamehta.plugins.geomaps.model.GeoCoordinate;
 import de.deepamehta.plugins.geomaps.GeomapsService;
 import de.deepamehta.plugins.geospatial.GeospatialService;
 import de.deepamehta.plugins.workspaces.WorkspacesService;
-import de.kiezatlas.KiezatlasService;
 import de.kiezatlas.angebote.AngebotService;
 import de.mikromedia.webpages.WebpagePluginService;
 import de.kiezatlas.website.model.BezirkView;

@@ -843,7 +843,7 @@ div.link-area {
 
 /** ------------------------------------------------------------------ Sign-up Dialogs --- */
 
-.api-up, .sign-up {
+.custom-ws-up, .sign-up {
     font-family: serif;
     color: rgba(39, 99, 140, 1.0);
     font-size: 16px;
@@ -867,30 +867,38 @@ div.link-area {
     margin-left: 15px;
 }
 
-#account-info,
-#private-info {
+.sign-up #account-info,
+.sign-up #custom-ws-info,
+.sign-up #private-info {
     display: none;
 }
 
-#api-text,
-#pre-text {
+.sign-up #custom-ws-text,
+.sign-up #pre-text {
     margin: 30px;
 }
 
-#pre-text {
+.sign-up #custom-ws-text label p {
+    display: inline-block;
+    margin: 0px;
+    margin-right: 15px;
+}
+
+.sign-up #pre-text {
     font-size: small;
 }
 
-#page-header {
+.sign-up.account-page .dialog-body,
+.sign-up #page-header {
     text-align: left;
     margin: 30px;
 }
 
-#page-header a {
+.sign-up #page-header a {
     text-decoration: none;
 }
 
-#page-footer {
+.sign-up #page-footer {
     font-size: small;
     color: #a9a9a9;
     text-align: left;
@@ -898,24 +906,24 @@ div.link-area {
     margin: 30px;
 }
 
-#pre-text a,
-#page-footer a {
+.sign-up #pre-text a,
+.sign-up #page-footer a {
     text-decoration: none;
 }
 
-#page-header img.webapp-logo {
+.sign-up #page-header img.webapp-logo {
     margin-top: 30px;
     margin-bottom: 30px;
 }
 
-#page-header .project-title {
+.sign-up #page-header .project-title {
     margin-top: 20px;
     font-size: 2.5em;
     font-weight: bold;
     color: #27638C;
 }
 
-#page-footer .plus {
+.sign-up #page-footer .plus {
     font-size: 3em;
     font-weight: bold;
     color: #a9a9a9;
@@ -924,28 +932,29 @@ div.link-area {
     margin-right: 10px;
 }
 
-#receipt-view,
-#sign-up-view,
-#log-in-view {
+.sign-up #account-view,
+.sign-up #receipt-view,
+.sign-up #sign-up-view,
+.sign-up #log-in-view {
     padding: 0px 30px 30px 15px;
     border-radius: 3px;
     text-align: left;
     max-width: 610px; /** 30px Margin */
 }
 
-#receipt-view h2,
-#sign-up-view h2,
-#log-in-view h2 {
+.sign-up #receipt-view h2,
+.sign-up #sign-up-view h2,
+.sign-up #log-in-view h2 {
     margin-left: 15px;
 }
 
-#sign-up-view form,
-#log-in-view form {
+.sign-up #sign-up-view form,
+.sign-up #log-in-view form {
     padding: 15px;
     position: relative;
 }
 
-#log-in-view form {
+.sign-up #log-in-view form {
     text-align: left;
 }
 
@@ -973,9 +982,9 @@ div.link-area {
  /** font: normal 26px/1 Verdana, Helvetica;
 } **/
 
-input.log-in,
-input.api-up,
-input.sign-up {
+.sign-up input.log-in,
+.sign-up input.custom-ws-up,
+.sign-up input.sign-up {
     font-size: 20px;
     padding: 10px 15px 10px 15px;
     margin: 0 0 15px 0;
@@ -987,9 +996,9 @@ input.sign-up {
     box-shadow: 0 1px 1px #ccc inset, 0 1px 0 #fff;
 }
 
-input.log-in.ok,
-input.api-up,
-input.sign-up.ok {
+.sign-up input.log-in.ok,
+.sign-up input.custom-ws-up,
+.sign-up input.sign-up.ok {
     margin-top: 20px;
     background-color: rgba(39, 99, 140, 1.0);
     color: rgba(255, 255, 255, 1.0);
@@ -997,23 +1006,27 @@ input.sign-up.ok {
     display: inline-block;
 }
 
-input[disabled] {
+.sign-up input[disabled] {
     background-color: rgba(99, 99, 99, 1.0);
 }
 
-input.sign-up.ok[disabled],
-input[type="text"][disabled] {
+.sign-up input.sign-up.ok[disabled],
+.sign-up input[type="text"][disabled] {
     color: #999;
     background-color: #fff;
     cursor: auto;
 }
 
-#message {
+.sign-up #message {
     color: rgba(200, 0, 0, 1.0);
     line-height: 1.8em;
 }
 
-#message-view {
+.sign-up .logout-page #log-in-view #message {
+    margin-left: 15px;
+}
+
+.sign-up #message-view {
     padding: 5px;
     margin-bottom: 10px;
     color: rgba(39, 99, 140, 1.0);

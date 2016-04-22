@@ -2,16 +2,10 @@ package de.kiezatlas.website.migrations;
 
 import de.deepamehta.core.Topic;
 import de.deepamehta.core.TopicType;
-import de.deepamehta.core.model.ChildTopicsModel;
-import de.deepamehta.core.model.TopicModel;
 import de.deepamehta.core.service.Inject;
 import de.deepamehta.core.service.Migration;
-import de.deepamehta.core.model.SimpleValue;
-import de.deepamehta.plugins.accesscontrol.AccessControlService;
 import de.deepamehta.plugins.workspaces.WorkspacesService;
 
-import java.util.Iterator;
-import java.util.List;
 import java.util.logging.Logger;
 
 

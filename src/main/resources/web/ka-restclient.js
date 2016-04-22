@@ -28,7 +28,7 @@ var restc = (function($) {
     }
 
     restc.load_current_angebotsinfos = function(callback) {
-        $.getJSON('/kiezatlas/angebot/current', function(results) {
+        $.getJSON('/kiezatlas/angebot/locations', function(results) {
                 callback(results)
             }
         )
