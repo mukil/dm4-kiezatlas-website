@@ -888,6 +888,7 @@ div.link-area {
     font-size: small;
 }
 
+.sign-up .logout-form,
 .sign-up.account-page .dialog-body,
 .sign-up #page-header {
     text-align: left;
@@ -982,6 +983,7 @@ div.link-area {
  /** font: normal 26px/1 Verdana, Helvetica;
 } **/
 
+.sign-up input.ok,
 .sign-up input.log-in,
 .sign-up input.custom-ws-up,
 .sign-up input.sign-up {
@@ -996,6 +998,7 @@ div.link-area {
     box-shadow: 0 1px 1px #ccc inset, 0 1px 0 #fff;
 }
 
+.sign-up .logout-form input.ok,
 .sign-up input.log-in.ok,
 .sign-up input.custom-ws-up,
 .sign-up input.sign-up.ok {
