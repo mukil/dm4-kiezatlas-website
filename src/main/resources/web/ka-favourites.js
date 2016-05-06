@@ -54,6 +54,16 @@ var favourites = (function($, PouchDB) {
         }
     }
 
+    function get_next_id(handler) {
+        _db.allDocs({include_docs: true})
+            .then(function (result) {
+                var next_id = parseInt(result.total_rows)
+                handler("place_" + next_id)
+            }).catch(function (err) {
+                console.warn(err)
+            })
+    }
+
     api.add_entry_to_local_db = function(location) {
         // TODO; Use POST not PUT to auto-generate IDs
         // ### perform some kind of existence check
@@ -63,16 +73,6 @@ var favourites = (function($, PouchDB) {
                 _db.put(entry)
                 api.list_entries_in_local_db()
             })
-
-            function get_next_id(handler) {
-                _db.allDocs({include_docs: true})
-                    .then(function (result) {
-                        var next_id = parseInt(result.total_rows)
-                        handler("place_" + next_id)
-                    }).catch(function (err) {
-                        console.warn(err)
-                    })
-            }
         }
     }
 
