@@ -19,7 +19,7 @@ var angebote = (function($) {
             }
             count++
         }
-        $.ajax('/kiezatlas/angebot/list/many/' + params, {
+        $.ajax('/angebote/list/many/' + params, {
             type: "GET",
             error: function(e) {
                 console.warn("AJAX POST Error", e)

@@ -305,8 +305,8 @@ span.angebote-btn,
     text-decoration-color: #8f1414;
 }
 
-#navigation .logout,
-#navigation .angebote {
+#navigation .account,
+#navigation .logout {
     display: none;
 }
 

@@ -1,5 +1,6 @@
 package de.kiezatlas.website;
 
+import com.sun.jersey.api.view.Viewable;
 import java.util.*;
 import java.util.logging.Logger;
 
@@ -12,13 +13,13 @@ import javax.ws.rs.core.MediaType;
 
 import de.deepamehta.core.RelatedTopic;
 import de.deepamehta.core.Topic;
-import de.deepamehta.core.osgi.PluginActivator;
 import de.deepamehta.core.service.Inject;
 import de.deepamehta.core.service.ResultList;
 import de.deepamehta.core.service.Transactional;
 import de.deepamehta.plugins.geomaps.model.GeoCoordinate;
 import de.deepamehta.plugins.geomaps.GeomapsService;
 import de.deepamehta.plugins.geospatial.GeospatialService;
+import de.deepamehta.plugins.webactivator.WebActivatorPlugin;
 import de.deepamehta.plugins.workspaces.WorkspacesService;
 import de.kiezatlas.angebote.AngebotService;
 import de.mikromedia.webpages.WebpagePluginService;
@@ -50,7 +51,7 @@ import javax.ws.rs.core.Response;
 @Path("/kiezatlas")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
-public class WebsitePlugin extends PluginActivator implements WebsiteService {
+public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService {
 
     private final Logger log = Logger.getLogger(getClass().getName());
 
@@ -71,6 +72,7 @@ public class WebsitePlugin extends PluginActivator implements WebsiteService {
     @Override
     public void init() {
         pageService.setFrontpageResource("/web/index.html", "de.kiezatlas.website");
+        initTemplateEngine();
     }
 
     /**
@@ -124,8 +126,8 @@ public class WebsitePlugin extends PluginActivator implements WebsiteService {
      */
     @GET
     @Path("/search")
-    public List<GeoObjectView> searchGeoObjectTopics(@HeaderParam("Referer") String referer,
-                                                     @QueryParam("search") String query) {
+    public List<GeoObjectView> searchGeoObjectsFulltext(@HeaderParam("Referer") String referer,
+                                                        @QueryParam("search") String query) {
         if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
         // TODO: Maybe it is also desirable that we wrap the users query into quotation marks
         // (to allow users to search for a combination of words)
@@ -189,7 +191,7 @@ public class WebsitePlugin extends PluginActivator implements WebsiteService {
      */
     @GET
     @Path("/search/by_name")
-    public List<GeoObjectView> getGeoObjectsByName(@HeaderParam("Referer") String referer,
+    public List<GeoObjectView> searchGeoObjectsByName(@HeaderParam("Referer") String referer,
                                                    @QueryParam("query") String query) {
         if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
         try {
@@ -221,10 +223,26 @@ public class WebsitePlugin extends PluginActivator implements WebsiteService {
      */
     @GET
     @Path("/topic/{topicId}")
-    public GeoObjectDetailsView getKiezatlasTopicView(@HeaderParam("Referer") String referer,
+    @Produces(MediaType.APPLICATION_JSON)
+    public GeoObjectDetailsView getGeoObjectDetails(@HeaderParam("Referer") String referer,
                                                       @PathParam("topicId") long topicId) {
         if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
         return new GeoObjectDetailsView(dms.getTopic(topicId), geomapsService, angeboteService);
+    }
+
+    /**
+     * Renders details about a Kiezatlas Geo Object into HTML.
+     *
+     * @param topicId
+     * @return
+     */
+    @GET
+    @Path("/topic/{topicId}")
+    @Produces(MediaType.TEXT_HTML)
+    public Viewable getGeoObjectDetailsPage(@PathParam("topicId") long topicId) {
+        Topic geoObject = dms.getTopic(topicId);
+        viewData("name", geoObject.getSimpleValue());
+        return view("geoobject");
     }
 
     // --- Bezirk Specific Resource Search, Overall, Listing
@@ -249,7 +267,7 @@ public class WebsitePlugin extends PluginActivator implements WebsiteService {
      */
     @GET
     @Path("/bezirk/{topicId}")
-    public List<GeoObjectView> getGeoObjectsInDistrict(@HeaderParam("Referer") String referer,
+    public List<GeoObjectView> getGeoObjectsByDistrict(@HeaderParam("Referer") String referer,
                                                        @PathParam("topicId") long bezirkId) {
         if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
         // use cache
@@ -323,7 +341,7 @@ public class WebsitePlugin extends PluginActivator implements WebsiteService {
 
     @GET
     @Path("/bezirksregion/{topicId}")
-    public List<GeoObjectView> getGeoObjectsInSubdistrict(@HeaderParam("Referer") String referer,
+    public List<GeoObjectView> getGeoObjectsBySubregions(@HeaderParam("Referer") String referer,
                                                           @PathParam("topicId") long bezirksregionId) {
         if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
         ArrayList<GeoObjectView> results = new ArrayList<GeoObjectView>();

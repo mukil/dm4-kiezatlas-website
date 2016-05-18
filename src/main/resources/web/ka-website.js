@@ -97,7 +97,7 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
     this.render_page = function(name) {
         // get current page alias
         var hash = window.location.hash
-        if (!hash || hash == "#karte") {
+        if (!hash || hash === "#karte" || hash === "#logout/") {
             // render main kiezatlas page
             _self.render_map(true, undefined, false) // detectLocation=true
             _self.load_district_topics(function(e) {
@@ -135,12 +135,10 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
         if (state) {
             $('li.register').hide()
             $('li.login').hide()
-            $('li.angebote').attr('style', 'display: inline-block;')
             $('li.logout').attr('style', 'display: inline-block;')
         } else {
             $('li.register').show()
             $('li.login').show()
-            $('li.angebote').hide()
             $('li.logout').hide()
         }
     }
@@ -543,7 +541,7 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
     }
 
     this.do_text_search_angebotsinfos = function(text) { // Remove Duplicate Lines
-        var queryUrl = '/kiezatlas/angebot/search/geoobjects/?search=' + text
+        var queryUrl = '/angebote/search/geoobjects/?search=' + text
         _self.clear_details_area()
         _self.show_spinning_wheel()
         $.getJSON(queryUrl, function (geo_objects) {

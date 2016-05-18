@@ -1,7 +1,6 @@
 package de.kiezatlas.website;
 
 import de.deepamehta.core.Topic;
-import de.kiezatlas.website.model.BezirkView;
 
 import java.util.List;
 

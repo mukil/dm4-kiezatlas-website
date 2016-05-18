@@ -33,6 +33,11 @@
             <version>0.2-SNAPSHOT</version>
         </dependency>
         <dependency>
+            <groupId>de.deepamehta</groupId>
+            <artifactId>dm47-webactivator</artifactId>
+            <version>0.4.6</version>
+        </dependency>
+        <dependency>
             <groupId>de.mikromedia</groupId>
             <artifactId>dm47-webpages</artifactId>
             <version>0.4-SNAPSHOT</version>
