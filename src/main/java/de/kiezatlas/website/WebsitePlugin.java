@@ -48,7 +48,7 @@ import javax.ws.rs.core.Response;
  * @author Malte Reißig (<a href="mailto:malte@mikromedia.de">Contact</a>)
  * @version 0.3-SNAPSHOT
  */
-@Path("/kiezatlas")
+@Path("/")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService {
@@ -71,17 +71,24 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
      */
     @Override
     public void init() {
-        pageService.setFrontpageResource("/web/index.html", "de.kiezatlas.website");
+        // pageService.setFrontpageResource("/web/index.html", "de.kiezatlas.website");
         initTemplateEngine();
     }
 
     /**
-     * Responds with the main menu for the Kiezatlas Website at Resource /kiezatlas/.
+     * Responds the frontpage of the Kiezatlas Website.
      */
     @GET
     @Produces(MediaType.TEXT_HTML)
-    public InputStream getKiezatlasWebsite() {
-        return getStaticResource("web/menu.html");
+    public Viewable getWebsite() {
+        return view("index");
+    }
+
+    @GET
+    @Path("/menu")
+    @Produces(MediaType.TEXT_HTML)
+    public Viewable getWebsiteMenu() {
+        return view("menu");
     }
 
     /**
@@ -90,7 +97,7 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
      * @param radius
      */
     @GET
-    @Path("/search/{coordinatePair}/{radius}")
+    @Path("/website/search/{coordinatePair}/{radius}")
     public List<GeoObjectView> getGeoObjectsNearBy(@PathParam("coordinatePair") String coordinates,
                                                    @PathParam("radius") String radius) {
         double lon = 13.4, lat = 52.5;
@@ -125,7 +132,7 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
      * @param query
      */
     @GET
-    @Path("/search")
+    @Path("/website/search")
     public List<GeoObjectView> searchGeoObjectsFulltext(@HeaderParam("Referer") String referer,
                                                         @QueryParam("search") String query) {
         if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
@@ -190,7 +197,7 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
      * @param query
      */
     @GET
-    @Path("/search/by_name")
+    @Path("/website/search/by_name")
     public List<GeoObjectView> searchGeoObjectsByName(@HeaderParam("Referer") String referer,
                                                    @QueryParam("query") String query) {
         if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
@@ -222,7 +229,7 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
      * @param topicId
      */
     @GET
-    @Path("/topic/{topicId}")
+    @Path("/website/topic/{topicId}")
     @Produces(MediaType.APPLICATION_JSON)
     public GeoObjectDetailsView getGeoObjectDetails(@HeaderParam("Referer") String referer,
                                                       @PathParam("topicId") long topicId) {
@@ -248,7 +255,7 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
     // --- Bezirk Specific Resource Search, Overall, Listing
 
     @GET
-    @Path("/bezirk")
+    @Path("/website/bezirk")
     public List<BezirkView> getKiezatlasDistricts() {
         ArrayList<BezirkView> results = new ArrayList<BezirkView>();
         for (RelatedTopic bezirk : dms.getTopics("ka2.bezirk", 0)) {
@@ -266,7 +273,7 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
      * @param bezirkId
      */
     @GET
-    @Path("/bezirk/{topicId}")
+    @Path("/website/bezirk/{topicId}")
     public List<GeoObjectView> getGeoObjectsByDistrict(@HeaderParam("Referer") String referer,
                                                        @PathParam("topicId") long bezirkId) {
         if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
@@ -303,7 +310,7 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
      * @param query
      */
     @GET
-    @Path("/search/{districtId}")
+    @Path("/website/search/{districtId}")
     @Transactional
     public List<GeoObjectView> searchGeoObjectTopicsInDistrict(@HeaderParam("Referer") String referer,
                                                                @PathParam("districtId") long districtId,
@@ -334,13 +341,13 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
     // --- Bezirksregionen Resources Listing
 
     @GET
-    @Path("/bezirksregion")
+    @Path("/website/bezirksregion")
     public ResultList<RelatedTopic> getKiezatlasSubregions() {
         return dms.getTopics("ka2.bezirksregion", 0);
     }
 
     @GET
-    @Path("/bezirksregion/{topicId}")
+    @Path("/website/bezirksregion/{topicId}")
     public List<GeoObjectView> getGeoObjectsBySubregions(@HeaderParam("Referer") String referer,
                                                           @PathParam("topicId") long bezirksregionId) {
         if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
@@ -357,7 +364,7 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
     // --- Utility Resources (Geo Coding and Reverse Geo Coding)
 
     @GET
-    @Path("/geocode")
+    @Path("/website/geocode")
     public String geoCodeAddressInput(@HeaderParam("Referer") String referer,
                                       @QueryParam("query") String input) {
         if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
@@ -389,7 +396,7 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
     }
 
     @GET
-    @Path("/reverse-geocode/{latlng}")
+    @Path("/website/reverse-geocode/{latlng}")
     public String geoCodeLocationInput(@HeaderParam("Referer") String referer,
                                        @PathParam("latlng") String latlng) {
         if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);

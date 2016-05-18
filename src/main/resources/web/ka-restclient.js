@@ -17,7 +17,7 @@ var restc = (function($) {
     
     restc.do_geocode = function(streetValue, callback) {
         $.ajax({
-            type: "GET", url: "/kiezatlas/geocode?query=" + streetValue,
+            type: "GET", url: "/website/geocode?query=" + streetValue,
             success: function(obj) {
                 callback(obj)
             },
@@ -35,7 +35,7 @@ var restc = (function($) {
     }
 
     restc.load_district_topics = function(callback) {
-        $.getJSON('/kiezatlas/bezirk', function(results) {
+        $.getJSON('/website/bezirk', function(results) {
                 results.sort(value_sort_asc)
                 callback(results)
             }
@@ -43,7 +43,7 @@ var restc = (function($) {
     }
     
     restc.load_geo_object_detail = function(geo_object_id, callback) {
-        $.getJSON('/kiezatlas/topic/' + geo_object_id, function (geo_object) {
+        $.getJSON('/website/topic/' + geo_object_id, function (geo_object) {
                 if (geo_object) {
                     callback(geo_object)
                 } else {

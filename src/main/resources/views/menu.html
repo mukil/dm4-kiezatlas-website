@@ -3,7 +3,7 @@
     <head>
         <title>Kiezatlas 2 Menu</title>
 
-        <meta charset="UTF-8">
+        <meta charset="UTF-8"/>
         <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0"/>
 
         <link rel="stylesheet" href="/de.kiezatlas.website/vendor/jquery/ui/css/kiezatlas/jquery-ui-1.9.2.custom.min.css"/>
@@ -15,7 +15,8 @@
         <script src="/de.kiezatlas.website/ka-website.js"></script>
         <script src="/de.deepamehta.accesscontrol/script/vendor/sha256.js"></script>
 
-        <script type="text/javascript">
+        <script type="text/javascript" th:inline="javascript">
+        /*<![CDATA[*/
 
             // App initialization
             $(document).ready(function(e) {
@@ -40,7 +41,7 @@
                 var ie10andbelow = navigator.userAgent.indexOf('MSIE') != -1 // IE10 or below Boolean
                 return (ie11andabove || ie10andbelow)
             }
-
+        /*]]>*/
         </script>
     </head>
     <body class="kiezatlas">

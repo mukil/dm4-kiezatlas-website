@@ -206,7 +206,7 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
             + " Einrichtungen zu finden.", 7000)
         _self.update_document_title(undefined, bezirk_name)
         _self.show_spinning_wheel()
-        $.getJSON('/kiezatlas/bezirk/' + topic_id, function (response) {
+        $.getJSON('/website/bezirk/' + topic_id, function (response) {
             leafletMap.clear_circle_marker()
             _self.hide_spinning_wheel()
             leafletMap.setItems(response)
@@ -509,7 +509,7 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
         } else {
             location_string = location.lng + ', '+location.lat
         }
-        $.getJSON('/kiezatlas/search/'+encodeURIComponent(location_string)+'/' + (radius_value / 1000),
+        $.getJSON('/website/search/'+encodeURIComponent(location_string)+'/' + (radius_value / 1000),
             function (geo_objects) {
                 leafletMap.setItems(geo_objects) // ### let markers add up
                 leafletMap.clear_circle_marker()
@@ -519,9 +519,9 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
     }
 
     this.do_text_search_geo_objects = function(text) {
-        var queryUrl = '/kiezatlas/search/?search='+text
+        var queryUrl = '/website/search/?search='+text
         var district = _self.getDistrict()
-        if (district)  queryUrl = '/kiezatlas/search/' + district.id + '/?search=' + text
+        if (district)  queryUrl = '/website/search/' + district.id + '/?search=' + text
         _self.clear_details_area()
         _self.show_spinning_wheel()
         $.getJSON(queryUrl, function (geo_objects) {
@@ -561,7 +561,7 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
     }
 
     this.do_reverse_geocode = function(e) {
-        $.getJSON('/kiezatlas/reverse-geocode/' + leafletMap.getCurrentLocationLatitude()
+        $.getJSON('/website/reverse-geocode/' + leafletMap.getCurrentLocationLatitude()
                 + ',' + leafletMap.getCurrentLocationLongitude(), function (geo_names) {
             _self.hide_spinning_wheel(true)
             if (geo_names.results.length > 0) {
