@@ -1,183 +1,89 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>Kiezatlas 2 Website</title>
-
-        <meta charset="UTF-8">
+        <title th:text="${geoobject.name} + ' - Kiezatlas'"></title>
+        <meta charset="UTF-8"/>
         <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0"/>
 
-        <!--link rel="stylesheet" href="/de.kiezatlas.website/vendor/jquery/jquery.mobile.theme-1.3.0.min.css"-->
-        <!--link rel="stylesheet" href="/de.kiezatlas.website/vendor/jquery/jquery.mobile-1.3.0.min.css"-->
         <link rel="stylesheet" href="/de.kiezatlas.website/vendor/leaflet/leaflet.css"/>
-        <!--link rel="stylesheet" href="/de.kiezatlas.website/vendor/leaflet/markercluster/dist/MarkerCluster.css"/>
-        <link rel="stylesheet" href="/de.kiezatlas.website/vendor/leaflet/markercluster/dist/MarkerCluster.Default.css"/-->
         <link rel="stylesheet" href="/de.kiezatlas.website/css/sitestyle.css"/>
 
+        <!-- script src="/de.kiezatlas.website/vendor/jquery/jquery-1.9.1.min.js"></script-->
         <script src="/de.kiezatlas.website/vendor/leaflet/leaflet.js"></script>
-        <!--script src="/de.kiezatlas.website/vendor/leaflet/markercluster/dist/leaflet.markercluster.js"></script-->
-        <!--script src="/de.kiezatlas.website/vendor/jquery/jquery.mobile-1.3.0.min.js"></script-->
-        <script src="/de.kiezatlas.website/ka-restclient.js"></script>
-        <script src="/de.kiezatlas.website/ka-map.js"></script>
-        <script src="/de.kiezatlas.website/ka-angebote.js"></script>
-        <script src="/de.kiezatlas.website/ka-favourites.js"></script>
-        <script src="/de.kiezatlas.website/ka-website.js"></script>
+        <!-- script src="/de.kiezatlas.website/ka-restclient.js"></script-->
+        <!-- script src="/de.kiezatlas.website/ka-map.js"></script-->
 
-        <script type="text/javascript">
-
+        <script type="text/javascript" th:inline="javascript">
+        /*<![CDATA[*/
             // App initialization
-            $(document).ready(function(e) {
-                // initiates an indexDB (if we're not on the MS IE)
-                favourites.start_local_db()
-                favourites.list_entries_in_local_db()
-                // render all co mponents of the page requested
-                kiezatlas.render_page()
-                // add click and touch handlers on our "three near by options"
-                kiezatlas.add_nearby_button_handler()
-                // render user menu
-                restc.is_logged_in(function(response) {
-                    kiezatlas.render_user_menu(response)
-                })
-            })
-
+            window.onload = function() {
+                var coordinate = /*[[${geoobject.coordinate}]]*/ undefined;
+                var lCoordinate = L.latLng(coordinate.split(", "))
+                var name = /*[[${geoobject.name}]]*/ undefined;
+                var map = L.map('map', { scrollWheelZoom: false } ).setView(lCoordinate, 17)
+                L.tileLayer('https://api.tiles.mapbox.com/v4/kiezatlas.pd8lkp64/{z}/{x}/{y}.png?' // old style id="kiezatlas.map-feifsq6f"
+                    + 'access_token=pk.eyJ1Ijoia2llemF0bGFzIiwiYSI6ImNpa3BndjU2ODAwYm53MGxzM3JtOXFmb2IifQ._PcBhOcfLYDD8RP3BS0U_g', {
+                    attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors,'
+                    + '<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery &#169; <a href="http://mapbox.com">Mapbox</a>',
+                    id: 'kiezatlas.m7222ia5'}).addTo(map)
+                L.circleMarker(lCoordinate).addTo(map)
+                    // .bindPopup('<h3>'+name+'</h3>').openPopup();
+            }
+        /*]]>*/
         </script>
     </head>
-    <body class="kiezatlas">
+    <body class="kiezatlas topic">
 
         <div id="navigation">
             <ul>
                 <!--li class="register"><a href="/sign-up/">Registrieren</a></li-->
+                <li class="angebote"><a href="/">Startseite</a></li>
+                <li class="angebote"><a href="/angebote/">Angebote</a></li>
                 <li class="login"><a href="/sign-up/login">Login</a></li>
-                <li class="angebote"><a href="/kiezatlas/angebot/">Angebote</a></li>
                 <!--li class="angebote"><a href="/kiezatlas/angebot/">Orte</a></li-->
-                <li class="angebote"><a href="/sign-up/edit/">Mein Account</a></li>
+                <!-- li class="angebote"><a href="/sign-up/edit/">Mein Account</a></li-->
                 <li class="logout"><a href="/#logout/" onclick="javascript:restc.logout()">Abmelden</a></li>
             </ul>
         </div>
         
         <div id="header">
-            <div class="welcome">
-                <img src="/de.kiezatlas.website/images/kiezatlas2-logo.png" width="150" />
-                <h3>Willkommen im Kiezatlas!</h3>
-                <p>
-                    Im Kiezatlas findest du Berliner Einrichtungen &ndash; und neuerdings auch
-                    <a href="#angebote" onclick="javascript:kiezatlas.show_angebote_page()"><b>Angebote</b></a>.
-                </p>
-            </div>
+            <div class="welcome"></div>
         </div>
-
-        <div id="filter-container"></div>
-
-        <div id="karte">
-
-            <!-- Favourite locations dialog -->
-            <h3 class="location-label">
-                <span class="text"></span>
-                <button class="star no-favs">
-                    <img class="fav-icon" title="zu Favoriten hinzufügen" alt="Icon: Favourite this location."
-                         src="/de.kiezatlas.website/images/1441217865_black_5_favorite_star.png"/>
-                </button>
-            </h3>
-
-            <!-- Location detection by text delivers alternatives -->
-            <div id="street-alternatives"></div>
-            <ul id="places">
-                <li class="ui-menu-item ui-corner-all ui-widget-content">
-                    <a href="#">Favoriten</a>
-                    <ul class="entries submenu"></ul>
-                </li>
-            </ul>
-
-            <div id="spinning-wheel">
-                <img src="/de.kiezatlas.website/images/ajax-loader.gif" />
-            </div>
-
-            <!-- Leaflet Area -->
-            <div id="map" class="fullsize"></div>
-
-            <!--- Filter & Map Controls Area -->
-            <div class="legende">
-                <div class="text-search-control">
-                    <form action="javascript:search_fulltext_geo_objects()" id="fulltext-search-form" accept-charset="ISO-8859-15">
-                        <span class="elements angebote-btn" onclick="kiezatlas.show_angebote_page()">
-                            <img src="/de.kiezatlas.website/images/ka-einrichtung-mit-angeboten2.png"
-                                title="Markierer: Einrichtungen mit Angeboten"/> Aktuelle Angebote
-                        </span>
-                        <span class="elements einrichtungen-btn" onclick="kiezatlas.clear_angebote_page()">
-                            <img src="/de.kiezatlas.website/images/ka-einrichtung2.png"
-                                title="Markierer: Einrichtungen"/> Einrichtungen
-                        </span>
-                        <!--img src="/de.kiezatlas.website/images/soziale_einrichtung_circle_ye.png"
-                             title="Markierer: Angebote"/> Angebote -->
-                        <!--label for="fulltext" id="fulltext-search-label"></label-->
-                        <input id="fulltext-search" type="text" placeholder="Volltextsuche" />
-                        <input id="fulltext-do" type="submit" class="btn" value="Suchen" />
-                    </form>
-                </div>
-                <a href="javascript:kiezatlas.toggle_circle_search_lock_button()" class="lock-control">Unlock Circle</a>
-            </div>
-
-        </div>
-
-        <!-- Notification area -->
-        <div id="notification" onclick="javascript:kiezatlas.close_message_window()">
-            <span class="message">Hi!</span>
-            <!-- a href="javascript:kiezatlas.close_message_window()">(x)</a-->
-        </div>
-
-        <!-- District Info Area -->
-        <div id="district-area"></div>
 
         <!-- Details Area -->
-        <div id="detail-area">
-            <!--h3 class="help">Ausgew&auml;hlter Ort</h3-->
-            <div class="search-option d">
-                Bitte w&auml;hlen sie einen Markierer auf der <a href="#karte">Karte</a> aus um weitere Details zu
-                erfahren.
-            </div>
-        </div>
-
-        <!-- Location detection menu -->
-        <div id="main-menu">
-            <h3><a href="javascript:kiezatlas.toggle_location_menu();">In der N&auml;he von...</a></h3>
-            <div class="options">
-                <p>
-                    Du hast drei M&ouml;glichkeiten um mit unserer Umkreissuche Informationen aus einer ganz
-                    bestimmten Berliner Gegend abzufragen.
-                </p>
-                <!--p>Bitte teile uns einen Standort mit damit wir Dir Infos aus der Umgebung liefern k&ouml;nnen (A, B) oder nutze (C) unsere grafische Umkreissuche!</p-->
-                <div class="search-option a">
-                    <h1 id="a">A)</h1>
-                    <b>Deinen aktuellen Standort freigeben</b><br/>
-                    Mit Hilfe deines Web-Browsers kannst du einfach per Klick <a href="javascript:kiezatlas.get_browser_location()">deinen aktuellen Standort</a> als Ausgangspunkt f&uuml;r die Umkreissuche benutzen.
-                </div>
-                <div class="search-option b">
-                    <h1 id="b">B)</h1>
-                    <b>Name eines Platzes oder einer Stra&szlig;e eingeben</b><br/>
-                    Suchen sie eine Stra&szlig;e oder Platz in Berlin mit Hilfe der Google Geo Location API:<br/>
-                    <div id="location-input">
-                        <form action="javascript:search_location_by_text()" id="near-by-form" accept-charset="UTF-8">
-                            <!-- label for="near-by" id="near-by-label">In der N&auml;he von</label-->
-                            <input id="near-by" type="text" placeholder="Stra&szlig;enname / Hnr." />
-                            <input id="do-nearby" type="submit" class="btn" value="Suche" />
-                            <div class="spinning-wheel">
-                                <img src="/de.kiezatlas.website/images/ajax-loader.gif" />
-                            </div>
-                            <div class="location-search-info"></div>
-                        </form>
-                    </div>
-                </div>
-                <div class="search-option c">
-                    <h1 id="c">C)</h1>
-                    <b>Grafische Umkreissuche auf der Karte</b><br/>
-                    Du kannst den <i>blauen Kreis</i> auf der <a href="#karte">Karte</a> einfach
-                    anfassen,
-                    <i>
-                        verschieben</i> und ggf. vergr&ouml;&szlig;ern. Probier es mal aus!
+        <div id="detail-area" th:class="${angebotsinfos} ? 'angebotsinfos'">
+            <div id="map"></div>
+            <div id="angebote" th:if="${angebotsinfos}">
+                <div class="assigned-offers" th:each="angebotsinfo : ${angebotsinfos}">
+                    <span class="thema" th:text='${angebotsinfo.simpleValue}'>Name des Angebots</span>
                 </div>
             </div>
-            <p>
-                <b>Tipp:</b> Eine Liste von Lieblingsstandorten kannst du mit unserer Favoriten-Funktion in deinem Browser speichern. Diese Standorte speichern wir dann nur in deinem Browser und nicht bei Kiezatlas.
-            </p>
+            <div class="infos">
+                <div class="info-area">
+                    <h3 th:text='${geoobject.name}'>Name</h3>
+                    <p class="anschrift" th:if="${!#strings.isEmpty(geoobject.address)}" th:utext='${geoobject.address}'>Anschrift</p>
+                    <p class="ansprechpartner" th:if="${!#strings.isEmpty(geoobject.ansprechpartner)}" th:utext='${geoobject.ansprechpartner}'>Ansprechpartner</p>
+                    <p class="email" th:if="${!#strings.isEmpty(geoobject.email)}" th:utext='${geoobject.email}'>Email</p>
+                    <p class="fax" th:if="${!#strings.isEmpty(geoobject.fax)}" th:utext='${geoobject.fax}'>Fax</p>
+                    <p class="telefon" th:if="${!#strings.isEmpty(geoobject.telefon)}" th:utext='${geoobject.telefon}'>Telefon</p>
+                    <div class="opening" th:if="${!#strings.isEmpty(geoobject.oeffnungszeiten)}" th:utext='${geoobject.oeffnungszeiten}'>&Ouml;ffnungszeiten</div>
+                    <p class="stichworte" th:if="${!#strings.isEmpty(geoobject.stichworte)}" th:utext='${geoobject.stichworte}'>Stichworte</p>
+                    <div class="beschreibung" th:if="${!#strings.isEmpty(geoobject.beschreibung)}" th:utext='${geoobject.beschreibung}'>Beschreibung</div>
+                    <p class="website" th:if="${!#strings.isEmpty(geoobject.webpage)}"><a th:href="${geoobject.webpage}" th:text="${geoobject.webpage}">Website</a></p>
+                    <p class="lor" th:if="${!#strings.isEmpty(geoobject.lorId)}"><a th:href="${'//sozialraumdaten.kiezatlas.de/seiten/2014/12/?lor=' + geoobject.lorId}">Sozialraumdaten</a></p>
+                </div>
+            </div>
+            <div class="categories">
+                <div class="related-topics" th:each="audience : ${zielgruppen}">
+                    <span class="thema" th:text='${audience.simpleValue}'>Name der Zielgruppe</span>
+                </div>
+                <div class="related-topics" th:each="service : ${angebote}">
+                    <span class="angebot" th:text='${service.simpleValue}'>Name der Angebote</span>
+                </div>
+                <div class="related-topics" th:each="topic : ${themen}">
+                    <span class="zielgruppe" th:text='${topic.simpleValue}'>Name des Themas</span>
+                </div>
+            </div>
         </div>
 
         <!-- Kiezatlas Standard Website section -->
@@ -197,38 +103,7 @@
         </div>
 
         <div id="bottom">
-            <div class="sozialraumdaten">
-                <h3>Datenbank lebensweltlich orientierte R&auml;ume (LOR)</h3>
-                <p>
-                    Ein Herzst&uuml;ck sind die <a href="http://sozialraumdaten.kiezatlas.de/" title="Öffnet externen Link in neuem Fenster" target="_blank" class="external-link">
-                    Lebensweltlich orientierten Planungsraum = LOR &ndash; Daten</a>, die wir in Kooperation vom Amt für Statistik Berlin-Brandenburg für das Projekt Kiezatlas erhalten und aufbereiten.
-                    <br/><br/>
-                    Aktueller Stand: Dezember 2014
-                </p>
-                <div class="link-area">
-                    <a href="http://sozialraumdaten.kiezatlas.de/">
-                        <img src="/de.kiezatlas.website/images/lor_sozialraumdaten_diagramm_green467_pure.png" style="border: 0px;" alt="Grafik: Diagramm zur Altersverteilung im Kiez Victoriastadt">
-                        <br/>Link zu den Sozialraumdaten
-                    </a>
-                </div>
-                <div class="link-area">
-                    <a href="http://sozialraumdaten.kiezatlas.de/seiten/" title="Kartograpischer Zugang zu den LOR-Auswertungen">
-                        <img src="/de.kiezatlas.website/images/lor_sozialraumdaten_einstiegskarte_445.jpg" style="border: 0px;" alt="Grafik: Diagramm zur Altersverteilung der 40-45j&auml;hrigen">
-                        <br/>Geographische Auswertung der LOR&ndash;Seiten
-                    </a>
-                </div>
-            </div>
-            <p>
-                <b>Kontakt</b><br/>
-                GskA &ndash; Projekt Network, Tucholskystr. 11, 10117 Berlin<br/>
-                Fon: 030 / 280 961 10, E-Mail: <a href="mailto:info@kiezatlas.de">info@kiezatlas.de</a><br/>
-            </p>
-        </div>
-
-        <!-- Kiezatlas District Menu -->
-        <div class="district-area">
-            <h4>Bezirke im Kiezatlas und ihre Stadtpl&auml;ne</h4>
-            <ul class="bezirke"></ul>
+            <img src="/de.kiezatlas.website/images/kiezatlas2-logo.png" width="150" />
         </div>
 
         <!-- Piwik -->
@@ -243,7 +118,7 @@
         } catch( err ) {}
         </script>
         <noscript>
-            <img src="https://stats.infokitchen.net/piwik.php?idsite=2&rec=1&action_name=Kiezatlas+2+Website" style="border:0" alt="" />
+            <img th:src="@{https://stats.infokitchen.net/piwik.php(idsite=2,rec=1,action_name='Kiezatlas+2+Topic')}" style="border:0" alt="" />
         </noscript>
         <!-- End Piwik Tracking Code -->
 

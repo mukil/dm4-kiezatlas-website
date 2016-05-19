@@ -674,6 +674,77 @@ span.angebote-btn,
     color: #ff0000;
 }
 
+/** --------------------------- Geo Object Details ---------------------- **/
+
+.kiezatlas.topic #detail-area {
+    background-color: #e3e3e3;
+    padding: 5px;
+    display: inline-block;
+    text-decoration: none;
+    display: block;
+    color: #222;
+    max-width: 1140px;
+    margin: auto;
+    position: relative;
+}
+
+.kiezatlas.topic #map {
+    width: 100%;
+    height: 340px;
+    max-height: 60%;
+    border: 1px solid #FC3;
+    display: inline-block;
+}
+
+.kiezatlas.topic h3 {
+    margin-top: 5px;
+}
+
+.kiezatlas.topic .infos {
+    background-color: #fff;
+    display: inline-block;
+    text-align: left;
+    width: 100%;
+}
+
+.kiezatlas.topic .infos .info-area {
+    padding: 10px;
+}
+
+.kiezatlas.topic #detail-area.angebotsinfos .infos {
+    width: 49%;
+}
+
+.kiezatlas.topic #angebote {
+    overflow-y: scroll;
+    height: 100%; width: 50%;
+    display: inline-block;
+    vertical-align: top;
+    background-color: #fff;
+}
+
+.kiezatlas.topic .infos .beschreibung {
+    max-width: 740px;
+}
+
+.kiezatlas.topic .categories {
+    text-align: left;
+    margin-top: 5px;
+}
+
+.kiezatlas.topic .categories .related-topics {
+    display: inline-block;
+    margin: 10px;
+    margin-left: 0px;
+}
+
+.kiezatlas.topic .categories .related-topics span {
+    background-color: #fff; /** #eaeaea; **/
+    padding: 4px;
+    padding-left: 8px;
+    padding-right: 8px;
+}
+
 #navigation {
     /** #D3D3D3; opacity: 0.8; be-link blue #2D509A **/
     /** position: absolute; top: 0px; left: 0px; **/
@@ -712,6 +783,8 @@ span.angebote-btn,
     background-color: #fff;
     padding: 4px;
 }
+
+/** -------------------------------------------------- Leaflet Overrides --- **/
 
 .leaflet-popup-content-wrapper .item {
     border-bottom: 2px solid #e9e9e9; padding: 5px;
@@ -1044,7 +1117,6 @@ div.link-area {
 
 
 
-
 /** 
   margin-top: 5px; width: 45px; height: 20px;
   childish.. => z-index: 100; position: absolute; top: 10px; left: 10px; 
@@ -1054,6 +1126,8 @@ div.link-area {
 /** .leaflet-control-zoom-out {
   position: relative; top: -25px; left: 25px;
 } **/
+
+/** --------------------- Media Specific Style Overrides ------------------ **/
 
 @media(min-width: 1600px) {
     #district-area,
@@ -1074,6 +1148,9 @@ div.link-area {
     }
     #fulltext-search-form input[type="text"] {
         width: 230px;
+    }
+    .kiezatlas.topic #detail-area {
+        margin: 30px;
     }
 }
 
@@ -1140,6 +1217,7 @@ div.link-area {
     .district-area ul.bezirke li {
         margin: 5px;
     }
+    .kiezatlas.topic .infos .beschreibung,
     .sozialraumdaten p {
         max-width: 90%;
     }
@@ -1194,6 +1272,9 @@ div.link-area {
     #detail-area h3 {
         display: none;
     }
+    #detail-area .infos h3 {
+        display: block;
+    }
     #detail-area .entry-card {
         font-size: .8em;
         min-width: 150px;
@@ -1211,6 +1292,9 @@ div.link-area {
     }
     #navigation ul {
         margin-left: 0px;
+    }
+    .kiezatlas.topic #detail-area {
+        margin: 10px;
     }
 }
 

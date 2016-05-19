@@ -47,6 +47,11 @@
             <artifactId>deepamehta-workspaces</artifactId>
             <version>4.7</version>
         </dependency>
+        <dependency>
+            <groupId>de.deepamehta</groupId>
+            <artifactId>deepamehta-facets</artifactId>
+            <version>4.7</version>
+        </dependency>
         <!--dependency>
             <groupId>de.deepamehta</groupId>
             <artifactId>dm44-deepamehta-images</artifactId>

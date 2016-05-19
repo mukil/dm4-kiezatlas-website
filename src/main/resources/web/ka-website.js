@@ -456,8 +456,9 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
                 + '' + body_text + ''
             + '</p>'
             + angebote_link
-            + '<a href="http://www.kiezatlas.de/map/'+web_alias+'/p/'+topic_id+'" title="Diesen'
-                + ' Datensatz in seinem ursprünglichen Stadtplan anzeigen">Details im Stadtplan</a>'
+            + '<a href="/website/topic/' + object.id + '" title="Zeige Details">Details zur Einrichtung</a>'
+            /* + '<a href="http://www.kiezatlas.de/map/'+web_alias+'/p/'+topic_id+'" title="Diesen'
+                + ' Datensatz in seinem ursprünglichen Stadtplan anzeigen">Details im Stadtplan</a>' **/
             + '<a href="https://fahrinfo.bvg.de/Fahrinfo/bin/query.bin/dn?Z=' + object.address_name.toString()
                 + '&REQ0JourneyStopsZA1=2&start=1&pk_campaign=kiezatlas.de">'
                 + '<img src="/de.kiezatlas.website/images/fahrinfo.gif"></a>'

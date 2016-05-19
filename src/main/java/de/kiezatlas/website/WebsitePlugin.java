@@ -16,18 +16,21 @@ import de.deepamehta.core.Topic;
 import de.deepamehta.core.service.Inject;
 import de.deepamehta.core.service.ResultList;
 import de.deepamehta.core.service.Transactional;
+import de.deepamehta.plugins.facets.FacetsService;
 import de.deepamehta.plugins.geomaps.model.GeoCoordinate;
 import de.deepamehta.plugins.geomaps.GeomapsService;
 import de.deepamehta.plugins.geospatial.GeospatialService;
 import de.deepamehta.plugins.webactivator.WebActivatorPlugin;
 import de.deepamehta.plugins.workspaces.WorkspacesService;
+import de.kiezatlas.KiezatlasService;
 import de.kiezatlas.angebote.AngebotService;
-import de.mikromedia.webpages.WebpagePluginService;
+import de.kiezatlas.angebote.model.AngebotsInfo;
 import de.kiezatlas.website.model.BezirkView;
+import de.kiezatlas.website.model.EinrichtungsInfo;
 import de.kiezatlas.website.model.GeoObjectDetailsView;
 import de.kiezatlas.website.model.GeoObjectView;
+import de.mikromedia.webpages.WebpagePluginService;
 import java.io.BufferedReader;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLConnection;
@@ -48,18 +51,19 @@ import javax.ws.rs.core.Response;
  * @author Malte Reißig (<a href="mailto:malte@mikromedia.de">Contact</a>)
  * @version 0.3-SNAPSHOT
  */
-@Path("/")
+@Path("/website")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService {
 
     private final Logger log = Logger.getLogger(getClass().getName());
 
-    @Inject WorkspacesService workspaceService;
-    @Inject WebpagePluginService pageService;
-    @Inject GeospatialService spatialService;
-    @Inject AngebotService angeboteService;
-    @Inject GeomapsService geomapsService;
+    @Inject private WorkspacesService workspaceService;
+    @Inject private WebpagePluginService pageService;
+    @Inject private GeospatialService spatialService;
+    @Inject private AngebotService angeboteService;
+    @Inject private GeomapsService geomapsService;
+    @Inject private FacetsService facetsService;
     // @Inject KiezatlasService kiezatlas;
 
     // Application Cache of District Overview Resultsets
@@ -71,7 +75,7 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
      */
     @Override
     public void init() {
-        // pageService.setFrontpageResource("/web/index.html", "de.kiezatlas.website");
+        pageService.setFrontpageResource("/web/index.html", "de.kiezatlas.website");
         initTemplateEngine();
     }
 
@@ -97,7 +101,7 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
      * @param radius
      */
     @GET
-    @Path("/website/search/{coordinatePair}/{radius}")
+    @Path("/search/{coordinatePair}/{radius}")
     public List<GeoObjectView> getGeoObjectsNearBy(@PathParam("coordinatePair") String coordinates,
                                                    @PathParam("radius") String radius) {
         double lon = 13.4, lat = 52.5;
@@ -132,7 +136,7 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
      * @param query
      */
     @GET
-    @Path("/website/search")
+    @Path("/search")
     public List<GeoObjectView> searchGeoObjectsFulltext(@HeaderParam("Referer") String referer,
                                                         @QueryParam("search") String query) {
         if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
@@ -197,7 +201,7 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
      * @param query
      */
     @GET
-    @Path("/website/search/by_name")
+    @Path("/search/by_name")
     public List<GeoObjectView> searchGeoObjectsByName(@HeaderParam("Referer") String referer,
                                                    @QueryParam("query") String query) {
         if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
@@ -229,7 +233,7 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
      * @param topicId
      */
     @GET
-    @Path("/website/topic/{topicId}")
+    @Path("/topic/{topicId}")
     @Produces(MediaType.APPLICATION_JSON)
     public GeoObjectDetailsView getGeoObjectDetails(@HeaderParam("Referer") String referer,
                                                       @PathParam("topicId") long topicId) {
@@ -248,14 +252,30 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
     @Produces(MediaType.TEXT_HTML)
     public Viewable getGeoObjectDetailsPage(@PathParam("topicId") long topicId) {
         Topic geoObject = dms.getTopic(topicId);
-        viewData("name", geoObject.getSimpleValue());
+        if (!geoObject.getTypeUri().equals(KiezatlasService.GEO_OBJECT)) return view("404");
+        // Assemble Generic Einrichtungs Infos
+        EinrichtungsInfo einrichtung = assembleGeneralEinrichtungsInfo(geoObject);
+        viewData("geoobject", einrichtung);
+        // Assemble Category Assignments for Einrichtung
+        ResultList<RelatedTopic> relatedTopics = geoObject.getRelatedTopics("dm4.core.aggregation", "dm4.core.parent",
+            "dm4.core.child", "ka2.criteria.thema", 0);
+        viewData("themen", relatedTopics);
+        ResultList<RelatedTopic> relatedServices = geoObject.getRelatedTopics("dm4.core.aggregation", "dm4.core.parent",
+            "dm4.core.child", "ka2.criteria.angebote", 0);
+        viewData("angebote", relatedServices);
+        ResultList<RelatedTopic> relatedAudiences = geoObject.getRelatedTopics("dm4.core.aggregation", "dm4.core.parent",
+            "dm4.core.child", "ka2.criteria.zielgruppe", 0);
+        viewData("zielgruppen", relatedAudiences);
+        // Assemble Angebosinfos for Einrichtung
+        ResultList<RelatedTopic> angebotsInfos = angeboteService.getAngeboteTopics(topicId);
+        if (angebotsInfos.getSize() > 0) viewData("angebotsinfos", angebotsInfos);
         return view("geoobject");
     }
 
     // --- Bezirk Specific Resource Search, Overall, Listing
 
     @GET
-    @Path("/website/bezirk")
+    @Path("/bezirk")
     public List<BezirkView> getKiezatlasDistricts() {
         ArrayList<BezirkView> results = new ArrayList<BezirkView>();
         for (RelatedTopic bezirk : dms.getTopics("ka2.bezirk", 0)) {
@@ -273,7 +293,7 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
      * @param bezirkId
      */
     @GET
-    @Path("/website/bezirk/{topicId}")
+    @Path("/bezirk/{topicId}")
     public List<GeoObjectView> getGeoObjectsByDistrict(@HeaderParam("Referer") String referer,
                                                        @PathParam("topicId") long bezirkId) {
         if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
@@ -310,7 +330,7 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
      * @param query
      */
     @GET
-    @Path("/website/search/{districtId}")
+    @Path("/search/{districtId}")
     @Transactional
     public List<GeoObjectView> searchGeoObjectTopicsInDistrict(@HeaderParam("Referer") String referer,
                                                                @PathParam("districtId") long districtId,
@@ -341,13 +361,13 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
     // --- Bezirksregionen Resources Listing
 
     @GET
-    @Path("/website/bezirksregion")
+    @Path("/bezirksregion")
     public ResultList<RelatedTopic> getKiezatlasSubregions() {
         return dms.getTopics("ka2.bezirksregion", 0);
     }
 
     @GET
-    @Path("/website/bezirksregion/{topicId}")
+    @Path("/bezirksregion/{topicId}")
     public List<GeoObjectView> getGeoObjectsBySubregions(@HeaderParam("Referer") String referer,
                                                           @PathParam("topicId") long bezirksregionId) {
         if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
@@ -364,7 +384,7 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
     // --- Utility Resources (Geo Coding and Reverse Geo Coding)
 
     @GET
-    @Path("/website/geocode")
+    @Path("/geocode")
     public String geoCodeAddressInput(@HeaderParam("Referer") String referer,
                                       @QueryParam("query") String input) {
         if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
@@ -396,7 +416,7 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
     }
 
     @GET
-    @Path("/website/reverse-geocode/{latlng}")
+    @Path("/reverse-geocode/{latlng}")
     public String geoCodeLocationInput(@HeaderParam("Referer") String referer,
                                        @PathParam("latlng") String latlng) {
         if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
@@ -446,6 +466,45 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
         } else {
             return false;
         }
+    }
+
+    private EinrichtungsInfo assembleGeneralEinrichtungsInfo(Topic einrichtung) {
+        EinrichtungsInfo infoModel = new EinrichtungsInfo();
+        try {
+            einrichtung.loadChildTopics();
+            infoModel.setName(einrichtung.getChildTopics().getString(KiezatlasService.GEO_OBJECT_NAME));
+            Topic addressTopic = einrichtung.getChildTopics().getTopic(KiezatlasService.GEO_OBJECT_ADDRESS);
+            infoModel.setAddress(addressTopic.getSimpleValue().toString());
+            infoModel.setCoordinate(geomapsService.getGeoCoordinate(addressTopic));
+            // Kontakt Facet
+            Topic kontakt = facetsService.getFacet(einrichtung, KONTAKT_FACET);
+            if (kontakt != null) {
+                kontakt.loadChildTopics();
+                infoModel.setEmail(kontakt.getChildTopics().getString(KONTAKT_MAIL));
+                infoModel.setFax(kontakt.getChildTopics().getString(KONTAKT_FAX));
+                infoModel.setTelefon(kontakt.getChildTopics().getString(KONTAKT_TEL));
+                infoModel.setAnsprechpartner(kontakt.getChildTopics().getString(KONTAKT_ANSPRECHPARTNER));
+            }
+            // Öffnungszeiten Facet
+            Topic offnung = facetsService.getFacet(einrichtung, OEFFNUNGSZEITEN_FACET);
+            if (offnung != null) infoModel.setOeffnungszeiten(offnung.getSimpleValue().toString());
+            // Beschreibung Facet
+            Topic beschreibung = facetsService.getFacet(einrichtung, BESCHREIBUNG_FACET);
+            if (beschreibung != null) infoModel.setBeschreibung(beschreibung.getSimpleValue().toString());
+            // Stichworte Facet
+            Topic stichworte = facetsService.getFacet(einrichtung, STICHWORTE_FACET);
+            if (stichworte != null) infoModel.setStichworte(stichworte.getSimpleValue().toString());
+            // LOR Nummer Facet
+            Topic lor = facetsService.getFacet(einrichtung, LOR_FACET);
+            if (lor != null) infoModel.setLORId(lor.getSimpleValue().toString());
+            // Website Facet
+            Topic website = facetsService.getFacet(einrichtung, WEBSITE_FACET);
+            if (website != null) infoModel.setWebpage(website.getSimpleValue().toString());
+            infoModel.setId(einrichtung.getId());
+        } catch (Exception ex) {
+            throw new RuntimeException("Could not assemble EinrichtungsInfo", ex);
+        }
+        return infoModel;
     }
 
 }
