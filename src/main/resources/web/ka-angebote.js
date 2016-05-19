@@ -57,7 +57,7 @@ var angebote = (function($) {
         $listing.empty()
         for (var aidx in infos) {
             var angebotsinfo = infos[aidx]
-            $listing.append('<span>' + angebotsinfo.value + "</span><br/>")
+            // $listing.append('<span>' + angebotsinfo.value + "</span><br/>")
             console.log("- NYE - Render Angebotsinfo", angebotsinfo)
         }
     }

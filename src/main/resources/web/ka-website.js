@@ -428,7 +428,7 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
         var angebote_link = ''
         if (object.angebote_count > 0) {
             angebote_link = '<div class="angebote-link">'
-                + '<a class="button" href="javascript:angebote.show_angebotsinfos('+object.id+')">Aktuelle Angebote anzeigen</a></div>'
+                + '<a class="button" href="/website/topic/' + object.id + '">Aktuelle Angebote anzeigen</a></div>'
         }
         var body_text = ""
         // if (description) body_text += '<p><b>Info</b> ' + description + '</p>'
