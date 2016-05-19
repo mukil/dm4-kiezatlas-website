@@ -46,6 +46,8 @@
             </ul>
         </div>
         
+        <!-- ### Fahrinfo Link, Impressum, LOR Page Link -->
+
         <div id="header">
             <div class="welcome"></div>
         </div>
@@ -53,13 +55,19 @@
         <!-- Details Area -->
         <div id="detail-area" th:class="${angebotsinfos} ? 'angebotsinfos'">
             <div id="map"></div>
-            <div id="angebote" th:if="${angebotsinfos}">
-                <div class="assigned-offers" th:each="angebotsinfo : ${angebotsinfos}">
-                    <span class="thema" th:text='${angebotsinfo.simpleValue}'>Name des Angebots</span>
+            <div class="info-area">
+                <div id="angebote" th:if="${angebotsinfos}">
+                    <!--h3 class="label">Aktuelle Angebote dieser Einrichtung</h3-->
+                    <div class="assigned-offers" th:each="angebotsinfo : ${angebotsinfos}">
+                        <h3 th:text="${angebotsinfo.angebotsName}">Name des Angebots</h3>
+                        <p th:text="${angebotsinfo.description}"></p>
+                        <p th:if="${!#strings.isEmpty(angebotsinfo.additionalInfo)}"><span th:text="${angebotsinfo.additionalInfo}"></span></p>
+                        <p th:if="${!#strings.isEmpty(angebotsinfo.additionalContact)}"><span th:text="${angebotsinfo.additionalContact}"></span></p>
+                        <p th:text="${angebotsinfo.startDate} + ' &ndash; ' + ${angebotsinfo.endDate}"></p>
+                        <a class="read-more" th:href="'/angebote/' + ${angebotsinfo.angebotsId}">Mehr</a>
+                    </div>
                 </div>
-            </div>
-            <div class="infos">
-                <div class="info-area">
+                <div class="infos">
                     <h3 th:text='${geoobject.name}'>Name</h3>
                     <p class="anschrift" th:if="${!#strings.isEmpty(geoobject.address)}" th:utext='${geoobject.address}'>Anschrift</p>
                     <p class="ansprechpartner" th:if="${!#strings.isEmpty(geoobject.ansprechpartner)}" th:utext='${geoobject.ansprechpartner}'>Ansprechpartner</p>

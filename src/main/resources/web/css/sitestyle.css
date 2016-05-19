@@ -696,8 +696,17 @@ span.angebote-btn,
     display: inline-block;
 }
 
-.kiezatlas.topic h3 {
+.kiezatlas.topic .infos h3,
+.kiezatlas.topic .assigned-offers h3 {
     margin-top: 5px;
+}
+
+.kiezatlas.topic #angebote h3.label {
+    color: #343434;
+    text-align: left;
+    margin-left: 5px;
+    margin-top: 5px;
+    margin-bottom: 10px;
 }
 
 .kiezatlas.topic .infos {
@@ -707,7 +716,32 @@ span.angebote-btn,
     width: 100%;
 }
 
-.kiezatlas.topic .infos .info-area {
+.kiezatlas.topic .assigned-offers {
+    background: #fff;
+    padding: 15px;
+    border: 1px solid #002856;
+    cursor: pointer;
+    margin: 5px;
+    text-align: left;
+    width: 85%;
+}
+
+.kiezatlas.topic .assigned-offers h3,
+.kiezatlas.topic .assigned-offers p {
+    margin-top: 0px;
+    margin-bottom: 0px;
+}
+
+.kiezatlas.topic .assigned-offers:hover {
+    box-shadow: 2px 2px 2px 0px #a9a9a9;
+}
+
+.kiezatlas.topic .assigned-offers.selected {
+    box-shadow: 3px 3px 2px 0px #a9a9a9;
+}
+
+.kiezatlas.topic .info-area {
+    background-color: #fff;
     padding: 10px;
 }
 
@@ -716,7 +750,7 @@ span.angebote-btn,
 }
 
 .kiezatlas.topic #angebote {
-    overflow-y: scroll;
+    /** overflow-y: scroll; */
     height: 100%; width: 50%;
     display: inline-block;
     vertical-align: top;
@@ -729,7 +763,6 @@ span.angebote-btn,
 
 .kiezatlas.topic .categories {
     text-align: left;
-    margin-top: 5px;
 }
 
 .kiezatlas.topic .categories .related-topics {
@@ -1221,6 +1254,11 @@ div.link-area {
     .sozialraumdaten p {
         max-width: 90%;
     }
+    .kiezatlas.topic #angebote,
+    .kiezatlas.topic #detail-area.angebotsinfos .infos {
+        width: 100%;
+        overflow-y: hidden;
+    }
 }
 
 @media (max-width:600px), (max-width:720px) {
@@ -1272,6 +1310,8 @@ div.link-area {
     #detail-area h3 {
         display: none;
     }
+    #detail-area #angebote h3,
+    #detail-area .assigned-offers h3,
     #detail-area .infos h3 {
         display: block;
     }

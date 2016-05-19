@@ -24,7 +24,7 @@ import de.deepamehta.plugins.webactivator.WebActivatorPlugin;
 import de.deepamehta.plugins.workspaces.WorkspacesService;
 import de.kiezatlas.KiezatlasService;
 import de.kiezatlas.angebote.AngebotService;
-import de.kiezatlas.angebote.model.AngebotsInfo;
+import de.kiezatlas.angebote.model.AngebotsInfoAssigned;
 import de.kiezatlas.website.model.BezirkView;
 import de.kiezatlas.website.model.EinrichtungsInfo;
 import de.kiezatlas.website.model.GeoObjectDetailsView;
@@ -267,8 +267,8 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
             "dm4.core.child", "ka2.criteria.zielgruppe", 0);
         viewData("zielgruppen", relatedAudiences);
         // Assemble Angebosinfos for Einrichtung
-        ResultList<RelatedTopic> angebotsInfos = angeboteService.getAngeboteTopics(topicId);
-        if (angebotsInfos.getSize() > 0) viewData("angebotsinfos", angebotsInfos);
+        List<AngebotsInfoAssigned> angebotsInfos = angeboteService.getAngebotsInfosAssigned(geoObject);
+        if (angebotsInfos.size() > 0) viewData("angebotsinfos", angebotsInfos);
         return view("geoobject");
     }
 
