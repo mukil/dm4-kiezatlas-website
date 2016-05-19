@@ -25,7 +25,7 @@ import de.deepamehta.plugins.workspaces.WorkspacesService;
 import de.kiezatlas.KiezatlasService;
 import de.kiezatlas.angebote.AngebotService;
 import de.kiezatlas.angebote.model.AngebotsInfoAssigned;
-import de.kiezatlas.website.model.BezirkView;
+import de.kiezatlas.website.model.BezirkInfo;
 import de.kiezatlas.website.model.EinrichtungsInfo;
 import de.kiezatlas.website.model.GeoObjectDetailsView;
 import de.kiezatlas.website.model.GeoObjectView;
@@ -276,10 +276,10 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
 
     @GET
     @Path("/bezirk")
-    public List<BezirkView> getKiezatlasDistricts() {
-        ArrayList<BezirkView> results = new ArrayList<BezirkView>();
+    public List<BezirkInfo> getKiezatlasDistricts() {
+        ArrayList<BezirkInfo> results = new ArrayList<BezirkInfo>();
         for (RelatedTopic bezirk : dms.getTopics("ka2.bezirk", 0)) {
-            results.add(new BezirkView(bezirk));
+            results.add(new BezirkInfo(bezirk));
         }
         return results;
     }
@@ -451,9 +451,12 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
         return entry.getRelatedTopic(null, "dm4.core.child", "dm4.core.parent", "ka2.geo_object");
     }
 
+    private Topic getRelatedBezirk(Topic geoObject) {
+        return geoObject.getRelatedTopic("dm4.core.aggregation", "dm4.core.parent", "dm4.core.child", "ka2.bezirk");
+    }
+
     private boolean hasRelatedBezirk(Topic geoObject, long bezirksId) {
-        Topic relatedBezirk = geoObject.getRelatedTopic("dm4.core.aggregation", "dm4.core.parent",
-                "dm4.core.child", "ka2.bezirk");
+        Topic relatedBezirk = getRelatedBezirk(geoObject);
         if (relatedBezirk == null) return false;
         if (relatedBezirk.getId() == bezirksId) return true;
         return false;
@@ -484,6 +487,15 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
                 infoModel.setFax(kontakt.getChildTopics().getString(KONTAKT_FAX));
                 infoModel.setTelefon(kontakt.getChildTopics().getString(KONTAKT_TEL));
                 infoModel.setAnsprechpartner(kontakt.getChildTopics().getString(KONTAKT_ANSPRECHPARTNER));
+            }
+            // Imprint Value
+            Topic bezirk = getRelatedBezirk(einrichtung);
+            BezirkInfo bezirkInfo = new BezirkInfo(bezirk);
+            if (bezirkInfo.getImprintLink() != null) {
+                infoModel.setImprintUrl(bezirkInfo.getImprintLink().getSimpleValue().toString());
+            } else {
+                log.warning("EinrichtungsInfos Bezirk has NO IMPRINT value set, ID:" + einrichtung.getId());
+                infoModel.setImprintUrl("http://pax.spinnenwerk.de/~kiezatlas/index.php?id=6");
             }
             // Öffnungszeiten Facet
             Topic offnung = facetsService.getFacet(einrichtung, OEFFNUNGSZEITEN_FACET);

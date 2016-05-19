@@ -15,29 +15,29 @@ import java.util.logging.Logger;
  *
  * @author Malte Reißig (<a href="mailto:malte@mikromedia.de">Contact</a>)
  */
-public class BezirkView implements JSONEnabled {
+public class BezirkInfo implements JSONEnabled {
 
     Logger log = Logger.getLogger(GeoObjectDetailsView.class.getName());
 
     private Topic topic;
     private JSONObject json = new JSONObject();
 
-    public BezirkView(Topic bezirk) {
-    this.topic = bezirk;
+    public BezirkInfo(Topic bezirk) {
+        this.topic = bezirk;
     }
 
-    private String getBezirksname() {
+    public String getBezirksname() {
         return topic.getSimpleValue().toString();
     }
 
-    private Topic getImprintLink() {
-        return this.topic.getRelatedTopic("dm4.core.association", "dm4.core.default", "dm4.core.default", "dm4" +
-                ".webbrowser.web_resource");
+    public Topic getImprintLink() {
+        return this.topic.getRelatedTopic("dm4.core.association", "dm4.core.default", "dm4.core.default", "dm4"
+            + ".webbrowser.web_resource");
     }
 
-    private Topic getBezirksHTML() {
+    public Topic getBezirksHTML() {
         return this.topic.getRelatedTopic("dm4.core.association", "dm4.core.default", "dm4.core.default",
-                "ka2.website.bezirk_info");
+            "ka2.website.bezirk_info");
     }
 
     private JSONArray getBezirksregionen() {
@@ -64,17 +64,17 @@ public class BezirkView implements JSONEnabled {
             if (link != null) {
                 imprint = link.getSimpleValue().toString();
             } else if (link == null) {
-                log.warning("### Fallback because district \"" + this.topic.getSimpleValue() + "\" has no \"Web " +
-                        "Resource\" associated (default, default) which we could use as an IMPRINT!");
+                log.warning("### Fallback because district \"" + this.topic.getSimpleValue() + "\" has no \"Web "
+                    + "Resource\" associated (default, default) which we could use as an IMPRINT!");
             }
             Topic html = getBezirksHTML();
-            String body = "<h3>Willkommen auf der Kiezatlas-Seite des Bezirks " + getBezirksname() +
-                    "</h3><p><a href=\""+link+"\">Impressum</a></p>";
+            String body = "<h3>Willkommen auf der Kiezatlas-Seite des Bezirks " + getBezirksname()
+                + "</h3><p><a href=\"" + link + "\">Impressum</a></p>";
             if (html != null) {
                 body = html.getSimpleValue().toString();
             } else if (html == null) {
-                log.warning("### Fallback because district \"" + this.topic.getSimpleValue() + "\" has no " +
-                        "\"Bezirk Info Area\" associated (default, default) which we could use as content!");
+                log.warning("### Fallback because district \"" + this.topic.getSimpleValue() + "\" has no "
+                    + "\"Bezirk Info Area\" associated (default, default) which we could use as content!");
             }
             this.json.put("imprint", imprint);
             this.json.put("html", body);

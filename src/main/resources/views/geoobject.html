@@ -45,8 +45,6 @@
                 <li class="logout"><a href="/#logout/" onclick="javascript:restc.logout()">Abmelden</a></li>
             </ul>
         </div>
-        
-        <!-- ### Fahrinfo Link, Impressum, LOR Page Link -->
 
         <div id="header">
             <div class="welcome"></div>
@@ -69,6 +67,10 @@
                 </div>
                 <div class="infos">
                     <h3 th:text='${geoobject.name}'>Name</h3>
+                    <a class="fahrinfo-link"
+                       th:href="@{https://fahrinfo.bvg.de/Fahrinfo/bin/query.bin/dn(Z=${geoobject.address},REQ0JourneyStopsZA1=2,start=1,pk_campaign='kiezatlas.de')}">
+                        <img src="/de.kiezatlas.website/images/fahrinfo.gif"/>
+                    </a>
                     <p class="anschrift" th:if="${!#strings.isEmpty(geoobject.address)}" th:utext='${geoobject.address}'>Anschrift</p>
                     <p class="ansprechpartner" th:if="${!#strings.isEmpty(geoobject.ansprechpartner)}" th:utext='${geoobject.ansprechpartner}'>Ansprechpartner</p>
                     <p class="email" th:if="${!#strings.isEmpty(geoobject.email)}" th:utext='${geoobject.email}'>Email</p>
@@ -78,7 +80,8 @@
                     <p class="stichworte" th:if="${!#strings.isEmpty(geoobject.stichworte)}" th:utext='${geoobject.stichworte}'>Stichworte</p>
                     <div class="beschreibung" th:if="${!#strings.isEmpty(geoobject.beschreibung)}" th:utext='${geoobject.beschreibung}'>Beschreibung</div>
                     <p class="website" th:if="${!#strings.isEmpty(geoobject.webpage)}"><a th:href="${geoobject.webpage}" th:text="${geoobject.webpage}">Website</a></p>
-                    <p class="lor" th:if="${!#strings.isEmpty(geoobject.lorId)}"><a th:href="${'//sozialraumdaten.kiezatlas.de/seiten/2014/12/?lor=' + geoobject.lorId}">Sozialraumdaten</a></p>
+                    <p class="lor" th:if="${!#strings.isEmpty(geoobject.lor)}"><a th:href="@{http://sozialraumdaten.kiezatlas.de/seiten/2014/12/(lor=${geoobject.lor})}">Sozialraumdaten</a></p>
+                    <a class="imprint" th:href="${geoobject.imprint}">Impressum</a>
                 </div>
             </div>
             <div class="categories">

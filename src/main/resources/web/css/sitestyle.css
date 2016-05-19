@@ -761,6 +761,12 @@ span.angebote-btn,
     max-width: 740px;
 }
 
+.kiezatlas.topic .infos .imprint,
+.kiezatlas.topic .infos .fahrinfo-link {
+    float: right;
+    font-size: .8em;
+}
+
 .kiezatlas.topic .categories {
     text-align: left;
 }
