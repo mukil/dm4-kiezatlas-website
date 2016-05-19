@@ -26,7 +26,9 @@
                     attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors,'
                     + '<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery &#169; <a href="http://mapbox.com">Mapbox</a>',
                     id: 'kiezatlas.m7222ia5'}).addTo(map)
-                L.circleMarker(lCoordinate).addTo(map)
+                L.circleMarker(lCoordinate, {
+                    weight: 3, opacity: 0.6, fillColor: "#a9a9a9", fillOpacity: 0.2, color: "#8f1414",
+                }).addTo(map)
                     // .bindPopup('<h3>'+name+'</h3>').openPopup();
             }
         /*]]>*/
@@ -80,7 +82,7 @@
                     <p class="stichworte" th:if="${!#strings.isEmpty(geoobject.stichworte)}" th:utext='${geoobject.stichworte}'>Stichworte</p>
                     <div class="beschreibung" th:if="${!#strings.isEmpty(geoobject.beschreibung)}" th:utext='${geoobject.beschreibung}'>Beschreibung</div>
                     <p class="website" th:if="${!#strings.isEmpty(geoobject.webpage)}"><a th:href="${geoobject.webpage}" th:text="${geoobject.webpage}">Website</a></p>
-                    <p class="lor" th:if="${!#strings.isEmpty(geoobject.lor)}"><a th:href="@{http://sozialraumdaten.kiezatlas.de/seiten/2014/12/(lor=${geoobject.lor})}">Sozialraumdaten</a></p>
+                    <p class="sozialraumdaten" th:if="${!#strings.isEmpty(geoobject.lor)}"><a th:href="@{http://sozialraumdaten.kiezatlas.de/seiten/2014/12/(lor=${geoobject.lor})}">Sozialraumdaten</a></p>
                     <a class="imprint" th:href="${geoobject.imprint}">Impressum</a>
                 </div>
             </div>
