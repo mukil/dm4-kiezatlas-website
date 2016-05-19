@@ -104,6 +104,7 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
                 _self.show_district_listing()
             })
         } else if (name === "angebote" || hash === "#angebote") {
+            _self.render_map(false, undefined, false) // detectLocation=false
             _self.show_angebote_page()
             _self.load_district_topics(function(e) {
               _self.show_district_listing()
