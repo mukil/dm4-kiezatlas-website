@@ -81,6 +81,7 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
 
     /**
      * Responds the frontpage of the Kiezatlas Website.
+     * ### Unused: see init
      */
     @GET
     @Produces(MediaType.TEXT_HTML)
@@ -88,157 +89,24 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
         return view("index");
     }
 
+    /**
+     * Responds the form for editing a Kiezatlas Einrichtung.
+     */
     @GET
-    @Path("/menu")
     @Produces(MediaType.TEXT_HTML)
-    public Viewable getWebsiteMenu() {
-        return view("menu");
-    }
-
-    /**
-     * Fetches Geo Objects to be displayed in a map by WGS 84 coordinate pair (Longitude, Latitude) and a radius in km.
-     * @param coordinates
-     * @param radius
-     */
-    @GET
-    @Path("/search/{coordinatePair}/{radius}")
-    public List<GeoObjectView> getGeoObjectsNearBy(@PathParam("coordinatePair") String coordinates,
-                                                   @PathParam("radius") String radius) {
-        double lon = 13.4, lat = 52.5;
-        if (coordinates != null && !coordinates.isEmpty() && coordinates.contains(",")) {
-            lon = Double.parseDouble(coordinates.split(",")[0].trim());
-            lat = Double.parseDouble(coordinates.split(",")[1].trim());
+    @Path("/edit/{topicId}")
+    public Viewable getGeoObjectForm(@PathParam("topicId") long topicId) {
+        Topic geoObject = dms.getTopic(topicId);
+        if (geoObject != null && geoObject.getTypeUri().equals(KiezatlasService.GEO_OBJECT)) {
+            // Assemble Generic Einrichtungs Infos
+            EinrichtungsInfo einrichtung = assembleGeneralEinrichtungsInfo(geoObject);
+            viewData("geoobject", einrichtung);
+            viewData("message", "Einrichtung \"" + geoObject.getSimpleValue() + " erfolgreich geladen.");
+        } else {
+            // ### throw 401
+            viewData("message", "Eine Einrichtung mit dieser ID ist uns nicht bekannt.");
         }
-        double r;
-        r = (radius.isEmpty() || radius.equals("0")) ? 1.0 : Double.parseDouble(radius);
-        List<Topic> geoCoordTopics = spatialService.getTopicsWithinDistance(new GeoCoordinate(lon, lat), r);
-        ArrayList<GeoObjectView> results = new ArrayList<GeoObjectView>();
-        for (Topic geoCoordTopic : geoCoordTopics) {
-            // GeoCoordinate geoCoord = geomapsService.geoCoordinate(geoCoordTopic);
-            Topic address = geoCoordTopic.getRelatedTopic("dm4.core.composition", "dm4.core.child",
-                "dm4.core.parent", "dm4.contacts.address");
-            if (address != null) {
-                ResultList<RelatedTopic> geoObjects = address.getRelatedTopics("dm4.core.composition",
-                    "dm4.core.child", "dm4.core.parent", "ka2.geo_object", 0);
-                for (RelatedTopic geoObject : geoObjects) {
-                    results.add(new GeoObjectView(geoObject, geomapsService, angeboteService));
-                }
-            } else {
-                log.log(Level.INFO, "No Address Entry found for geocoordinate {0}", geoCoordTopic.getSimpleValue());
-            }
-        }
-        return results;
-    }
-
-    /**
-     * Builds up a list of search results (Geo Objects to be displayed in a map) by text query.
-     * @param referer
-     * @param query
-     */
-    @GET
-    @Path("/search")
-    public List<GeoObjectView> searchGeoObjectsFulltext(@HeaderParam("Referer") String referer,
-                                                        @QueryParam("search") String query) {
-        if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
-        // TODO: Maybe it is also desirable that we wrap the users query into quotation marks
-        // (to allow users to search for a combination of words)
-        try {
-            ArrayList<GeoObjectView> results = new ArrayList<GeoObjectView>();
-            if (query.isEmpty()) {
-                log.warning("No search term entered, returning empty resultset");
-                return results;
-            }
-            List<Topic> geoObjects = searchFulltextInGeoObjectChilds(query);
-            // iterate over merged results
-            log.info("Start building response for " + geoObjects.size() + " OVERALL");
-            for (Topic topic : geoObjects) {
-                results.add(new GeoObjectView(topic, geomapsService, angeboteService));
-            }
-            log.info("Build up response " + results.size() + " geo objects across all districts");
-            return results;
-        } catch (Exception e) {
-            throw new RuntimeException("Searching geo object topics failed", e);
-        }
-    }
-
-    @Override
-    public List<Topic> searchFulltextInGeoObjectChilds(String query) {
-        // ### Todo: Fetch for ka2.ansprechpartner, traeger name, too
-        HashMap<Long, Topic> uniqueResults = new HashMap<Long, Topic>();
-        List<Topic> searchResults = dms.searchTopics(query, "ka2.geo_object.name");
-        List<Topic> descrResults = dms.searchTopics(query, "ka2.beschreibung");
-        List<Topic> stichworteResults = dms.searchTopics(query, "ka2.stichworte");
-        // List<Topic> sonstigesResults = dms.searchTopics(query, "ka2.sonstiges");
-        List<Topic> bezirksregionResults = dms.searchTopics(query, "ka2.bezirksregion");
-        // List<Topic> traegerNameResults = dms.searchTopics(query, "ka2.traeger.name");
-        // List<Topic> traegerNameResults = dms.searchTopics(query, "dm4.contacts.street");
-        log.info("> " + searchResults.size() + ", "+ descrResults.size() +", "+stichworteResults.size() + ", " + bezirksregionResults.size()
-                + " results in four child types for query=\""+query+"\" in FULLTEXT");
-        // merge all three types in search results
-        searchResults.addAll(descrResults);
-        searchResults.addAll(stichworteResults);
-        // searchResults.addAll(sonstigesResults);
-        searchResults.addAll(bezirksregionResults);
-        // searchResults.addAll(traegerNameResults);
-        // make search results only contain unique geo object topics
-        log.info("Building up unique search resultset of fulltext search...");
-        Iterator<Topic> iterator = searchResults.iterator();
-        while (iterator.hasNext()) {
-            Topic next = iterator.next();
-            Topic geoObject = getParentGeoObjectTopic(next);
-            if (!uniqueResults.containsKey(geoObject.getId())) {
-                uniqueResults.put(geoObject.getId(), geoObject);
-            }
-        }
-        log.info("searchResultLength=" + (searchResults.size()) + ", " + "uniqueResultLength=" + uniqueResults.size());
-        return new ArrayList(uniqueResults.values());
-    }
-
-    /**
-     * Fetches a list of Geo Objects to be displayed in a map by name.
-     * Ditch searchGeoObjectNames in KiezatlasPlugin (used by Famportal-Angular service).
-     * @param referer
-     * @param query
-     */
-    @GET
-    @Path("/search/by_name")
-    public List<GeoObjectView> searchGeoObjectsByName(@HeaderParam("Referer") String referer,
-                                                   @QueryParam("query") String query) {
-        if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
-        try {
-            log.log(Level.INFO, "> nameQuery=\"{0}\"", query);
-            String queryValue = query.trim();
-            ArrayList<GeoObjectView> results = new ArrayList<GeoObjectView>();
-            if (queryValue.isEmpty()) {
-                log.warning("No search term entered, returning empty resultset");
-                return results;
-            }
-            List<Topic> singleTopics = dms.searchTopics(queryValue, "ka2.geo_object.name");
-            log.log(Level.INFO, "{0} name topics found", singleTopics.size());
-            for (Topic topic : singleTopics) {
-                Topic geoObject = topic.getRelatedTopic("dm4.core.composition",
-                    "dm4.core.child", "dm4.core.parent", "ka2.geo_object");
-                results.add(new GeoObjectView(geoObject, geomapsService, angeboteService));
-            }
-            return results;
-        } catch (Exception e) {
-            throw new RuntimeException("Searching geo object topics by name failed", e);
-        }
-    }
-
-    /**
-     * Fetches details about a Kiezatlas Geo Object.
-     *
-     * @param referer
-     * @param topicId
-     */
-    @GET
-    @Path("/topic/{topicId}")
-    @Produces(MediaType.APPLICATION_JSON)
-    public GeoObjectDetailsView getGeoObjectDetails(@HeaderParam("Referer") String referer,
-                                                      @PathParam("topicId") long topicId) {
-        if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
-        return new GeoObjectDetailsView(dms.getTopic(topicId), geomapsService, angeboteService);
+        return view("edit");
     }
 
     /**
@@ -269,7 +137,179 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
         // Assemble Angebosinfos for Einrichtung
         List<AngebotsInfoAssigned> angebotsInfos = angeboteService.getAngebotsInfosAssigned(geoObject);
         if (angebotsInfos.size() > 0) viewData("angebotsinfos", angebotsInfos);
-        return view("geoobject");
+        return view("detail");
+    }
+
+    /**
+     * Fetches details about a Kiezatlas Geo Object.
+     *
+     * ### Revise DTO.
+     *
+     * @param referer
+     * @param topicId
+     * @return A GeoObject DetailsView as DTO to presend details about a place.
+     */
+    @GET
+    @Path("/topic/{topicId}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public GeoObjectDetailsView getGeoObjectDetails(@HeaderParam("Referer") String referer,
+                                                    @PathParam("topicId") long topicId) {
+        if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
+        return new GeoObjectDetailsView(dms.getTopic(topicId), geomapsService, angeboteService);
+    }
+
+    /**
+     * Fetches Geo Objects to be displayed in a map by WGS 84 coordinate pair (Longitude, Latitude)
+     * and a numerical radius (provide in km).
+     * @param coordinates
+     * @param radius
+     */
+    @GET
+    @Path("/search/{coordinatePair}/{radius}")
+    public List<GeoObjectView> getGeoObjectsNearBy(@PathParam("coordinatePair") String coordinates,
+                                                   @PathParam("radius") String radius) {
+        // .) ### Authenticate...
+        // 0) Set default coordinates for a query
+        double lon = 13.4, lat = 52.5;
+        if (coordinates != null && !coordinates.isEmpty() && coordinates.contains(",")) {
+            lon = Double.parseDouble(coordinates.split(",")[0].trim());
+            lat = Double.parseDouble(coordinates.split(",")[1].trim());
+        }
+        // 1) Set default search radius for a query
+        double r = (radius.isEmpty() || radius.equals("0")) ? 1.0 : Double.parseDouble(radius);
+        List<Topic> geoCoordTopics = spatialService.getTopicsWithinDistance(new GeoCoordinate(lon, lat), r);
+        ArrayList<GeoObjectView> results = new ArrayList<GeoObjectView>();
+        // 2) Process spatial search results (=topics of type Geo Coordinate)
+        for (Topic geoCoordTopic : geoCoordTopics) {
+            // 2.1) Check for an Address topic
+            Topic address = geoCoordTopic.getRelatedTopic("dm4.core.composition", "dm4.core.child",
+                "dm4.core.parent", "dm4.contacts.address");
+            if (address != null) {
+                // 2.1.1) If place has an address set, create a DTO for map display
+                ResultList<RelatedTopic> geoObjects = address.getRelatedTopics("dm4.core.composition",
+                    "dm4.core.child", "dm4.core.parent", "ka2.geo_object", 0);
+                for (RelatedTopic geoObject : geoObjects) {
+                    results.add(new GeoObjectView(geoObject, geomapsService, angeboteService));
+                }
+            } else {
+                // 2.1.2) If place has NO address set, skip place for map display
+                log.log(Level.INFO, "No Address Entry found for geo coordinate {0}", geoCoordTopic.getSimpleValue());
+            }
+        }
+        return results;
+    }
+
+    /**
+     * Builds up a list of search results (Geo Objects to be displayed in a map) by text query.
+     * @param referer
+     * @param query
+     */
+    @GET
+    @Path("/search")
+    public List<GeoObjectView> searchGeoObjectsFulltext(@HeaderParam("Referer") String referer,
+            @QueryParam("search") String query) {
+        // .) ### Authenticate
+        if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
+        // TODO: Maybe it is also desirable that we wrap the users query into quotation marks
+        // (to allow users to search for a combination of words)
+        try {
+            ArrayList<GeoObjectView> results = new ArrayList<GeoObjectView>();
+            if (query.isEmpty()) {
+                log.warning("No search term entered, returning empty resultset");
+                return results;
+            }
+            // 1) Fetch unique geo object topics by text query string
+            List<Topic> geoObjects = searchFulltextInGeoObjectChilds(query);
+            // 2) Process saerch results and create DTS for map display
+            log.info("Start building response for " + geoObjects.size() + " OVERALL");
+            for (Topic topic : geoObjects) {
+                results.add(new GeoObjectView(topic, geomapsService, angeboteService));
+            }
+            log.info("Build up response " + results.size() + " geo objects across all districts");
+            return results;
+        } catch (Exception e) {
+            throw new RuntimeException("Searching geo object topics failed", e);
+        }
+    }
+
+    /**
+     * Builds up a list of search results (Geo Objects to be displayed in a map) by district
+     * topic id and text query.
+     * @param referer
+     * @param districtId
+     * @param query
+     */
+    @GET
+    @Path("/search/{districtId}")
+    @Transactional
+    public List<GeoObjectView> searchGeoObjectsFulltextInDistrict(@HeaderParam("Referer") String referer,
+            @PathParam("districtId") long districtId, @QueryParam("search") String query) {
+        if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
+        try {
+            ArrayList<GeoObjectView> results = new ArrayList<GeoObjectView>();
+            if (query.isEmpty()) {
+                log.warning("No search term entered, returning empty resultset");
+                return results;
+            }
+            List<Topic> geoObjects = searchFulltextInGeoObjectChilds(query);
+            // iterate over merged results
+            log.info("Start building response for " + geoObjects.size() + " and FILTER by DISTRICT");
+            for (Topic geoObject: geoObjects) {
+                // check for district
+                if (hasRelatedBezirk(geoObject, districtId)) {
+                    results.add(new GeoObjectView(geoObject, geomapsService, angeboteService));
+                }
+            }
+            log.info("Build up response " + results.size() + " geo objects in district=\""+districtId+"\"");
+            return results;
+        } catch (Exception e) {
+            throw new RuntimeException("Searching geo object topics failed", e);
+        }
+    }
+
+    /**
+     * Fires searchTopic()-calls to find Geo Object topics by their:
+     * <ul>
+     *  <li>Geo Object Name</li>
+     *  <li>Beschreibung Facet</li>
+     *  <li>Stichworte Facet</li>
+     *  <li>Bezirksregion Facet</li>
+     * </ul>
+     * @param query
+     * @return A list of unique topics of type "ka2.geo_object".
+     */
+    @Override
+    public List<Topic> searchFulltextInGeoObjectChilds(String query) {
+        // ### Authenticate
+        // ### Todo: Fetch for ka2.ansprechpartner, traeger name, too
+        HashMap<Long, Topic> uniqueResults = new HashMap<Long, Topic>();
+        List<Topic> searchResults = dms.searchTopics(query, "ka2.geo_object.name");
+        List<Topic> descrResults = dms.searchTopics(query, "ka2.beschreibung");
+        List<Topic> stichworteResults = dms.searchTopics(query, "ka2.stichworte");
+        // List<Topic> sonstigesResults = dms.searchTopics(query, "ka2.sonstiges");
+        List<Topic> bezirksregionResults = dms.searchTopics(query, "ka2.bezirksregion");
+        // List<Topic> traegerNameResults = dms.searchTopics(query, "ka2.traeger.name");
+        // List<Topic> traegerNameResults = dms.searchTopics(query, "dm4.contacts.street");
+        log.info("> " + searchResults.size() + ", "+ descrResults.size() +", "+stichworteResults.size() + ", " + bezirksregionResults.size()
+                + " results in four child types for query=\""+query+"\" in FULLTEXT");
+        // merge all three types in search results
+        searchResults.addAll(descrResults);
+        searchResults.addAll(stichworteResults);
+        // searchResults.addAll(sonstigesResults);
+        searchResults.addAll(bezirksregionResults);
+        // searchResults.addAll(traegerNameResults);
+        // make search results only contain unique geo object topics
+        log.info("Building up unique search resultset of fulltext search...");
+        Iterator<Topic> iterator = searchResults.iterator();
+        while (iterator.hasNext()) {
+            Topic next = iterator.next();
+            Topic geoObject = getParentGeoObjectTopic(next);
+            if (!uniqueResults.containsKey(geoObject.getId())) {
+                uniqueResults.put(geoObject.getId(), geoObject);
+            }
+        }
+        log.info("searchResultLength=" + (searchResults.size()) + ", " + "uniqueResultLength=" + uniqueResults.size());
+        return new ArrayList(uniqueResults.values());
     }
 
     // --- Bezirk Specific Resource Search, Overall, Listing
@@ -321,41 +361,6 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
         districtsCache.put(bezirkId, results);
         districtCachedAt.put(bezirkId, new Date().getTime());
         return results;
-    }
-
-    /**
-     * Builds up a list of search results (Geo Objects to be displayed in a map) by district topic id and text query.
-     * @param referer
-     * @param districtId
-     * @param query
-     */
-    @GET
-    @Path("/search/{districtId}")
-    @Transactional
-    public List<GeoObjectView> searchGeoObjectTopicsInDistrict(@HeaderParam("Referer") String referer,
-                                                               @PathParam("districtId") long districtId,
-                                                               @QueryParam("search") String query) {
-        if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
-        try {
-            ArrayList<GeoObjectView> results = new ArrayList<GeoObjectView>();
-            if (query.isEmpty()) {
-                log.warning("No search term entered, returning empty resultset");
-                return results;
-            }
-            List<Topic> geoObjects = searchFulltextInGeoObjectChilds(query);
-            // iterate over merged results
-            log.info("Start building response for " + geoObjects.size() + " and FILTER by DISTRICT");
-            for (Topic geoObject: geoObjects) {
-                // check for district
-                if (hasRelatedBezirk(geoObject, districtId)) {
-                    results.add(new GeoObjectView(geoObject, geomapsService, angeboteService));
-                }
-            }
-            log.info("Build up response " + results.size() + " geo objects in district=\""+districtId+"\"");
-            return results;
-        } catch (Exception e) {
-            throw new RuntimeException("Searching geo object topics failed", e);
-        }
     }
 
     // --- Bezirksregionen Resources Listing

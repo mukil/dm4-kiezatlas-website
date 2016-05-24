@@ -743,6 +743,20 @@ span.angebote-btn,
 .kiezatlas.topic .info-area {
     background-color: #fff;
     padding: 10px;
+    flex-direction: row;
+    display: flex;
+}
+
+.kiezatlas.topic .info-area .right-side,
+.kiezatlas.topic .info-area .left-side {
+    flex-wrap: wrap;
+    align-items: stretch;
+    justify-content: space-around;
+    align-content: stretch;
+    display: inline-block;
+    /** vertical-align: top;
+    /** width: 48%; */
+    flex: 0 0 50%;
 }
 
 .kiezatlas.topic #detail-area.angebotsinfos .infos {
@@ -761,10 +775,52 @@ span.angebote-btn,
     max-width: 740px;
 }
 
+.kiezatlas.topic .infos .beschreibung p,
+.kiezatlas.topic .infos .opening p {
+    margin: 0px;
+    margin-bottom: 15px;
+}
+
 .kiezatlas.topic .infos .imprint,
 .kiezatlas.topic .infos .fahrinfo-link {
     float: right;
+}
+
+.kiezatlas.topic .infos label {
+    display: block;
+}
+
+.kiezatlas.topic .infos label,
+.kiezatlas.topic form label {
+    color: #a9a9a9;
     font-size: .8em;
+}
+
+.kiezatlas.topic form textarea {
+    height: 95px;
+}
+
+.kiezatlas.topic form .cke_textarea_inline {
+    border: 1px solid #a9a9a9;
+    border-radius: 4px;
+    padding-left: 5px;
+    margin-bottom: 10px;
+    margin-top: 1px;
+    font-size: .8em;
+}
+
+.kiezatlas.topic form .cke_textarea_inline p {
+    margin: 5px;
+}
+
+.kiezatlas.topic form div.cke_textarea_inline,
+.kiezatlas.topic form textarea,
+.kiezatlas.topic form input[type="text"] {
+    color: #343434;
+    display: block;
+    width: 90%;
+    margin-bottom: 10px;
+    padding: 5px;
 }
 
 .kiezatlas.topic .categories {
@@ -1341,6 +1397,12 @@ div.link-area {
     }
     .kiezatlas.topic #detail-area {
         margin: 10px;
+    }
+    .kiezatlas.topic .info-area {
+        flex-direction: column;
+    }
+    .kiezatlas.topic .info-area input[type="submit"] {
+        max-width: 40px;
     }
 }
 
