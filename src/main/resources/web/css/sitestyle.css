@@ -688,6 +688,10 @@ span.angebote-btn,
     position: relative;
 }
 
+.kiezatlas.topic #detail-area .commands {
+    padding: 10px;
+}
+
 .kiezatlas.topic #map {
     width: 100%;
     height: 340px;
@@ -757,6 +761,12 @@ span.angebote-btn,
     /** vertical-align: top;
     /** width: 48%; */
     flex: 0 0 50%;
+    padding-right: 15px;
+}
+
+.kiezatlas.topic .info-area input[type="submit"] {
+    max-width: 50px;
+    cursor: pointer;
 }
 
 .kiezatlas.topic #detail-area.angebotsinfos .infos {
@@ -800,6 +810,18 @@ span.angebote-btn,
     height: 95px;
 }
 
+.kiezatlas.topic form input[type="text"].plz,
+.kiezatlas.topic form input[type="text"].city,
+.kiezatlas.topic form input.coordinates {
+    max-width: 150px;
+    display: inline-block;
+}
+
+.kiezatlas.topic form input[type="text"] {
+    display: block;
+    width: 90%;
+}
+
 .kiezatlas.topic form .cke_textarea_inline {
     border: 1px solid #a9a9a9;
     border-radius: 4px;
@@ -815,10 +837,9 @@ span.angebote-btn,
 
 .kiezatlas.topic form div.cke_textarea_inline,
 .kiezatlas.topic form textarea,
+.kiezatlas.topic form input[type="number"],
 .kiezatlas.topic form input[type="text"] {
     color: #343434;
-    display: block;
-    width: 90%;
     margin-bottom: 10px;
     padding: 5px;
 }
@@ -1400,9 +1421,6 @@ div.link-area {
     }
     .kiezatlas.topic .info-area {
         flex-direction: column;
-    }
-    .kiezatlas.topic .info-area input[type="submit"] {
-        max-width: 40px;
     }
 }
 

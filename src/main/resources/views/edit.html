@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title th:text="${geoobject.name} + ' - Kiezatlas'"></title>
+        <title th:text="'Edit - ' + ${geoobject.name} + ' - Kiezatlas'"></title>
         <meta charset="UTF-8"/>
         <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0"/>
 
@@ -19,8 +19,9 @@
         /*<![CDATA[*/
             // App initialization
             window.onload = function() {
-                var coordinate = /*[[${geoobject.coordinate}]]*/ undefined;
-                var lCoordinate = L.latLng(coordinate.split(", "))
+                var latitude = /*[[${geoobject.latitude}]]*/ undefined;
+                var longitude = /*[[${geoobject.longitude}]]*/ undefined;
+                var lCoordinate = L.latLng(latitude, longitude)
                 var name = /*[[${geoobject.name}]]*/ undefined;
                 var map = L.map('map', { scrollWheelZoom: false } ).setView(lCoordinate, 17)
                 L.tileLayer('https://api.tiles.mapbox.com/v4/kiezatlas.pd8lkp64/{z}/{x}/{y}.png?' // old style id="kiezatlas.map-feifsq6f"
@@ -28,9 +29,13 @@
                     attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors,'
                     + '<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery &#169; <a href="http://mapbox.com">Mapbox</a>',
                     id: 'kiezatlas.m7222ia5'}).addTo(map)
-                L.circleMarker(lCoordinate, {
-                    weight: 3, opacity: 0.6, fillColor: "#a9a9a9", fillOpacity: 0.2, color: "#8f1414",
-                }).addTo(map)
+                var circleMarker = L.circleMarker(lCoordinate, {
+                    weight: 3, opacity: 0.6, fillColor: "#a9a9a9", fillOpacity: 0.2, color: "#8f1414", clickable: true
+                })
+                circleMarker.addTo(map)
+                circleMarker.on('click', function(e) {
+                    console.log("Start manual placement..", e)
+                })
                 CKEDITOR.inline('beschreibung')
                 CKEDITOR.inline('oeffnungszeiten')
             }
@@ -44,10 +49,10 @@
                 <!--li class="register"><a href="/sign-up/">Registrieren</a></li-->
                 <li class="angebote"><a href="/">Startseite</a></li>
                 <li class="angebote"><a href="/angebote/">Angebote</a></li>
-                <li class="login"><a href="/sign-up/login">Login</a></li>
-                <!-- li class="angebote"><a href="/kiezatlas/angebot/">Orte</a></li-->
+                <li class="login" th:if="!${authenticated}" ><a href="/sign-up/login">Login</a></li>
+                <!--li class="angebote"><a href="/kiezatlas/angebot/">Orte</a></li-->
                 <!-- li class="angebote"><a href="/sign-up/edit/">Mein Account</a></li-->
-                <li class="logout"><a href="/#logout/" onclick="javascript:restc.logout()">Abmelden</a></li>
+                <li class="logout" th:if="${authenticated}" ><a href="/#logout/" onclick="javascript:restc.logout()">Abmelden</a></li>
             </ul>
         </div>
 
@@ -57,25 +62,33 @@
 
         <!-- Details Area -->
         <div id="detail-area">
+            <div class="commands">
+                <a th:if="${authenticated}" th:href="'/website/topic/' + ${geoobject.id}">Cancel</a>
+            </div>
             <div id="map"></div>
-                <form class="infos" th:action="'/website/edit/' + ${geoobject.id}" method="POST">
+                <form class="infos" action="/website/topic/save" method="POST">
                     <div class="info-area">
                         <div class="left-side">
+                            <input th:if="${!#strings.isEmpty(geoobject.id)}" type="hidden" name="id" th:value='${geoobject.id}'/>
                             <label for="name">Name</label>
                             <input type="text" name="name" th:value='${geoobject.name}'/>
                             <label for="strasse">Stra&szlig;enname</label>
-                            <input type="text" name="anschrift" th:value='${geoobject.address}'/>
-                            <label for="hausnr">Hausnummer</label>
-                            <input type="text" name="hrn" th:value='${geoobject.address}'/>
+                            <input type="text" name="strasse" th:value='${geoobject.strasse}'/>
+                            <label for="plz">Postleitzahl, Stadt</label>
+                            <input type="number" class="plz" name="plz" th:value='${geoobject.plz}'/>
+                            <input type="text" readonly="true" class="city" name="city" th:value='${geoobject.city}'/>
                             <label for="beschreibung">Beschreibung</label>
                             <textarea id="beschreibung" name="beschreibung"
                                       contenteditable="true" th:utext="${geoobject.beschreibung}"/>
                             <label for="open">&Ouml;ffnungszeiten</label>
                             <textarea id="oeffnungszeiten" name="open" contenteditable="true" th:utext='${geoobject.oeffnungszeiten}'/>
-                            <label for="stichworte">Stichworte</label>
-                            <input type="text" name="stichworte" th:utext='${geoobject.stichworte}'/>
+                            <!-- label for="stichworte">Stichworte</label>
+                            <input type="text" name="stichworte" th:value='${geoobject.stichworte}'/-->
                         </div>
                         <div class="right-side">
+                            <label for="lat">Geo Koordinate &ndash; Breitengrad (Lat), L&auml;ngengrad (Lon)</label>
+                            <input class="coordinates" type="number" step="any" name="lon" th:value='${geoobject.latitude}'/>
+                            <input class="coordinates" type="number" step="any" name="lat" th:value='${geoobject.longitude}'/>
                             <label for="ansprechpartner">AnsprechpartnerIn</label>
                             <input type="text" name="ansprechpartner" th:value='${geoobject.ansprechpartner}'/>
                             <label for="telefon">Telefon</label>
@@ -93,6 +106,7 @@
                     </div>
                     <div class="info-area">
                         <input type="submit" value="Ok"/>
+                        <a class="button" th:href="'/website/topic/' + ${geoobject.id}">Cancel</a>
                     </div>
                 </form>
             <div class="categories">
@@ -108,8 +122,10 @@
             </div>
         </div>
 
+        <p>&nbsp;</p>
+
         <!-- Kiezatlas Standard Website section -->
-        <div id="pages">
+        <!--div id="pages">
             <ul>
                 <li><a href="/aktuelles">Aktuelles</a></li>
                 <li><a href="/projektbeschreibung">Projektbeschreibung</a></li>
@@ -122,13 +138,13 @@
                 <li><a href="/links">Links</a></li>
             </ul>
             <p></p>
-        </div>
+        </div-->
 
         <div id="bottom">
             <img src="/de.kiezatlas.website/images/kiezatlas2-logo.png" width="150" />
         </div>
 
-        <!-- Piwik -->
+        <!-- Piwik
         <script type="text/javascript">
         var pkBaseURL = "//stats.infokitchen.net/";
         document.write(unescape("%3Cscript src='" + pkBaseURL + "piwik.js' type='text/javascript'%3E%3C/script%3E"));
@@ -140,9 +156,9 @@
         } catch( err ) {}
         </script>
         <noscript>
-            <img th:src="@{https://stats.infokitchen.net/piwik.php(idsite=2,rec=1,action_name='Kiezatlas+2+Topic')}" style="border:0" alt="" />
+            <img th:src="@{https://stats.infokitchen.net/piwik.php(idsite=2,rec=1,action_name='Kiezatlas+2+GeoObjectForm')}" style="border:0" alt="" />
         </noscript>
-        <!-- End Piwik Tracking Code -->
+        End Piwik Tracking Code -->
 
     </body>
 </html>

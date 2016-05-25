@@ -17,8 +17,9 @@
         /*<![CDATA[*/
             // App initialization
             window.onload = function() {
-                var coordinate = /*[[${geoobject.coordinate}]]*/ undefined;
-                var lCoordinate = L.latLng(coordinate.split(", "))
+                var latitude = /*[[${geoobject.latitude}]]*/ undefined;
+                var longitude = /*[[${geoobject.longitude}]]*/ undefined;
+                var lCoordinate = L.latLng(latitude, longitude)
                 var name = /*[[${geoobject.name}]]*/ undefined;
                 var map = L.map('map', { scrollWheelZoom: false } ).setView(lCoordinate, 17)
                 L.tileLayer('https://api.tiles.mapbox.com/v4/kiezatlas.pd8lkp64/{z}/{x}/{y}.png?' // old style id="kiezatlas.map-feifsq6f"
@@ -29,7 +30,6 @@
                 L.circleMarker(lCoordinate, {
                     weight: 3, opacity: 0.6, fillColor: "#a9a9a9", fillOpacity: 0.2, color: "#8f1414",
                 }).addTo(map)
-                    // .bindPopup('<h3>'+name+'</h3>').openPopup();
             }
         /*]]>*/
         </script>
@@ -41,10 +41,10 @@
                 <!--li class="register"><a href="/sign-up/">Registrieren</a></li-->
                 <li class="angebote"><a href="/">Startseite</a></li>
                 <li class="angebote"><a href="/angebote/">Angebote</a></li>
-                <li class="login"><a href="/sign-up/login">Login</a></li>
+                <li class="login" th:if="!${authenticated}" ><a href="/sign-up/login">Login</a></li>
                 <!--li class="angebote"><a href="/kiezatlas/angebot/">Orte</a></li-->
                 <!-- li class="angebote"><a href="/sign-up/edit/">Mein Account</a></li-->
-                <li class="logout"><a href="/#logout/" onclick="javascript:restc.logout()">Abmelden</a></li>
+                <li class="logout" th:if="${authenticated}" ><a href="/#logout/" onclick="javascript:restc.logout()">Abmelden</a></li>
             </ul>
         </div>
 
@@ -54,6 +54,9 @@
 
         <!-- Details Area -->
         <div id="detail-area" th:class="${angebotsinfos} ? 'angebotsinfos'">
+            <div class="commands">
+                <a th:if="${authenticated}" th:href="'/website/topic/edit/' + ${geoobject.id}">Edit</a>
+            </div>
             <div id="map"></div>
             <div class="info-area">
                 <div id="angebote" th:if="${angebotsinfos}">
@@ -157,7 +160,7 @@
         } catch( err ) {}
         </script>
         <noscript>
-            <img th:src="@{https://stats.infokitchen.net/piwik.php(idsite=2,rec=1,action_name='Kiezatlas+2+Topic')}" style="border:0" alt="" />
+            <img th:src="@{https://stats.infokitchen.net/piwik.php(idsite=2,rec=1,action_name='Kiezatlas+2+Info')}" style="border:0" alt="" />
         </noscript>
         <!-- End Piwik Tracking Code -->
 

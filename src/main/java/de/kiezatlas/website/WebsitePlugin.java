@@ -16,6 +16,7 @@ import de.deepamehta.core.Topic;
 import de.deepamehta.core.service.Inject;
 import de.deepamehta.core.service.ResultList;
 import de.deepamehta.core.service.Transactional;
+import de.deepamehta.plugins.accesscontrol.AccessControlService;
 import de.deepamehta.plugins.facets.FacetsService;
 import de.deepamehta.plugins.geomaps.model.GeoCoordinate;
 import de.deepamehta.plugins.geomaps.GeomapsService;
@@ -32,15 +33,21 @@ import de.kiezatlas.website.model.GeoObjectView;
 import de.mikromedia.webpages.WebpagePluginService;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.net.URI;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLEncoder;
 import java.util.logging.Level;
 import java.util.HashMap;
+import javax.ws.rs.FormParam;
 import javax.ws.rs.HeaderParam;
+import javax.ws.rs.POST;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
+import org.codehaus.jettison.json.JSONArray;
+import org.codehaus.jettison.json.JSONException;
+import org.codehaus.jettison.json.JSONObject;
 
 /**
  * The module bundling the Kiezatlas 2 Website.<br/>
@@ -59,6 +66,7 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
     private final Logger log = Logger.getLogger(getClass().getName());
 
     @Inject private WorkspacesService workspaceService;
+    @Inject private AccessControlService acService;
     @Inject private WebpagePluginService pageService;
     @Inject private GeospatialService spatialService;
     @Inject private AngebotService angeboteService;
@@ -90,13 +98,58 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
     }
 
     /**
-     * Responds the form for editing a Kiezatlas Einrichtung.
+     * Processes the form for editing a Kiezatlas Einrichtung.
+     */
+    @POST
+    @Produces(MediaType.TEXT_HTML)
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @Path("/topic/save")
+    public Viewable createGeoObject(@FormParam("id") String topicId, @FormParam("name") String name, @FormParam("strasse") String strasse, @FormParam("plz") String plz, @FormParam("city") String city,
+            @FormParam("beschreibung") String beschreibung, @FormParam("open") String oeffnungszeiten, @FormParam("ansprechpartner") String ansprechpartner,
+            @FormParam("telefon") String telefon, @FormParam("email") String email, @FormParam("fax") String fax, @FormParam("website") String website, 
+            @FormParam("lat") double latitude, @FormParam("lon") double longitude) {
+        Topic geoObject = null;
+        // 1) Check if form submission deals with an UPDATE or CREATE
+        String districtName = "", coordinatePair = "", geoLocation = "";
+        if (topicId != null) {
+            log.info("UPDATE Einrichtung " + name + " (TopicID: " + topicId + ")");
+        } else {
+            log.info("CREATE Einrichtung " + name + ", Straße: " + strasse + ", in \"" + plz + " " + city + "\"");
+        }
+        // 2) Find out Geo Coordinate and District of Geo Object
+        if (latitude == 0 || longitude == 0) {
+            log.info("> Resetting Geo Coordinates " + latitude + ", " + longitude);
+            geoLocation = geoCodeAddressInput(URLEncoder.encode(strasse + ", " + plz + " " + city));
+            coordinatePair = parseFirstCoordinatePair(geoLocation);
+            districtName = parseFirstSublocality(geoLocation);
+            log.info("> Geocoded Street, Postal Code City Value to \"" + coordinatePair + "\"");
+        } else {
+            log.info("> Geo Coordinates provided: " + latitude + ", " + longitude);
+        }
+        // 3) ### Assemble and create new Geo Object Topic
+        // 4) ### Assign current user and correct district flag
+        // 5) ### Set as "unpublished" (just leave it unassigned regarding a "Site" topic)
+        // ..) Prepare new page
+        if (geoObject != null) {
+            viewData("message", "Einrichtung \"" + name + " wurde erfolgreich angelegt.");
+            // ### Author Relation
+            // ### Bezirk Relation
+            // ### Geo Coordinate
+        } else {
+            viewData("message", "Die Einrichtung konnte nicht angelegt werden.");
+        }
+        return getGeoObjectForm(Long.parseLong(topicId));
+    }
+
+    /**
+     * Builds up a form for editing a Kiezatlas Einrichtung.
      */
     @GET
     @Produces(MediaType.TEXT_HTML)
-    @Path("/edit/{topicId}")
+    @Path("/topic/edit/{topicId}")
     public Viewable getGeoObjectForm(@PathParam("topicId") long topicId) {
         Topic geoObject = dms.getTopic(topicId);
+        if (!isAuthenticated()) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
         if (geoObject != null && geoObject.getTypeUri().equals(KiezatlasService.GEO_OBJECT)) {
             // Assemble Generic Einrichtungs Infos
             EinrichtungsInfo einrichtung = assembleGeneralEinrichtungsInfo(geoObject);
@@ -106,6 +159,7 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
             // ### throw 401
             viewData("message", "Eine Einrichtung mit dieser ID ist uns nicht bekannt.");
         }
+        viewData("authenticated", isAuthenticated());
         return view("edit");
     }
 
@@ -137,6 +191,7 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
         // Assemble Angebosinfos for Einrichtung
         List<AngebotsInfoAssigned> angebotsInfos = angeboteService.getAngebotsInfosAssigned(geoObject);
         if (angebotsInfos.size() > 0) viewData("angebotsinfos", angebotsInfos);
+        viewData("authenticated", isAuthenticated());
         return view("detail");
     }
 
@@ -386,14 +441,24 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
         return results;
     }
 
-    // --- Utility Resources (Geo Coding and Reverse Geo Coding)
-
     @GET
     @Path("/geocode")
-    public String geoCodeAddressInput(@HeaderParam("Referer") String referer,
-                                      @QueryParam("query") String input) {
+    public String geoCodeAddressInput(@HeaderParam("Referer") String referer, @QueryParam("query") String input) {
         if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
-        String query = input;
+        return geoCodeAddressInput(input);
+    }
+
+    @GET
+    @Path("/reverse-geocode/{latlng}")
+    public String geoCodeLocationInput(@HeaderParam("Referer") String referer, @PathParam("latlng") String latlng) {
+        if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
+        return geoCodeLocationInput(latlng);
+    }
+
+    // --- Utility Resources (Geo Coding and Reverse Geo Coding)
+
+    private String geoCodeAddressInput(String addressValue) {
+        String query = addressValue;
         String result = "";
         try {
             // Encoded url to open
@@ -420,22 +485,21 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
         return result;
     }
 
-    @GET
-    @Path("/reverse-geocode/{latlng}")
-    public String geoCodeLocationInput(@HeaderParam("Referer") String referer,
-                                       @PathParam("latlng") String latlng) {
-        if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
+    /**
+     * Returns name for the given coordinate pair by (unauthenticated) asking Google Geocode API.
+     * @param inputValue    String containing an URL encoded latitude longitude value pair.
+     * @return
+     */
+    private String geoCodeLocationInput(String inputValue) {
         String result = "";
         try {
-            String url = "https://maps.googleapis.com/maps/api/geocode/json?latlng="
-                + latlng + "&language=de";
+            String url = "https://maps.googleapis.com/maps/api/geocode/json?latlng=" + inputValue + "&language=de";
             // &result_type=street_address|postal_code&key=API_KEY
             URLConnection connection = new URL(url).openConnection();
             connection.setRequestProperty("Content-Type", "application/json");
             connection.setRequestProperty("Charset", "UTF-8");
             // Get the response
-            BufferedReader rd = new BufferedReader(new InputStreamReader(connection.getInputStream(),
-                "UTF-8"));
+            BufferedReader rd = new BufferedReader(new InputStreamReader(connection.getInputStream(), "UTF-8"));
             StringBuilder sb = new StringBuilder();
             String line;
             while ((line = rd.readLine()) != null) {
@@ -443,7 +507,7 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
             }
             rd.close();
             result = sb.toString();
-            log.info("Reverse Geo Coded Location ("+latlng+") successfully.");
+            log.info("Reverse Geo Coded Location ("+inputValue+") successfully.");
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
@@ -451,6 +515,10 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
     }
 
     // ------------------------------------------------------------------------------------------------- Private Methods
+
+    private boolean isAuthenticated() {
+        return (acService.getUsername() != null);
+    }
 
     private Topic getParentGeoObjectTopic(Topic entry) {
         return entry.getRelatedTopic(null, "dm4.core.child", "dm4.core.parent", "ka2.geo_object");
@@ -481,10 +549,13 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
         try {
             einrichtung.loadChildTopics();
             infoModel.setName(einrichtung.getChildTopics().getString(KiezatlasService.GEO_OBJECT_NAME));
+            // Sets Street, Postal Code, City and Address
             Topic addressTopic = einrichtung.getChildTopics().getTopic(KiezatlasService.GEO_OBJECT_ADDRESS);
-            infoModel.setAddress(addressTopic.getSimpleValue().toString());
-            infoModel.setCoordinate(geomapsService.getGeoCoordinate(addressTopic));
-            // Kontakt Facet
+            infoModel.setAddress(addressTopic);
+            // Sets Latitude and Longitude
+            GeoCoordinate geoCoordinate = geomapsService.getGeoCoordinate(addressTopic);
+            infoModel.setCoordinates(geoCoordinate);
+            // Sets Kontakt Facet
             Topic kontakt = facetsService.getFacet(einrichtung, KONTAKT_FACET);
             if (kontakt != null) {
                 kontakt.loadChildTopics();
@@ -493,7 +564,7 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
                 infoModel.setTelefon(kontakt.getChildTopics().getString(KONTAKT_TEL));
                 infoModel.setAnsprechpartner(kontakt.getChildTopics().getString(KONTAKT_ANSPRECHPARTNER));
             }
-            // Imprint Value
+            // Calculates Imprint Value
             Topic bezirk = getRelatedBezirk(einrichtung);
             BezirkInfo bezirkInfo = new BezirkInfo(bezirk);
             if (bezirkInfo.getImprintLink() != null) {
@@ -522,6 +593,56 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
             throw new RuntimeException("Could not assemble EinrichtungsInfo", ex);
         }
         return infoModel;
+    }
+
+    private String parseFirstCoordinatePair(String jsonGoogleLocation) {
+        String result = "";
+        try {
+            JSONObject response = new JSONObject(jsonGoogleLocation);
+            JSONArray results = response.getJSONArray("results");
+            // JSONObject geometry = results.();
+            for (int i=0; i < results.length(); i++) {
+                JSONObject obj = results.getJSONObject(i);
+                // log.info("> Result: " + obj.toString());
+                JSONObject geometry = obj.getJSONObject("geometry");
+                JSONObject location = geometry.getJSONObject("location");
+                log.info("Location: " + location.toString() + " Type: " + geometry.getString("location_type"));
+                return location.getDouble("lng") + "," + location.getDouble("lat");
+            }
+        } catch (JSONException ex) {
+            Logger.getLogger(WebsitePlugin.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return result;
+    }
+
+    private String parseFirstSublocality(String jsonGoogleLocation) {
+        String result = "";
+        try {
+            JSONObject response = new JSONObject(jsonGoogleLocation);
+            JSONArray results = response.getJSONArray("results");
+            for (int i=0; i < results.length(); i++) {
+                JSONObject obj = results.getJSONObject(i);
+                JSONArray components = obj.getJSONArray("address_components");
+                for (int k=0; k < components.length(); k++) {
+                    JSONObject component = components.getJSONObject(k);
+                    log.info("> Address Component: " + component.toString());
+                    JSONArray types = component.getJSONArray("types");
+                    for (int t=0; t < types.length(); t++) {
+                        log.info("> Component Type: " + types.getString(i));
+                        if (types.getString(i).equals("sublocality_level1")) {
+                            if (component.has("long_name") && !component.getString("long_name").equals("undefined")) {
+                                return component.getString("long_name");
+                            } else {
+                                return component.getString("short_name");
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (JSONException ex) {
+            Logger.getLogger(WebsitePlugin.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return result;
     }
 
 }

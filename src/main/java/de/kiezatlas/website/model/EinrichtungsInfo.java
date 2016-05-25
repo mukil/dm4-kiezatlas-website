@@ -1,6 +1,7 @@
 package de.kiezatlas.website.model;
 
 import de.deepamehta.core.JSONEnabled;
+import de.deepamehta.core.Topic;
 import de.deepamehta.plugins.geomaps.model.GeoCoordinate;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -67,9 +68,44 @@ public class EinrichtungsInfo implements JSONEnabled {
         }
     }
 
-    public void setAddress(String addressValue) {
+    public void setAddress(Topic address) {
         try {
-            json.put("anschrift", addressValue);
+            json.put("anschrift", address.getSimpleValue().toString()); // Utility
+            setStrasse(address.getChildTopics().getString("dm4.contacts.street"));
+            setPLZ(address.getChildTopics().getString("dm4.contacts.postal_code"));
+            setCity(address.getChildTopics().getString("dm4.contacts.city"));
+        } catch (JSONException ex) {
+            Logger.getLogger(EinrichtungsInfo.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    public void setStrasse(String strasseValue) {
+        try {
+            json.put("strasse", strasseValue);
+        } catch (JSONException ex) {
+            Logger.getLogger(EinrichtungsInfo.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    public void setPLZ(String plzValue) {
+        try {
+            json.put("plz", plzValue);
+        } catch (JSONException ex) {
+            Logger.getLogger(EinrichtungsInfo.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    public void setCity(String cityValue) {
+        try {
+            json.put("city", cityValue);
+        } catch (JSONException ex) {
+            Logger.getLogger(EinrichtungsInfo.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    public void setCountry(String countryValue) {
+        try {
+            json.put("country", countryValue);
         } catch (JSONException ex) {
             Logger.getLogger(EinrichtungsInfo.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -123,9 +159,10 @@ public class EinrichtungsInfo implements JSONEnabled {
         }
     }
 
-    public void setCoordinate(GeoCoordinate coordinate) {
+    public void setCoordinates(GeoCoordinate coordinate) {
         try {
-            json.put("location", coordinate.lat + ", " + coordinate.lon);
+            json.put("latitude", coordinate.lat);
+            json.put("longitude", coordinate.lon);
         } catch (JSONException ex) {
             Logger.getLogger(EinrichtungsInfo.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -208,7 +245,43 @@ public class EinrichtungsInfo implements JSONEnabled {
             return "";
         }
     }
-    
+
+    public String getStrasse() {
+        try {
+            return json.getString("strasse");
+        } catch (JSONException ex) {
+            Logger.getLogger(EinrichtungsInfo.class.getName()).log(Level.FINE, "Einrichtung has no Anschrift (Id: " + getId() + ")", ex);
+            return "";
+        }
+    }
+
+    public String getPlz() {
+        try {
+            return json.getString("plz");
+        } catch (JSONException ex) {
+            Logger.getLogger(EinrichtungsInfo.class.getName()).log(Level.FINE, "Einrichtung has no Anschrift (Id: " + getId() + ")", ex);
+            return "";
+        }
+    }
+
+    public String getCity() {
+        try {
+            return json.getString("city");
+        } catch (JSONException ex) {
+            Logger.getLogger(EinrichtungsInfo.class.getName()).log(Level.FINE, "Einrichtung has no Anschrift (Id: " + getId() + ")", ex);
+            return "";
+        }
+    }
+
+    public String getCountry() {
+        try {
+            return json.getString("country");
+        } catch (JSONException ex) {
+            Logger.getLogger(EinrichtungsInfo.class.getName()).log(Level.FINE, "Einrichtung has no Anschrift (Id: " + getId() + ")", ex);
+            return "";
+        }
+    }
+
     public String getOeffnungszeiten() {
         try {
             return json.getString("oeffnungszeiten");
@@ -244,16 +317,25 @@ public class EinrichtungsInfo implements JSONEnabled {
             return "";
         }
     }
-    
-    public String getCoordinate() {
+
+    public double getLongitude() {
         try {
-            return json.getString("location");
+            return json.getDouble("longitude");
         } catch (JSONException ex) {
-            Logger.getLogger(EinrichtungsInfo.class.getName()).log(Level.WARNING, "Einrichtung has no location (Id: " + getId() + ")", ex);
-            return "";
+            Logger.getLogger(EinrichtungsInfo.class.getName()).log(Level.WARNING, "Einrichtung has no Longitude (Id: " + getId() + ")", ex);
+            return 0.0;
         }
     }
-   
+
+    public double getLatitude() {
+        try {
+            return json.getDouble("latitude");
+        } catch (JSONException ex) {
+            Logger.getLogger(EinrichtungsInfo.class.getName()).log(Level.WARNING, "Einrichtung has no Latitude (Id: " + getId() + ")", ex);
+            return 0.0;
+        }
+    }
+
     public long getId() {
         try {
             return json.getLong("id");
