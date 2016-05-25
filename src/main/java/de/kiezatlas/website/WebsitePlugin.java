@@ -164,6 +164,24 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
     }
 
     /**
+     * Builds up a form for editing a Kiezatlas Einrichtung.
+     */
+    @GET
+    @Produces(MediaType.TEXT_HTML)
+    @Path("/topic/create")
+    public Viewable getGeoObjectForm() {
+        if (!isAuthenticated()) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
+        EinrichtungsInfo geoObject = new EinrichtungsInfo();
+        geoObject.setCoordinates(new GeoCoordinate(13.4, 52.5));
+        geoObject.setName("Neuer Eintrag");
+        geoObject.setCity("Berlin");
+        geoObject.setId(-1);
+        viewData("geoobject", geoObject);
+        viewData("authenticated", isAuthenticated());
+        return view("edit");
+    }
+
+    /**
      * Renders details about a Kiezatlas Geo Object into HTML.
      *
      * @param topicId

@@ -226,11 +226,15 @@ h1.my-title {
 }
 
 .kiezatlas a.button {
-    padding-left: 8px;
     padding: 4px;
 }
 
-.kiezatlas .right-side a.button {
+.kiezatlas .info-area a.button {
+    margin-left: 10px;
+}
+
+.kiezatlas .info-area .right-side a.button {
+    margin: 0px;
     font-size: .8em;
 }
 

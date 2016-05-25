@@ -8,11 +8,11 @@
         <link rel="stylesheet" href="/de.kiezatlas.website/vendor/leaflet/leaflet.css"/>
         <link rel="stylesheet" href="/de.kiezatlas.website/css/sitestyle.css"/>
 
-        <!-- script src="/de.kiezatlas.website/vendor/jquery/jquery-1.9.1.min.js"></script-->
+        <script src="/de.kiezatlas.website/vendor/jquery/jquery-1.9.1.min.js"></script>
         <script src="/de.kiezatlas.website/vendor/leaflet/leaflet.js"></script>
         <script src="/de.kiezatlas.angebote/vendor/ckeditor/ckeditor.js"></script>
         <script src="/de.kiezatlas.angebote/vendor/ckeditor/config.js"></script>
-        <!-- script src="/de.kiezatlas.website/ka-restclient.js"></script-->
+        <script src="/de.kiezatlas.website/ka-restclient.js"></script>
         <!-- script src="/de.kiezatlas.website/ka-map.js"></script-->
 
         <script type="text/javascript" th:inline="javascript">
@@ -48,6 +48,22 @@
                 CKEDITOR.inline('oeffnungszeiten')
             }
 
+            function do_geocode() {
+                var streetNr = document.getElementById('streetnr').value
+                var zipCode = document.getElementById('postal-code').value
+                var city = document.getElementById('city').value
+                restc.do_geocode(streetNr + " " + zipCode + " " + city, function(response) {
+                    try {
+                        console.log("Geo Coded Resonse", response.results[0].geometry.location)
+                        document.getElementById("latitude-val").value = response.results[0].geometry.location.lat
+                        document.getElementById("longitude-val").value = response.results[0].geometry.location.lng   
+                    } catch (e) {
+                        alert("Die Koordinaten konnten leider nicht automatisch ermittelt werden. Bitte versuchen Sie es mittels '\n\
+                            + 'manueller Positionierung des Markierers und unter Anpassung des Kartenausschnitts.")
+                    }
+                })
+            }
+
             function clear_coordinates() {
                 document.getElementById('latitude-val').value = ""
                 document.getElementById('longitude-val').value = ""
@@ -64,10 +80,8 @@
             }
 
             function update_marker_position() {
-                // update position of draggable marker to latest values (possibly manually entered
                 var newLat = document.getElementById('latitude-val').value
                 var newLong = document.getElementById('longitude-val').value
-                console.log("Read in Coordinates from Input Field, Update Marker Position & Map Viewport", latitude, longitude)
                 marker.setLatLng(L.latLng(newLat, newLong))
                 map.panTo(marker.getLatLng())
             }
@@ -113,10 +127,10 @@
                             <label for="name">Name</label>
                             <input type="text" name="name" th:value='${geoobject.name}'/>
                             <label for="strasse">Stra&szlig;enname</label>
-                            <input type="text" name="strasse" th:value='${geoobject.strasse}'/>
+                            <input type="text" id="streetnr" name="strasse" th:value='${geoobject.strasse}'/>
                             <label for="plz">Postleitzahl, Stadt</label>
-                            <input type="number" class="plz" name="plz" th:value='${geoobject.plz}'/>
-                            <input type="text" readonly="true" class="city" name="city" th:value='${geoobject.city}'/>
+                            <input type="number" id="postal-code" class="plz" name="plz" th:value='${geoobject.plz}'/>
+                            <input type="text" id="city" readonly="true" class="city" name="city" th:value='${geoobject.city}'/>
                             <label for="ansprechpartner">AnsprechpartnerIn</label>
                             <input type="text" name="ansprechpartner" th:value='${geoobject.ansprechpartner}'/>
                             <label for="telefon">Telefon</label>
@@ -132,6 +146,7 @@
                             <input class="coordinates" onchange="do_manual_placement()" id="longitude-val" type="number" step="any" name="lat" th:value='${geoobject.longitude}'/>
                             <br/>
                             <span class="label">Geo Koordinate dieses Ortes</span>
+                            <a class="button" onclick="do_geocode()">Ermitteln</a>
                             <a class="button" onclick="do_manual_placement()">Korrigieren</a>
                             <a class="button" onclick="reset_coordinates()">Zur&uuml;cksetzen</a>
                             <a class="button" onclick="clear_coordinates()">L&ouml;schen</a>
