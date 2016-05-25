@@ -274,9 +274,11 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
             }
         })
         leafletMap.listen_to('drag_end', function(e) {
-            if (mapping.circleSearchActive && mapping.circleSearchLocked && !_self.getDistrict()) {
-                _self.do_circle_search(undefined, undefined)
-                _self.do_reverse_geocode()
+            if (e.detail >= 8) {
+                if (mapping.circleSearchActive && mapping.circleSearchLocked && !_self.getDistrict()) {
+                    _self.do_circle_search(undefined, undefined)
+                    _self.do_reverse_geocode()
+                }
             }
         })
         leafletMap.listen_to('marker_select', function(e) {
@@ -513,9 +515,13 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
         }
         $.getJSON('/website/search/'+encodeURIComponent(location_string)+'/' + (radius_value / 1000),
             function (geo_objects) {
-                leafletMap.setItems(geo_objects) // ### let markers add up
-                leafletMap.clear_circle_marker()
-                leafletMap.render_geo_objects(false)
+                if (geo_objects.length > 0) {
+                    leafletMap.setItems(geo_objects) // ### let markers add up
+                    leafletMap.clear_circle_marker()
+                    leafletMap.render_geo_objects(false)
+                } else {
+                    _self.show_message('Keine Treffer in diesem Umkreis', 2000)
+                }
                 _self.hide_spinning_wheel()
             })
     }
@@ -528,7 +534,7 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
         _self.show_spinning_wheel()
         $.getJSON(queryUrl, function (geo_objects) {
                 console.log("> Text based Geo Object Search returned", geo_objects)
-                // TODO: If search results are zero
+                // If search results are not zero
                 if (geo_objects.length > 0) {
                     // ### for resultsets bigger than 100 implement an incremental rendering method
                     leafletMap.setItems(geo_objects)
@@ -573,19 +579,27 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
                 for (var i in components) {
                     var el = components[i]
                     if (el.types[0] === "route") {
-                        o.street = el.long_name
-                    } else if (el.types[0] === "sublocality_level_2") {
-                        o.area = el.long_name
-                    } else if (el.types[0] === "street_number") {
-                        if (typeof el.long_name !== "undefined") o.street_nr = el.long_name
+                        if (typeof el.long_name !== "undefined") o.street = el.long_name
+                    } else if (el.types[0] === "sublocality_level_1") {
+                        if (typeof el.long_name !== "undefined" && el.long_name) o.district = el.long_name.replace("Bezirk ", "")
+                    } else if (el.types[0] === "street_number" ) {
+                        if (typeof el.long_name !== "undefined" && el.long_name) o.street_nr = el.long_name
                     } else if (el.types[0] === "locality") {
-                        o.city = el.long_name
+                        if (typeof el.long_name !== "undefined" && el.long_name) o.city = el.long_name
                     } else if (el.types[0] === "postal_code") {
-                        o.postal_code= el.long_name
+                        if (typeof el.long_name !== "undefined" && el.long_name) o.postal_code= el.long_name
                     }
                 }
-                var location_name  = o.street + " " + o.street_nr + ", " + o.city
-                if (typeof o.area !== "undefined") location_name += " " + o.area
+                // console.log("Reverse Geo Code, Street: " + o.street + " Hausnr: " + o.street_nr + " City: " + o.city + " PLZ: " + o.postal_code)
+                var location_name  = o.street + " "
+                // Append street nr to street name
+                if (o.street_nr) location_name += o.street_nr + ", "
+                // Append name of District OR (if unknown) City
+                if (o.district) {
+                    location_name += " " + o.district
+                } else if (o.city) {
+                    location_name += " " + o.city
+                }
                 leafletMap.setCurrentLocationName(location_name)
                 _self.render_current_location_label()
             }
@@ -696,7 +710,8 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
         if (isLocating) {
             $('#location-input .spinning-wheel').hide()
         } else {
-            $('#spinning-wheel').hide()
+            if ($('#spinning-wheel').css("display") !== "none")
+                $('#spinning-wheel').hide()
         }
     }
 
