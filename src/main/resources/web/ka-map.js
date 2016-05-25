@@ -283,7 +283,7 @@ var leafletMap = (function($, L) {
 
     map.setItems = function(itemList) {
         items = itemList
-        console.log("Map Set Items (" + items.length + ")", items)
+        // console.log("Map Set Items (" + items.length + ")", items)
     }
 
     map.addItems = function(itemList) {
@@ -384,10 +384,10 @@ var leafletMap = (function($, L) {
         domElement.addEventListener(event_name, handler)
     }
 
-    map.fire_drag_end = function() {
+    map.fire_drag_end = function(e) {
         var domElement = document.getElementById(map.elementId)
         // domElement.dispatchEvent(new CustomEvent('drag_end'))
-        fire_custom_event(domElement, 'drag_end')
+        fire_custom_event(domElement, 'drag_end', e.distance)
     }
 
     map.fire_drag = function() {
@@ -436,7 +436,7 @@ var leafletMap = (function($, L) {
     }
 
     map.on_map_drag_end = function(e) {
-        map.fire_drag_end()
+        map.fire_drag_end(e)
     }
 
     map.on_browser_location_found = function(e) {
