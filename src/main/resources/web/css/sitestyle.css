@@ -225,10 +225,20 @@ h1.my-title {
     display: block;
 }
 
+.kiezatlas a.button {
+    padding-left: 8px;
+    padding: 4px;
+}
+
+.kiezatlas .right-side a.button {
+    font-size: .8em;
+}
+
 #close {
     margin: 10px;
 }
 
+.kiezatlas a.button,
 span.einrichtungen-btn,
 span.angebote-btn,
 #do-nearby {
@@ -753,15 +763,7 @@ span.angebote-btn,
 
 .kiezatlas.topic .info-area .right-side,
 .kiezatlas.topic .info-area .left-side {
-    flex-wrap: wrap;
-    align-items: stretch;
-    justify-content: space-around;
-    align-content: stretch;
-    display: inline-block;
-    /** vertical-align: top;
-    /** width: 48%; */
     flex: 0 0 50%;
-    padding-right: 15px;
 }
 
 .kiezatlas.topic .info-area input[type="submit"] {
@@ -800,6 +802,7 @@ span.angebote-btn,
     display: block;
 }
 
+.kiezatlas.topic .infos .label,
 .kiezatlas.topic .infos label,
 .kiezatlas.topic form label {
     color: #a9a9a9;

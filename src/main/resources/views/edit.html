@@ -18,26 +18,66 @@
         <script type="text/javascript" th:inline="javascript">
         /*<![CDATA[*/
             // App initialization
+            var marker, map, circleMarker, latitude, longitude, lCoordinate;
+
             window.onload = function() {
-                var latitude = /*[[${geoobject.latitude}]]*/ undefined;
-                var longitude = /*[[${geoobject.longitude}]]*/ undefined;
-                var lCoordinate = L.latLng(latitude, longitude)
-                var name = /*[[${geoobject.name}]]*/ undefined;
-                var map = L.map('map', { scrollWheelZoom: false } ).setView(lCoordinate, 17)
+                latitude = /*[[${geoobject.latitude}]]*/ undefined;
+                longitude = /*[[${geoobject.longitude}]]*/ undefined;
+                lCoordinate = L.latLng(latitude, longitude)
+                map = L.map('map', { scrollWheelZoom: false } ).setView(lCoordinate, 17)
                 L.tileLayer('https://api.tiles.mapbox.com/v4/kiezatlas.pd8lkp64/{z}/{x}/{y}.png?' // old style id="kiezatlas.map-feifsq6f"
                     + 'access_token=pk.eyJ1Ijoia2llemF0bGFzIiwiYSI6ImNpa3BndjU2ODAwYm53MGxzM3JtOXFmb2IifQ._PcBhOcfLYDD8RP3BS0U_g', {
                     attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors,'
                     + '<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery &#169; <a href="http://mapbox.com">Mapbox</a>',
                     id: 'kiezatlas.m7222ia5'}).addTo(map)
-                var circleMarker = L.circleMarker(lCoordinate, {
+                marker = L.marker(lCoordinate, { draggable: true} )
+                marker.on('dragend', function(e) {
+                    var pos = marker.getLatLng()
+                    // console.log("Position Update, Latitude", pos.lat, "Longitude", pos.lng, pos)
+                    document.getElementById('latitude-val').value = Number((pos.lat).toFixed(8))
+                    document.getElementById('longitude-val').value = Number((pos.lng).toFixed(8))
+                })
+                circleMarker = L.circleMarker(lCoordinate, {
                     weight: 3, opacity: 0.6, fillColor: "#a9a9a9", fillOpacity: 0.2, color: "#8f1414", clickable: true
                 })
                 circleMarker.addTo(map)
                 circleMarker.on('click', function(e) {
-                    console.log("Start manual placement..", e)
+                    do_manual_placement()
                 })
                 CKEDITOR.inline('beschreibung')
                 CKEDITOR.inline('oeffnungszeiten')
+            }
+
+            function clear_coordinates() {
+                document.getElementById('latitude-val').value = ""
+                document.getElementById('longitude-val').value = ""
+            }
+
+            function reset_coordinates() {
+                if (map.hasLayer(marker)) { // initiate default marker
+                    map.removeLayer(marker)
+                    circleMarker.addTo(map)
+                }
+                document.getElementById('latitude-val').value = latitude
+                document.getElementById('longitude-val').value = longitude
+                update_marker_position()
+            }
+
+            function update_marker_position() {
+                // update position of draggable marker to latest values (possibly manually entered
+                var newLat = document.getElementById('latitude-val').value
+                var newLong = document.getElementById('longitude-val').value
+                console.log("Read in Coordinates from Input Field, Update Marker Position & Map Viewport", latitude, longitude)
+                marker.setLatLng(L.latLng(newLat, newLong))
+                map.panTo(marker.getLatLng())
+            }
+
+            function do_manual_placement() {
+                if (map.hasLayer(circleMarker)) { // initiate draggable marker
+                    map.removeLayer(circleMarker)
+                    marker.addTo(map)
+                }
+                update_marker_position()
             }
         /*]]>*/
         </script>
@@ -77,18 +117,6 @@
                             <label for="plz">Postleitzahl, Stadt</label>
                             <input type="number" class="plz" name="plz" th:value='${geoobject.plz}'/>
                             <input type="text" readonly="true" class="city" name="city" th:value='${geoobject.city}'/>
-                            <label for="beschreibung">Beschreibung</label>
-                            <textarea id="beschreibung" name="beschreibung"
-                                      contenteditable="true" th:utext="${geoobject.beschreibung}"/>
-                            <label for="open">&Ouml;ffnungszeiten</label>
-                            <textarea id="oeffnungszeiten" name="open" contenteditable="true" th:utext='${geoobject.oeffnungszeiten}'/>
-                            <!-- label for="stichworte">Stichworte</label>
-                            <input type="text" name="stichworte" th:value='${geoobject.stichworte}'/-->
-                        </div>
-                        <div class="right-side">
-                            <label for="lat">Geo Koordinate &ndash; Breitengrad (Lat), L&auml;ngengrad (Lon)</label>
-                            <input class="coordinates" type="number" step="any" name="lon" th:value='${geoobject.latitude}'/>
-                            <input class="coordinates" type="number" step="any" name="lat" th:value='${geoobject.longitude}'/>
                             <label for="ansprechpartner">AnsprechpartnerIn</label>
                             <input type="text" name="ansprechpartner" th:value='${geoobject.ansprechpartner}'/>
                             <label for="telefon">Telefon</label>
@@ -97,6 +125,24 @@
                             <input type="text" name="email" th:value='${geoobject.email}'/>
                             <label for="fax">Fax</label>
                             <input type="text" name="fax" th:value='${geoobject.fax}'/>
+                        </div>
+                        <div class="right-side">
+                            <label for="lat">Breitengrad (Latitude) &ndash; L&auml;ngengrad (Longitude)</label>
+                            <input class="coordinates" onchange="do_manual_placement()" id="latitude-val" type="number" step="any" name="lon" th:value='${geoobject.latitude}'/>
+                            <input class="coordinates" onchange="do_manual_placement()" id="longitude-val" type="number" step="any" name="lat" th:value='${geoobject.longitude}'/>
+                            <br/>
+                            <span class="label">Geo Koordinate dieses Ortes</span>
+                            <a class="button" onclick="do_manual_placement()">Korrigieren</a>
+                            <a class="button" onclick="reset_coordinates()">Zur&uuml;cksetzen</a>
+                            <a class="button" onclick="clear_coordinates()">L&ouml;schen</a>
+                            <br/><br/>
+                            <label for="beschreibung">Beschreibung</label>
+                            <textarea id="beschreibung" name="beschreibung"
+                                      contenteditable="true" th:utext="${geoobject.beschreibung}"/>
+                            <label for="open">&Ouml;ffnungszeiten</label>
+                            <textarea id="oeffnungszeiten" name="open" contenteditable="true" th:utext='${geoobject.oeffnungszeiten}'/>
+                            <!-- label for="stichworte">Stichworte</label>
+                            <input type="text" name="stichworte" th:value='${geoobject.stichworte}'/-->
                             <label for="website">Website</label>
                             <input type="text" name="website" th:value='${geoobject.webpage}'/>
                         </div>
