@@ -9,8 +9,9 @@ import static de.kiezatlas.website.WebsiteService.CONFIRMATION_WS_URI;
 import static de.kiezatlas.website.WebsiteService.CONFIRMED_TYPE;
 import java.util.logging.Logger;
 
-
-
+/** 
+ * Extends all existing Geo Objects about a "Confirmed" flag with the value "true".
+ */
 public class Migration8 extends Migration {
 
     private Logger log = Logger.getLogger(getClass().getName());
