@@ -48,6 +48,10 @@ public interface WebsiteService {
     static final String WEBSITE_FACET = "ka2.website.facet";
     static final String IMAGE_FACET = "ka2.bild.facet";
 
+    static final String CONFIRMED_TYPE = "ka2.website.confirmed";
+    static final String CONFIRMATION_WS_URI = "de.kiezatlas.ws_confirmation";
+    static final String CONFIRMATION_WS_NAME = "Confirmation";
+
     /**
      * Searching in four child topic types of geo object, returning topics of type "ka2.geo_object".
      */

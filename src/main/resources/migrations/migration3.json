@@ -1,0 +1,9 @@
+{
+    "assoc_types": [
+        {
+            "uri": "de.kiezatlas.user_assignment",
+            "data_type_uri": "dm4.core.text",
+            "value": "User Assignment"
+        }
+    ]
+}

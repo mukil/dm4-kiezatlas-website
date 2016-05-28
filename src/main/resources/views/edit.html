@@ -19,6 +19,14 @@
         /*<![CDATA[*/
             // App initialization
             var marker, map, circleMarker, latitude, longitude, lCoordinate;
+            // ### TODOs: set proper "workspace" and "dm4_no_geocoding=true" cookies
+            var kiezatlasWsId = /*[[${workspace.id}]]*/ undefined;
+            if (kiezatlasWsId) {
+                // ### this does not override DeepaMehta Workspace Cookie
+                // document.cookie = "dm4_workspace_id=" + kiezatlasWsId;
+            }
+            document.cookie = " dm4_no_geocoding=true;"
+            console.log("Show Cookies", document.cookie)
 
             window.onload = function() {
                 latitude = /*[[${geoobject.latitude}]]*/ undefined;
@@ -104,7 +112,6 @@
                 <li class="angebote"><a href="/">Startseite</a></li>
                 <li class="angebote"><a href="/angebote/">Angebote</a></li>
                 <li class="login" th:if="!${authenticated}" ><a href="/sign-up/login">Login</a></li>
-                <!--li class="angebote"><a href="/kiezatlas/angebot/">Orte</a></li-->
                 <!-- li class="angebote"><a href="/sign-up/edit/">Mein Account</a></li-->
                 <li class="logout" th:if="${authenticated}" ><a href="/#logout/" onclick="javascript:restc.logout()">Abmelden</a></li>
             </ul>
@@ -142,8 +149,8 @@
                         </div>
                         <div class="right-side">
                             <label for="lat">Breitengrad (Latitude) &ndash; L&auml;ngengrad (Longitude)</label>
-                            <input class="coordinates" onchange="do_manual_placement()" id="latitude-val" type="number" step="any" name="lon" th:value='${geoobject.latitude}'/>
-                            <input class="coordinates" onchange="do_manual_placement()" id="longitude-val" type="number" step="any" name="lat" th:value='${geoobject.longitude}'/>
+                            <input class="coordinates" onchange="do_manual_placement()" id="latitude-val" type="number" step="any" name="lat" th:value='${geoobject.latitude}'/>
+                            <input class="coordinates" onchange="do_manual_placement()" id="longitude-val" type="number" step="any" name="lon" th:value='${geoobject.longitude}'/>
                             <br/>
                             <span class="label">Geo Koordinate dieses Ortes</span>
                             <a class="button" onclick="do_geocode()">Ermitteln</a>
