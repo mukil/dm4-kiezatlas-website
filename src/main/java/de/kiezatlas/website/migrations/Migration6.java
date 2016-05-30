@@ -8,22 +8,23 @@ import de.deepamehta.plugins.accesscontrol.AccessControlService;
 import de.deepamehta.plugins.workspaces.WorkspacesService;
 import static de.kiezatlas.website.WebsiteService.CONFIRMATION_WS_NAME;
 import static de.kiezatlas.website.WebsiteService.CONFIRMATION_WS_URI;
+import java.util.logging.Logger;
 
 
 
 public class Migration6 extends Migration {
 
-    @Inject
-    private WorkspacesService workspaceService;
+    private Logger log = Logger.getLogger(getClass().getName());
 
-    @Inject
-    private AccessControlService acService;
+    @Inject private WorkspacesService workspaceService;
+
+    @Inject private AccessControlService acService;
 
     @Override
     public void run() {
-        // 1) Create "Confirmation" workspace
-        Topic workspace = workspaceService.getWorkspace(CONFIRMATION_WS_URI);
-        workspaceService.createWorkspace(CONFIRMATION_WS_NAME, CONFIRMATION_WS_URI, SharingMode.PUBLIC);
+        log.info("##### Create seperate \"Confirmation\"-Workspace in Kiezatlas Website Migration Nr. 6 #####");
+        // 1) Create new "Confirmation" workspace
+        Topic workspace = workspaceService.createWorkspace(CONFIRMATION_WS_NAME, CONFIRMATION_WS_URI, SharingMode.PUBLIC);
         acService.setWorkspaceOwner(workspace, AccessControlService.ADMIN_USERNAME);
     }
 

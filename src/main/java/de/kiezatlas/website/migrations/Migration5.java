@@ -5,26 +5,23 @@ import de.deepamehta.core.TopicType;
 import de.deepamehta.core.model.AssociationDefinitionModel;
 import de.deepamehta.core.service.Inject;
 import de.deepamehta.core.service.Migration;
-import de.deepamehta.core.service.accesscontrol.SharingMode;
 import de.deepamehta.plugins.workspaces.WorkspacesService;
-import static de.kiezatlas.website.WebsiteService.CONFIRMATION_WS_NAME;
-import static de.kiezatlas.website.WebsiteService.CONFIRMATION_WS_URI;
 
 import java.util.logging.Logger;
 
 
 public class Migration5 extends Migration {
 
-
     private Logger log = Logger.getLogger(getClass().getName());
 
     static final String KIEZATLAS_WORKSPACE_URI = "de.kiezatlas.workspace";
 
-    @Inject
-    private WorkspacesService workspaceService;
+    @Inject private WorkspacesService workspaceService;
 
     @Override
     public void run() {
+        
+        log.info("##### Setup Website Geo Object \"Confirmed\" Child Type in Website Migration Nr. 5 #####");
 
         // 1) Assign all our types from migration1 to the "Kiezatlas" workspace so "admin" can edit these definitions
         Topic kiezatlas = workspaceService.getWorkspace(KIEZATLAS_WORKSPACE_URI);
