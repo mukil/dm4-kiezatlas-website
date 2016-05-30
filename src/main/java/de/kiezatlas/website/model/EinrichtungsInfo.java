@@ -168,6 +168,14 @@ public class EinrichtungsInfo implements JSONEnabled {
         }
     }
 
+    public void setImageUrl(String path) {
+        try {
+            json.put("image_url", path);
+        } catch (JSONException ex) {
+            Logger.getLogger(EinrichtungsInfo.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
     public JSONObject toJSON() {
         return json;
     }
@@ -200,7 +208,7 @@ public class EinrichtungsInfo implements JSONEnabled {
             return "";
         }
     }
-    
+
     public String getFax() {
         try {
             return json.getString("fax");
@@ -209,7 +217,16 @@ public class EinrichtungsInfo implements JSONEnabled {
             return "";
         }
     }
-    
+
+    public String getImageUrl() {
+        try {
+            return json.getString("image_url");
+        } catch (JSONException ex) {
+            Logger.getLogger(EinrichtungsInfo.class.getName()).log(Level.FINE, "Einrichtung has no Image URL (Id: " + getId() + ")", ex);
+            return "";
+        }
+    }
+
     public String getEmail() {
         try {
             return json.getString("email");
@@ -218,7 +235,7 @@ public class EinrichtungsInfo implements JSONEnabled {
             return "";
         }
     }
-    
+
     public String getTelefon() {
         try {
             return json.getString("telefon");

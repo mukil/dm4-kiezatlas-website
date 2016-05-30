@@ -324,6 +324,10 @@ span.angebote-btn,
     display: none;
 }
 
+#navigation .logout {
+    float: right; /** use display: absolute; right: 0px; instead */
+}
+
 .district-area {
     position: relative;
     top: 100px;

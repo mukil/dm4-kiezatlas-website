@@ -80,7 +80,7 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
     @Inject private AngebotService angeboteService;
     @Inject private GeomapsService geomapsService;
     @Inject private FacetsService facetsService;
-    // @Inject KiezatlasService kiezatlas;
+    @Inject KiezatlasService kiezatlas;
 
     // Application Cache of District Overview Resultsets
     HashMap<Long, List<GeoObjectView>> districtsCache = new HashMap<Long, List<GeoObjectView>>();
@@ -227,8 +227,7 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
         if (!geoObject.getTypeUri().equals(KiezatlasService.GEO_OBJECT)) return view("404");
         // Assemble Generic Einrichtungs Infos
         EinrichtungsInfo einrichtung = assembleGeneralEinrichtungsInfo(geoObject);
-        // ### Träger & Image (Bezirksregion, Bezirk, Administrator Infos, Stichworte)
-        // Yet Missing..
+        // ### Yet Missing: Träger, Bezirksregion, Bezirk, Administrator Infos und Stichworte
         viewData("geoobject", einrichtung);
         // Assemble Category Assignments for Einrichtung
         ResultList<RelatedTopic> relatedTopics = geoObject.getRelatedTopics("dm4.core.aggregation", "dm4.core.parent",
@@ -690,6 +689,9 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
                     infoModel.setImprintUrl(bezirkInfo.getImprintLink().getSimpleValue().toString());
                 }
             }
+            // Image Path
+            Topic imagePath = kiezatlas.getImageFileFacetByGeoObject(einrichtung);
+            if (imagePath != null) infoModel.setImageUrl(imagePath.getSimpleValue().toString());
             // Öffnungszeiten Facet
             Topic offnung = facetsService.getFacet(einrichtung, OEFFNUNGSZEITEN_FACET);
             if (offnung != null) infoModel.setOeffnungszeiten(offnung.getSimpleValue().toString());

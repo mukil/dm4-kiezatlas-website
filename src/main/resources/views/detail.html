@@ -79,6 +79,9 @@
                     <p class="anschrift" th:if="${!#strings.isEmpty(geoobject.address)}">
                         <span th:utext='${geoobject.address}'>Anschrift</span>
                     </p>
+                    <p class="bild" th:if="${!#strings.isEmpty(geoobject.imageUrl)}">
+                        <img th:src='${geoobject.imageUrl}' alt="Abbildung, Foto der Einrichtung" />
+                    </p>
                     <p class="ansprechpartner" th:if="${!#strings.isEmpty(geoobject.ansprechpartner)}">
                         <label>AnsprechpartnerIn</label>
                         <span th:utext='${geoobject.ansprechpartner}'>Ansprechpartner</span>
