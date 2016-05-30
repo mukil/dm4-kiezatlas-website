@@ -44,7 +44,7 @@
                 <li class="login" th:if="!${authenticated}" ><a href="/sign-up/login">Login</a></li>
                 <!--li class="angebote"><a href="/kiezatlas/angebot/">Orte</a></li-->
                 <!-- li class="angebote"><a href="/sign-up/edit/">Mein Account</a></li-->
-                <li class="logout" th:if="${authenticated}" ><a href="/#logout/" onclick="javascript:restc.logout()">Abmelden</a></li>
+                <li class="logout" th:if="${authenticated}"><a href="/#logout/" onclick="javascript:restc.logout()">Abmelden</a></li>
             </ul>
         </div>
 
@@ -55,7 +55,7 @@
         <!-- Details Area -->
         <div id="detail-area" th:class="${angebotsinfos} ? 'angebotsinfos'">
             <div class="commands">
-                <a th:if="${authenticated}" th:href="'/website/topic/edit/' + ${geoobject.id}">Edit</a>
+                <a th:if="${authenticated} and ${editable}" th:href="'/website/topic/edit/' + ${geoobject.id}">Edit</a>
             </div>
             <div id="map"></div>
             <div class="info-area">

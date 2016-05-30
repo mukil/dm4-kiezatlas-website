@@ -136,7 +136,7 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
         if (state) {
             $('li.login').hide()
             $('li.new').attr("href", "/website/topic/create")
-            $('li.logout').attr('style', 'display: inline-block;')
+            $('li.logout').show()
         } else {
             $('li.login').show()
             $('li.logout').hide()

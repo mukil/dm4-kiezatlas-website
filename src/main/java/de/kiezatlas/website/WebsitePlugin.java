@@ -21,7 +21,6 @@ import de.deepamehta.core.model.TopicRoleModel;
 import de.deepamehta.core.service.Inject;
 import de.deepamehta.core.service.ResultList;
 import de.deepamehta.core.service.Transactional;
-import de.deepamehta.core.storage.spi.DeepaMehtaTransaction;
 import de.deepamehta.plugins.accesscontrol.AccessControlService;
 import de.deepamehta.plugins.facets.FacetsService;
 import de.deepamehta.plugins.facets.model.FacetValue;
@@ -85,6 +84,10 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
     // Application Cache of District Overview Resultsets
     HashMap<Long, List<GeoObjectView>> districtsCache = new HashMap<Long, List<GeoObjectView>>();
     HashMap<Long, Long> districtCachedAt = new HashMap<Long, Long>();
+
+    // The URIs of KA2 Geo Object topics synchronized (and kept up-to-date in) Kiezatlas 1 have this prefix.
+    // The remaining part of the URI is the original KA1 topic id.
+    private static final String KA1_GEO_OBJECT_URI_PREFIX = "de.kiezatlas.topic.";
 
     /**
      * Sets the Kiezatlas Website index.html as main resource to be served at "/" by the webpages-module.
@@ -243,6 +246,8 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
         List<AngebotsInfoAssigned> angebotsInfos = angeboteService.getAngebotsInfosAssigned(geoObject);
         if (angebotsInfos.size() > 0) viewData("angebotsinfos", angebotsInfos);
         viewData("authenticated", isAuthenticated());
+        // is editable
+        viewData("editable", isKiezatlas2GeoObject(geoObject));
         return view("detail");
     }
 
@@ -259,9 +264,14 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
     @Path("/topic/{topicId}")
     @Produces(MediaType.APPLICATION_JSON)
     public GeoObjectDetailsView getGeoObjectDetails(@HeaderParam("Referer") String referer,
-                                                    @PathParam("topicId") long topicId) {
+            @PathParam("topicId") long topicId) {
         if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
-        return new GeoObjectDetailsView(dms.getTopic(topicId), geomapsService, angeboteService);
+        Topic geoObject = dms.getTopic(topicId);
+        GeoObjectDetailsView geoDetailsView = null;
+        if (geoObject.getTypeUri().equals(KiezatlasService.GEO_OBJECT) && isPublishedGeoObject(geoObject)) {
+            geoDetailsView = new GeoObjectDetailsView(dms.getTopic(topicId), geomapsService, angeboteService);
+        }
+        return geoDetailsView;
     }
 
     /**
@@ -295,7 +305,9 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
                 ResultList<RelatedTopic> geoObjects = address.getRelatedTopics("dm4.core.composition",
                     "dm4.core.child", "dm4.core.parent", "ka2.geo_object", 0);
                 for (RelatedTopic geoObject : geoObjects) {
-                    results.add(new GeoObjectView(geoObject, geomapsService, angeboteService));
+                    if (isPublishedGeoObject(geoObject)) {
+                        results.add(new GeoObjectView(geoObject, geomapsService, angeboteService));
+                    }
                 }
             } else {
                 // 2.1.2) If place has NO address set, skip place for map display
@@ -329,7 +341,9 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
             // 2) Process saerch results and create DTS for map display
             log.info("Start building response for " + geoObjects.size() + " OVERALL");
             for (Topic topic : geoObjects) {
-                results.add(new GeoObjectView(topic, geomapsService, angeboteService));
+                if (isPublishedGeoObject(topic)) {
+                    results.add(new GeoObjectView(topic, geomapsService, angeboteService));
+                }
             }
             log.info("Build up response " + results.size() + " geo objects across all districts");
             return results;
@@ -363,7 +377,9 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
             for (Topic geoObject: geoObjects) {
                 // check for district
                 if (hasRelatedBezirk(geoObject, districtId)) {
-                    results.add(new GeoObjectView(geoObject, geomapsService, angeboteService));
+                    if (isPublishedGeoObject(geoObject)) {
+                        results.add(new GeoObjectView(geoObject, geomapsService, angeboteService));
+                    }
                 }
             }
             log.info("Build up response " + results.size() + " geo objects in district=\""+districtId+"\"");
@@ -409,8 +425,9 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
         Iterator<Topic> iterator = searchResults.iterator();
         while (iterator.hasNext()) {
             Topic next = iterator.next();
+            // ### may be "null" (check for Facets? relatio) of search child types
             Topic geoObject = getParentGeoObjectTopic(next);
-            if (!uniqueResults.containsKey(geoObject.getId())) {
+            if (geoObject != null && !uniqueResults.containsKey(geoObject.getId())) {
                 uniqueResults.put(geoObject.getId(), geoObject);
             }
         }
@@ -459,7 +476,9 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
         ResultList<RelatedTopic> geoObjects = bezirk.getRelatedTopics("dm4.core.aggregation",
             "dm4.core.child", "dm4.core.parent", "ka2.geo_object", 0);
         for (RelatedTopic geoObject : geoObjects) {
-            results.add(new GeoObjectView(geoObject, geomapsService, angeboteService));
+            if (isPublishedGeoObject(geoObject)) {
+                results.add(new GeoObjectView(geoObject, geomapsService, angeboteService));
+            }
         }
         log.info("Populating cached list of geo object for district " + bezirkId);
         // insert new result into cache
@@ -485,7 +504,9 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
         ResultList<RelatedTopic> geoObjects = bezirksregion.getRelatedTopics("dm4.core.aggregation",
             "dm4.core.child", "dm4.core.parent", "ka2.geo_object", 0);
         for (RelatedTopic geoObject : geoObjects) {
-            results.add(new GeoObjectView(geoObject, geomapsService, angeboteService));
+            if (isPublishedGeoObject(geoObject)) {
+                results.add(new GeoObjectView(geoObject, geomapsService, angeboteService));
+            }
         }
         return results;
     }
@@ -634,7 +655,7 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
     }
 
     private Topic getParentGeoObjectTopic(Topic entry) {
-        return entry.getRelatedTopic(null, "dm4.core.child", "dm4.core.parent", "ka2.geo_object");
+        return entry.getRelatedTopic(null, "dm4.core.child", "dm4.core.parent", KiezatlasService.GEO_OBJECT);
     }
 
     private Topic getRelatedBezirk(Topic geoObject) {
@@ -646,6 +667,14 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
         if (relatedBezirk == null) return false;
         if (relatedBezirk.getId() == bezirksId) return true;
         return false;
+    }
+
+    private boolean isPublishedGeoObject(Topic geoObject) {
+        return geoObject.getChildTopics().getBoolean(CONFIRMED_TYPE);
+    }
+
+    private boolean isKiezatlas2GeoObject(Topic geoObject) {
+        return !(geoObject.getUri().startsWith(KA1_GEO_OBJECT_URI_PREFIX));
     }
 
     private boolean isValidReferer(String ref) {
