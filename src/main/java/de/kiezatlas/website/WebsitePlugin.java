@@ -52,6 +52,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
@@ -122,6 +123,7 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
             @FormParam("lat") double latitude, @FormParam("lon") double longitude) {
         // 0) This method is secured via @POST
         Topic geoObject = null;
+        Topic username = acService.getUsernameTopic(acService.getUsername());
         // 1) Check if form submission deals with an UPDATE or CREATE
         String districtName = "", coordinatePair = "", geoLocation = "";
         // 2) Find out Geo Coordinate and District of Geo Object
@@ -154,23 +156,29 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
             geoObject = dms.createTopic(new TopicModel("ka2.geo_object", geoObjectTopicModel));
             // 3.2) Assign current user, the CREATOR (assign association to Confirmation WS)
             createUserAssignment(geoObject, acService.getUsername());
+            // 3.3) Send Notification to EDITOR with basic infos on the "confirmation" process
+            viewData("message", "Vielen Dank, Sie haben erfolgreich einen neuen Ort in den Kiezatlas eingetragen.");
         } else {
-            log.info("UPDATE Einrichtung " + name + " (TopicID: " + topicId + ")");
             geoObject = dms.getTopic(topicId);
-            geoObject.setChildTopics(geoObjectTopicModel);
+            if (isGeoObjectEditable(geoObject, username)) {
+                log.info("UPDATE Einrichtung " + name + " (TopicID: " + topicId + ")");
+                geoObject.setChildTopics(geoObjectTopicModel);
+            } else {
+                viewData("message", "Sie sind leider nicht berechtigt diesen Datensatz zu bearbeiten.");
+            }
         }
-        // 4) ### Assign all current, generic facets
+        // 4) ### Assign ALL current, generic facets
         facetsService.updateFacet(geoObject.getId(), WebsiteService.BESCHREIBUNG_FACET,
             new FacetValue(WebsiteService.BESCHREIBUNG).put(beschreibung.trim()));
         // 5) Store Geo Coordinate
         storeGeoCoordinateFacet(geoObject.getChildTopics().getTopic("dm4.contacts.address"), coordinatePair);
         // 6) ### match Googles District Name to Site Topics via ETL
         // ### Bezirk Relation
-        // 7) ### Set "Confirmed=false" flag // unpublished, to be confirmed
+        // 7) Set "Confirmed=false" flag // unpublished, to be confirmed
         setConfirmationFlag(geoObject, false);
         // 8) ### Handle Cateogry-Relations
         // 9) ### Handle Image-File Upload (Seperately)
-        // Prepare new form page
+        // Prepare new form page (is unpublished..)
         return getGeoObjectForm(geoObject.getId());
     }
 
@@ -182,18 +190,21 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
     @Path("/topic/edit/{topicId}")
     public Viewable getGeoObjectForm(@PathParam("topicId") long topicId) {
         Topic geoObject = dms.getTopic(topicId);
+        Topic username = acService.getUsernameTopic(acService.getUsername());
         if (!isAuthenticated()) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
-        if (geoObject != null && geoObject.getTypeUri().equals(KiezatlasService.GEO_OBJECT)) {
+        if (isPublishedGeoObject(geoObject) || hasUserAssignment(geoObject, username)) {
             // Assemble Generic Einrichtungs Infos
             EinrichtungsInfo einrichtung = assembleGeneralEinrichtungsInfo(geoObject);
             viewData("geoobject", einrichtung);
-            viewData("message", "Einrichtung \"" + geoObject.getSimpleValue() + " erfolgreich geladen.");
+            // viewData("message", "Einrichtung \"" + geoObject.getSimpleValue() + "\" erfolgreich geladen.");
         } else {
             // ### throw 401
             viewData("message", "Eine Einrichtung mit dieser ID ist uns nicht bekannt.");
         }
         viewData("workspace", workspaceService.getWorkspace(KiezatlasService.KIEZATLAS_WORKSPACE_URI));
         viewData("authenticated", isAuthenticated());
+        // ### if (!isGeoObjectEditable(geoObject, username)) throw new WebApplicationException(Status.UNAUTHORIZED);
+        viewData("editable", isGeoObjectEditable(geoObject, username));
         return view("edit");
     }
 
@@ -227,7 +238,8 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
     @Produces(MediaType.TEXT_HTML)
     public Viewable getGeoObjectDetailsPage(@PathParam("topicId") long topicId) {
         Topic geoObject = dms.getTopic(topicId);
-        if (!geoObject.getTypeUri().equals(KiezatlasService.GEO_OBJECT)) return view("404");
+        Topic username = acService.getUsernameTopic(acService.getUsername());
+        if (isPublishedGeoObject(geoObject)) return view("404");
         // Assemble Generic Einrichtungs Infos
         EinrichtungsInfo einrichtung = assembleGeneralEinrichtungsInfo(geoObject);
         // ### Yet Missing: Träger, Bezirksregion, Bezirk, Administrator Infos und Stichworte
@@ -246,8 +258,7 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
         List<AngebotsInfoAssigned> angebotsInfos = angeboteService.getAngebotsInfosAssigned(geoObject);
         if (angebotsInfos.size() > 0) viewData("angebotsinfos", angebotsInfos);
         viewData("authenticated", isAuthenticated());
-        // is editable
-        viewData("editable", isKiezatlas2GeoObject(geoObject));
+        viewData("editable", isGeoObjectEditable(geoObject, username));
         return view("detail");
     }
 
@@ -268,7 +279,7 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
         if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
         Topic geoObject = dms.getTopic(topicId);
         GeoObjectDetailsView geoDetailsView = null;
-        if (geoObject.getTypeUri().equals(KiezatlasService.GEO_OBJECT) && isPublishedGeoObject(geoObject)) {
+        if (isPublishedGeoObject(geoObject)) {
             geoDetailsView = new GeoObjectDetailsView(dms.getTopic(topicId), geomapsService, angeboteService);
         }
         return geoDetailsView;
@@ -283,7 +294,7 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
     @GET
     @Path("/search/{coordinatePair}/{radius}")
     public List<GeoObjectView> getGeoObjectsNearBy(@PathParam("coordinatePair") String coordinates,
-                                                   @PathParam("radius") String radius) {
+            @PathParam("radius") String radius) {
         // .) ### Authenticate...
         // 0) Set default coordinates for a query
         double lon = 13.4, lat = 52.5;
@@ -670,7 +681,13 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
     }
 
     private boolean isPublishedGeoObject(Topic geoObject) {
-        return geoObject.getChildTopics().getBoolean(CONFIRMED_TYPE);
+        // ### Checking for typeuri AND Confirmed flagmay be redundant
+        return geoObject != null && geoObject.getTypeUri().equals(KiezatlasService.GEO_OBJECT)
+            && geoObject.getChildTopics().getBoolean(CONFIRMED_TYPE);
+    }
+
+    private boolean isGeoObjectEditable(Topic geoObject, Topic username) {
+        return hasUserAssignment(geoObject, username) && isKiezatlas2GeoObject(geoObject);
     }
 
     private boolean isKiezatlas2GeoObject(Topic geoObject) {

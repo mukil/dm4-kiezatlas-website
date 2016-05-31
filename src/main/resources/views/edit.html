@@ -124,7 +124,8 @@
         <!-- Details Area -->
         <div id="detail-area">
             <div class="commands">
-                <a th:if="${authenticated}" th:href="'/website/topic/' + ${geoobject.id}">Cancel</a>
+                <span th:if="${!#strings.isEmpty(message)}" th:utext="${message}" class="message"></span>
+                <!--a th:if="${editable} and ${authenticated}" th:href="'/website/topic/' + ${geoobject.id}">Cancel</a-->
             </div>
             <div id="map"></div>
                 <form class="infos" action="/website/topic/save" method="POST">

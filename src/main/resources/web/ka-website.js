@@ -134,10 +134,11 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
 
     this.render_user_menu = function(state) {
         if (state) {
-            $('li.login').hide()
-            $('li.new').attr("href", "/website/topic/create")
+            $('li.login').remove()
+            $('li.new a').attr("href", "/website/topic/create")
             $('li.logout').show()
         } else {
+            $('li.angebote-my').hide()
             $('li.login').show()
             $('li.logout').hide()
         }
