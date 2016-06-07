@@ -14,6 +14,7 @@ public interface WebsiteService {
     static final String TRAEGER_CRIT = "ka2.criteria.traeger";
 
     static final String TRAEGER_FACET = "ka2.traeger.facet";
+    static final String TRAEGER = "ka2.traeger";
     static final String TRAEGER_NAME = "ka2.traeger.name";
     static final String TRAEGER_ART = "ka2.traeger.art";
 

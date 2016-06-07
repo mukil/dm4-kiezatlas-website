@@ -16,6 +16,7 @@ import de.deepamehta.core.RelatedTopic;
 import de.deepamehta.core.Topic;
 import de.deepamehta.core.model.AssociationModel;
 import de.deepamehta.core.model.ChildTopicsModel;
+import de.deepamehta.core.model.SimpleValue;
 import de.deepamehta.core.model.TopicModel;
 import de.deepamehta.core.model.TopicRoleModel;
 import de.deepamehta.core.service.Inject;
@@ -52,7 +53,6 @@ import javax.ws.rs.POST;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
@@ -227,19 +227,12 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
         return view("edit");
     }
 
-    /**
-     * Renders details about a Kiezatlas Geo Object into HTML.
-     *
-     * @param topicId
-     * @return
-     */
-    @GET
-    @Path("/topic/{topicId}")
-    @Produces(MediaType.TEXT_HTML)
     public Viewable getGeoObjectDetailsPage(@PathParam("topicId") long topicId) {
         Topic geoObject = dms.getTopic(topicId);
-        Topic username = acService.getUsernameTopic(acService.getUsername());
-        if (isPublishedGeoObject(geoObject)) return view("404");
+        Topic username = getUsernameTopic();
+        if (!isPublishedGeoObject(geoObject)) {
+            return view("404");
+        }
         // Assemble Generic Einrichtungs Infos
         EinrichtungsInfo einrichtung = assembleGeneralEinrichtungsInfo(geoObject);
         // ### Yet Missing: Träger, Bezirksregion, Bezirk, Administrator Infos und Stichworte
@@ -260,6 +253,25 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
         viewData("authenticated", isAuthenticated());
         viewData("editable", isGeoObjectEditable(geoObject, username));
         return view("detail");
+    }
+
+    /**
+     * Renders details about a Kiezatlas Geo Object into HTML.
+     *
+     * @param topicId
+     * @return
+     */
+    @GET
+    @Path("/topic/{topicId}")
+    @Produces(MediaType.TEXT_HTML)
+    public Viewable getGeoObjectDetailsPage(@PathParam("topicId") String topicId) {
+        Topic geoObject = null;
+        if (topicId.startsWith("t-")) {
+            geoObject = dms.getTopic("uri", new SimpleValue("de.kiezatlas.topic." + topicId));
+        } else {
+            geoObject = dms.getTopic(Long.parseLong(topicId));
+        }
+        return (geoObject != null) ? getGeoObjectDetailsPage(geoObject.getId()) : view("404");
     }
 
     /**
@@ -420,7 +432,7 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
         List<Topic> descrResults = dms.searchTopics(query, "ka2.beschreibung");
         List<Topic> stichworteResults = dms.searchTopics(query, "ka2.stichworte");
         // List<Topic> sonstigesResults = dms.searchTopics(query, "ka2.sonstiges");
-        List<Topic> bezirksregionResults = dms.searchTopics(query, "ka2.bezirksregion");
+        List<Topic> bezirksregionResults = dms.searchTopics(query, "ka2.bezirksregion"); // many
         // List<Topic> traegerNameResults = dms.searchTopics(query, "ka2.traeger.name");
         // List<Topic> traegerNameResults = dms.searchTopics(query, "dm4.contacts.street");
         log.info("> " + searchResults.size() + ", "+ descrResults.size() +", "+stichworteResults.size() + ", " + bezirksregionResults.size()
@@ -437,7 +449,13 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
         while (iterator.hasNext()) {
             Topic next = iterator.next();
             // ### may be "null" (check for Facets? relatio) of search child types
-            Topic geoObject = getParentGeoObjectTopic(next);
+            Topic geoObject = null;
+            if (next.getTypeUri().equals("ka2.bezirksregion")) {
+                geoObject = getFirstParentGeoObjectTopic(next);
+            } else if (next.getTypeUri().equals("ka2.geo_object.name") || next.getTypeUri().equals("ka2.stichworte")
+                || next.getTypeUri().equals("ka2.beschreibung")) {
+                geoObject = getParentGeoObjectTopic(next);
+            }
             if (geoObject != null && !uniqueResults.containsKey(geoObject.getId())) {
                 uniqueResults.put(geoObject.getId(), geoObject);
             }
@@ -657,6 +675,7 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
     }
 
     private boolean hasUserAssignment(Topic topic, Topic username) {
+        if (username == null) return false;
         ResultList<RelatedTopic> assignments = topic.getRelatedTopics("de.kiezatlas.user_assignment",
             "dm4.core.default", "dm4.core.default", null, 0);
         for (RelatedTopic assignedUsername : assignments) {
@@ -666,7 +685,18 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
     }
 
     private Topic getParentGeoObjectTopic(Topic entry) {
-        return entry.getRelatedTopic(null, "dm4.core.child", "dm4.core.parent", KiezatlasService.GEO_OBJECT);
+        Topic result = entry.getRelatedTopic(null, "dm4.core.child", "dm4.core.parent", KiezatlasService.GEO_OBJECT);
+        if (result == null) log.warning("Search Result Entry: " +entry.getTypeUri()
+            + ", " +entry.getId() +" has no Geo Object as PARENT"); // fulltext searches also "abandoned" facet topics
+        return result;
+    }
+
+    private Topic getFirstParentGeoObjectTopic(Topic entry) {
+        ResultList<RelatedTopic> results = entry.getRelatedTopics("dm4.core.aggregation", "dm4.core.child",
+            "dm4.core.parent", KiezatlasService.GEO_OBJECT, 0);
+        if (results == null) log.warning("Search Result Entry: " +entry.getTypeUri()
+            + ", " +entry.getId() +" has NOT ONE Geo Object as PARENT");  // fulltext-search incl. "abandoned" facets
+        return (results.getSize() > 0 ) ? results.get(0) : null;
     }
 
     private Topic getRelatedBezirk(Topic geoObject) {
@@ -808,6 +838,15 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
             Logger.getLogger(WebsitePlugin.class.getName()).log(Level.SEVERE, null, ex);
         }
         return result;
+    }
+
+    private Topic getUsernameTopic() {
+        String username = acService.getUsername();
+        if (username != null && !username.isEmpty()) {
+            return acService.getUsernameTopic(username);
+        } else {
+            return null;
+        }
     }
 
 }
