@@ -175,7 +175,7 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
         // 6) ### match Googles District Name to Site Topics via ETL
         // ### Bezirk Relation
         // 7) Set "Confirmed=false" flag // unpublished, to be confirmed
-        setConfirmationFlag(geoObject, false);
+        // Defused setConfirmationFlag(geoObject, false);
         // 8) ### Handle Cateogry-Relations
         // 9) ### Handle Image-File Upload (Seperately)
         // Prepare new form page (is unpublished..)
@@ -619,7 +619,7 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
         return (acService.getUsername() != null);
     }
 
-    /** Stores "Confirmed" topic on Geo Object into our "Confirmation" workspace. */
+    /** Stores "Confirmed" topic on Geo Object into our "Confirmation" workspace.
     private void setConfirmationFlag(final Topic geoObject, final boolean value) {
         try {
             dms.getAccessControl().runWithoutWorkspaceAssignment(new Callable<Topic>() {
@@ -636,7 +636,7 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
         } catch (Exception e) {
             throw new RuntimeException("Setting Geo Object Confirmation Flag failed", e);
         }
-    }
+    } **/
 
     /** see duplicate in GeomapsPlugin.storeGeoCoordinate() */
     private void storeGeoCoordinateFacet(Topic address, String coordinatePair) {
@@ -712,8 +712,8 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
 
     private boolean isPublishedGeoObject(Topic geoObject) {
         // ### Checking for typeuri AND Confirmed flagmay be redundant
-        return geoObject != null && geoObject.getTypeUri().equals(KiezatlasService.GEO_OBJECT)
-            && geoObject.getChildTopics().getBoolean(CONFIRMED_TYPE);
+        return geoObject != null && geoObject.getTypeUri().equals(KiezatlasService.GEO_OBJECT);
+            // && geoObject.getChildTopics().getBoolean(CONFIRMED_TYPE);
     }
 
     private boolean isGeoObjectEditable(Topic geoObject, Topic username) {
