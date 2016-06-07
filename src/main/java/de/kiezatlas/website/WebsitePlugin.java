@@ -110,7 +110,7 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
     }
 
     /**
-     * Processes the form for editing a Kiezatlas Einrichtung.
+     * Processes the form for creating a Kiezatlas Einrichtung in a specific Workspace.
      */
     @POST
     @Produces(MediaType.TEXT_HTML)
@@ -129,11 +129,10 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
         // 2) Find out Geo Coordinate and District of Geo Object
         // ### Start 1st Transaction
         if (latitude == 0 || longitude == 0) {
-            log.info("> Resetting Geo Coordinates " + latitude + ", " + longitude);
             geoLocation = geoCodeAddressInput(URLEncoder.encode(strasse + ", " + plz + " " + city));
             coordinatePair = parseFirstCoordinatePair(geoLocation);
             districtName = parseFirstSublocality(geoLocation);
-            log.info("> Geocoded Street, Postal Code City Value to \"" + coordinatePair + "\"");
+            log.info("> Reset Geo Coordinates by Street, Postal Code, City Value to \"" + coordinatePair + "\"");
         } else {
             // ### This leaves districtName = undefined
             log.info("> Geo Coordinates provided: " + latitude + ", " + longitude);
@@ -338,6 +337,38 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
             }
         }
         return results;
+    }
+
+    /**
+     * Fetches a list of Geo Objects to be displayed in a map by name.
+     * Ditch searchGeoObjectNames in KiezatlasPlugin (used by Famportal-Angular service).
+     * @param referer
+     * @param query
+     */
+    @GET
+    @Path("/search/by_name")
+    public List<GeoObjectView> searchGeoObjectsByName(@HeaderParam("Referer") String referer,
+            @QueryParam("query") String query) {
+        if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
+        try {
+            log.log(Level.INFO, "> nameQuery=\"{0}\"", query);
+            String queryValue = query.trim();
+            ArrayList<GeoObjectView> results = new ArrayList<GeoObjectView>();
+            if (queryValue.isEmpty()) {
+                log.warning("No search term entered, returning empty resultset");
+                return results;
+            }
+            List<Topic> singleTopics = dms.searchTopics(queryValue, "ka2.geo_object.name");
+            log.log(Level.INFO, "{0} name topics found", singleTopics.size());
+            for (Topic topic : singleTopics) {
+                Topic geoObject = topic.getRelatedTopic("dm4.core.composition",
+                    "dm4.core.child", "dm4.core.parent", "ka2.geo_object");
+                results.add(new GeoObjectView(geoObject, geomapsService, angeboteService));
+            }
+            return results;
+        } catch (Exception e) {
+            throw new RuntimeException("Searching geo object topics by name failed", e);
+        }
     }
 
     /**
@@ -664,6 +695,7 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
                             new TopicRoleModel(geoObject.getId(), "dm4.core.default"),
                             new TopicRoleModel(usernameTopic.getId(), "dm4.core.default")));
                         log.info("Created User Assignment ("+username+") for Geo Object \"" + geoObject.getSimpleValue() + "\" in Confirmation WS");
+                        // ## Workspace Asignment for flag and association yet MISSING
                         return assignment;
                     }
                 });

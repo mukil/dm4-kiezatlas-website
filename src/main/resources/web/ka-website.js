@@ -202,7 +202,7 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
         leafletMap.show_anchor(anchor_name)
         leafletMap.deactivate_circle_control()
         leafletMap.remove_circle_search_control()
-        _self.show_message("Hinweis: Die Volltextsuche liefert ab jetzt nur noch Ergebnisse aus dem Bezirk <em>"
+        _self.show_message("Die Volltextsuche liefert ab jetzt nur noch Ergebnisse aus dem Bezirk <em>"
             + bezirk_name + "</em>. W&auml;hlen sie <em>Bezirksfilter aufheben</em> um wieder Berlinweit"
             + " Einrichtungen zu finden.", 7000)
         _self.update_document_title(undefined, bezirk_name)
