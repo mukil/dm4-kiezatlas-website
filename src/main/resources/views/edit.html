@@ -18,7 +18,7 @@
         <script type="text/javascript" th:inline="javascript">
         /*<![CDATA[*/
             // App initialization
-            var marker, map, circleMarker, latitude, longitude, lCoordinate;
+            var draggableMarker, map, circleMarker, latitude, longitude, lCoordinate;
             // ### TODOs: set proper "workspace" and "dm4_no_geocoding=true" cookies
             var kiezatlasWsId = /*[[${workspace.id}]]*/ undefined;
             if (kiezatlasWsId) {
@@ -38,9 +38,9 @@
                     attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors,'
                     + '<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery &#169; <a href="http://mapbox.com">Mapbox</a>',
                     id: 'kiezatlas.m7222ia5'}).addTo(map)
-                marker = L.marker(lCoordinate, { draggable: true} )
-                marker.on('dragend', function(e) {
-                    var pos = marker.getLatLng()
+                draggableMarker = L.marker(lCoordinate, { draggable: true} )
+                draggableMarker.on('dragend', function(e) {
+                    var pos = draggableMarker.getLatLng()
                     // console.log("Position Update, Latitude", pos.lat, "Longitude", pos.lng, pos)
                     document.getElementById('latitude-val').value = Number((pos.lat).toFixed(8))
                     document.getElementById('longitude-val').value = Number((pos.lng).toFixed(8))
@@ -64,7 +64,8 @@
                     try {
                         console.log("Geo Coded Resonse", response.results[0].geometry.location)
                         document.getElementById("latitude-val").value = response.results[0].geometry.location.lat
-                        document.getElementById("longitude-val").value = response.results[0].geometry.location.lng   
+                        document.getElementById("longitude-val").value = response.results[0].geometry.location.lng
+                        do_manual_placement()
                     } catch (e) {
                         alert("Die Koordinaten konnten leider nicht automatisch ermittelt werden. Bitte versuchen Sie es mittels '\n\
                             + 'manueller Positionierung des Markierers und unter Anpassung des Kartenausschnitts.")
@@ -73,13 +74,13 @@
             }
 
             function clear_coordinates() {
-                document.getElementById('latitude-val').value = ""
-                document.getElementById('longitude-val').value = ""
+                document.getElementById('latitude-val').value = "-1000"
+                document.getElementById('longitude-val').value = "-1000"
             }
 
             function reset_coordinates() {
-                if (map.hasLayer(marker)) { // initiate default marker
-                    map.removeLayer(marker)
+                if (map.hasLayer(draggableMarker)) { // initiate standard marker
+                    map.removeLayer(draggableMarker)
                     circleMarker.addTo(map)
                 }
                 document.getElementById('latitude-val').value = latitude
@@ -90,14 +91,14 @@
             function update_marker_position() {
                 var newLat = document.getElementById('latitude-val').value
                 var newLong = document.getElementById('longitude-val').value
-                marker.setLatLng(L.latLng(newLat, newLong))
-                map.panTo(marker.getLatLng())
+                draggableMarker.setLatLng(L.latLng(newLat, newLong))
+                map.panTo(draggableMarker.getLatLng())
             }
 
             function do_manual_placement() {
                 if (map.hasLayer(circleMarker)) { // initiate draggable marker
                     map.removeLayer(circleMarker)
-                    marker.addTo(map)
+                    draggableMarker.addTo(map)
                 }
                 update_marker_position()
             }
@@ -153,9 +154,9 @@
                             <input class="coordinates" onchange="do_manual_placement()" id="latitude-val" type="number" step="any" name="lat" th:value='${geoobject.latitude}'/>
                             <input class="coordinates" onchange="do_manual_placement()" id="longitude-val" type="number" step="any" name="lon" th:value='${geoobject.longitude}'/>
                             <br/>
-                            <span class="label">Geo Koordinate dieses Ortes</span>
+                            <span class="label">Geo Koordinate dieses Ortes</span><br/>
                             <a class="button reset" onclick="do_geocode()">Neu Ermitteln</a>
-                            <a class="button" onclick="do_manual_placement()">Korrigieren</a>
+                            <a class="button" onclick="do_manual_placement()">Manuell platzieren</a>
                             <a class="button" onclick="reset_coordinates()">Zur&uuml;cksetzen</a>
                             <a class="button" onclick="clear_coordinates()">L&ouml;schen</a>
                             <br/><br/>

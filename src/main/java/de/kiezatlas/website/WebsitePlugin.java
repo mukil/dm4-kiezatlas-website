@@ -128,7 +128,7 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
         // 1) Check if form submission deals with an UPDATE or CREATE
         String districtName = "", coordinatePair = "", geoLocation = "";
         // 2) Find out Geo Coordinate and District of Geo Object
-        if (latitude == 0 || longitude == 0) {
+        if (latitude == -1000 || longitude == -1000) {
             geoLocation = geoCodeAddressInput(URLEncoder.encode(strasse + ", " + plz + " " + city));
             coordinatePair = parseFirstCoordinatePair(geoLocation);
             districtName = parseFirstSublocality(geoLocation);
@@ -138,15 +138,15 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
             log.info("> Geo Coordinates provided: " + latitude + ", " + longitude);
             coordinatePair = longitude + "," + latitude;
         }
+        ChildTopicsModel addressValue = new ChildTopicsModel();
+        setCityTopicValue(addressValue, city);
+        setStreetTopicValue(addressValue, strasse);
+        setPostalCodeValue(addressValue, plz);
+        setCountryValue(addressValue, "Deutschland"); // ###
         // 3) Assemble and create/update new Geo Object Topic basics
         ChildTopicsModel geoObjectTopicModel = new ChildTopicsModel()
             .put("ka2.geo_object.name", name)
-            .put("dm4.contacts.address", new ChildTopicsModel()
-                .put("dm4.contacts.street", strasse.trim()) // # Ref:
-                .put("dm4.contacts.postal_code", plz.trim()) // # Ref:
-                .put("dm4.contacts.city", city.trim()) // ### Ref: Berlin
-                // .putRef("dm4.contacts.country", ) // Ref: Germany
-            );
+            .put("dm4.contacts.address", addressValue);
         if (topicId == -1 || topicId == 0) {
             // ------------ Assign Geo Object Basics to the topic of getPrivilegedWorkspace() ------------------ //
             log.info("CREATE Einrichtung " + name + ", Straße: " + strasse + ", in \"" + plz + " " + city + "\"");
@@ -672,6 +672,55 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
         }
     } **/
 
+    private void setCityTopicValue(ChildTopicsModel model, String value) {
+        List<Topic> cities = dms.searchTopics(value.trim(), "dm4.contacts.city");
+        for (Topic city : cities) {
+            if (city.getSimpleValue().toString().equals(value.trim())) {
+                log.info("FINE: Reusing City Topic ("+city.getId()+") for value \"" + value + "\"");
+                model.putRef("dm4.contacts.city", city.getId());
+                return;
+            }
+        }
+        log.info("Creating new City Topic for value \"" + value + "\"");
+        model.put("dm4.contacts.city", value.trim());
+    }
+
+    private void setStreetTopicValue(ChildTopicsModel model, String value) {
+        List<Topic> streetNames = dms.searchTopics(value.trim(), "dm4.contacts.street");
+        for (Topic streetName : streetNames) {
+            if (streetName.getSimpleValue().toString().equals(value.trim())) {
+                model.putRef("dm4.contacts.street", streetName.getId());
+                return;
+            }
+        }
+        log.info("Creating new Street Topic for value \"" + value.trim() + "\"");
+        model.put("dm4.contacts.street", value.trim());
+    }
+
+    private void setPostalCodeValue(ChildTopicsModel model, String value) {
+        List<Topic> postalCodes = dms.searchTopics(value.trim(), "dm4.contacts.postal_code");
+        for (Topic postalCode : postalCodes) {
+            if (postalCode.getSimpleValue().toString().equals(value.trim())) {
+                model.putRef("dm4.contacts.postal_code", postalCode.getId());
+                return;
+            }
+        }
+        log.info("Creating new Postal Code Topic for value \"" + value.trim() + "\"");
+        model.put("dm4.contacts.postal_code", value.trim());
+    }
+
+    private void setCountryValue(ChildTopicsModel model, String value) {
+        List<Topic> countryNames = dms.searchTopics(value.trim(), "dm4.contacts.country");
+        for (Topic countries : countryNames) {
+            if (countries.getSimpleValue().toString().equals(value.trim())) {
+                model.putRef("dm4.contacts.country", countries.getId());
+                return;
+            }
+        }
+        log.info("Creating new Country Topic for value \"" + value.trim() + "\"");
+        model.put("dm4.contacts.country", value.trim());
+    }
+
     /** see duplicate in GeomapsPlugin.storeGeoCoordinate() */
     private void storeGeoCoordinateFacet(Topic address, String coordinatePair) {
         // ### Just write new coordinates IF values changed.
@@ -699,12 +748,14 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
                 @Override
                 public Topic call() {
                     Topic geoObject = dms.createTopic(geoObjectModel);
+                    Topic addressObject = geoObject.getChildTopics().getTopic("dm4.contacts.address");
+                    long workspaceId = getPrivilegedWorkspace().getId();
                     dms.getAccessControl().assignToWorkspace(geoObject, getPrivilegedWorkspace().getId());
-                    dms.getAccessControl().assignToWorkspace(geoObject.getChildTopics().getTopic("dm4.contacts.address"), getPrivilegedWorkspace().getId());
-                    dms.getAccessControl().assignToWorkspace(geoObject.getChildTopics().getTopic("dm4.contacts.address").getChildTopics().getTopic("dm4.contacts.street"), getPrivilegedWorkspace().getId());
-                    dms.getAccessControl().assignToWorkspace(geoObject.getChildTopics().getTopic("dm4.contacts.address").getChildTopics().getTopic("dm4.contacts.city"), getPrivilegedWorkspace().getId());
-                    dms.getAccessControl().assignToWorkspace(geoObject.getChildTopics().getTopic("dm4.contacts.address").getChildTopics().getTopic("dm4.contacts.postal_code"), getPrivilegedWorkspace().getId());
-                    dms.getAccessControl().assignToWorkspace(geoObject.getChildTopics().getTopic("dm4.contacts.address").getChildTopics().getTopic("dm4.contacts.country"), getPrivilegedWorkspace().getId());
+                    dms.getAccessControl().assignToWorkspace(addressObject, getPrivilegedWorkspace().getId());
+                    dms.getAccessControl().assignToWorkspace(addressObject.getChildTopics().getTopic("dm4.contacts.street"), workspaceId);
+                    dms.getAccessControl().assignToWorkspace(addressObject.getChildTopics().getTopic("dm4.contacts.city"), workspaceId);
+                    dms.getAccessControl().assignToWorkspace(addressObject.getChildTopics().getTopic("dm4.contacts.postal_code"), workspaceId);
+                    dms.getAccessControl().assignToWorkspace(addressObject.getChildTopics().getTopic("dm4.contacts.country"), workspaceId);
                     log.info("Created Unconfirmed Geo Object ("+geoObject.getSimpleValue()+") in Confirmation WS");
                     return geoObject;
                 }
