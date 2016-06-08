@@ -252,7 +252,7 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
         // Assemble Angebosinfos for Einrichtung
         List<AngebotsInfoAssigned> angebotsInfos = angeboteService.getAngebotsInfosAssigned(geoObject);
         if (angebotsInfos.size() > 0) viewData("angebotsinfos", angebotsInfos);
-        viewData("authentaticated", isAuthenticated());
+        viewData("authenticated", isAuthenticated());
         viewData("editable", isGeoObjectEditable(geoObject, username));
         return view("detail");
     }
