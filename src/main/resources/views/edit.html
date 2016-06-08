@@ -22,8 +22,8 @@
             // ### TODOs: set proper "workspace" and "dm4_no_geocoding=true" cookies
             var kiezatlasWsId = /*[[${workspace.id}]]*/ undefined;
             if (kiezatlasWsId) {
-                // ### this does not override DeepaMehta Workspace Cookie
-                // document.cookie = "dm4_workspace_id=" + kiezatlasWsId;
+                restc.erase_cookie("dm4_workspace_id")
+                restc.create_cookie("dm4_workspace_id", kiezatlasWsId)
             }
             document.cookie = " dm4_no_geocoding=true;"
             console.log("Show Cookies", document.cookie)
@@ -154,7 +154,7 @@
                             <input class="coordinates" onchange="do_manual_placement()" id="longitude-val" type="number" step="any" name="lon" th:value='${geoobject.longitude}'/>
                             <br/>
                             <span class="label">Geo Koordinate dieses Ortes</span>
-                            <a class="button" onclick="do_geocode()">Ermitteln</a>
+                            <a class="button reset" onclick="do_geocode()">Neu Ermitteln</a>
                             <a class="button" onclick="do_manual_placement()">Korrigieren</a>
                             <a class="button" onclick="reset_coordinates()">Zur&uuml;cksetzen</a>
                             <a class="button" onclick="clear_coordinates()">L&ouml;schen</a>

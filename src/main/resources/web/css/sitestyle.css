@@ -238,6 +238,10 @@ h1.my-title {
     font-size: .8em;
 }
 
+.kiezatlas .info-area .right-side .button.reset {
+    color: #ff0000;
+}
+
 #close {
     margin: 10px;
 }
