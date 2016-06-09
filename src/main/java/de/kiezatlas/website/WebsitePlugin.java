@@ -135,6 +135,31 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
     }
 
     /**
+     * Builds up a form for introducing a NEW Kiezatlas Einrichtung (Geo Object).
+     */
+    @GET
+    @Produces(MediaType.TEXT_HTML)
+    @Path("/topic/create")
+    public Viewable getGeoObjectEditPage() {
+        if (!isAuthenticated()) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
+        EinrichtungsInfo geoObject = new EinrichtungsInfo();
+        geoObject.setCoordinates(new GeoCoordinate(13.4, 52.5));
+        geoObject.setName("Neuer Eintrag");
+        geoObject.setId(-1);
+        viewData("geoobject", geoObject);
+        viewData("availableCities", getAvailableCityTopics());
+        viewData("availableDistricts", getAvailableDistrictTopics());
+        viewData("availableCountries", getAvailableCountryTopics());
+        viewData("availableThemen", getThemaCriteriaTopics());
+        viewData("availableAngebote", getAngebotCriteriaTopics());
+        viewData("availableZielgruppen", getZielgruppeCriteriaTopics());
+        viewData("workspace", getStandardWorkspace());
+        viewData("authenticated", isAuthenticated());
+        viewData("is_publisher", isConfirmationWorkspaceMember());
+        return view("edit");
+    }
+
+    /**
      * Processes the form for creating a Kiezatlas Einrichtung in a specific Workspace.
      */
     @POST
@@ -147,7 +172,9 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
             @FormParam("country") long country, @FormParam("beschreibung") String beschreibung,
             @FormParam("open") String oeffnungszeiten, @FormParam("ansprechpartner") String ansprechpartner,
             @FormParam("telefon") String telefon, @FormParam("email") String email, @FormParam("fax") String fax,
-            @FormParam("website") String website, @FormParam("lat") double latitude, @FormParam("lon") double longitude) {
+            @FormParam("website") String website, @FormParam("lat") double latitude, @FormParam("lon") double longitude,
+            @FormParam("themen") List<Long> themen, @FormParam("angebote") List<Long> angebote, @FormParam("zielgruppen") List<Long> zielgruppen) {
+        log.info("> Criteria Values Posted Themen " + themen.toString());
         // 0) This method is secured through being a @POST
         Topic geoObject = null;
         Topic username = acService.getUsernameTopic(acService.getUsername());
@@ -209,28 +236,6 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
     }
 
     /**
-     * Builds up a form for introducing a NEW Kiezatlas Einrichtung (Geo Object).
-     */
-    @GET
-    @Produces(MediaType.TEXT_HTML)
-    @Path("/topic/create")
-    public Viewable getGeoObjectEditPage() {
-        if (!isAuthenticated()) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
-        EinrichtungsInfo geoObject = new EinrichtungsInfo();
-        geoObject.setCoordinates(new GeoCoordinate(13.4, 52.5));
-        geoObject.setName("Neuer Eintrag");
-        geoObject.setId(-1);
-        viewData("geoobject", geoObject);
-        viewData("availableCities", getAvailableCityTopics());
-        viewData("availableDistricts", getAvailableDistrictTopics());
-        viewData("availableCountries", getAvailableCountryTopics());
-        viewData("workspace", getStandardWorkspace());
-        viewData("authenticated", isAuthenticated());
-        viewData("is_publisher", isConfirmationWorkspaceMember());
-        return view("edit");
-    }
-
-    /**
      * Builds up a form for editing a Kiezatlas Einrichtung.
      */
     @GET
@@ -245,6 +250,9 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
             // Assemble Generic Einrichtungs Infos
             EinrichtungsInfo einrichtung = assembleGeneralEinrichtungsInfo(geoObject);
             viewData("geoobject", einrichtung);
+            viewData("themen", facetsService.getFacets(geoObject, "ka2.criteria.thema_facet"));
+            viewData("angebote", facetsService.getFacets(geoObject, "ka2.criteria.angebote_facet"));
+            viewData("zielgruppen", facetsService.getFacets(geoObject, "ka2.criteria.zielgruppe_facet"));
             // viewData("message", "Einrichtung \"" + geoObject.getSimpleValue() + "\" erfolgreich geladen.");
         } else {
             // ### throw 401
@@ -253,6 +261,9 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
         viewData("availableCities", getAvailableCityTopics());
         viewData("availableDistricts", getAvailableDistrictTopics());
         viewData("availableCountries", getAvailableCountryTopics());
+        viewData("availableThema", getThemaCriteriaTopics());
+        viewData("availableAngebote", getAngebotCriteriaTopics());
+        viewData("availableZielgruppe", getZielgruppeCriteriaTopics());
         viewData("workspace", getStandardWorkspace());
         viewData("authenticated", isAuthenticated());
         // ### if (!isGeoObjectEditable(geoObject, username)) throw new WebApplicationException(Status.UNAUTHORIZED);
@@ -309,16 +320,10 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
         EinrichtungsInfo einrichtung = assembleGeneralEinrichtungsInfo(geoObject);
         // ### Yet Missing: Träger, Bezirksregion, Bezirk, Administrator Infos und Stichworte
         viewData("geoobject", einrichtung);
-        // Assemble Category Assignments for Einrichtung
-        ResultList<RelatedTopic> relatedTopics = geoObject.getRelatedTopics("dm4.core.aggregation", "dm4.core.parent",
-            "dm4.core.child", "ka2.criteria.thema", 0);
-        viewData("themen", relatedTopics);
-        ResultList<RelatedTopic> relatedServices = geoObject.getRelatedTopics("dm4.core.aggregation", "dm4.core.parent",
-            "dm4.core.child", "ka2.criteria.angebote", 0);
-        viewData("angebote", relatedServices);
-        ResultList<RelatedTopic> relatedAudiences = geoObject.getRelatedTopics("dm4.core.aggregation", "dm4.core.parent",
-            "dm4.core.child", "ka2.criteria.zielgruppe", 0);
-        viewData("zielgruppen", relatedAudiences);
+        // Assemble Category Assignments for Einrichtung;
+        viewData("themen", facetsService.getFacets(geoObject, "ka2.criteria.thema_facet"));
+        viewData("angebote", facetsService.getFacets(geoObject, "ka2.criteria.angebote_facet"));
+        viewData("zielgruppen", facetsService.getFacets(geoObject, "ka2.criteria.zielgruppe_facet"));
         // Assemble Angebosinfos for Einrichtung
         List<AngebotsInfoAssigned> angebotsInfos = angeboteService.getAngebotsInfosAssigned(geoObject);
         if (angebotsInfos.size() > 0) viewData("angebotsinfos", angebotsInfos);
@@ -1055,6 +1060,18 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
         }
     }
 
+    private List<RelatedTopic> getAngebotCriteriaTopics() {
+        return sortAlphabeticalDescending(dms.getTopics("ka2.criteria.angebot", 0).getItems());
+    }
+
+    private List<RelatedTopic> getThemaCriteriaTopics() {
+        return sortAlphabeticalDescending(dms.getTopics("ka2.criteria.thema", 0).getItems());
+    }
+
+    private List<RelatedTopic> getZielgruppeCriteriaTopics() {
+        return sortAlphabeticalDescending(dms.getTopics("ka2.criteria.zielgruppe", 0).getItems());
+    }
+
     private List<Topic> getAvailableCountryTopics() {
         List<Topic> countries = new ArrayList<Topic>();
         for (RelatedTopic city : dms.getTopics("dm4.contacts.country", 0)) {
@@ -1078,7 +1095,7 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
         return results;
     }
 
-    private void sortAlphabeticalDescending(List<RelatedTopic> topics) {
+    private List<RelatedTopic> sortAlphabeticalDescending(List<RelatedTopic> topics) {
         Collections.sort(topics, new Comparator<Topic>() {
             public int compare(Topic t1, Topic t2) {
                 String one = t1.getSimpleValue().toString();
@@ -1086,6 +1103,7 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
                 return one.compareTo(two);
             }
         });
+        return topics;
     }
 
     private void sortAlphabeticalDescendingByChildTopic(List<RelatedTopic> topics, final String childTypeUri) {

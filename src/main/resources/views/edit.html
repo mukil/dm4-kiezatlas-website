@@ -137,18 +137,20 @@
                             <input type="text" name="name" th:value='${geoobject.name}'/>
                             <label for="strasse">Stra&szlig;enname</label>
                             <input type="text" id="streetnr" name="strasse" th:value='${geoobject.strasse}'/>
-                            <label for="plz">Postleitzahl, Stadt</label>
+                            <label for="plz">Postleitzahl, Bezirk</label>
                             <input type="number" id="postal-code" class="plz" name="plz" th:value='${geoobject.plz}'/>
-                            <!--input type="text" id="city" readonly="true" class="city" name="city" th:value='${geoobject.city}'/-->
+                            <!-- Reusable Topic Selectors -->
                             <select id="district" name="district">
                                 <option th:each="district : ${availableDistricts}" th:selected="${#strings.toString(district.simpleValue) eq geoobject.bezirk}" th:value="${district.id}" th:text="${district.simpleValue}"></option>
-                            </select><br/>
+                            </select>
+                            <!--label for="plz">Stadt, Land</label-->
                             <select id="city" name="city">
                                 <option th:each="city : ${availableCities}" th:selected="${#strings.toString(city.simpleValue) eq geoobject.city}"  th:value="${city.id}" th:text="${city.simpleValue}"></option>
-                            </select><!-- th:attr="@{#strings.equals(city.simpleValue,'Berlin')} ? 'selected' : ''" -->
+                            </select>
                             <select id="country" name="country">
                                 <option th:each="city : ${availableCountries}" th:selected="${#strings.toString(city.simpleValue) eq geoobject.country}"  th:value="${city.id}" th:text="${city.simpleValue}"></option>
-                            </select><!-- th:attr="@{#strings.equals(city.simpleValue,'Berlin')} ? 'selected' : ''" -->
+                            </select>
+                            <!-- Plain Text Data -->
                             <label for="ansprechpartner">AnsprechpartnerIn</label>
                             <input type="text" name="ansprechpartner" th:value='${geoobject.ansprechpartner}'/>
                             <label for="telefon">Telefon</label>
@@ -157,6 +159,10 @@
                             <input type="text" name="email" th:value='${geoobject.email}'/>
                             <label for="fax">Fax</label>
                             <input type="text" name="fax" th:value='${geoobject.fax}'/>
+                            <label for="zielgruppen">Zielgruppe</label>
+                            <select id="zielgruppen" name="zielgruppen" multiple="true">
+                                <option th:each="thema : ${availableZielgruppen}" th:value="${thema.id}" th:text="${thema.simpleValue}"></option>
+                            </select>
                         </div>
                         <div class="right-side">
                             <label for="lat">Breitengrad (Latitude) &ndash; L&auml;ngengrad (Longitude)</label>
@@ -169,6 +175,7 @@
                             <a class="button" onclick="reset_coordinates()">Zur&uuml;cksetzen</a>
                             <a class="button" onclick="clear_coordinates()">L&ouml;schen</a>
                             <br/><br/>
+                            <!-- HTML Data -->
                             <label for="beschreibung">Beschreibung</label>
                             <textarea id="beschreibung" name="beschreibung"
                                       contenteditable="true" th:utext="${geoobject.beschreibung}"/>
@@ -178,6 +185,14 @@
                             <input type="text" name="stichworte" th:value='${geoobject.stichworte}'/-->
                             <label for="website">Website</label>
                             <input type="text" name="website" th:value='${geoobject.webpage}'/>
+                            <label for="thema">Thema</label>
+                            <select id="thema" name="themen" multiple="true">
+                                <option th:each="thema : ${availableThemen}" th:value="${thema.id}" th:text="${thema.simpleValue}"></option>
+                            </select>
+                            <label for="angebote-crit">Angebot</label>
+                            <select id="angebote-crit" name="angebote" multiple="true">
+                                <option th:each="thema : ${availableAngebote}" th:value="${thema.id}" th:text="${thema.simpleValue}"></option>
+                            </select>
                         </div>
                         <!--
                         <p class="sozialraumdaten" th:if="${!#strings.isEmpty(geoobject.lor)}"><a th:href="@{http://sozialraumdaten.kiezatlas.de/seiten/2014/12/(lor=${geoobject.lor})}">Sozialraumdaten</a></p>

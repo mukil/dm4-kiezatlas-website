@@ -872,6 +872,13 @@ span.angebote-btn,
     padding: 5px;
 }
 
+.kiezatlas.topic form select#angebote-crit,
+.kiezatlas.topic form select#thema,
+.kiezatlas.topic form select#zielgruppen {
+    width: 95%;
+    height: 145px;
+}
+
 .kiezatlas.topic .categories {
     text-align: left;
 }

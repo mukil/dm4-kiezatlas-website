@@ -26,6 +26,7 @@
         <div id="navigation">
             <ul>
                 <li class="angebote"><a href="/">Startseite</a></li>
+                <li class="login" th:if="!${authenticated}" ><a href="/sign-up/login">Login</a></li>
                 <li class="logout" th:if="${authorized}"><a href="/#logout/" onclick="javascript:restc.logout()">Abmelden</a></li>
             </ul>
         </div>
