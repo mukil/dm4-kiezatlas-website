@@ -53,6 +53,8 @@ public interface WebsiteService {
     static final String CONFIRMATION_WS_URI = "de.kiezatlas.ws_confirmation";
     static final String CONFIRMATION_WS_NAME = "Confirmation";
 
+    static final String POSTAL_CODE_DUMMY_VALUE = "0";
+
     /**
      * Searching in four child topic types of geo object, returning topics of type "ka2.geo_object".
      */

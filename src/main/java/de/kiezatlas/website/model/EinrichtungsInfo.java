@@ -111,6 +111,22 @@ public class EinrichtungsInfo implements JSONEnabled {
         }
     }
 
+    public void setBezirk(String districtName) {
+        try {
+            json.put("bezirk", districtName);
+        } catch (JSONException ex) {
+            Logger.getLogger(EinrichtungsInfo.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    public void setBezirkId(long id) {
+        try {
+            json.put("bezirk_id", id);
+        } catch (JSONException ex) {
+            Logger.getLogger(EinrichtungsInfo.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
     public void setWebpage(String webpageValue) {
         try {
             json.put("webpage", webpageValue);
@@ -278,6 +294,24 @@ public class EinrichtungsInfo implements JSONEnabled {
         } catch (JSONException ex) {
             Logger.getLogger(EinrichtungsInfo.class.getName()).log(Level.FINE, "Einrichtung has no Anschrift (Id: " + getId() + ")", ex);
             return "";
+        }
+    }
+
+    public String getBezirk() {
+        try {
+            return json.getString("bezirk");
+        } catch (JSONException ex) {
+            Logger.getLogger(EinrichtungsInfo.class.getName()).log(Level.FINE, "Einrichtung has no Anschrift (Id: " + getId() + ")", ex);
+            return "";
+        }
+    }
+
+    public long getBezirkId() {
+        try {
+            return json.getLong("bezirk_id");
+        } catch (JSONException ex) {
+            Logger.getLogger(EinrichtungsInfo.class.getName()).log(Level.FINE, "Einrichtung has no Anschrift (Id: " + getId() + ")", ex);
+            return -1;
         }
     }
 

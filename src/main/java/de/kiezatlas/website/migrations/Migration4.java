@@ -22,9 +22,9 @@ public class Migration4 extends Migration {
 
     @Override
     public void run() {
-        log.info("##### Create seperate \"Confirmation\"-Workspace in Kiezatlas Website Migration Nr. 6 #####");
+        log.info("##### Create seperate \"Confirmation\"-Workspace in Kiezatlas Website Migration Nr. 4 #####");
         // 1) Create new "Confirmation" workspace
-        Topic workspace = workspaceService.createWorkspace(CONFIRMATION_WS_NAME, CONFIRMATION_WS_URI, SharingMode.PUBLIC);
+        Topic workspace = workspaceService.createWorkspace(CONFIRMATION_WS_NAME, CONFIRMATION_WS_URI, SharingMode.COLLABORATIVE);
         acService.setWorkspaceOwner(workspace, AccessControlService.ADMIN_USERNAME);
     }
 

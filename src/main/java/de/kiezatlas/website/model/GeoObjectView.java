@@ -47,7 +47,6 @@ public class GeoObjectView implements JSONEnabled {
         if (bezirksregion == null) {
             log.log(Level.WARNING, "### Geo Object ({0}, {1}) has no BEZIRKSREGION set!",
                 new Object[]{geoObject.getUri(), geoObject.getSimpleValue()});
-            return null;
         }
         return bezirksregion;
     }
@@ -58,7 +57,6 @@ public class GeoObjectView implements JSONEnabled {
         if (bezirk == null) {
             log.log(Level.WARNING, "### Geo Object ({0}, {1}) has no BEZIRK set!",
                 new Object[]{geoObject.getUri(), geoObject.getSimpleValue()});
-            return null;
         }
         return bezirk;
     }

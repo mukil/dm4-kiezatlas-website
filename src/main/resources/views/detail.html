@@ -44,18 +44,21 @@
                 <li class="login" th:if="!${authenticated}" ><a href="/sign-up/login">Login</a></li>
                 <!--li class="angebote"><a href="/kiezatlas/angebot/">Orte</a></li-->
                 <!-- li class="angebote"><a href="/sign-up/edit/">Mein Account</a></li-->
-                <li class="logout" th:if="${authenticated}"><a href="/#logout/" onclick="javascript:restc.logout()">Abmelden</a></li>
+                <li class="logout visible-ib" th:if="${authenticated}"><a href="/#logout/" onclick="javascript:restc.logout()">Abmelden</a></li>
             </ul>
         </div>
 
         <div id="header">
-            <div class="welcome"></div>
+            <div class="welcome">
+            </div>
         </div>
 
         <!-- Details Area -->
         <div id="detail-area" th:class="${angebotsinfos} ? 'angebotsinfos'">
             <div class="commands">
-                <a th:if="${authenticated} and ${editable}" th:href="'/website/topic/edit/' + ${geoobject.id}">Edit</a>
+                <p th:if="${!#strings.isEmpty(message)}" th:text="${message}"></p>
+                <a class="button" th:if="${authenticated} and ${editable}" th:href="'/website/topic/edit/' + ${geoobject.id}">Edit</a>
+                <a class="button" th:if="${is_publisher} and ${editable}" th:href="'/website/topic/confirm/' + ${geoobject.id}">Freischalten</a>
             </div>
             <div id="map"></div>
             <div class="info-area">
@@ -151,7 +154,7 @@
             <img src="/de.kiezatlas.website/images/kiezatlas2-logo.png" width="150" />
         </div>
 
-        <!-- Piwik -->
+        <!--Piwik>
         <script type="text/javascript">
         var pkBaseURL = "//stats.infokitchen.net/";
         document.write(unescape("%3Cscript src='" + pkBaseURL + "piwik.js' type='text/javascript'%3E%3C/script%3E"));
@@ -165,7 +168,7 @@
         <noscript>
             <img th:src="@{https://stats.infokitchen.net/piwik.php(idsite=2,rec=1,action_name='Kiezatlas+2+Info')}" style="border:0" alt="" />
         </noscript>
-        <!-- End Piwik Tracking Code -->
+        End Piwik Tracking Code -->
 
     </body>
 </html>

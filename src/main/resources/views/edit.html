@@ -42,8 +42,8 @@
                 draggableMarker.on('dragend', function(e) {
                     var pos = draggableMarker.getLatLng()
                     // console.log("Position Update, Latitude", pos.lat, "Longitude", pos.lng, pos)
-                    document.getElementById('latitude-val').value = Number((pos.lat).toFixed(8))
-                    document.getElementById('longitude-val').value = Number((pos.lng).toFixed(8))
+                    document.getElementById('latitude-val').value = Number((pos.lat).toFixed(5))
+                    document.getElementById('longitude-val').value = Number((pos.lng).toFixed(5))
                 })
                 circleMarker = L.circleMarker(lCoordinate, {
                     weight: 3, opacity: 0.6, fillColor: "#a9a9a9", fillOpacity: 0.2, color: "#8f1414", clickable: true
@@ -139,7 +139,16 @@
                             <input type="text" id="streetnr" name="strasse" th:value='${geoobject.strasse}'/>
                             <label for="plz">Postleitzahl, Stadt</label>
                             <input type="number" id="postal-code" class="plz" name="plz" th:value='${geoobject.plz}'/>
-                            <input type="text" id="city" readonly="true" class="city" name="city" th:value='${geoobject.city}'/>
+                            <!--input type="text" id="city" readonly="true" class="city" name="city" th:value='${geoobject.city}'/-->
+                            <select id="district" name="district">
+                                <option th:each="district : ${availableDistricts}" th:selected="${#strings.toString(district.simpleValue) eq geoobject.bezirk}" th:value="${district.id}" th:text="${district.simpleValue}"></option>
+                            </select><br/>
+                            <select id="city" name="city">
+                                <option th:each="city : ${availableCities}" th:selected="${#strings.toString(city.simpleValue) eq geoobject.city}"  th:value="${city.id}" th:text="${city.simpleValue}"></option>
+                            </select><!-- th:attr="@{#strings.equals(city.simpleValue,'Berlin')} ? 'selected' : ''" -->
+                            <select id="country" name="country">
+                                <option th:each="city : ${availableCountries}" th:selected="${#strings.toString(city.simpleValue) eq geoobject.country}"  th:value="${city.id}" th:text="${city.simpleValue}"></option>
+                            </select><!-- th:attr="@{#strings.equals(city.simpleValue,'Berlin')} ? 'selected' : ''" -->
                             <label for="ansprechpartner">AnsprechpartnerIn</label>
                             <input type="text" name="ansprechpartner" th:value='${geoobject.ansprechpartner}'/>
                             <label for="telefon">Telefon</label>

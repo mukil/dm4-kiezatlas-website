@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title th:text="'Freischaltung neuer Einrichtungen - Kiezatlas'"></title>
+        <meta charset="UTF-8"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0"/>
+
+        <link rel="stylesheet" href="/de.kiezatlas/style/kiezatlas.css"/>
+        <link rel="stylesheet" href="/de.kiezatlas.website/css/sitestyle.css"/>
+
+        <!--script src="/de.kiezatlas.website/vendor/jquery/jquery-1.9.1.min.js"></script-->
+        <!-- script src="/de.kiezatlas.website/ka-restclient.js"></script-->
+        <!-- script src="/de.kiezatlas.website/ka-map.js"></script-->
+
+        <script type="text/javascript" th:inline="javascript">
+        /*<![CDATA[*/
+            // App initialization
+            window.onload = function() {
+                console.log("hello admin")
+            }
+        /*]]>*/
+        </script>
+    </head>
+    <body class="kiezatlas confirm">
+
+        <div id="navigation">
+            <ul>
+                <li class="angebote"><a href="/">Startseite</a></li>
+                <li class="logout" th:if="${authorized}"><a href="/#logout/" onclick="javascript:restc.logout()">Abmelden</a></li>
+            </ul>
+        </div>
+
+        <div id="header">
+            <div class="welcome" th:if="${authorized}">Hier k&ouml;nnen Sie neu eingetragene Einrichtungen freischalten und ihren Kiezatlas Websites zuordnen.</div>
+            <div class="welcome" th:if="${not authorized}">Sorry! Sie haben aktuell keine Berechtigungen um neue Einrichtungen im Kiezatlas freizuschalten.</div>
+        </div>
+
+        <!-- Details Area -->
+        <div th:if="${authorized}">
+            <div class="commands">
+                <!-- a href="#confirm">Eintrag best&auml;tigen</a-->
+                <!--a href="#zuordnen">Website zuordnen</a-->
+            </div>
+            <div id="listing">
+                <ul class="soziale-einrichtungen">
+                    <li th:each="geoobject : ${geoobjects}">
+                        <div class="list-item">
+                            <h3 th:text="${geoobject.simpleValue}"></h3>
+                            <p>
+                                <span class="label"></span>
+                            </p>
+                            <a class="read-more" th:href="'/website/topic/' + ${geoobject.id}">Details</a>
+                            <!--select>
+                                <option th:each="site : ${websites}" th:text="${site.simpleValue}" th:value="${site.id}"></option>
+                            </select-->
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Kiezatlas Standard Website section -->
+        <div id="pages">
+            <ul>
+                <li><a href="/aktuelles">Aktuelles</a></li>
+                <li><a href="/projektbeschreibung">Projektbeschreibung</a></li>
+                <li><a href="/dies-das">Dies und Das</a></li>
+                <li><a href="/weitere-atlanten">Weitere Atlanten</a></li>
+                <li><a href="http://pax.spinnenwerk.de/~kiezatlas/index.php?id=6">Impressum</a></li>
+                <li><a href="/datenschutzhinweise">Datenschutzhinweise</a></li>
+                <li><a href="/api-documentation">API</a></li>
+                <li><a href="/open-source">Open Source</a></li>
+                <li><a href="/links">Links</a></li>
+            </ul>
+            <p></p>
+        </div>
+
+        <div id="bottom">
+            <img src="/de.kiezatlas.website/images/kiezatlas2-logo.png" width="150" />
+        </div>
+
+        <!-- Piwik
+        <script type="text/javascript">
+        var pkBaseURL = "//stats.infokitchen.net/";
+        document.write(unescape("%3Cscript src='" + pkBaseURL + "piwik.js' type='text/javascript'%3E%3C/script%3E"));
+        </script><script type="text/javascript">
+        try {
+        var piwikTracker = Piwik.getTracker(pkBaseURL + "piwik.php", 2);
+        piwikTracker.trackPageView();
+        piwikTracker.enableLinkTracking();
+        } catch( err ) {}
+        </script>
+        <noscript>
+            <img th:src="@{https://stats.infokitchen.net/piwik.php(idsite=2,rec=1,action_name='Kiezatlas+2+Info')}" style="border:0" alt="" />
+        </noscript>
+        End Piwik Tracking Code -->
+
+    </body>
+</html>
+
