@@ -123,13 +123,12 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
         Topic confirmationWs = getPrivilegedWorkspace();
         ResultList<RelatedTopic> unconfirmedGeoObjects = confirmationWs.getRelatedTopics("dm4.core.aggregation", "dm4.core.child",
             "dm4.core.parent", KiezatlasService.GEO_OBJECT, 0);
+        // ResultList<RelatedTopic> availableWebsites = dms.getTopics("ka2.website", 0);
+        // viewData("websites", availableWebsites);
         List<RelatedTopic> sortedGeoObjects = unconfirmedGeoObjects.getItems();
         sortByModificationDateDescending(sortedGeoObjects);
-        ResultList<RelatedTopic> availableWebsites = dms.getTopics("ka2.website", 0);
-        boolean isAuthorized = isConfirmationWorkspaceMember();
-        log.info("Preparing confirmation (authorizedRequest="+isAuthorized+") page, " + unconfirmedGeoObjects.getSize() + " Geo Objects, " + availableWebsites.getSize() + " Websites");
-        viewData("authorized", isAuthorized);
-        viewData("websites", availableWebsites);
+        preparePageAuthorization();
+        viewData("workspace", getStandardWorkspace());
         viewData("geoobjects", sortedGeoObjects);
         return view("confirmation");
     }
@@ -141,21 +140,16 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
     @Produces(MediaType.TEXT_HTML)
     @Path("/topic/create")
     public Viewable getGeoObjectEditPage() {
-        if (!isAuthenticated()) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
+        if (!isAuthenticated()) return view("401");
         EinrichtungsInfo geoObject = new EinrichtungsInfo();
         geoObject.setCoordinates(new GeoCoordinate(13.4, 52.5));
         geoObject.setName("Neuer Eintrag");
         geoObject.setId(-1);
         viewData("geoobject", geoObject);
-        viewData("availableCities", getAvailableCityTopics());
-        viewData("availableDistricts", getAvailableDistrictTopics());
-        viewData("availableCountries", getAvailableCountryTopics());
-        viewData("availableThemen", getThemaCriteriaTopics());
-        viewData("availableAngebote", getAngebotCriteriaTopics());
-        viewData("availableZielgruppen", getZielgruppeCriteriaTopics());
-        viewData("workspace", getStandardWorkspace());
-        viewData("authenticated", isAuthenticated());
-        viewData("is_publisher", isConfirmationWorkspaceMember());
+        prepareFormWithAvailableTopics();
+        preparePageAuthorization();
+        // misleading cause not in effect, createGeoObjectTopic() has the final saying here
+        viewData("workspace", null);
         return view("edit");
     }
 
@@ -174,7 +168,6 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
             @FormParam("telefon") String telefon, @FormParam("email") String email, @FormParam("fax") String fax,
             @FormParam("website") String website, @FormParam("lat") double latitude, @FormParam("lon") double longitude,
             @FormParam("themen") List<Long> themen, @FormParam("angebote") List<Long> angebote, @FormParam("zielgruppen") List<Long> zielgruppen) {
-        log.info("> Criteria Values Posted Themen " + themen.toString());
         // 0) This method is secured through being a @POST
         Topic geoObject = null;
         Topic username = acService.getUsernameTopic(acService.getUsername());
@@ -222,6 +215,9 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
         // 4) ### Assign ALL current, generic facet to Confirmation WS, too
         storeBeschreibungFacet(geoObject, beschreibung);
         storeBezirksFacet(geoObject, district);
+        putRefFacets(geoObject, themen, THEMA_FACET, THEMA_CRIT);
+        putRefFacets(geoObject, angebote, ANGEBOT_FACET, ANGEBOT_CRIT);
+        putRefFacets(geoObject, zielgruppen, ZIELGRUPPE_FACET, ZIELGRUPPE_CRIT);
         // ------- From here on, ALL new topics are assigned to the topic behind getStandardWorkspace() --------- //
         // 5) Store Geo Coordinate
         storeGeoCoordinateFacet(geoObject.getChildTopics().getTopic("dm4.contacts.address"), coordinatePair);
@@ -250,22 +246,16 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
             // Assemble Generic Einrichtungs Infos
             EinrichtungsInfo einrichtung = assembleGeneralEinrichtungsInfo(geoObject);
             viewData("geoobject", einrichtung);
-            viewData("themen", facetsService.getFacets(geoObject, "ka2.criteria.thema_facet"));
-            viewData("angebote", facetsService.getFacets(geoObject, "ka2.criteria.angebote_facet"));
-            viewData("zielgruppen", facetsService.getFacets(geoObject, "ka2.criteria.zielgruppe_facet"));
+            viewData("themen", facetsService.getFacets(geoObject, THEMA_FACET).getItems());
+            viewData("zielgruppen", facetsService.getFacets(geoObject, ZIELGRUPPE_FACET).getItems());
+            // viewData("angebote", facetsService.getFacets(geoObject, ANGEBOT_FACET).getItems());
             // viewData("message", "Einrichtung \"" + geoObject.getSimpleValue() + "\" erfolgreich geladen.");
         } else {
             // ### throw 401
             viewData("message", "Eine Einrichtung mit dieser ID ist uns nicht bekannt.");
         }
-        viewData("availableCities", getAvailableCityTopics());
-        viewData("availableDistricts", getAvailableDistrictTopics());
-        viewData("availableCountries", getAvailableCountryTopics());
-        viewData("availableThema", getThemaCriteriaTopics());
-        viewData("availableAngebote", getAngebotCriteriaTopics());
-        viewData("availableZielgruppe", getZielgruppeCriteriaTopics());
+        prepareFormWithAvailableTopics();
         viewData("workspace", getStandardWorkspace());
-        viewData("authenticated", isAuthenticated());
         // ### if (!isGeoObjectEditable(geoObject, username)) throw new WebApplicationException(Status.UNAUTHORIZED);
         viewData("editable", isGeoObjectEditable(geoObject, username));
         return view("edit");
@@ -321,15 +311,14 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
         // ### Yet Missing: Träger, Bezirksregion, Bezirk, Administrator Infos und Stichworte
         viewData("geoobject", einrichtung);
         // Assemble Category Assignments for Einrichtung;
-        viewData("themen", facetsService.getFacets(geoObject, "ka2.criteria.thema_facet"));
-        viewData("angebote", facetsService.getFacets(geoObject, "ka2.criteria.angebote_facet"));
-        viewData("zielgruppen", facetsService.getFacets(geoObject, "ka2.criteria.zielgruppe_facet"));
+        viewData("zielgruppen", facetsService.getFacets(geoObject, ZIELGRUPPE_FACET));
+        viewData("themen", facetsService.getFacets(geoObject, THEMA_FACET));
+        // viewData("angebote", facetsService.getFacets(geoObject, ANGEBOT_FACET));
         // Assemble Angebosinfos for Einrichtung
         List<AngebotsInfoAssigned> angebotsInfos = angeboteService.getAngebotsInfosAssigned(geoObject);
         if (angebotsInfos.size() > 0) viewData("angebotsinfos", angebotsInfos);
-        viewData("authenticated", isAuthenticated());
+        preparePageAuthorization();
         viewData("editable", isGeoObjectEditable(geoObject, username));
-        viewData("is_publisher", isConfirmationWorkspaceMember());
         return view("detail");
     }
 
@@ -826,6 +815,13 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
         }
     }
 
+    private void putRefFacets(Topic geoObject, List<Long> ids, String facetTypeUri, String childTypeUri) {
+        for (Long id : ids){
+            facetsService.updateFacet(geoObject.getId(), facetTypeUri,
+                new FacetValue(childTypeUri).addRef(id));
+        }
+    }
+
     private Topic createUnconfirmedGeoObject(final TopicModel geoObjectModel) {
         try {
             return dms.getAccessControl().runWithoutWorkspaceAssignment(new Callable<Topic>() {
@@ -1128,6 +1124,24 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
                 return 0;
             }
         });
+    }
+
+    private void prepareFormWithAvailableTopics() {
+        viewData("availableCities", getAvailableCityTopics());
+        viewData("availableDistricts", getAvailableDistrictTopics());
+        viewData("availableCountries", getAvailableCountryTopics());
+        viewData("availableThemen", getThemaCriteriaTopics());
+        // viewData("availableAngebote", getAngebotCriteriaTopics());
+        viewData("availableZielgruppen", getZielgruppeCriteriaTopics());
+        log.info("> Prepare Form Template with available Topics");
+    }
+
+    private void preparePageAuthorization() {
+        boolean isAuthenticated = isAuthenticated();
+        boolean isPrivileged = isConfirmationWorkspaceMember();
+        viewData("authenticated", isAuthenticated);
+        viewData("is_publisher", isPrivileged);
+        log.info("> Prepare Page Auth (isPrivileged=" + isPrivileged + ", isAuthenticated=" + isAuthenticated() + ")");
     }
 
 }

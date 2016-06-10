@@ -19,7 +19,6 @@
         /*<![CDATA[*/
             // App initialization
             var draggableMarker, map, circleMarker, latitude, longitude, lCoordinate;
-            // ### TODOs: set proper "workspace" and "dm4_no_geocoding=true" cookies
             var kiezatlasWsId = /*[[${workspace.id}]]*/ undefined;
             if (kiezatlasWsId) {
                 restc.erase_cookie("dm4_workspace_id")
@@ -59,18 +58,41 @@
             function do_geocode() {
                 var streetNr = document.getElementById('streetnr').value
                 var zipCode = document.getElementById('postal-code').value
-                var city = document.getElementById('city').value
-                restc.do_geocode(streetNr + " " + zipCode + " " + city, function(response) {
+                var districtSelect = document.getElementById('district')
+                var selectedDistrict = districtSelect.options[districtSelect.selectedIndex]
+                var citySelect = document.getElementById('city')
+                var selectedCity = citySelect.options[citySelect.selectedIndex]
+                var countrySelect = document.getElementById('country')
+                var selectedCountry = countrySelect.options[countrySelect.selectedIndex]
+                console.log("District", selectedDistrict.value, selectedDistrict.text, "City", selectedCity.value, selectedCity.text, "Country", selectedCountry)
+                var queryString = streetNr + ", "
+                if (zipCode.length > 0) queryString += zipCode + " "
+                if (selectedCity.value !== "undefined") queryString += selectedCity.text + " "
+                if (selectedDistrict.value !== "undefined") queryString += selectedDistrict.text + " "
+                queryString += selectedCountry.text
+                restc.do_geocode(queryString, function(response) {
                     try {
-                        console.log("Geo Coded Resonse", response.results[0].geometry.location)
+                        var postalCode = parse_google_response("postal_code", response.results[0])
+                        var districtName = parse_google_response("sublocality_level_1", response.results[0])
+                        console.log("Geo Coded Resonse included", postalCode, districtName)
                         document.getElementById("latitude-val").value = response.results[0].geometry.location.lat
                         document.getElementById("longitude-val").value = response.results[0].geometry.location.lng
                         do_manual_placement()
                     } catch (e) {
-                        alert("Die Koordinaten konnten leider nicht automatisch ermittelt werden. Bitte versuchen Sie es mittels '\n\
-                            + 'manueller Positionierung des Markierers und unter Anpassung des Kartenausschnitts.")
+                        alert("Die Koordinaten konnten leider nicht automatisch ermittelt werden. Bitte versuchen Sie es mittels "
+                            + "manueller Positionierung des Markierers und unter Anpassung des Kartenausschnitts.")
                     }
                 })
+            }
+
+            function parse_google_response(fieldKey, results) {
+                for (var idx in results["address_components"]) {
+                    var comp = results["address_components"][idx]
+                    for (var tdx in comp.types) {
+                        if (comp.types[tdx] === fieldKey) return comp.short_name
+                    }
+                }
+                return undefined
             }
 
             function clear_coordinates() {
@@ -130,27 +152,31 @@
             </div>
             <div id="map"></div>
                 <form class="infos" action="/website/topic/save" method="POST">
+                    <input th:if="${!#strings.isEmpty(geoobject.id)}" type="hidden" name="id" th:value='${geoobject.id}'/>
+
                     <div class="info-area">
+
                         <div class="left-side">
-                            <input th:if="${!#strings.isEmpty(geoobject.id)}" type="hidden" name="id" th:value='${geoobject.id}'/>
+                            <!-- Essential Einrichtungs Informationen -->
                             <label for="name">Name</label>
                             <input type="text" name="name" th:value='${geoobject.name}'/>
                             <label for="strasse">Stra&szlig;enname</label>
                             <input type="text" id="streetnr" name="strasse" th:value='${geoobject.strasse}'/>
                             <label for="plz">Postleitzahl, Bezirk</label>
                             <input type="number" id="postal-code" class="plz" name="plz" th:value='${geoobject.plz}'/>
-                            <!-- Reusable Topic Selectors -->
                             <select id="district" name="district">
+                                <option value="undefined">Bitte Bezirk ausw&auml;hlen</option>
                                 <option th:each="district : ${availableDistricts}" th:selected="${#strings.toString(district.simpleValue) eq geoobject.bezirk}" th:value="${district.id}" th:text="${district.simpleValue}"></option>
                             </select>
-                            <!--label for="plz">Stadt, Land</label-->
+                            <br/>
                             <select id="city" name="city">
                                 <option th:each="city : ${availableCities}" th:selected="${#strings.toString(city.simpleValue) eq geoobject.city}"  th:value="${city.id}" th:text="${city.simpleValue}"></option>
                             </select>
                             <select id="country" name="country">
                                 <option th:each="city : ${availableCountries}" th:selected="${#strings.toString(city.simpleValue) eq geoobject.country}"  th:value="${city.id}" th:text="${city.simpleValue}"></option>
                             </select>
-                            <!-- Plain Text Data -->
+
+                            <!-- Geo Object Desription & Details -->
                             <label for="ansprechpartner">AnsprechpartnerIn</label>
                             <input type="text" name="ansprechpartner" th:value='${geoobject.ansprechpartner}'/>
                             <label for="telefon">Telefon</label>
@@ -159,12 +185,11 @@
                             <input type="text" name="email" th:value='${geoobject.email}'/>
                             <label for="fax">Fax</label>
                             <input type="text" name="fax" th:value='${geoobject.fax}'/>
-                            <label for="zielgruppen">Zielgruppe</label>
-                            <select id="zielgruppen" name="zielgruppen" multiple="true">
-                                <option th:each="thema : ${availableZielgruppen}" th:value="${thema.id}" th:text="${thema.simpleValue}"></option>
-                            </select>
+                            <!-- ### Image File Upload, Träger, LOR Nummer -->
                         </div>
+
                         <div class="right-side">
+                            <!-- Geo Coordinate Settings -->
                             <label for="lat">Breitengrad (Latitude) &ndash; L&auml;ngengrad (Longitude)</label>
                             <input class="coordinates" onchange="do_manual_placement()" id="latitude-val" type="number" step="any" name="lat" th:value='${geoobject.latitude}'/>
                             <input class="coordinates" onchange="do_manual_placement()" id="longitude-val" type="number" step="any" name="lon" th:value='${geoobject.longitude}'/>
@@ -175,6 +200,7 @@
                             <a class="button" onclick="reset_coordinates()">Zur&uuml;cksetzen</a>
                             <a class="button" onclick="clear_coordinates()">L&ouml;schen</a>
                             <br/><br/>
+
                             <!-- HTML Data -->
                             <label for="beschreibung">Beschreibung</label>
                             <textarea id="beschreibung" name="beschreibung"
@@ -185,14 +211,24 @@
                             <input type="text" name="stichworte" th:value='${geoobject.stichworte}'/-->
                             <label for="website">Website</label>
                             <input type="text" name="website" th:value='${geoobject.webpage}'/>
+
+                            <!-- Geo Object Category Relations: Zielgruppe und Thema -->
+                            <label for="zielgruppen">Zielgruppe</label>
+                            <select id="zielgruppen" name="zielgruppen" multiple="true">
+                                <option th:each="category : ${availableZielgruppen}"
+                                        th:selected="${zielgruppen.contains(category)}"
+                                        th:value="${category.id}" th:text="${category.simpleValue}"></option>
+                            </select>
                             <label for="thema">Thema</label>
                             <select id="thema" name="themen" multiple="true">
-                                <option th:each="thema : ${availableThemen}" th:value="${thema.id}" th:text="${thema.simpleValue}"></option>
+                                <option th:each="category : ${availableThemen}"
+                                        th:selected="${themen.contains(category)}"
+                                        th:value="${category.id}" th:text="${category.simpleValue}"></option>
                             </select>
-                            <label for="angebote-crit">Angebot</label>
+                            <!--label for="angebote-crit">Angebot</label>
                             <select id="angebote-crit" name="angebote" multiple="true">
                                 <option th:each="thema : ${availableAngebote}" th:value="${thema.id}" th:text="${thema.simpleValue}"></option>
-                            </select>
+                            </select-->
                         </div>
                         <!--
                         <p class="sozialraumdaten" th:if="${!#strings.isEmpty(geoobject.lor)}"><a th:href="@{http://sozialraumdaten.kiezatlas.de/seiten/2014/12/(lor=${geoobject.lor})}">Sozialraumdaten</a></p>

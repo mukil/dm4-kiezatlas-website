@@ -8,11 +8,13 @@ import java.util.List;
 
 public interface WebsiteService {
 
+    static final String THEMA_FACET = "ka2.criteria.thema.facet";
     static final String THEMA_CRIT = "ka2.criteria.thema";
+    static final String ANGEBOT_FACET = "ka2.criteria.angebot.facet";
     static final String ANGEBOT_CRIT = "ka2.criteria.angebot";
+    static final String ZIELGRUPPE_FACET = "ka2.criteria.zielgruppe.facet";
     static final String ZIELGRUPPE_CRIT = "ka2.criteria.zielgruppe";
     static final String TRAEGER_CRIT = "ka2.criteria.traeger";
-
     static final String TRAEGER_FACET = "ka2.traeger.facet";
     static final String TRAEGER = "ka2.traeger";
     static final String TRAEGER_NAME = "ka2.traeger.name";

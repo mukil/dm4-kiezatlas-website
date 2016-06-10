@@ -27,17 +27,17 @@
             <ul>
                 <li class="angebote"><a href="/">Startseite</a></li>
                 <li class="login" th:if="!${authenticated}" ><a href="/sign-up/login">Login</a></li>
-                <li class="logout" th:if="${authorized}"><a href="/#logout/" onclick="javascript:restc.logout()">Abmelden</a></li>
+                <li class="logout visible-ib" th:if="${is_publisher}"><a href="/#logout/" onclick="javascript:restc.logout()">Abmelden</a></li>
             </ul>
         </div>
 
         <div id="header">
-            <div class="welcome" th:if="${authorized}">Hier k&ouml;nnen Sie neu eingetragene Einrichtungen freischalten und ihren Kiezatlas Websites zuordnen.</div>
-            <div class="welcome" th:if="${not authorized}">Sorry! Sie haben aktuell keine Berechtigungen um neue Einrichtungen im Kiezatlas freizuschalten.</div>
+            <div class="welcome" th:if="${is_publisher}">Hier k&ouml;nnen Sie neu eingetragene Einrichtungen freischalten und ihren Kiezatlas Websites zuordnen.</div>
+            <div class="welcome" th:if="${not is_publisher}">Sorry! Sie haben aktuell keine Berechtigungen um neue Einrichtungen im Kiezatlas freizuschalten.</div>
         </div>
 
         <!-- Details Area -->
-        <div th:if="${authorized}">
+        <div th:if="${is_publisher}">
             <div class="commands">
                 <!-- a href="#confirm">Eintrag best&auml;tigen</a-->
                 <!--a href="#zuordnen">Website zuordnen</a-->
