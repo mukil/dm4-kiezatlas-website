@@ -64,7 +64,6 @@
                 var selectedCity = citySelect.options[citySelect.selectedIndex]
                 var countrySelect = document.getElementById('country')
                 var selectedCountry = countrySelect.options[countrySelect.selectedIndex]
-                console.log("District", selectedDistrict.value, selectedDistrict.text, "City", selectedCity.value, selectedCity.text, "Country", selectedCountry)
                 var queryString = streetNr + ", "
                 if (zipCode.length > 0) queryString += zipCode + " "
                 if (selectedCity.value !== "undefined") queryString += selectedCity.text + " "

@@ -103,19 +103,14 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
         initTemplateEngine();
     }
 
-    /**
-     * Responds the frontpage of the Kiezatlas Website.
-     * ### Unused: see init
-     */
+    /** Responds witha a Viewable,the frontpage of the Kiezatlas Website. */
     @GET
     @Produces(MediaType.TEXT_HTML)
     public Viewable getWebsite() {
         return view("index");
     }
 
-    /**
-     * Responds with the administrative confirmation page of the Kiezatlas Website.
-     */
+    /** Responds with a Viewable, the administrative confirmation page of the Kiezatlas Website.  */
     @GET
     @Path("/confirmation")
     @Produces(MediaType.TEXT_HTML)
@@ -146,10 +141,11 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
         geoObject.setName("Neuer Eintrag");
         geoObject.setId(-1);
         viewData("geoobject", geoObject);
+        viewData("themen", new ArrayList<RelatedTopic>());
+        viewData("zielgruppen", new ArrayList<RelatedTopic>());
         prepareFormWithAvailableTopics();
         preparePageAuthorization();
-        // misleading cause not in effect, createGeoObjectTopic() has the final saying here
-        viewData("workspace", null);
+        viewData("workspace", getPrivilegedWorkspace());
         return view("edit");
     }
 
@@ -171,15 +167,13 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
         // 0) This method is secured through being a @POST
         Topic geoObject = null;
         Topic username = acService.getUsernameTopic(acService.getUsername());
-        String districtName = "", coordinatePair = "", geoLocation = "";
-        // Handle Geo Coordinates and District of Geo Object
+        String coordinatePair = "", geoLocation = "";
+        // Handle Geo Coordinates of Geo Object
         if (latitude == -1000 || longitude == -1000) {
             geoLocation = geoCodeAddressInput(URLEncoder.encode(strasse + ", " + plz + " " + city));
             coordinatePair = parseFirstCoordinatePair(geoLocation);
-            districtName = parseFirstSublocality(geoLocation);
             log.info("> Reset Geo Coordinates by Street, Postal Code, City Value to \"" + coordinatePair + "\"");
         } else {
-            // ### This leaves districtName = undefined
             log.info("> Geo Coordinates provided: " + latitude + ", " + longitude);
             coordinatePair = longitude + "," + latitude;
         }
@@ -215,9 +209,7 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
         // 4) ### Assign ALL current, generic facet to Confirmation WS, too
         storeBeschreibungFacet(geoObject, beschreibung);
         storeBezirksFacet(geoObject, district);
-        putRefFacets(geoObject, themen, THEMA_FACET, THEMA_CRIT);
-        putRefFacets(geoObject, angebote, ANGEBOT_FACET, ANGEBOT_CRIT);
-        putRefFacets(geoObject, zielgruppen, ZIELGRUPPE_FACET, ZIELGRUPPE_CRIT);
+        updateCriteriaFacets(geoObject, themen, zielgruppen, angebote);
         // ------- From here on, ALL new topics are assigned to the topic behind getStandardWorkspace() --------- //
         // 5) Store Geo Coordinate
         storeGeoCoordinateFacet(geoObject.getChildTopics().getTopic("dm4.contacts.address"), coordinatePair);
@@ -802,6 +794,7 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
     }
 
     private void storeBeschreibungFacet(Topic geoObject, String beschreibung) {
+        // ### delete former one
         if (!beschreibung.trim().isEmpty()) {
             facetsService.updateFacet(geoObject.getId(), WebsiteService.BESCHREIBUNG_FACET,
                 new FacetValue(WebsiteService.BESCHREIBUNG).put(beschreibung.trim()));
@@ -815,8 +808,15 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
         }
     }
 
-    private void putRefFacets(Topic geoObject, List<Long> ids, String facetTypeUri, String childTypeUri) {
-        for (Long id : ids){
+    private void delFacetTopicReferences(Topic geoObject, List<RelatedTopic> topics, String facetTypeUri, String childTypeUri) {
+        for (Topic topic : topics) {
+            facetsService.updateFacet(geoObject, facetTypeUri,
+                new FacetValue(childTypeUri).addDeletionRef(topic.getId()));
+        }
+    }
+
+    private void putFacetTopicsReferences(Topic geoObject, List<Long> ids, String facetTypeUri, String childTypeUri) {
+        for (Long id : ids) {
             facetsService.updateFacet(geoObject.getId(), facetTypeUri,
                 new FacetValue(childTypeUri).addRef(id));
         }
@@ -1142,6 +1142,18 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
         viewData("authenticated", isAuthenticated);
         viewData("is_publisher", isPrivileged);
         log.info("> Prepare Page Auth (isPrivileged=" + isPrivileged + ", isAuthenticated=" + isAuthenticated() + ")");
+    }
+
+    private void updateCriteriaFacets(Topic geoObject, List<Long> themen, List<Long> zielgruppen, List<Long> angebote) {
+        List<RelatedTopic> formerThemen = facetsService.getFacets(geoObject, THEMA_FACET).getItems();
+        List<RelatedTopic> formerZielgruppen = facetsService.getFacets(geoObject, ZIELGRUPPE_FACET).getItems();
+        // List<RelatedTopic> formerAngebote = facetsService.getFacets(geoObject, ANGEBOT_FACET).getItems();
+        delFacetTopicReferences(geoObject, formerThemen, THEMA_FACET, THEMA_CRIT);
+        delFacetTopicReferences(geoObject, formerZielgruppen, ZIELGRUPPE_FACET, ZIELGRUPPE_CRIT);
+        /// delRefFacetTopics(geoObject, formerAngebote, ANGEBOT_FACET, ANGEBOT_CRIT);
+        putFacetTopicsReferences(geoObject, themen, THEMA_FACET, THEMA_CRIT);
+        putFacetTopicsReferences(geoObject, zielgruppen, ZIELGRUPPE_FACET, ZIELGRUPPE_CRIT);
+        // putRefFacets(geoObject, angebote, ANGEBOT_FACET, ANGEBOT_CRIT);
     }
 
 }
