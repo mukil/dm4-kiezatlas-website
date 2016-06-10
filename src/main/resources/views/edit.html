@@ -67,7 +67,7 @@
                 var queryString = streetNr + ", "
                 if (zipCode.length > 0) queryString += zipCode + " "
                 if (selectedCity.value !== "undefined") queryString += selectedCity.text + " "
-                if (selectedDistrict.value !== "undefined") queryString += selectedDistrict.text + " "
+                if (selectedDistrict.value !== -1) queryString += selectedDistrict.text + " "
                 queryString += selectedCountry.text
                 restc.do_geocode(queryString, function(response) {
                     try {
@@ -164,7 +164,7 @@
                             <label for="plz">Postleitzahl, Bezirk</label>
                             <input type="number" id="postal-code" class="plz" name="plz" th:value='${geoobject.plz}'/>
                             <select id="district" name="district">
-                                <option value="undefined">Bitte Bezirk ausw&auml;hlen</option>
+                                <option value="-1">Bitte Bezirk ausw&auml;hlen</option>
                                 <option th:each="district : ${availableDistricts}" th:selected="${#strings.toString(district.simpleValue) eq geoobject.bezirk}" th:value="${district.id}" th:text="${district.simpleValue}"></option>
                             </select>
                             <br/>
