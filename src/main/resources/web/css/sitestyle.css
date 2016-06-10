@@ -1384,8 +1384,8 @@ div.link-area {
         top: 10px;
         text-align: left;
     }
-    #header .welcome img,
-    #header .welcome h3 {
+    .frontpage #header .welcome img,
+    .frontpage #header .welcome h3 {
         display: none;
     }
     #header .welcome p {
@@ -1499,7 +1499,7 @@ div.link-area {
     #map {
         height: 350px !important;
     }
-    #header {
+    .frontpage #header {
         display: none;
     }
     .confirm #header {

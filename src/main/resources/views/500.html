@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <title>Internal server error - 500</title>
+
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0"/>
+        
+        <link media="all" href="/de.mikromedia.webpages/css/sitestyle.css" rel="stylesheet" />
+
+    </head>
+    <body class="page denied">
+        
+        <div id="header">
+            <div class="welcome">
+                <h1>500</h1>
+                <h3>Sorry, the server experienced an internal error.</h3>
+            </div>
+        </div>
+        
+        <div class="story">
+            <span class="label">Fehlermeldung</span>
+            <div class="text" th:text="${message}"></div>
+        </div>
+
+        <div id="bottom" class="padding">
+            <a href="/" title="zur Startseite"><img src="/de.kiezatlas.website/images/kiezatlas2-logo.png" width="150" /></a>
+        </div>
+
+        <div class="footer" th:utext="${footerText}"></div>
+
+    </body>
+</html>

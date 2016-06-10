@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <title>Access denied - 401</title>
+
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0"/>
+        
+        <link media="all" href="/de.mikromedia.webpages/css/sitestyle.css" rel="stylesheet" />
+
+    </head>
+    <body class="page denied">
+        
+        <div id="header">
+            <div class="welcome">
+                <h1>401</h1>
+                <h3>Sie sind entweder gerade nicht im Kiezatlas angemeldet oder noch nicht berechtigt diese Seite zu benutzen.</h3>
+                <p>Hier geht's zum <a class="button" href="/sign-up/login">Login</a></p>
+            </div>
+        </div>
+        
+        <div class="story">
+            <div class="text"></div>
+        </div>
+
+        <div id="bottom" class="padding">
+            <a href="/" title="zur Startseite"><img src="/de.kiezatlas.website/images/kiezatlas2-logo.png" width="150" /></a>
+        </div>
+
+        <div class="footer" th:utext="${footerText}"></div>
+
+    </body>
+</html>

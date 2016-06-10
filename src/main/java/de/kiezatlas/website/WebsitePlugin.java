@@ -135,7 +135,7 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
     @Produces(MediaType.TEXT_HTML)
     @Path("/topic/create")
     public Viewable getGeoObjectEditPage() {
-        if (!isAuthenticated()) return view("401");
+        if (!isAuthenticated()) return getUnauthorizedPage();
         EinrichtungsInfo geoObject = new EinrichtungsInfo();
         geoObject.setCoordinates(new GeoCoordinate(13.4, 52.5));
         geoObject.setName("Neuer Eintrag");
@@ -243,8 +243,7 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
             // viewData("angebote", facetsService.getFacets(geoObject, ANGEBOT_FACET).getItems());
             // viewData("message", "Einrichtung \"" + geoObject.getSimpleValue() + "\" erfolgreich geladen.");
         } else {
-            // ### throw 401
-            viewData("message", "Eine Einrichtung mit dieser ID ist uns nicht bekannt.");
+            return getPageNotFound("Eine Einrichtung mit dieser ID ist uns nicht bekannt.");
         }
         prepareFormWithAvailableTopics();
         viewData("workspace", getStandardWorkspace());
@@ -295,9 +294,7 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
     public Viewable getGeoObjectDetailsPage(@PathParam("topicId") long topicId) {
         Topic geoObject = dms.getTopic(topicId);
         Topic username = getUsernameTopic();
-        if (!isGeoObjectTopic(geoObject)) {
-            return view("404");
-        }
+        if (!isGeoObjectTopic(geoObject)) return getPageNotFound();
         // Assemble Generic Einrichtungs Infos
         EinrichtungsInfo einrichtung = assembleGeneralEinrichtungsInfo(geoObject);
         // ### Yet Missing: Träger, Bezirksregion, Bezirk, Administrator Infos und Stichworte
@@ -330,7 +327,7 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
         } else {
             geoObject = dms.getTopic(Long.parseLong(topicId));
         }
-        return (geoObject != null) ? getGeoObjectDetailsPage(geoObject.getId()) : view("404");
+        return (geoObject != null) ? getGeoObjectDetailsPage(geoObject.getId()) : getPageNotFound();
     }
 
     /**
@@ -1190,6 +1187,34 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
             kontakt.getChildTopics().set(KONTAKT_TEL, telefon.trim());
             kontakt.getChildTopics().set(KONTAKT_FAX, fax.trim());
         }
+    }
+
+    private Viewable getPageNotFound() {
+        return getPageNotFound(null, null);
+    }
+
+    private Viewable getPageNotFound(String message) {
+        return getPageNotFound(message, null);
+    }
+
+    private Viewable getPageNotFound(String message, String backLinkUrl) {
+        if (message != null) viewData("message", message);
+        if (backLinkUrl != null) viewData("originated", backLinkUrl);
+        return view("404");
+    }
+
+    private Viewable getUnauthorizedPage() {
+        return getUnauthorizedPage(null, null);
+    }
+
+    private Viewable getUnauthorizedPage(String message) {
+        return getUnauthorizedPage(message, null);
+    }
+
+    private Viewable getUnauthorizedPage(String message, String backLinkUrl) {
+        if (message != null) viewData("message", message);
+        if (backLinkUrl != null) viewData("originated", backLinkUrl);
+        return view("401");
     }
 
 }
