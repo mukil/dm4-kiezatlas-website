@@ -145,7 +145,7 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
         viewData("zielgruppen", new ArrayList<RelatedTopic>());
         prepareFormWithAvailableTopics();
         preparePageAuthorization();
-        viewData("workspace", getPrivilegedWorkspace());
+        viewData("workspace", getStandardWorkspace());
         return view("edit");
     }
 
@@ -206,20 +206,20 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
                 viewData("message", "Sie sind leider nicht berechtigt diesen Datensatz zu bearbeiten.");
             }
         }
-        // 4) ### Assign ALL current, generic facet to Confirmation WS, too
-        storeBeschreibungFacet(geoObject, beschreibung);
-        storeBezirksFacet(geoObject, district);
+        // 4) ### Assign to Confirmation WS, too
+        updateSimpleCompositeFacet(geoObject, BESCHREIBUNG_FACET, BESCHREIBUNG, beschreibung);
+        updateSimpleCompositeFacet(geoObject, OEFFNUNGSZEITEN_FACET, OEFFNUNGSZEITEN, oeffnungszeiten);
+        updateContactFacet(geoObject, ansprechpartner, telefon, email, fax);
+        // Assign existing Bezirks Topic
+        writeBezirksFacet(geoObject, district);
+        // Create, Update or Re-use existing Webpage URL and Assign
+        writeSimpleKeyCompositeFacet(geoObject, WEBSITE_FACET, "dm4.webbrowser.url", website);
+        // Handle Category Relations
         updateCriteriaFacets(geoObject, themen, zielgruppen, angebote);
         // ------- From here on, ALL new topics are assigned to the topic behind getStandardWorkspace() --------- //
-        // 5) Store Geo Coordinate
-        storeGeoCoordinateFacet(geoObject.getChildTopics().getTopic("dm4.contacts.address"), coordinatePair);
-        // 6) ### match Googles District Name to Site Topics via ETL
-        // ### Bezirk Relation
-        // 7) Set "Confirmed=false" flag // unpublished, to be confirmed
-        // Defused setConfirmationFlag(geoObject, false);
-        // 8) ### Handle Category-Relations
-        // 9) ### Handle Image-File Upload (Seperately)
-        // Prepare new form page (is unpublished..)
+        // Store Geo Coordinate
+        writeGeoCoordinateFacet(geoObject.getChildTopics().getTopic("dm4.contacts.address"), coordinatePair);
+        // ### Handle Image-File Upload (Seperately)
         return WebsitePlugin.this.getGeoObjectEditPage(geoObject.getId());
     }
 
@@ -780,7 +780,7 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
     }
 
     /** see duplicate in GeomapsPlugin.storeGeoCoordinate() */
-    private void storeGeoCoordinateFacet(Topic address, String coordinatePair) {
+    private void writeGeoCoordinateFacet(Topic address, String coordinatePair) {
         // ### Just write new coordinates IF values changed.
         double longitude, latitude;
         longitude = Double.parseDouble(coordinatePair.split(",")[0]);
@@ -793,15 +793,33 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
         facetsService.updateFacet(address, "dm4.geomaps.geo_coordinate_facet", value);
     }
 
-    private void storeBeschreibungFacet(Topic geoObject, String beschreibung) {
-        // ### delete former one
-        if (!beschreibung.trim().isEmpty()) {
-            facetsService.updateFacet(geoObject.getId(), WebsiteService.BESCHREIBUNG_FACET,
-                new FacetValue(WebsiteService.BESCHREIBUNG).put(beschreibung.trim()));
+    private void updateSimpleCompositeFacet(Topic geoObject, String facetTypeUri, String childTypeUri, String value) {
+        Topic oldFacetTopic = facetsService.getFacet(geoObject.getId(), facetTypeUri);
+        if (!value.trim().isEmpty()) {
+            facetsService.updateFacet(geoObject.getId(), facetTypeUri, new FacetValue(childTypeUri).put(value.trim()));
+            if (oldFacetTopic != null) oldFacetTopic.delete();
         }
     }
 
-    private void storeBezirksFacet(Topic geoObject, long bezirksTopicId) {
+    private void writeSimpleKeyCompositeFacet(Topic geoObject, String facetTypeUri, String childTypeUri, String value) {
+        // check if a former value was already assigned and we're updating
+        Topic oldFacetTopic = facetsService.getFacet(geoObject.getId(), facetTypeUri);
+        // check if value already exist in a topic/db and if so, reference that
+        Topic keyTopic = dms.getTopic(childTypeUri, new SimpleValue(value.trim()));
+        if (!value.trim().isEmpty()) {
+            if (oldFacetTopic != null && !oldFacetTopic.getSimpleValue().toString().equals(value.trim())) {
+                // old value is existent and same as new value, do nothing
+            } else if (keyTopic != null) { // reference existing topic
+                facetsService.updateFacet(geoObject.getId(), facetTypeUri,
+                    new FacetValue(childTypeUri).putRef(keyTopic.getId()));
+            } else { // create new topic with new value
+                facetsService.updateFacet(geoObject.getId(), facetTypeUri,
+                    new FacetValue(childTypeUri).put(value.trim()));
+            }
+        }
+    }
+
+    private void writeBezirksFacet(Topic geoObject, long bezirksTopicId) {
         if (bezirksTopicId > -1) {
             facetsService.updateFacet(geoObject.getId(), WebsiteService.BEZIRK_FACET,
                 new FacetValue(WebsiteService.BEZIRK).putRef(bezirksTopicId));
@@ -817,8 +835,7 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
 
     private void putFacetTopicsReferences(Topic geoObject, List<Long> ids, String facetTypeUri, String childTypeUri) {
         for (Long id : ids) {
-            facetsService.updateFacet(geoObject.getId(), facetTypeUri,
-                new FacetValue(childTypeUri).addRef(id));
+            facetsService.updateFacet(geoObject.getId(), facetTypeUri, new FacetValue(childTypeUri).addRef(id));
         }
     }
 
@@ -1154,6 +1171,25 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
         putFacetTopicsReferences(geoObject, themen, THEMA_FACET, THEMA_CRIT);
         putFacetTopicsReferences(geoObject, zielgruppen, ZIELGRUPPE_FACET, ZIELGRUPPE_CRIT);
         // putRefFacets(geoObject, angebote, ANGEBOT_FACET, ANGEBOT_CRIT);
+    }
+
+    private void updateContactFacet(Topic geoObject, String ansprechpartner, String telefon, String email, String fax) {
+        Topic kontakt = facetsService.getFacet(geoObject, KONTAKT_FACET);
+        if (kontakt == null) { // Create
+            FacetValue facetValue = new FacetValue(KONTAKT);
+            facetValue.put(new ChildTopicsModel()
+                .put(KONTAKT_ANSPRECHPARTNER, ansprechpartner.trim())
+                .put(KONTAKT_MAIL, email.trim())
+                .put(KONTAKT_TEL, telefon.trim())
+                .put(KONTAKT_FAX, fax.trim())
+            );
+            facetsService.updateFacet(geoObject, KONTAKT_FACET, facetValue);
+        } else { // Update through Overwrite
+            kontakt.getChildTopics().set(KONTAKT_ANSPRECHPARTNER, ansprechpartner.trim());
+            kontakt.getChildTopics().set(KONTAKT_MAIL, email.trim());
+            kontakt.getChildTopics().set(KONTAKT_TEL, telefon.trim());
+            kontakt.getChildTopics().set(KONTAKT_FAX, fax.trim());
+        }
     }
 
 }
