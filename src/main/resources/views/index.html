@@ -56,8 +56,9 @@
                 <li class="angebote-my"><a href="/angebote/my">Meine Angebote</a></li>
                 <li class="angebote"><a href="/angebote/">Angebote</a></li>
                 <li class="new"><a href="/sign-up/login">Neueintrag</a></li>
+                <li class="confirm"><a href="/website/confirmation">Einrichtungen freischalten</a></li>
                 <li class="account"><a href="/sign-up/edit/">Mein Account</a></li>
-                <li class="logout"><a href="/#logout/" onclick="javascript:restc.logout()">Abmelden</a></li>
+                <li class="logout"><a href="/#logout/" onclick="kiezatlas.do_logout()">Abmelden</a></li>
             </ul>
         </div>
         
@@ -67,7 +68,7 @@
                 <h3>Willkommen im Kiezatlas!</h3>
                 <p>
                     Im Kiezatlas findest du Berliner Einrichtungen &ndash; und neuerdings auch
-                    <a href="#angebote" onclick="javascript:kiezatlas.show_angebote_page()"><b>Angebote</b></a>.
+                    <a href="#angebote" onclick="kiezatlas.show_angebote_page()"><b>Angebote</b></a>.
                 </p>
             </div>
         </div>
@@ -126,7 +127,7 @@
         </div>
 
         <!-- Notification area -->
-        <div id="notification" onclick="javascript:kiezatlas.close_message_window()">
+        <div id="notification" onclick="kiezatlas.close_message_window()">
             <span class="message">Hi!</span>
             <!-- a href="javascript:kiezatlas.close_message_window()">(x)</a-->
         </div>

@@ -163,7 +163,7 @@
                             <input type="text" id="streetnr" name="strasse" th:value='${geoobject.strasse}'/>
                             <label for="plz">Postleitzahl, Bezirk</label>
                             <input type="number" id="postal-code" class="plz" name="plz" th:value='${geoobject.plz}'/>
-                            <select id="district" name="district">
+                            <select id="district" required="true" name="district">
                                 <option value="-1">Bitte Bezirk ausw&auml;hlen</option>
                                 <option th:each="district : ${availableDistricts}" th:selected="${#strings.toString(district.simpleValue) eq geoobject.bezirk}" th:value="${district.id}" th:text="${district.simpleValue}"></option>
                             </select>

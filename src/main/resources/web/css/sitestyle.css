@@ -327,6 +327,7 @@ span.angebote-btn,
     text-decoration-color: #8f1414;
 }
 
+#navigation .confirm,
 #navigation .account,
 #navigation .logout {
     display: none;
@@ -724,6 +725,14 @@ span.angebote-btn,
 
 .kiezatlas.topic #detail-area .commands {
     padding: 10px;
+}
+
+.kiezatlas.topic .commands .edit {
+    float: left;
+}
+
+.kiezatlas.topic .commands .publish {
+    float: right;
 }
 
 .kiezatlas.topic #map {

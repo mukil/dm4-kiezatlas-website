@@ -3,6 +3,8 @@ package de.kiezatlas.website.model;
 import de.deepamehta.core.JSONEnabled;
 import de.deepamehta.core.Topic;
 import de.deepamehta.plugins.geomaps.model.GeoCoordinate;
+import java.text.DateFormat;
+import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.codehaus.jettison.json.JSONException;
@@ -175,6 +177,15 @@ public class EinrichtungsInfo implements JSONEnabled {
         }
     }
 
+    public void setLastModified(long timestamp) {
+        try {
+            json.put("last_modified", timestamp);
+            json.put("last_modified_string", DateFormat.getDateInstance(DateFormat.LONG, Locale.GERMANY).format(timestamp));
+        } catch (JSONException ex) {
+            Logger.getLogger(EinrichtungsInfo.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
     public void setCoordinates(GeoCoordinate coordinate) {
         try {
             json.put("latitude", coordinate.lat);
@@ -187,6 +198,14 @@ public class EinrichtungsInfo implements JSONEnabled {
     public void setImageUrl(String path) {
         try {
             json.put("image_url", path);
+        } catch (JSONException ex) {
+            Logger.getLogger(EinrichtungsInfo.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    public void setAssignedUsername(String username) {
+        try {
+            json.put("username", username);
         } catch (JSONException ex) {
             Logger.getLogger(EinrichtungsInfo.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -394,6 +413,24 @@ public class EinrichtungsInfo implements JSONEnabled {
             Logger.getLogger(EinrichtungsInfo.class.getName()).log(Level.SEVERE, null, ex);
         }
         return -1;
+    }
+
+    public String getLastModified() {
+        try {
+            return json.getString("last_modified_string");
+        } catch (JSONException ex) {
+            Logger.getLogger(EinrichtungsInfo.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return "";
+    }
+
+    public String getAssignedUsername() {
+        try {
+            return json.getString("username");
+        } catch (JSONException ex) {
+            Logger.getLogger(EinrichtungsInfo.class.getName()).log(Level.FINE, "Einrichtung has no Username (Id: " + getId() + ")", ex);
+            return "";
+        }
     }
 
     /** ------------------------- Java Object API Overrides --------------------- */

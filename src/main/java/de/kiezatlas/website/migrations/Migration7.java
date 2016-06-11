@@ -1,35 +1,37 @@
 package de.kiezatlas.website.migrations;
 
-import de.deepamehta.core.RelatedTopic;
+import de.deepamehta.core.Topic;
+import de.deepamehta.core.TopicType;
+import de.deepamehta.core.model.AssociationDefinitionModel;
 import de.deepamehta.core.service.Inject;
 import de.deepamehta.core.service.Migration;
-import de.deepamehta.core.service.ResultList;
 import de.deepamehta.plugins.workspaces.WorkspacesService;
+
 import java.util.logging.Logger;
 
-/** 
- * Extends all existing Geo Objects about a "Confirmed" flag with the value "true".
- */
+
 public class Migration7 extends Migration {
 
     private Logger log = Logger.getLogger(getClass().getName());
+
+    static final String KIEZATLAS_WORKSPACE_URI = "de.kiezatlas.workspace";
 
     @Inject private WorkspacesService workspaceService;
 
     @Override
     public void run() {
-        log.info("##### Start Kiezatlas Website \"Confirmation\"-Migration: Extend all Geo Objects! #####");
-        // 1) Set "Confirmed" flag for every geo object already EXISTING to TRUE
-        ResultList<RelatedTopic> geoObjects = dms.getTopics("ka2.geo_object", 0);
-        for(RelatedTopic geoObject : geoObjects) {
-            // Assign all new "confirmed"-flag topics to our dedicated "Confirmation"-Workspace
-            // geoObject.getChildTopics().set(CONFIRMED_TYPE, true);
-            /** dms.getAccessControl().assignToWorkspace(geoObject.getChildTopics().getTopic(CONFIRMED_TYPE),
-                workspaceService.getWorkspace(CONFIRMATION_WS_URI).getId()); **/
-            log.info("Set existing Geo Object: " + geoObject.getSimpleValue() + "  confirmed=" + true + " in Confirmation Workspace");
-        }
-        log.info("##### Kiezatlas Website \"Confirmation\"-Migration COMPLETE: Set " + geoObjects.getSize() 
-            + " Geo Objects as CONFIRMED #####");
-    }
+        
+        log.info("##### Setup Website Geo Object \"Confirmed\" Child Type in Website Migration Nr. 5 #####");
 
+        // 1) Assign all our types from migration1 to the "Kiezatlas" workspace so "admin" can edit these definitions
+        Topic kiezatlas = workspaceService.getWorkspace(KIEZATLAS_WORKSPACE_URI);
+        TopicType confirmationFlag = dms.getTopicType("ka2.website.confirmed");
+        workspaceService.assignTypeToWorkspace(confirmationFlag, kiezatlas.getId());
+        // 2) Assign "Confirmed"-Flag to "Geo Object"..
+        //    .. to introduce a "publishing" workflow around "self-registered" / publicly created Geo Objects
+        TopicType geoObject = dms.getTopicType("ka2.geo_object");
+        geoObject.addAssocDef(new AssociationDefinitionModel("dm4.core.composition_def",
+            "ka2.geo_object", "ka2.website.confirmed", "dm4.core.one", "dm4.core.one"));
+
+    }
 }

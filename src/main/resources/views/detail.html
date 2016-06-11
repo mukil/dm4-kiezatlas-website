@@ -8,10 +8,9 @@
         <link rel="stylesheet" href="/de.kiezatlas.website/vendor/leaflet/leaflet.css"/>
         <link rel="stylesheet" href="/de.kiezatlas.website/css/sitestyle.css"/>
 
-        <!-- script src="/de.kiezatlas.website/vendor/jquery/jquery-1.9.1.min.js"></script-->
+        <script src="/de.kiezatlas.website/vendor/jquery/jquery-1.9.1.min.js"></script>
         <script src="/de.kiezatlas.website/vendor/leaflet/leaflet.js"></script>
-        <!-- script src="/de.kiezatlas.website/ka-restclient.js"></script-->
-        <!-- script src="/de.kiezatlas.website/ka-map.js"></script-->
+        <script src="/de.deepamehta.webclient/script/util/rest_client.js"></script>
 
         <script type="text/javascript" th:inline="javascript">
         /*<![CDATA[*/
@@ -31,6 +30,11 @@
                     weight: 3, opacity: 0.6, fillColor: "#a9a9a9", fillOpacity: 0.2, color: "#8f1414",
                 }).addTo(map)
             }
+
+            function logout() {
+                restc.logout()
+                window.document.location.reload()
+            }
         /*]]>*/
         </script>
     </head>
@@ -41,10 +45,10 @@
                 <!--li class="register"><a href="/sign-up/">Registrieren</a></li-->
                 <li class="angebote"><a href="/">Startseite</a></li>
                 <li class="angebote"><a href="/angebote/">Angebote</a></li>
-                <li class="login" th:if="!${authenticated}" ><a href="/sign-up/login">Login</a></li>
+                <li class="login" th:if="!${authenticated}"><a href="/sign-up/login">Login</a></li>
                 <!--li class="angebote"><a href="/kiezatlas/angebot/">Orte</a></li-->
                 <!-- li class="angebote"><a href="/sign-up/edit/">Mein Account</a></li-->
-                <li class="logout visible-ib" th:if="${authenticated}"><a href="/#logout/" onclick="javascript:restc.logout()">Abmelden</a></li>
+                <li class="logout visible-ib" th:if="${authenticated}"><a href="#" onclick="javascript:logout()">Abmelden</a></li>
             </ul>
         </div>
 
@@ -57,8 +61,8 @@
         <div id="detail-area" th:class="${angebotsinfos} ? 'angebotsinfos'">
             <div class="commands">
                 <p th:if="${!#strings.isEmpty(message)}" th:text="${message}"></p>
-                <a class="button" th:if="${authenticated} and ${editable}" th:href="'/website/topic/edit/' + ${geoobject.id}">Edit</a>
-                <a class="button" th:if="${is_publisher} and ${editable}" th:href="'/website/topic/confirm/' + ${geoobject.id}">Freischalten</a>
+                <a class="button edit" th:if="${authenticated} and ${editable}" th:href="'/website/topic/edit/' + ${geoobject.id}">Edit</a>
+                <a class="button publish" th:if="${is_publisher}" th:href="'/website/topic/confirm/' + ${geoobject.id}">Freischalten</a>
             </div>
             <div id="map"></div>
             <div class="info-area">

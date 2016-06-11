@@ -26,14 +26,15 @@
         <div id="navigation">
             <ul>
                 <li class="angebote"><a href="/">Startseite</a></li>
+                <li class="login" th:if="!${authenticated}" ><a href="/website/user/menu">Hauptmen&uuml;</a></li>
                 <li class="login" th:if="!${authenticated}" ><a href="/sign-up/login">Login</a></li>
                 <li class="logout visible-ib" th:if="${is_publisher}"><a href="/#logout/" onclick="javascript:restc.logout()">Abmelden</a></li>
             </ul>
         </div>
 
         <div id="header">
-            <div class="welcome" th:if="${is_publisher}">Hier k&ouml;nnen Sie neu eingetragene Einrichtungen freischalten und ihren Kiezatlas Websites zuordnen.</div>
-            <div class="welcome" th:if="${not is_publisher}">Sorry! Sie haben aktuell keine Berechtigungen um neue Einrichtungen im Kiezatlas freizuschalten.</div>
+            <p th:if="${is_publisher}">Hier k&ouml;nnen Sie neu eingetragene Einrichtungen freischalten und ihren Kiezatlas Websites zuordnen.</p>
+            <p th:if="${not is_publisher}"><b>Sorry!</b><br/>Sie haben aktuell nicht die n&ouml;tigen Berechtigungen um neue Einrichtungen im Kiezatlas freizuschalten.</p>
         </div>
 
         <!-- Details Area -->
@@ -45,16 +46,16 @@
             <div id="listing">
                 <ul class="soziale-einrichtungen">
                     <li th:each="geoobject : ${geoobjects}">
-                        <div class="list-item">
-                            <h3 th:text="${geoobject.simpleValue}"></h3>
-                            <p>
-                                <span class="label"></span>
-                            </p>
-                            <a class="read-more" th:href="'/website/topic/' + ${geoobject.id}">Details</a>
-                            <!--select>
-                                <option th:each="site : ${websites}" th:text="${site.simpleValue}" th:value="${site.id}"></option>
-                            </select-->
-                        </div>
+                            <div class="list-item">
+                                <h3 th:text="${geoobject.name}"></h3>
+                                <p>
+                                    Eingepflegt von <span th:text="${geoobject.assignedUsername}"></span> am <span th:text="${geoobject.lastModified}"></span>
+                                </p>
+                                <!--select>
+                                    <option th:each="site : ${websites}" th:text="${site.simpleValue}" th:value="${site.id}"></option>
+                                </select-->
+                                <a class="read-more" th:href="'/website/topic/' + ${geoobject.id}">Link zum Eintrag</a>
+                            </div>
                     </li>
                 </ul>
             </div>

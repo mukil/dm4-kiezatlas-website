@@ -90,6 +90,11 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
 
     var _self = this
 
+    this.do_logout = function() {
+        restc.logout()
+        window.document.location.reload()
+    }
+
     /** Renders either the
      *  - Standard Frontpage (Berlin wide) with Einrichtungen or Angeboten
      *  - District Frontpage (District Infos, District Fulltext search)
