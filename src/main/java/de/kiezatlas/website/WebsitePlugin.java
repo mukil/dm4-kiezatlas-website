@@ -193,17 +193,14 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
         Topic geoObject = null;
         Topic username = acService.getUsernameTopic(acService.getUsername());
         String coordinatePair = "", geoLocation = "";
-        if (district == -1 && !googleDistrict.isEmpty()) { // no district selected
+        if (district == -1 && !googleDistrict.isEmpty()) { // no district selected, trying magic
             district = mapGoogleDistrictNameToKiezatlasBezirksTopic(googleDistrict);
             if (district == -1) log.warning("> Automatisches Mapping des Bezirks für Einrichtung ist FEHLGESCHLAGEN.");
             if (district > 0) log.info("> Automatisches Mapping des Bezirks für Einrichtung war ERFOLGREICH, ID: " + district);
         } else if (district == -1 && googleDistrict.isEmpty()) {
             viewData("message", "Bitte w&auml;hlen Sie den den passenden Bezirk f&uuml;r diese Einrichtung aus");
-            if (topicId == -1 || topicId == 0) {
-                return getGeoObjectEditPage();
-            } else {
-                return getGeoObjectEditPage(topicId);
-            }
+            // ### Test this route
+            return (topicId == -1 || topicId == 0) ? getGeoObjectEditPage() : getGeoObjectEditPage(topicId);
         }
         // Handle Geo Coordinates of Geo Object
         if (latitude == -1000 || longitude == -1000) {
@@ -840,10 +837,7 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
             .put("dm4.geomaps.latitude",  latitude)
         );
         facetsService.updateFacet(address, "dm4.geomaps.geo_coordinate_facet", value);
-        // ## Do WS Assignment
-        // Topic facetTopicValue = facetsService.getFacet(address, "dm4.geomaps.geo_coordinate_facet");
-        // Association facetAssoc = dms.getAssociation("dm4.core.composition", address.getId(), facetTopicValue.getId(), null, null);
-        // log.info("Wrote Geo Coordinate Facet (Assoc:"+facetAssoc.getId()+"), Topic ID: " + facetTopicValue.getId());
+        // ## Do WS Assignment here, too.
     }
 
     private void updateSimpleCompositeFacet(Topic geoObject, String facetTypeUri, String childTypeUri, String value) {
@@ -851,6 +845,7 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
         if (!value.trim().isEmpty()) {
             facetsService.updateFacet(geoObject.getId(), facetTypeUri, new FacetValue(childTypeUri).put(value.trim()));
             if (oldFacetTopic != null) oldFacetTopic.delete();
+            initiallyAssignSingleRelatingFacetToWorkspace(geoObject, facetTypeUri, getStandardWorkspace().getId());
         }
     }
 
@@ -868,10 +863,21 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
             } else { // create new topic with new value
                 facetsService.updateFacet(geoObject.getId(), facetTypeUri,
                     new FacetValue(childTypeUri).put(value.trim()));
+                initiallyAssignSingleRelatingFacetToWorkspace(keyTopic, facetTypeUri, getStandardWorkspace().getId());
             }
         }
     }
 
+    private void initiallyAssignSingleRelatingFacetToWorkspace(Topic object, String facetTypeUri, long workspaceId) {
+        // ## Handle multi AND single-facets
+        // ## Iterate over all facet value topic childs and assign them too
+        Topic facetTopicValue = facetsService.getFacet(object, facetTypeUri);
+        dms.getAccessControl().assignToWorkspace(facetTopicValue, workspaceId);
+        Association facetAssoc = dms.getAssociation("dm4.core.composition", object.getId(), facetTopicValue.getId(), null, null);
+        dms.getAccessControl().assignToWorkspace(facetAssoc, workspaceId);
+        log.info("Assigned \""+facetTypeUri+"\" Facet Topic Value : " + facetTopicValue.getId() + " to Workspace incl. relating Association");
+    }
+    
     private void writeBezirksFacet(Topic geoObject, long bezirksTopicId) {
         if (bezirksTopicId > -1) {
             facetsService.updateFacet(geoObject.getId(), WebsiteService.BEZIRK_FACET,
@@ -904,10 +910,12 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
                     writeGeoCoordinateFacet(geoObject.getChildTopics().getTopic("dm4.contacts.address"), coordinatePair);
                     // Assign the composite contact and two new simple HTML facets
                     updateContactFacet(geoObject, ansprechpartner, telefon, email, fax);
+                    // Both new facet value topics will be assigned to Standard Workspace by default, old is removed
                     updateSimpleCompositeFacet(geoObject, BESCHREIBUNG_FACET, BESCHREIBUNG, beschreibung);
                     updateSimpleCompositeFacet(geoObject, OEFFNUNGSZEITEN_FACET, OEFFNUNGSZEITEN, oeffnungszeiten);
                     // Assign existing Bezirks Topic, Create, Update or Re-use existing Webpage URL and Assign
                     writeBezirksFacet(geoObject, district);
+                    // All new webbrowser url topics will be assign to Standard Workspace
                     writeSimpleKeyCompositeFacet(geoObject, WEBSITE_FACET, "dm4.webbrowser.url", website);
                     // Handle Category Relations
                     updateCriteriaFacets(geoObject, themen, zielgruppen, angebote);
@@ -925,14 +933,23 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
                 @Override
                 public Topic call() {
                     Topic geoObject = dms.createTopic(geoObjectModel);
-                    Topic addressObject = geoObject.getChildTopics().getTopic("dm4.contacts.address");
+                    RelatedTopic address = geoObject.getChildTopics().getTopic("dm4.contacts.address");
+                    RelatedTopic street = address.getChildTopics().getTopic("dm4.contacts.street");
+                    RelatedTopic city = address.getChildTopics().getTopic("dm4.contacts.city");
+                    RelatedTopic zipCode = address.getChildTopics().getTopic("dm4.contacts.postal_code");
+                    RelatedTopic country = address.getChildTopics().getTopic("dm4.contacts.country");
                     long workspaceId = getPrivilegedWorkspace().getId();
                     dms.getAccessControl().assignToWorkspace(geoObject, workspaceId);
-                    dms.getAccessControl().assignToWorkspace(addressObject, workspaceId);
-                    dms.getAccessControl().assignToWorkspace(addressObject.getChildTopics().getTopic("dm4.contacts.street"), workspaceId);
-                    dms.getAccessControl().assignToWorkspace(addressObject.getChildTopics().getTopic("dm4.contacts.city"), workspaceId);
-                    dms.getAccessControl().assignToWorkspace(addressObject.getChildTopics().getTopic("dm4.contacts.postal_code"), workspaceId);
-                    dms.getAccessControl().assignToWorkspace(addressObject.getChildTopics().getTopic("dm4.contacts.country"), workspaceId);
+                    dms.getAccessControl().assignToWorkspace(address, workspaceId);
+                    dms.getAccessControl().assignToWorkspace(address.getRelatingAssociation(), workspaceId);
+                    dms.getAccessControl().assignToWorkspace(street, workspaceId);
+                    dms.getAccessControl().assignToWorkspace(street.getRelatingAssociation(), workspaceId);
+                    dms.getAccessControl().assignToWorkspace(city, workspaceId);
+                    dms.getAccessControl().assignToWorkspace(city.getRelatingAssociation(), workspaceId);
+                    dms.getAccessControl().assignToWorkspace(zipCode, workspaceId);
+                    dms.getAccessControl().assignToWorkspace(zipCode.getRelatingAssociation(), workspaceId);
+                    dms.getAccessControl().assignToWorkspace(country, workspaceId);
+                    dms.getAccessControl().assignToWorkspace(country.getRelatingAssociation(), workspaceId);
                     log.info("Created Unconfirmed Geo Object ("+geoObject.getSimpleValue()+") in Confirmation WS");
                     return geoObject;
                 }
@@ -953,9 +970,10 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
                         Association assignment = dms.createAssociation(new AssociationModel("de.kiezatlas.user_assignment",
                             new TopicRoleModel(geoObject.getId(), "dm4.core.default"),
                             new TopicRoleModel(usernameTopic.getId(), "dm4.core.default")));
+                        // ### Workspace Selection Either OR ...
                         dms.getAccessControl().assignToWorkspace(assignment, getPrivilegedWorkspace().getId());
                         log.info("Created User Assignment ("+username+") for Geo Object \"" + geoObject.getSimpleValue() + "\" in Confirmation WS");
-                        dms.getAccessControl().assignToWorkspace(assignment, getStandardWorkspace().getId());
+                        // dms.getAccessControl().assignToWorkspace(assignment, getStandardWorkspace().getId());
                         return assignment;
                     }
                 });
@@ -977,7 +995,7 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
                         Association assignment = dms.createAssociation(new AssociationModel("de.kiezatlas.bild_assignment",
                             new TopicRoleModel(geoObject.getId(), "dm4.core.default"),
                             new TopicRoleModel(fileTopicId, "dm4.core.default")));
-                        dms.getAccessControl().assignToWorkspace(assignment, getPrivilegedWorkspace().getId());
+                        // ### Workspace Selection Either OR ...
                         log.info("Created Bild Assignment ("+username+") for Geo Object \"" + geoObject.getSimpleValue()
                             + "\" and File Topic \""+fileService.getFile(fileTopicId).toString()+"\"");
                         dms.getAccessControl().assignToWorkspace(assignment, getStandardWorkspace().getId());
