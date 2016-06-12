@@ -27,6 +27,7 @@ import de.deepamehta.core.service.Transactional;
 import de.deepamehta.plugins.accesscontrol.AccessControlService;
 import de.deepamehta.plugins.facets.FacetsService;
 import de.deepamehta.plugins.facets.model.FacetValue;
+import de.deepamehta.plugins.files.FilesService;
 import de.deepamehta.plugins.geomaps.model.GeoCoordinate;
 import de.deepamehta.plugins.geomaps.GeomapsService;
 import de.deepamehta.plugins.geospatial.GeospatialService;
@@ -91,6 +92,7 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
     @Inject private AngebotService angeboteService;
     @Inject private GeomapsService geomapsService;
     @Inject private FacetsService facetsService;
+    @Inject private FilesService fileService;
     @Inject KiezatlasService kiezatlas;
 
     // Application Cache of District Overview Resultsets
@@ -181,8 +183,8 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
     @Path("/topic/save")
     @Transactional
     public Viewable processGeoObjectForm(@FormParam("id") long topicId, @FormParam("name") String name, @FormParam("strasse") String strasse,
-            @FormParam("plz") String plz, @FormParam("city") long city, @FormParam("district") long district,
-            @FormParam("country") long country, @FormParam("beschreibung") String beschreibung,
+            @FormParam("plz") String plz, @FormParam("city") long city, @FormParam("district") long district, @FormParam("fileTopicId") long fileId,
+            @FormParam("googleDistrictName") String googleDistrict, @FormParam("country") long country, @FormParam("beschreibung") String beschreibung,
             @FormParam("open") String oeffnungszeiten, @FormParam("ansprechpartner") String ansprechpartner,
             @FormParam("telefon") String telefon, @FormParam("email") String email, @FormParam("fax") String fax,
             @FormParam("website") String website, @FormParam("lat") double latitude, @FormParam("lon") double longitude,
@@ -191,6 +193,18 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
         Topic geoObject = null;
         Topic username = acService.getUsernameTopic(acService.getUsername());
         String coordinatePair = "", geoLocation = "";
+        if (district == -1 && !googleDistrict.isEmpty()) { // no district selected
+            district = mapGoogleDistrictNameToKiezatlasBezirksTopic(googleDistrict);
+            if (district == -1) log.warning("> Automatisches Mapping des Bezirks für Einrichtung ist FEHLGESCHLAGEN.");
+            if (district > 0) log.info("> Automatisches Mapping des Bezirks für Einrichtung war ERFOLGREICH, ID: " + district);
+        } else if (district == -1 && googleDistrict.isEmpty()) {
+            viewData("message", "Bitte w&auml;hlen Sie den den passenden Bezirk f&uuml;r diese Einrichtung aus");
+            if (topicId == -1 || topicId == 0) {
+                return getGeoObjectEditPage();
+            } else {
+                return getGeoObjectEditPage(topicId);
+            }
+        }
         // Handle Geo Coordinates of Geo Object
         if (latitude == -1000 || longitude == -1000) {
             geoLocation = geoCodeAddressInput(URLEncoder.encode(strasse + ", " + plz + " " + city));
@@ -218,6 +232,9 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
                 createUserAssignment(geoObject, acService.getUsername());
                 attachGeoObjectChildTopics(geoObject, ansprechpartner, telefon, fax, email, beschreibung,
                     oeffnungszeiten, website, coordinatePair, district, themen, zielgruppen, angebote);
+                // Handle Image-File Upload (Seperately)
+                log.info("> Bild File Topic Upload is file at=\"" + fileService.getFile(fileId).toString());
+                createBildAssignment(geoObject, username, fileId);
                 // ### Send Notification to EDITOR with basic infos on the "confirmation" process
                 viewData("message", "Vielen Dank, Sie haben erfolgreich einen neuen Ort in den Kiezatlas eingetragen. "
                     + "Eine Kiez-AdministratorIn wurde benachrichtigt und wir werden den Eintrag so schnell wie m&ouml;glich freischalten.");
@@ -230,13 +247,13 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
             if (isGeoObjectEditable(geoObject, username)) {
                 // the following should create new street, postal code, city and country topics (which is not what we want)
                 geoObject.setChildTopics(geoObjectTopicModel);
+                // ### attachGeoObjectChildTopics
             } else {
                 viewData("message", "Sie sind aktuell leider nicht berechtigt diesen Datensatz zu bearbeiten.");
                 return getUnauthorizedPage();
             }
         }
         log.info("#### Geo Object Form Processing Topic Result: " + geoObject);
-        // ### Handle Image-File Upload (Seperately)
         return getGeoObjectEditPage(geoObject.getId());
     }
 
@@ -938,7 +955,32 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
                             new TopicRoleModel(usernameTopic.getId(), "dm4.core.default")));
                         dms.getAccessControl().assignToWorkspace(assignment, getPrivilegedWorkspace().getId());
                         log.info("Created User Assignment ("+username+") for Geo Object \"" + geoObject.getSimpleValue() + "\" in Confirmation WS");
-                        // ## Workspace Asignment for flag and association yet MISSING
+                        dms.getAccessControl().assignToWorkspace(assignment, getStandardWorkspace().getId());
+                        return assignment;
+                    }
+                });
+            } catch (Exception e) {
+                throw new RuntimeException("Creating User Assignment to Geo Object FAILED", e);
+            }
+        }
+        return null;
+    }
+
+    private Association createBildAssignment(final Topic geoObject, final Topic username, final long fileTopicId) {
+        final Topic usernameTopic = username;
+        if (isAssignedUsername(geoObject, usernameTopic)) { // check if this is alraedy allowed...
+            try {
+                return dms.getAccessControl().runWithoutWorkspaceAssignment(new Callable<Association>() {
+                    @Override
+                    public Association call() {
+                        // Create a geo object <-> file topic relation
+                        Association assignment = dms.createAssociation(new AssociationModel("de.kiezatlas.bild_assignment",
+                            new TopicRoleModel(geoObject.getId(), "dm4.core.default"),
+                            new TopicRoleModel(fileTopicId, "dm4.core.default")));
+                        dms.getAccessControl().assignToWorkspace(assignment, getPrivilegedWorkspace().getId());
+                        log.info("Created Bild Assignment ("+username+") for Geo Object \"" + geoObject.getSimpleValue()
+                            + "\" and File Topic \""+fileService.getFile(fileTopicId).toString()+"\"");
+                        dms.getAccessControl().assignToWorkspace(assignment, getStandardWorkspace().getId());
                         return assignment;
                     }
                 });
@@ -1269,6 +1311,15 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
         if (message != null) viewData("message", message);
         if (backLinkUrl != null) viewData("originated", backLinkUrl);
         return view("401");
+    }
+
+    private long mapGoogleDistrictNameToKiezatlasBezirksTopic(String googleDistrict) {
+        List<RelatedTopic> districts = getAvailableDistrictTopics();
+        for (Topic district : districts) {
+            if (district.getSimpleValue().toString().equals(googleDistrict)) return district.getId();
+            if (googleDistrict.contains(district.getSimpleValue().toString())) return district.getId();
+        }
+        return -1;
     }
 
 }

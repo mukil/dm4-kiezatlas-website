@@ -9,6 +9,10 @@
         <link rel="stylesheet" href="/de.kiezatlas.website/css/sitestyle.css"/>
 
         <script src="/de.kiezatlas.website/vendor/jquery/jquery-1.9.1.min.js"></script>
+        <link rel="stylesheet" href="/de.deepamehta.webclient/script/vendor/jquery/css/custom-theme/jquery-ui-1.10.3.custom.min.css" type="text/css"/>
+        <script src="/de.deepamehta.webclient/script/vendor/jquery/jquery-ui-1.10.3.custom.min.js"></script>
+        <script src="/de.deepamehta.webclient/script/vendor/jquery/jquery.ui.touch-punch.min.js"></script>
+        <script type="text/javascript" src="/de.deepamehta.webclient/script/util/gui_toolkit.js"></script>
         <script src="/de.kiezatlas.website/vendor/leaflet/leaflet.js"></script>
         <script src="/de.kiezatlas.angebote/vendor/ckeditor/ckeditor.js"></script>
         <script src="/de.kiezatlas.angebote/vendor/ckeditor/config.js"></script>
@@ -67,16 +71,18 @@
                 var queryString = streetNr + ", "
                 if (zipCode.length > 0) queryString += zipCode + " "
                 if (selectedCity.value !== "undefined") queryString += selectedCity.text + " "
-                if (selectedDistrict.value !== -1) queryString += selectedDistrict.text + " "
+                console.log("Selected District", districtSelect, selectedDistrict.value)
+                if (selectedDistrict.value !== -1 && !selectedDistrict.text.startsWith("Bitte Bezirk")) queryString += selectedDistrict.text + " "
                 queryString += selectedCountry.text
                 restc.do_geocode(queryString, function(response) {
                     try {
                         var postalCode = parse_google_response("postal_code", response.results[0])
                         var districtName = parse_google_response("sublocality_level_1", response.results[0])
-                        console.log("Geo Coded Resonse included", postalCode, districtName)
                         document.getElementById("latitude-val").value = response.results[0].geometry.location.lat
                         document.getElementById("longitude-val").value = response.results[0].geometry.location.lng
                         do_manual_placement()
+                        $('#google-district').val(districtName)
+                        console.log("Geo Coded Resonse included", postalCode, "Set Google District: ", districtName)
                     } catch (e) {
                         alert("Die Koordinaten konnten leider nicht automatisch ermittelt werden. Bitte versuchen Sie es mittels "
                             + "manueller Positionierung des Markierers und unter Anpassung des Kartenausschnitts.")
@@ -123,6 +129,60 @@
                 }
                 update_marker_position()
             }
+
+            function start_upload() {
+                open_upload_dialog("/images/upload", function(response) {
+                    console.log("Bild Upload Handler", response)
+                    $('#bild-topic').val(response.id)
+                }, $("body"))
+            }
+
+            /**
+             * GUIToolkit Helper Methods copied from dm4-webclient module
+             * @param   uploadResource    the file repository path (a string) to upload the selected file to. Must begin with "/".
+             * @param   callback    the function that is invoked once the file has been uploaded and processed at server-side.
+             *                      One argument is passed to that function: the object (deserialzed JSON)
+             *                      returned by the (server-side) executeCommandHook. ### FIXDOC
+             * @param   $parent     jQuery Parent (DOM) Element
+             */
+            function open_upload_dialog(uploadResource, callback, $parent) {
+                // install upload target
+                var upload_target = $("<iframe>", {name: "upload-target"}).hide()
+                $("body").append(upload_target)
+                // create upload dialog
+                var upload_form = $("<form>", {
+                    method:  "post", enctype: "multipart/form-data",
+                    target:  "upload-target", action: uploadResource
+                })
+                .append($('<input type="file">').attr({name: "file", size: 60}))
+                .append($('<input class=\"button\" type="submit">').attr({value: "Upload"}))
+                .append($('<br/><br/><label>Hinweis: Das Bild sollte die Gr&ouml;&szlig;e von 360px nicht '
+                    + '&uuml;berschreiten.</label>'))
+                //
+                var toolkit = new GUIToolkit()
+                var upload_dialog = toolkit.dialog({id:"picture-upload", title: "Füge Bild hinzu", content: upload_form})
+                $('.ui-dialog.ui-widget').show()
+
+                // bind handler
+                upload_target.unbind("load")    // Note: the previous handler must be removed
+                upload_target.load(upload_complete)
+
+                    function upload_complete() {
+                        upload_dialog.close()
+                        // Note: iframes must be accessed via window.frames
+                        var response = $("pre", window.frames["upload-target"].document).text()
+                        try {
+                            var response_object = JSON.parse(response)
+                            callback(response_object, $parent)
+                        } catch (e) {
+                            console.warn("Upload failed: \"" + response_object + "\"\nException=" + JSON.stringify(e))
+                        } finally {
+                            $('.ui-dialog.ui-widget').hide()
+                        }
+                    }
+                return undefined
+            }
+
         /*]]>*/
         </script>
     </head>
@@ -167,6 +227,7 @@
                                 <option value="-1">Bitte Bezirk ausw&auml;hlen</option>
                                 <option th:each="district : ${availableDistricts}" th:selected="${#strings.toString(district.simpleValue) eq geoobject.bezirk}" th:value="${district.id}" th:text="${district.simpleValue}"></option>
                             </select>
+                            <input type="hidden" id="google-district" name="googleDistrictName" value=""/>
                             <br/>
                             <select id="city" name="city">
                                 <option th:each="city : ${availableCities}" th:selected="${#strings.toString(city.simpleValue) eq geoobject.city}"  th:value="${city.id}" th:text="${city.simpleValue}"></option>
@@ -185,6 +246,8 @@
                             <label for="fax">Fax</label>
                             <input type="text" name="fax" th:value='${geoobject.fax}'/>
                             <!-- ### Image File Upload, Träger, LOR Nummer -->
+                            <input type="button" class="button" value="Bild hinzufügen" onclick="start_upload()"/>
+                            <input type="hidden" id="bild-topic" name="fileTopicId" value=""/>
                         </div>
 
                         <div class="right-side">

@@ -10,7 +10,7 @@ import java.util.logging.Logger;
 /** 
  * Extends all existing Geo Objects about a "Confirmed" flag with the value "true".
  */
-public class Migration8 extends Migration {
+public class Migration10 extends Migration {
 
     private Logger log = Logger.getLogger(getClass().getName());
 

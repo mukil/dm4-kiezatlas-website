@@ -1,14 +1,14 @@
 {
-    "topic_types": [
+    "assoc_types": [
         {
-            "value":            "Confirmed",
-            "uri":              "ka2.website.confirmed",
-            "data_type_uri":    "dm4.core.boolean",
+            "uri": "de.kiezatlas.bild_assignment",
+            "data_type_uri": "dm4.core.text",
+            "value": "Bild Assignment",
             "view_config_topics": [
                 {
                     "type_uri": "dm4.webclient.view_config",
                     "childs": {
-                        "dm4.webclient.show_in_create_menu": false
+                        "dm4.webclient.color": "#ff9979"
                     }
                 }
             ]

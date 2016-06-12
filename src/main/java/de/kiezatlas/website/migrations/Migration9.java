@@ -10,7 +10,7 @@ import de.deepamehta.plugins.workspaces.WorkspacesService;
 import java.util.logging.Logger;
 
 
-public class Migration7 extends Migration {
+public class Migration9 extends Migration {
 
     private Logger log = Logger.getLogger(getClass().getName());
 
