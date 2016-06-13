@@ -148,6 +148,7 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
             results.add(einrichtung);
         }
         preparePageAuthorization();
+        viewData("availableLor", getAvailableLORNumberTopics());
         viewData("workspace", getStandardWorkspace());
         viewData("geoobjects", results);
         return view("confirmation");
@@ -251,7 +252,8 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
             }
         }
         log.info("#### Geo Object Form Processing Topic Result: " + geoObject);
-        return getGeoObjectEditPage(geoObject.getId());
+        viewData("geoobject", geoObject);
+        return getSimpleMessagePage();
     }
 
     /**
@@ -354,6 +356,10 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
         preparePageAuthorization();
         viewData("editable", isGeoObjectEditable(geoObject, username));
         return view("detail");
+    }
+
+    public Viewable getSimpleMessagePage() {
+        return view("message");
     }
 
     /**
@@ -754,6 +760,22 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
         }
     }
 
+    private void privilegedAssignToWorkspace(DeepaMehtaObject object, long workspaceId) {
+        if (object != null) {
+            if (!hasWorkspaceAssignment(object)) {
+                dms.getAccessControl().assignToWorkspace(object, workspaceId);
+            } else {
+                Topic ws = workspaceService.getAssignedWorkspace(object.getId());
+                log.info("Skipping privileged workspace assignment, "
+                    + object.toString() + " already has a workspace wssignment to \"" + ws.getSimpleValue() + "\"");
+            }
+        }
+    }
+
+    private boolean hasWorkspaceAssignment(DeepaMehtaObject object) {
+        return (workspaceService.getAssignedWorkspace(object.getId()) != null) ? true : false;
+    }
+
     private boolean isConfirmationWorkspaceMember() {
         String username = acService.getUsername();
         if (username != null) {
@@ -872,9 +894,9 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
         // ## Handle multi AND single-facets
         // ## Iterate over all facet value topic childs and assign them too
         Topic facetTopicValue = facetsService.getFacet(object, facetTypeUri);
-        dms.getAccessControl().assignToWorkspace(facetTopicValue, workspaceId);
+        privilegedAssignToWorkspace(facetTopicValue, workspaceId);
         Association facetAssoc = dms.getAssociation("dm4.core.composition", object.getId(), facetTopicValue.getId(), null, null);
-        dms.getAccessControl().assignToWorkspace(facetAssoc, workspaceId);
+        privilegedAssignToWorkspace(facetAssoc, workspaceId);
         log.info("Assigned \""+facetTypeUri+"\" Facet Topic Value : " + facetTopicValue.getId() + " to Workspace incl. relating Association");
     }
     
@@ -939,17 +961,17 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
                     RelatedTopic zipCode = address.getChildTopics().getTopic("dm4.contacts.postal_code");
                     RelatedTopic country = address.getChildTopics().getTopic("dm4.contacts.country");
                     long workspaceId = getPrivilegedWorkspace().getId();
-                    dms.getAccessControl().assignToWorkspace(geoObject, workspaceId);
-                    dms.getAccessControl().assignToWorkspace(address, workspaceId);
-                    dms.getAccessControl().assignToWorkspace(address.getRelatingAssociation(), workspaceId);
-                    dms.getAccessControl().assignToWorkspace(street, workspaceId);
-                    dms.getAccessControl().assignToWorkspace(street.getRelatingAssociation(), workspaceId);
-                    dms.getAccessControl().assignToWorkspace(city, workspaceId);
-                    dms.getAccessControl().assignToWorkspace(city.getRelatingAssociation(), workspaceId);
-                    dms.getAccessControl().assignToWorkspace(zipCode, workspaceId);
-                    dms.getAccessControl().assignToWorkspace(zipCode.getRelatingAssociation(), workspaceId);
-                    dms.getAccessControl().assignToWorkspace(country, workspaceId);
-                    dms.getAccessControl().assignToWorkspace(country.getRelatingAssociation(), workspaceId);
+                    privilegedAssignToWorkspace(geoObject, workspaceId);
+                    privilegedAssignToWorkspace(address, workspaceId);
+                    privilegedAssignToWorkspace(address.getRelatingAssociation(), workspaceId);
+                    privilegedAssignToWorkspace(street, workspaceId);
+                    privilegedAssignToWorkspace(street.getRelatingAssociation(), workspaceId);
+                    privilegedAssignToWorkspace(city, workspaceId);
+                    privilegedAssignToWorkspace(city.getRelatingAssociation(), workspaceId);
+                    privilegedAssignToWorkspace(zipCode, workspaceId);
+                    privilegedAssignToWorkspace(zipCode.getRelatingAssociation(), workspaceId);
+                    privilegedAssignToWorkspace(country, workspaceId);
+                    privilegedAssignToWorkspace(country.getRelatingAssociation(), workspaceId);
                     log.info("Created Unconfirmed Geo Object ("+geoObject.getSimpleValue()+") in Confirmation WS");
                     return geoObject;
                 }
@@ -971,9 +993,8 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
                             new TopicRoleModel(geoObject.getId(), "dm4.core.default"),
                             new TopicRoleModel(usernameTopic.getId(), "dm4.core.default")));
                         // ### Workspace Selection Either OR ...
-                        dms.getAccessControl().assignToWorkspace(assignment, getPrivilegedWorkspace().getId());
+                        privilegedAssignToWorkspace(assignment, getPrivilegedWorkspace().getId());
                         log.info("Created User Assignment ("+username+") for Geo Object \"" + geoObject.getSimpleValue() + "\" in Confirmation WS");
-                        // dms.getAccessControl().assignToWorkspace(assignment, getStandardWorkspace().getId());
                         return assignment;
                     }
                 });
@@ -998,7 +1019,7 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
                         // ### Workspace Selection Either OR ...
                         log.info("Created Bild Assignment ("+username+") for Geo Object \"" + geoObject.getSimpleValue()
                             + "\" and File Topic \""+fileService.getFile(fileTopicId).toString()+"\"");
-                        dms.getAccessControl().assignToWorkspace(assignment, getStandardWorkspace().getId());
+                        privilegedAssignToWorkspace(assignment, getStandardWorkspace().getId());
                         return assignment;
                     }
                 });
@@ -1196,6 +1217,22 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
         return sortAlphabeticalDescending(dms.getTopics("ka2.criteria.zielgruppe", 0).getItems());
     }
 
+    private List<Topic> getAvailableLORNumberTopics() {
+        List<Topic> countries = new ArrayList<Topic>();
+        for (RelatedTopic city : dms.getTopics("ka2.lor_nummer", 0)) {
+            if (!city.getUri().isEmpty()) countries.add(city);
+        }
+        return countries;
+    }
+
+    private List<Topic> getAvailableTraegerTopics() {
+        List<Topic> countries = new ArrayList<Topic>();
+        for (RelatedTopic city : dms.getTopics("ka2.traeger", 0)) {
+            if (!city.getUri().isEmpty()) countries.add(city);
+        }
+        return countries;
+    }
+
     private List<Topic> getAvailableCountryTopics() {
         List<Topic> countries = new ArrayList<Topic>();
         for (RelatedTopic city : dms.getTopics("dm4.contacts.country", 0)) {
@@ -1259,6 +1296,8 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
         viewData("availableDistricts", getAvailableDistrictTopics());
         viewData("availableCountries", getAvailableCountryTopics());
         viewData("availableThemen", getThemaCriteriaTopics());
+        viewData("availableTraeger", getAvailableTraegerTopics());
+        viewData("availableLor", getAvailableLORNumberTopics());
         // viewData("availableAngebote", getAngebotCriteriaTopics());
         viewData("availableZielgruppen", getZielgruppeCriteriaTopics());
         log.info("> Prepare Form Template with available Topics");

@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title th:text="Bes&auml;tigung - Kiezatlas'"></title>
+        <meta charset="UTF-8"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0"/>
+
+        <link rel="stylesheet" href="/de.kiezatlas.website/vendor/leaflet/leaflet.css"/>
+        <link rel="stylesheet" href="/de.kiezatlas.website/css/sitestyle.css"/>
+
+    </head>
+    <body class="kiezatlas topic">
+
+        <div id="navigation">
+            <ul>
+                <!--li class="register"><a href="/sign-up/">Registrieren</a></li-->
+                <li class="angebote"><a href="/">Startseite</a></li>
+                <li class="angebote"><a href="/angebote/">Angebote</a></li>
+                <li class="login" th:if="!${authenticated}"><a href="/sign-up/login">Login</a></li>
+                <!--li class="angebote"><a href="/kiezatlas/angebot/">Orte</a></li-->
+                <!-- li class="angebote"><a href="/sign-up/edit/">Mein Account</a></li-->
+            </ul>
+        </div>
+
+        <div id="header">
+            <div class="welcome">
+            </div>
+        </div>
+
+        <!-- Details Area -->
+        <div id="detail-area" th:class="${angebotsinfos} ? 'angebotsinfos'">
+            <div class="commands">
+            </div>
+            <div id="map"></div>
+            <div class="info-area">
+                <div class="infos">
+                    <h3 th:text='${geoobject.name}'>Name des Eintrags</h3>
+                    <p th:if="${!#strings.isEmpty(message)}" th:text="${message}"></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Kiezatlas Standard Website section -->
+        <div id="pages">
+            <ul>
+                <li><a href="/aktuelles">Aktuelles</a></li>
+                <li><a href="/projektbeschreibung">Projektbeschreibung</a></li>
+                <li><a href="/dies-das">Dies und Das</a></li>
+                <li><a href="/weitere-atlanten">Weitere Atlanten</a></li>
+                <li><a href="http://pax.spinnenwerk.de/~kiezatlas/index.php?id=6">Impressum</a></li>
+                <li><a href="/datenschutzhinweise">Datenschutzhinweise</a></li>
+                <li><a href="/api-documentation">API</a></li>
+                <li><a href="/open-source">Open Source</a></li>
+                <li><a href="/links">Links</a></li>
+            </ul>
+            <p></p>
+        </div>
+
+        <div id="bottom">
+            <img src="/de.kiezatlas.website/images/kiezatlas2-logo.png" width="150" />
+        </div>
+
+        <!--Piwik>
+        <script type="text/javascript">
+        var pkBaseURL = "//stats.infokitchen.net/";
+        document.write(unescape("%3Cscript src='" + pkBaseURL + "piwik.js' type='text/javascript'%3E%3C/script%3E"));
+        </script><script type="text/javascript">
+        try {
+        var piwikTracker = Piwik.getTracker(pkBaseURL + "piwik.php", 2);
+        piwikTracker.trackPageView();
+        piwikTracker.enableLinkTracking();
+        } catch( err ) {}
+        </script>
+        <noscript>
+            <img th:src="@{https://stats.infokitchen.net/piwik.php(idsite=2,rec=1,action_name='Kiezatlas+2+Info')}" style="border:0" alt="" />
+        </noscript>
+        End Piwik Tracking Code -->
+
+    </body>
+</html>
+
