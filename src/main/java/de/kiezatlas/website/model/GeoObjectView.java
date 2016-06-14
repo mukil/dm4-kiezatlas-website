@@ -2,8 +2,8 @@ package de.kiezatlas.website.model;
 
 import de.deepamehta.core.JSONEnabled;
 import de.deepamehta.core.Topic;
-import de.deepamehta.plugins.geomaps.model.GeoCoordinate;
-import de.deepamehta.plugins.geomaps.GeomapsService;
+import de.deepamehta.geomaps.model.GeoCoordinate;
+import de.deepamehta.geomaps.GeomapsService;
 import de.kiezatlas.angebote.AngebotService;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -34,7 +34,7 @@ public class GeoObjectView implements JSONEnabled {
     public GeoObjectView(Topic geoObject, GeomapsService geomaps, AngebotService angebote) {
         this.geoObject = geoObject;
         getGeoCoordinate(geomaps);
-        this.angeboteCount = angebote.getAngeboteTopicsByGeoObject(geoObject).getSize();
+        this.angeboteCount = angebote.getAngeboteTopicsByGeoObject(geoObject).size();
     }
 
     public String getName() {

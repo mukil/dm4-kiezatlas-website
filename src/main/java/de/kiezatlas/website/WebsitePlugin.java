@@ -16,23 +16,20 @@ import javax.ws.rs.core.MediaType;
 
 import de.deepamehta.core.RelatedTopic;
 import de.deepamehta.core.Topic;
-import de.deepamehta.core.model.AssociationModel;
 import de.deepamehta.core.model.ChildTopicsModel;
 import de.deepamehta.core.model.SimpleValue;
 import de.deepamehta.core.model.TopicModel;
-import de.deepamehta.core.model.TopicRoleModel;
 import de.deepamehta.core.service.Inject;
-import de.deepamehta.core.service.ResultList;
 import de.deepamehta.core.service.Transactional;
-import de.deepamehta.plugins.accesscontrol.AccessControlService;
-import de.deepamehta.plugins.facets.FacetsService;
-import de.deepamehta.plugins.facets.model.FacetValue;
-import de.deepamehta.plugins.files.FilesService;
-import de.deepamehta.plugins.geomaps.model.GeoCoordinate;
-import de.deepamehta.plugins.geomaps.GeomapsService;
+import de.deepamehta.accesscontrol.AccessControlService;
+import de.deepamehta.core.model.facets.FacetValueModel;
+import de.deepamehta.facets.FacetsService;
+import de.deepamehta.files.FilesService;
+import de.deepamehta.geomaps.model.GeoCoordinate;
+import de.deepamehta.geomaps.GeomapsService;
 import de.deepamehta.plugins.geospatial.GeospatialService;
-import de.deepamehta.plugins.webactivator.WebActivatorPlugin;
-import de.deepamehta.plugins.workspaces.WorkspacesService;
+import de.deepamehta.thymeleaf.ThymeleafPlugin;
+import de.deepamehta.workspaces.WorkspacesService;
 import de.kiezatlas.KiezatlasService;
 import de.kiezatlas.angebote.AngebotService;
 import de.kiezatlas.angebote.model.AngebotsInfoAssigned;
@@ -46,7 +43,7 @@ import de.kiezatlas.website.model.BezirkInfo;
 import de.kiezatlas.website.model.EinrichtungsInfo;
 import de.kiezatlas.website.model.GeoObjectDetailsView;
 import de.kiezatlas.website.model.GeoObjectView;
-import de.mikromedia.webpages.WebpagePluginService;
+import de.mikromedia.webpages.WebpageService;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.math.RoundingMode;
@@ -81,13 +78,13 @@ import org.codehaus.jettison.json.JSONObject;
 @Path("/website")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
-public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService {
+public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService {
 
     private final Logger log = Logger.getLogger(getClass().getName());
 
     @Inject private WorkspacesService workspaceService;
     @Inject private AccessControlService acService;
-    @Inject private WebpagePluginService pageService;
+    @Inject private WebpageService pageService;
     @Inject private GeospatialService spatialService;
     @Inject private AngebotService angeboteService;
     @Inject private GeomapsService geomapsService;
@@ -135,11 +132,11 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
     public Viewable getAdministrativeConfirmationPage() {
         Topic confirmationWs = getPrivilegedWorkspace();
         if (confirmationWs == null) return getUnauthorizedPage();
-        ResultList<RelatedTopic> unconfirmedGeoObjects = confirmationWs.getRelatedTopics("dm4.core.aggregation", "dm4.core.child",
-            "dm4.core.parent", KiezatlasService.GEO_OBJECT, 0);
-        // ResultList<RelatedTopic> availableWebsites = dms.getTopics("ka2.website", 0);
+        List<RelatedTopic> unconfirmedGeoObjects = confirmationWs.getRelatedTopics("dm4.core.aggregation", "dm4.core.child",
+            "dm4.core.parent", KiezatlasService.GEO_OBJECT);
+        // ResultList<RelatedTopic> availableWebsites = dm4.getTopics("ka2.website", 0);
         // viewData("websites", availableWebsites);
-        List<RelatedTopic> sortedGeoObjects = unconfirmedGeoObjects.getItems();
+        List<RelatedTopic> sortedGeoObjects = unconfirmedGeoObjects;
         List<EinrichtungsInfo> results = new ArrayList();
         sortByModificationDateDescending(sortedGeoObjects);
         for (RelatedTopic geoObject : sortedGeoObjects) {
@@ -212,13 +209,13 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
             log.info("> Geo Coordinates provided: " + latitude + ", " + longitude);
             coordinatePair = longitude + "," + latitude;
         }
-        ChildTopicsModel addressValue = new ChildTopicsModel();
+        ChildTopicsModel addressValue = mf.newChildTopicsModel();
         addStreetTopicValue(addressValue, strasse);
         addPostalCodeValue(addressValue, plz);
         addCityTopicValue(addressValue, city);
         addCountryTopicValue(addressValue, country);
         // Assemble and create/update new Geo Object Topic basics
-        ChildTopicsModel geoObjectTopicModel = new ChildTopicsModel()
+        ChildTopicsModel geoObjectTopicModel = mf.newChildTopicsModel()
             .put("ka2.geo_object.name", name)
             .put("dm4.contacts.address", addressValue);
         if (topicId == -1 || topicId == 0) {
@@ -226,7 +223,7 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
                 log.info("// ---------- CREATing Einrichtung " + name + " ---------------------- // ");
                 // ------------ Assign Geo Object Basics to the topic of getPrivilegedWorkspace() ------------------ //
                 // Saving Address needs "dm4_no_geocoding=true" Cookie, otherwise it geo-codes automatically
-                geoObject = createUnconfirmedGeoObject(new TopicModel("ka2.geo_object", geoObjectTopicModel));
+                geoObject = createUnconfirmedGeoObject(mf.newTopicModel("ka2.geo_object", geoObjectTopicModel));
                 createUserAssignment(geoObject, acService.getUsername());
                 attachGeoObjectChildTopics(geoObject, ansprechpartner, telefon, fax, email, beschreibung,
                     oeffnungszeiten, website, coordinatePair, district, themen, zielgruppen, angebote);
@@ -241,7 +238,7 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
             }
         } else {
             log.info("// ---------- UPDATing Einrichtung " + name + " (TopicID: " + topicId + ") -------------- // ");
-            geoObject = dms.getTopic(topicId);
+            geoObject = dm4.getTopic(topicId);
             if (isGeoObjectEditable(geoObject, username)) {
                 // the following should create new street, postal code, city and country topics (which is not what we want)
                 geoObject.setChildTopics(geoObjectTopicModel);
@@ -264,7 +261,7 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
     @Path("/topic/edit/{topicId}")
     public Viewable getGeoObjectEditPage(@PathParam("topicId") long topicId) {
         // ### Handle the case if user cannot edit anymore (just see) directly after confirmation.
-        Topic geoObject = dms.getTopic(topicId);
+        Topic geoObject = dm4.getTopic(topicId);
         if (!isAuthenticated()) return getUnauthorizedPage();
         Topic username = acService.getUsernameTopic(acService.getUsername());
         if (isGeoObjectTopic(geoObject)) {
@@ -272,8 +269,8 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
                 EinrichtungsInfo einrichtung = assembleGeneralEinrichtungsInfo(geoObject);
                 einrichtung.setAssignedUsername(username.getSimpleValue().toString());
                 viewData("geoobject", einrichtung);
-                viewData("themen", facetsService.getFacets(geoObject, THEMA_FACET).getItems());
-                viewData("zielgruppen", facetsService.getFacets(geoObject, ZIELGRUPPE_FACET).getItems());
+                viewData("themen", facetsService.getFacets(geoObject, THEMA_FACET));
+                viewData("zielgruppen", facetsService.getFacets(geoObject, ZIELGRUPPE_FACET));
                 // viewData("angebote", facetsService.getFacets(geoObject, ANGEBOT_FACET).getItems());
             } else {
                 viewData("message", "Sie haben aktuell noch nicht die n&ouml;tigen Berechtigungen "
@@ -303,7 +300,7 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
     @Transactional
     public Viewable doConfirmGeoObject(@PathParam("topicId") long topicId) {
         // ### Handle the case if user cannot edit anymore (just see) directly after confirmation.
-        Topic geoObject = dms.getTopic(topicId);
+        Topic geoObject = dm4.getTopic(topicId);
         if (!isAuthenticated()) return getUnauthorizedPage();
         Topic username = acService.getUsernameTopic(acService.getUsername());
         if (!isConfirmationWorkspaceMember()) {
@@ -326,8 +323,9 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
             assignToWorkspace(addressChilds.getTopic("dm4.contacts.street"), deepaMehtaWs.getId());
             assignToWorkspace(addressChilds.getTopic("dm4.contacts.postal_code"), deepaMehtaWs.getId());
             assignToWorkspace(addressChilds.getTopic("dm4.contacts.city"), deepaMehtaWs.getId());
-            if (addressChilds.has("dm4.contacts.country")) {
-                assignToWorkspace(addressChilds.getTopic("dm4.contacts.country"), deepaMehtaWs.getId());
+            Topic addressCountry = addressChilds.getTopicOrNull("dm4.contacts.country");
+            if (addressCountry != null) {
+                assignToWorkspace(addressCountry, deepaMehtaWs.getId());
             }
             log.info("Assigned Geo Object to Standard Workspace \"" + deepaMehtaWs.getSimpleValue() + "\"");
             viewData("message", "Der Eintrag \"" + geoObject.getSimpleValue() + "\" erfolgreich freigeschaltet.");
@@ -339,7 +337,7 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
     }
 
     public Viewable getGeoObjectDetailsPage(@PathParam("topicId") long topicId) {
-        Topic geoObject = dms.getTopic(topicId);
+        Topic geoObject = dm4.getTopic(topicId);
         Topic username = getUsernameTopic();
         if (!isGeoObjectTopic(geoObject)) return getPageNotFound();
         // Assemble Generic Einrichtungs Infos
@@ -374,9 +372,9 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
     public Viewable getGeoObjectDetailsPage(@PathParam("topicId") String topicId) {
         Topic geoObject = null;
         if (topicId.startsWith("t-")) {
-            geoObject = dms.getTopic("uri", new SimpleValue("de.kiezatlas.topic." + topicId));
+            geoObject = dm4.getTopicByUri("de.kiezatlas.topic." + topicId);
         } else {
-            geoObject = dms.getTopic(Long.parseLong(topicId));
+            geoObject = dm4.getTopic(Long.parseLong(topicId));
         }
         return (geoObject != null) ? getGeoObjectDetailsPage(geoObject.getId()) : getPageNotFound();
     }
@@ -396,10 +394,10 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
     public GeoObjectDetailsView getGeoObjectDetails(@HeaderParam("Referer") String referer,
             @PathParam("topicId") long topicId) {
         if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
-        Topic geoObject = dms.getTopic(topicId);
+        Topic geoObject = dm4.getTopic(topicId);
         GeoObjectDetailsView geoDetailsView = null;
         if (isGeoObjectTopic(geoObject)) {
-            geoDetailsView = new GeoObjectDetailsView(dms.getTopic(topicId), geomapsService, angeboteService);
+            geoDetailsView = new GeoObjectDetailsView(dm4.getTopic(topicId), geomapsService, angeboteService);
         }
         return geoDetailsView;
     }
@@ -432,8 +430,8 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
                 "dm4.core.parent", "dm4.contacts.address");
             if (address != null) {
                 // 2.1.1) If place has an address set, create a DTO for map display
-                ResultList<RelatedTopic> geoObjects = address.getRelatedTopics("dm4.core.composition",
-                    "dm4.core.child", "dm4.core.parent", "ka2.geo_object", 0);
+                List<RelatedTopic> geoObjects = address.getRelatedTopics("dm4.core.composition",
+                    "dm4.core.child", "dm4.core.parent", "ka2.geo_object");
                 for (RelatedTopic geoObject : geoObjects) {
                     if (isGeoObjectTopic(geoObject)) {
                         results.add(new GeoObjectView(geoObject, geomapsService, angeboteService));
@@ -466,7 +464,7 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
                 log.warning("No search term entered, returning empty resultset");
                 return results;
             }
-            List<Topic> singleTopics = dms.searchTopics(queryValue, "ka2.geo_object.name");
+            List<Topic> singleTopics = dm4.searchTopics(queryValue, "ka2.geo_object.name");
             log.log(Level.INFO, "{0} name topics found", singleTopics.size());
             for (Topic topic : singleTopics) {
                 Topic geoObject = topic.getRelatedTopic("dm4.core.composition",
@@ -567,13 +565,13 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
         // ### Authenticate
         // ### Todo: Fetch for ka2.ansprechpartner, traeger name, too
         HashMap<Long, Topic> uniqueResults = new HashMap<Long, Topic>();
-        List<Topic> searchResults = dms.searchTopics(query, "ka2.geo_object.name");
-        List<Topic> descrResults = dms.searchTopics(query, "ka2.beschreibung");
-        List<Topic> stichworteResults = dms.searchTopics(query, "ka2.stichworte");
-        // List<Topic> sonstigesResults = dms.searchTopics(query, "ka2.sonstiges");
-        List<Topic> bezirksregionResults = dms.searchTopics(query, "ka2.bezirksregion"); // many
-        // List<Topic> traegerNameResults = dms.searchTopics(query, "ka2.traeger.name");
-        // List<Topic> traegerNameResults = dms.searchTopics(query, "dm4.contacts.street");
+        List<Topic> searchResults = dm4.searchTopics(query, "ka2.geo_object.name");
+        List<Topic> descrResults = dm4.searchTopics(query, "ka2.beschreibung");
+        List<Topic> stichworteResults = dm4.searchTopics(query, "ka2.stichworte");
+        // List<Topic> sonstigesResults = dm4.searchTopics(query, "ka2.sonstiges");
+        List<Topic> bezirksregionResults = dm4.searchTopics(query, "ka2.bezirksregion"); // many
+        // List<Topic> traegerNameResults = dm4.searchTopics(query, "ka2.traeger.name");
+        // List<Topic> traegerNameResults = dm4.searchTopics(query, "dm4.contacts.street");
         log.info("> " + searchResults.size() + ", "+ descrResults.size() +", "+stichworteResults.size() + ", " + bezirksregionResults.size()
                 + " results in four child types for query=\""+query+"\" in FULLTEXT");
         // merge all three types in search results
@@ -609,7 +607,7 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
     @Path("/bezirk")
     public List<BezirkInfo> getKiezatlasDistricts() {
         ArrayList<BezirkInfo> results = new ArrayList<BezirkInfo>();
-        for (RelatedTopic bezirk : dms.getTopics("ka2.bezirk", 0)) {
+        for (Topic bezirk : dm4.getTopicsByType("ka2.bezirk")) {
             results.add(new BezirkInfo(bezirk));
         }
         return results;
@@ -640,9 +638,9 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
         }
         // populate new resultset
         ArrayList<GeoObjectView> results = new ArrayList<GeoObjectView>();
-        Topic bezirk = dms.getTopic(bezirkId);
-        ResultList<RelatedTopic> geoObjects = bezirk.getRelatedTopics("dm4.core.aggregation",
-            "dm4.core.child", "dm4.core.parent", "ka2.geo_object", 0);
+        Topic bezirk = dm4.getTopic(bezirkId);
+        List<RelatedTopic> geoObjects = bezirk.getRelatedTopics("dm4.core.aggregation",
+            "dm4.core.child", "dm4.core.parent", "ka2.geo_object");
         for (RelatedTopic geoObject : geoObjects) {
             if (isGeoObjectTopic(geoObject)) {
                 results.add(new GeoObjectView(geoObject, geomapsService, angeboteService));
@@ -659,8 +657,8 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
 
     @GET
     @Path("/bezirksregion")
-    public ResultList<RelatedTopic> getKiezatlasSubregions() {
-        return dms.getTopics("ka2.bezirksregion", 0);
+    public List<Topic> getKiezatlasSubregions() {
+        return dm4.getTopicsByType("ka2.bezirksregion");
     }
 
     @GET
@@ -668,9 +666,9 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
     public List<GeoObjectView> getGeoObjectsBySubregions(@HeaderParam("Referer") String referer, @PathParam("topicId") long bezirksregionId) {
         if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
         ArrayList<GeoObjectView> results = new ArrayList<GeoObjectView>();
-        Topic bezirksregion = dms.getTopic(bezirksregionId);
-        ResultList<RelatedTopic> geoObjects = bezirksregion.getRelatedTopics("dm4.core.aggregation",
-            "dm4.core.child", "dm4.core.parent", "ka2.geo_object", 0);
+        Topic bezirksregion = dm4.getTopic(bezirksregionId);
+        List<RelatedTopic> geoObjects = bezirksregion.getRelatedTopics("dm4.core.aggregation",
+            "dm4.core.child", "dm4.core.parent", "ka2.geo_object");
         for (RelatedTopic geoObject : geoObjects) {
             if (isGeoObjectTopic(geoObject)) {
                 results.add(new GeoObjectView(geoObject, geomapsService, angeboteService));
@@ -763,7 +761,7 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
     private void privilegedAssignToWorkspace(DeepaMehtaObject object, long workspaceId) {
         if (object != null) {
             if (!hasWorkspaceAssignment(object)) {
-                dms.getAccessControl().assignToWorkspace(object, workspaceId);
+                dm4.getAccessControl().assignToWorkspace(object, workspaceId);
             } else {
                 Topic ws = workspaceService.getAssignedWorkspace(object.getId());
                 log.info("Skipping privileged workspace assignment, "
@@ -787,7 +785,7 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
     }
 
     /** private boolean isWorkspaceOwner(String username, long workspaceId) {
-        return (dms.getAccessControl().hasPermission(username, Operation.READ, workspaceId) && );
+        return (dm4.getAccessControl().hasPermission(username, Operation.READ, workspaceId) && );
     } **/
 
     private boolean isAuthenticated() {
@@ -797,12 +795,12 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
     /** Stores "Confirmed" topic on Geo Object into our "Confirmation" workspace.
     private void setConfirmationFlag(final Topic geoObject, final boolean value) {
         try {
-            dms.getAccessControl().runWithoutWorkspaceAssignment(new Callable<Topic>() {
+            dm4.getAccessControl().runWithoutWorkspaceAssignment(new Callable<Topic>() {
                 @Override
                 public Topic call() {
                     // Assign all new "confirmed"-flag topics to our dedicated "Confirmation"-Workspace
                     geoObject.getChildTopics().set(CONFIRMED_TYPE, value);
-                    dms.getAccessControl().assignToWorkspace(geoObject.getChildTopics().getTopic(CONFIRMED_TYPE),
+                    dm4.getAccessControl().assignToWorkspace(geoObject.getChildTopics().getTopic(CONFIRMED_TYPE),
                         workspaceService.getWorkspace(CONFIRMATION_WS_URI).getId());
                     log.info("Assigned Geo Object: " + geoObject.getSimpleValue() + " to custom Workspace, confirmed=" + value);
                     return geoObject;
@@ -819,7 +817,7 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
 
     private void addStreetTopicValue(ChildTopicsModel model, String value) {
         if (value.isEmpty()) return;
-        List<Topic> streetNames = dms.searchTopics(value.trim(), "dm4.contacts.street");
+        List<Topic> streetNames = dm4.searchTopics(value.trim(), "dm4.contacts.street");
         for (Topic streetName : streetNames) {
             if (streetName.getSimpleValue().toString().equals(value.trim())) {
                 model.putRef("dm4.contacts.street", streetName.getId());
@@ -832,7 +830,7 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
 
     private void addPostalCodeValue(ChildTopicsModel model, String value) {
         if (value.isEmpty()) value = POSTAL_CODE_DUMMY_VALUE;
-        List<Topic> postalCodes = dms.searchTopics(value.trim(), "dm4.contacts.postal_code");
+        List<Topic> postalCodes = dm4.searchTopics(value.trim(), "dm4.contacts.postal_code");
         for (Topic postalCode : postalCodes) {
             if (postalCode.getSimpleValue().toString().equals(value.trim())) {
                 model.putRef("dm4.contacts.postal_code", postalCode.getId());
@@ -854,7 +852,7 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
         longitude = Double.parseDouble(coordinatePair.split(",")[0]);
         latitude = Double.parseDouble(coordinatePair.split(",")[1]);
         log.info("Storing geo coordinate (" + latitude +","+ longitude + ") for addressTopic=" + address.getId());
-        FacetValue value = new FacetValue("dm4.geomaps.geo_coordinate").put(new ChildTopicsModel()
+        FacetValueModel value = mf.newFacetValueModel("dm4.geomaps.geo_coordinate").put(mf.newChildTopicsModel()
             .put("dm4.geomaps.longitude", longitude)
             .put("dm4.geomaps.latitude",  latitude)
         );
@@ -865,7 +863,7 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
     private void updateSimpleCompositeFacet(Topic geoObject, String facetTypeUri, String childTypeUri, String value) {
         Topic oldFacetTopic = facetsService.getFacet(geoObject.getId(), facetTypeUri);
         if (!value.trim().isEmpty()) {
-            facetsService.updateFacet(geoObject.getId(), facetTypeUri, new FacetValue(childTypeUri).put(value.trim()));
+            facetsService.updateFacet(geoObject.getId(), facetTypeUri, mf.newFacetValueModel(childTypeUri).put(value.trim()));
             if (oldFacetTopic != null) oldFacetTopic.delete();
             initiallyAssignSingleRelatingFacetToWorkspace(geoObject, facetTypeUri, getStandardWorkspace().getId());
         }
@@ -875,16 +873,16 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
         // check if a former value was already assigned and we're updating
         Topic oldFacetTopic = facetsService.getFacet(geoObject.getId(), facetTypeUri);
         // check if value already exist in a topic/db and if so, reference that
-        Topic keyTopic = dms.getTopic(childTypeUri, new SimpleValue(value.trim()));
+        Topic keyTopic = dm4.getTopicByValue(childTypeUri, new SimpleValue(value.trim()));
         if (!value.trim().isEmpty()) {
             if (oldFacetTopic != null && !oldFacetTopic.getSimpleValue().toString().equals(value.trim())) {
                 // old value is existent and same as new value, do nothing
             } else if (keyTopic != null) { // reference existing topic
                 facetsService.updateFacet(geoObject.getId(), facetTypeUri,
-                    new FacetValue(childTypeUri).putRef(keyTopic.getId()));
+                    mf.newFacetValueModel(childTypeUri).putRef(keyTopic.getId()));
             } else { // create new topic with new value
                 facetsService.updateFacet(geoObject.getId(), facetTypeUri,
-                    new FacetValue(childTypeUri).put(value.trim()));
+                    mf.newFacetValueModel(childTypeUri).put(value.trim()));
                 initiallyAssignSingleRelatingFacetToWorkspace(keyTopic, facetTypeUri, getStandardWorkspace().getId());
             }
         }
@@ -895,7 +893,7 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
         // ## Iterate over all facet value topic childs and assign them too
         Topic facetTopicValue = facetsService.getFacet(object, facetTypeUri);
         privilegedAssignToWorkspace(facetTopicValue, workspaceId);
-        Association facetAssoc = dms.getAssociation("dm4.core.composition", object.getId(), facetTopicValue.getId(), null, null);
+        Association facetAssoc = dm4.getAssociation("dm4.core.composition", object.getId(), facetTopicValue.getId(), null, null);
         privilegedAssignToWorkspace(facetAssoc, workspaceId);
         log.info("Assigned \""+facetTypeUri+"\" Facet Topic Value : " + facetTopicValue.getId() + " to Workspace incl. relating Association");
     }
@@ -903,20 +901,20 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
     private void writeBezirksFacet(Topic geoObject, long bezirksTopicId) {
         if (bezirksTopicId > -1) {
             facetsService.updateFacet(geoObject.getId(), WebsiteService.BEZIRK_FACET,
-                new FacetValue(WebsiteService.BEZIRK).putRef(bezirksTopicId));
+                mf.newFacetValueModel(WebsiteService.BEZIRK).putRef(bezirksTopicId));
         }
     }
 
     private void delFacetTopicReferences(Topic geoObject, List<RelatedTopic> topics, String facetTypeUri, String childTypeUri) {
         for (Topic topic : topics) {
             facetsService.updateFacet(geoObject, facetTypeUri,
-                new FacetValue(childTypeUri).addDeletionRef(topic.getId()));
+                mf.newFacetValueModel(childTypeUri).addDeletionRef(topic.getId()));
         }
     }
 
     private void putFacetTopicsReferences(Topic geoObject, List<Long> ids, String facetTypeUri, String childTypeUri) {
         for (Long id : ids) {
-            facetsService.updateFacet(geoObject.getId(), facetTypeUri, new FacetValue(childTypeUri).addRef(id));
+            facetsService.updateFacet(geoObject.getId(), facetTypeUri, mf.newFacetValueModel(childTypeUri).addRef(id));
         }
     }
 
@@ -925,7 +923,7 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
             final String website, final String coordinatePair, final long district, final List<Long> themen,
             final List<Long> zielgruppen, final List<Long> angebote) {
         try {
-            dms.getAccessControl().runWithoutWorkspaceAssignment(new Callable<Topic>() {
+            dm4.getAccessControl().runWithoutWorkspaceAssignment(new Callable<Topic>() {
                 @Override
                 public Topic call() {
                     // Store Geo Coordinate
@@ -951,10 +949,10 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
 
     private Topic createUnconfirmedGeoObject(final TopicModel geoObjectModel) {
         try {
-            return dms.getAccessControl().runWithoutWorkspaceAssignment(new Callable<Topic>() {
+            return dm4.getAccessControl().runWithoutWorkspaceAssignment(new Callable<Topic>() {
                 @Override
                 public Topic call() {
-                    Topic geoObject = dms.createTopic(geoObjectModel);
+                    Topic geoObject = dm4.createTopic(geoObjectModel);
                     RelatedTopic address = geoObject.getChildTopics().getTopic("dm4.contacts.address");
                     RelatedTopic street = address.getChildTopics().getTopic("dm4.contacts.street");
                     RelatedTopic city = address.getChildTopics().getTopic("dm4.contacts.city");
@@ -985,13 +983,13 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
         final Topic usernameTopic = acService.getUsernameTopic(username);
         if (!isAssignedUsername(geoObject, usernameTopic)) {
             try {
-                return dms.getAccessControl().runWithoutWorkspaceAssignment(new Callable<Association>() {
+                return dm4.getAccessControl().runWithoutWorkspaceAssignment(new Callable<Association>() {
                     @Override
                     public Association call() {
                         // Assign all new "confirmed"-flag topics to our dedicated "Confirmation"-Workspace
-                        Association assignment = dms.createAssociation(new AssociationModel("de.kiezatlas.user_assignment",
-                            new TopicRoleModel(geoObject.getId(), "dm4.core.default"),
-                            new TopicRoleModel(usernameTopic.getId(), "dm4.core.default")));
+                        Association assignment = dm4.createAssociation(mf.newAssociationModel("de.kiezatlas.user_assignment",
+                            mf.newTopicRoleModel(geoObject.getId(), "dm4.core.default"),
+                            mf.newTopicRoleModel(usernameTopic.getId(), "dm4.core.default")));
                         // ### Workspace Selection Either OR ...
                         privilegedAssignToWorkspace(assignment, getPrivilegedWorkspace().getId());
                         log.info("Created User Assignment ("+username+") for Geo Object \"" + geoObject.getSimpleValue() + "\" in Confirmation WS");
@@ -1009,13 +1007,13 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
         final Topic usernameTopic = username;
         if (isAssignedUsername(geoObject, usernameTopic)) { // check if this is alraedy allowed...
             try {
-                return dms.getAccessControl().runWithoutWorkspaceAssignment(new Callable<Association>() {
+                return dm4.getAccessControl().runWithoutWorkspaceAssignment(new Callable<Association>() {
                     @Override
                     public Association call() {
                         // Create a geo object <-> file topic relation
-                        Association assignment = dms.createAssociation(new AssociationModel("de.kiezatlas.bild_assignment",
-                            new TopicRoleModel(geoObject.getId(), "dm4.core.default"),
-                            new TopicRoleModel(fileTopicId, "dm4.core.default")));
+                        Association assignment = dm4.createAssociation(mf.newAssociationModel("de.kiezatlas.bild_assignment",
+                            mf.newTopicRoleModel(geoObject.getId(), "dm4.core.default"),
+                            mf.newTopicRoleModel(fileTopicId, "dm4.core.default")));
                         // ### Workspace Selection Either OR ...
                         log.info("Created Bild Assignment ("+username+") for Geo Object \"" + geoObject.getSimpleValue()
                             + "\" and File Topic \""+fileService.getFile(fileTopicId).toString()+"\"");
@@ -1040,7 +1038,7 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
 
     private List<RelatedTopic> getAssignedUsernameTopics(Topic topic) {
         return topic.getRelatedTopics("de.kiezatlas.user_assignment",
-            "dm4.core.default", "dm4.core.default", null, 0).getItems();
+            "dm4.core.default", "dm4.core.default", null);
     }
 
     private boolean isAssignedUsername(Topic topic, Topic username) {
@@ -1060,11 +1058,11 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
     }
 
     private Topic getFirstParentGeoObjectTopic(Topic entry) {
-        ResultList<RelatedTopic> results = entry.getRelatedTopics("dm4.core.aggregation", "dm4.core.child",
-            "dm4.core.parent", KiezatlasService.GEO_OBJECT, 0);
+        List<RelatedTopic> results = entry.getRelatedTopics("dm4.core.aggregation", "dm4.core.child",
+            "dm4.core.parent", KiezatlasService.GEO_OBJECT);
         if (results == null) log.warning("Search Result Entry: " +entry.getTypeUri()
             + ", " +entry.getId() +" has NOT ONE Geo Object as PARENT");  // fulltext-search incl. "abandoned" facets
-        return (results.getSize() > 0 ) ? results.get(0) : null;
+        return (results.size() > 0 ) ? results.get(0) : null;
     }
 
     private Topic getRelatedBezirk(Topic geoObject) {
@@ -1136,7 +1134,7 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
                 }
             }
             // Last Modified
-            einrichtung.setLastModified((Long) dms.getProperty(geoObject.getId(), "dm4.time.modified"));
+            einrichtung.setLastModified((Long) dm4.getProperty(geoObject.getId(), "dm4.time.modified"));
             // Image Path
             Topic imagePath = kiezatlas.getImageFileFacetByGeoObject(geoObject);
             if (imagePath != null) einrichtung.setImageUrl(imagePath.getSimpleValue().toString());
@@ -1193,7 +1191,7 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
     }
 
     private Topic getPrivilegedWorkspace() {
-        return dms.getAccessControl().getWorkspace(CONFIRMATION_WS_URI);
+        return dm4.getAccessControl().getWorkspace(CONFIRMATION_WS_URI);
     }
 
     private Topic getUsernameTopic() {
@@ -1205,21 +1203,21 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
         }
     }
 
-    private List<RelatedTopic> getAngebotCriteriaTopics() {
-        return sortAlphabeticalDescending(dms.getTopics("ka2.criteria.angebot", 0).getItems());
+    private List<Topic> getAngebotCriteriaTopics() {
+        return sortAlphabeticalDescending(dm4.getTopicsByType("ka2.criteria.angebot"));
     }
 
-    private List<RelatedTopic> getThemaCriteriaTopics() {
-        return sortAlphabeticalDescending(dms.getTopics("ka2.criteria.thema", 0).getItems());
+    private List<Topic> getThemaCriteriaTopics() {
+        return sortAlphabeticalDescending(dm4.getTopicsByType("ka2.criteria.thema"));
     }
 
-    private List<RelatedTopic> getZielgruppeCriteriaTopics() {
-        return sortAlphabeticalDescending(dms.getTopics("ka2.criteria.zielgruppe", 0).getItems());
+    private List<Topic> getZielgruppeCriteriaTopics() {
+        return sortAlphabeticalDescending(dm4.getTopicsByType("ka2.criteria.zielgruppe"));
     }
 
     private List<Topic> getAvailableLORNumberTopics() {
         List<Topic> countries = new ArrayList<Topic>();
-        for (RelatedTopic city : dms.getTopics("ka2.lor_nummer", 0)) {
+        for (Topic city : dm4.getTopicsByType("ka2.lor_nummer")) {
             if (!city.getUri().isEmpty()) countries.add(city);
         }
         return countries;
@@ -1227,7 +1225,7 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
 
     private List<Topic> getAvailableTraegerTopics() {
         List<Topic> countries = new ArrayList<Topic>();
-        for (RelatedTopic city : dms.getTopics("ka2.traeger", 0)) {
+        for (Topic city : dm4.getTopicsByType("ka2.traeger")) {
             if (!city.getUri().isEmpty()) countries.add(city);
         }
         return countries;
@@ -1235,7 +1233,7 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
 
     private List<Topic> getAvailableCountryTopics() {
         List<Topic> countries = new ArrayList<Topic>();
-        for (RelatedTopic city : dms.getTopics("dm4.contacts.country", 0)) {
+        for (Topic city : dm4.getTopicsByType("dm4.contacts.country")) {
             if (!city.getUri().isEmpty()) countries.add(city);
         }
         return countries;
@@ -1243,20 +1241,20 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
 
     private List<Topic> getAvailableCityTopics() {
         List<Topic> cities = new ArrayList<Topic>();
-        for (RelatedTopic city : dms.getTopics("dm4.contacts.city", 0)) {
+        for (Topic city : dm4.getTopicsByType("dm4.contacts.city")) {
             if (!city.getUri().isEmpty()) cities.add(city);
         }
         return cities;
     }
 
-    private List<RelatedTopic> getAvailableDistrictTopics() {
-        ResultList<RelatedTopic> topics = dms.getTopics("ka2.bezirk", 0);
-        List<RelatedTopic> results = topics.getItems();
+    private List<Topic> getAvailableDistrictTopics() {
+        List<Topic> topics = dm4.getTopicsByType("ka2.bezirk");
+        List<Topic> results = topics;
         sortAlphabeticalDescending(results);
         return results;
     }
 
-    private List<RelatedTopic> sortAlphabeticalDescending(List<RelatedTopic> topics) {
+    private List<Topic> sortAlphabeticalDescending(List<Topic> topics) {
         Collections.sort(topics, new Comparator<Topic>() {
             public int compare(Topic t1, Topic t2) {
                 String one = t1.getSimpleValue().toString();
@@ -1267,7 +1265,7 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
         return topics;
     }
 
-    private void sortAlphabeticalDescendingByChildTopic(List<RelatedTopic> topics, final String childTypeUri) {
+    private void sortAlphabeticalDescendingByChildTopic(List<Topic> topics, final String childTypeUri) {
         Collections.sort(topics, new Comparator<Topic>() {
             public int compare(Topic t1, Topic t2) {
                 t1.loadChildTopics(childTypeUri);
@@ -1312,9 +1310,9 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
     }
 
     private void updateCriteriaFacets(Topic geoObject, List<Long> themen, List<Long> zielgruppen, List<Long> angebote) {
-        List<RelatedTopic> formerThemen = facetsService.getFacets(geoObject, THEMA_FACET).getItems();
-        List<RelatedTopic> formerZielgruppen = facetsService.getFacets(geoObject, ZIELGRUPPE_FACET).getItems();
-        // List<RelatedTopic> formerAngebote = facetsService.getFacets(geoObject, ANGEBOT_FACET).getItems();
+        List<RelatedTopic> formerThemen = facetsService.getFacets(geoObject, THEMA_FACET);
+        List<RelatedTopic> formerZielgruppen = facetsService.getFacets(geoObject, ZIELGRUPPE_FACET);
+        // List<RelatedTopic> formerAngebote = facetsService.getFacets(geoObject, ANGEBOT_FACET);
         delFacetTopicReferences(geoObject, formerThemen, THEMA_FACET, THEMA_CRIT);
         delFacetTopicReferences(geoObject, formerZielgruppen, ZIELGRUPPE_FACET, ZIELGRUPPE_CRIT);
         /// delRefFacetTopics(geoObject, formerAngebote, ANGEBOT_FACET, ANGEBOT_CRIT);
@@ -1326,8 +1324,8 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
     private void updateContactFacet(Topic geoObject, String ansprechpartner, String telefon, String email, String fax) {
         Topic kontakt = facetsService.getFacet(geoObject, KONTAKT_FACET);
         if (kontakt == null) { // Create
-            FacetValue facetValue = new FacetValue(KONTAKT);
-            facetValue.put(new ChildTopicsModel()
+            FacetValueModel facetValue = mf.newFacetValueModel(KONTAKT);
+            facetValue.put(mf.newChildTopicsModel()
                 .put(KONTAKT_ANSPRECHPARTNER, ansprechpartner.trim())
                 .put(KONTAKT_MAIL, email.trim())
                 .put(KONTAKT_TEL, telefon.trim())
@@ -1371,7 +1369,7 @@ public class WebsitePlugin extends WebActivatorPlugin implements WebsiteService 
     }
 
     private long mapGoogleDistrictNameToKiezatlasBezirksTopic(String googleDistrict) {
-        List<RelatedTopic> districts = getAvailableDistrictTopics();
+        List<Topic> districts = getAvailableDistrictTopics();
         for (Topic district : districts) {
             if (district.getSimpleValue().toString().equals(googleDistrict)) return district.getId();
             if (googleDistrict.contains(district.getSimpleValue().toString())) return district.getId();

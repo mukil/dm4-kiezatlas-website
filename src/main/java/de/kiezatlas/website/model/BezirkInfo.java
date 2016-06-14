@@ -3,7 +3,7 @@ package de.kiezatlas.website.model;
 import de.deepamehta.core.JSONEnabled;
 import de.deepamehta.core.RelatedTopic;
 import de.deepamehta.core.Topic;
-import de.deepamehta.core.service.ResultList;
+import java.util.List;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
@@ -42,9 +42,9 @@ public class BezirkInfo implements JSONEnabled {
 
     private JSONArray getBezirksregionen() {
         JSONArray regionen = new JSONArray();
-        ResultList<RelatedTopic> topics = this.topic.getRelatedTopics("dm4.core.association",
-            "dm4.core.default", "dm4.core.default", "ka2.bezirksregion", 0);
-        for (RelatedTopic item : topics.getItems()) {
+        List<RelatedTopic> topics = this.topic.getRelatedTopics("dm4.core.association",
+            "dm4.core.default", "dm4.core.default", "ka2.bezirksregion");
+        for (RelatedTopic item : topics) {
             try {
                 JSONObject entry = new JSONObject()
                     .put("id", item.getId())

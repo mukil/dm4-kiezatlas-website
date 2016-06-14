@@ -6,56 +6,50 @@
 
     <name>DeepaMehta 4 Kiezatlas - Website</name>
     <groupId>de.kiezatlas</groupId>
-    <artifactId>dm47-kiezatlas-website</artifactId>
+    <artifactId>dm48-kiezatlas-website</artifactId>
     <version>0.4-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <parent>
         <groupId>de.deepamehta</groupId>
-        <artifactId>deepamehta-plugin-parent</artifactId>
-        <version>4.7</version>
+        <artifactId>deepamehta-plugin</artifactId>
+        <version>4.8</version>
     </parent>
+
+    <properties>
+        <dm4.deploy.dir>/home/malted/source/mikro/deepamehta/bundle-deploy</dm4.deploy.dir>
+    </properties>
 
     <dependencies>
         <dependency>
             <groupId>de.kiezatlas</groupId>
-            <artifactId>dm47-kiezatlas</artifactId>
+            <artifactId>dm48-kiezatlas</artifactId>
             <version>2.1.8-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>de.kiezatlas</groupId>
-            <artifactId>dm47-kiezatlas-etl</artifactId>
+            <artifactId>dm48-kiezatlas-etl</artifactId>
             <version>0.5-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>de.kiezatlas</groupId>
-            <artifactId>dm47-kiezatlas-angebote</artifactId>
+            <artifactId>dm48-kiezatlas-angebote</artifactId>
             <version>0.2-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>de.deepamehta</groupId>
-            <artifactId>dm47-webactivator</artifactId>
-            <version>0.4.6</version>
-        </dependency>
-        <dependency>
-            <groupId>de.mikromedia</groupId>
-            <artifactId>dm47-webpages</artifactId>
-            <version>0.4-SNAPSHOT</version>
-        </dependency>
-        <dependency>
-            <groupId>de.deepamehta</groupId>
             <artifactId>deepamehta-workspaces</artifactId>
-            <version>4.7</version>
+            <version>4.8</version>
         </dependency>
         <dependency>
             <groupId>de.deepamehta</groupId>
             <artifactId>deepamehta-facets</artifactId>
-            <version>4.7</version>
+            <version>4.8</version>
         </dependency>
         <dependency>
             <groupId>de.deepamehta</groupId>
             <artifactId>deepamehta-accesscontrol</artifactId>
-            <version>4.7</version>
+            <version>4.8</version>
         </dependency>
         <!--dependency>
             <groupId>de.deepamehta</groupId>
@@ -65,12 +59,22 @@
         <dependency>
             <groupId>de.deepamehta</groupId>
             <artifactId>deepamehta-geomaps</artifactId>
-            <version>4.7</version>
+            <version>4.8</version>
         </dependency>
         <dependency>
             <groupId>de.deepamehta</groupId>
-            <artifactId>dm47-geospatial</artifactId>
+            <artifactId>dm48-geospatial</artifactId>
             <version>0.2.2-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>de.deepamehta</groupId>
+            <artifactId>dm48-thymeleaf</artifactId>
+            <version>0.5</version>
+        </dependency>
+        <dependency>
+            <groupId>de.mikromedia</groupId>
+            <artifactId>dm48-webpages</artifactId>
+            <version>0.4-SNAPSHOT</version>
         </dependency>
     </dependencies>
 

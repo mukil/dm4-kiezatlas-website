@@ -2,7 +2,7 @@ package de.kiezatlas.website.model;
 
 import de.deepamehta.core.JSONEnabled;
 import de.deepamehta.core.Topic;
-import de.deepamehta.plugins.geomaps.model.GeoCoordinate;
+import de.deepamehta.geomaps.model.GeoCoordinate;
 import java.text.DateFormat;
 import java.util.Locale;
 import java.util.logging.Level;

@@ -3,9 +3,9 @@ package de.kiezatlas.website.model;
 import de.deepamehta.core.JSONEnabled;
 import de.deepamehta.core.RelatedTopic;
 import de.deepamehta.core.Topic;
-import de.deepamehta.core.service.ResultList;
-import de.deepamehta.plugins.geomaps.GeomapsService;
+import de.deepamehta.geomaps.GeomapsService;
 import de.kiezatlas.angebote.AngebotService;
+import java.util.List;
 import java.util.logging.Logger;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONObject;
@@ -23,9 +23,9 @@ public class GeoObjectDetailsView implements JSONEnabled {
     GeoObjectView geoObjectView = null;
     long geoCoordinateTopicId = -1;
     // Related Categories
-    ResultList<RelatedTopic> relatedTopics = null;
-    ResultList<RelatedTopic> relatedAudiences = null;
-    ResultList<RelatedTopic> relatedServices = null;
+    List<RelatedTopic> relatedTopics = null;
+    List<RelatedTopic> relatedAudiences = null;
+    List<RelatedTopic> relatedServices = null;
     // Sonstiges
     Topic beschreibung = null;
     Topic contact = null;
@@ -39,11 +39,11 @@ public class GeoObjectDetailsView implements JSONEnabled {
         this.geoObjectView = new GeoObjectView(geoObject, geomaps, angebote);
         // related categories
         relatedTopics = geoObject.getRelatedTopics("dm4.core.aggregation", "dm4.core.parent",
-            "dm4.core.child", "ka2.criteria.thema", 0);
+            "dm4.core.child", "ka2.criteria.thema");
         relatedAudiences = geoObject.getRelatedTopics("dm4.core.aggregation", "dm4.core.parent",
-            "dm4.core.child", "ka2.criteria.zielgruppe", 0);
+            "dm4.core.child", "ka2.criteria.zielgruppe");
         relatedServices = geoObject.getRelatedTopics("dm4.core.aggregation", "dm4.core.parent",
-            "dm4.core.child", "ka2.criteria.angebot", 0);
+            "dm4.core.child", "ka2.criteria.angebot");
         // fetch other details
         this.beschreibung = geoObject.getRelatedTopic("dm4.core.composition", "dm4.core.parent",
             "dm4.core.child", "ka2.beschreibung");
@@ -59,9 +59,9 @@ public class GeoObjectDetailsView implements JSONEnabled {
         if (!geoObjectView.hasGeoCoordinateValues()) return null;
         try {
             JSONObject object = geoObjectView.toJSON();
-            if (relatedTopics.getSize() > 0) {
+            if (relatedTopics.size() > 0) {
                 JSONArray related = new JSONArray();
-                for (RelatedTopic relatedTopic : relatedTopics.getItems()) {
+                for (RelatedTopic relatedTopic : relatedTopics) {
                     related.put(new JSONObject()
                             .put("related_topic_uri", relatedTopic.getUri())
                             .put("related_topic_name",
