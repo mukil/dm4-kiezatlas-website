@@ -228,8 +228,10 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService {
                 attachGeoObjectChildTopics(geoObject, ansprechpartner, telefon, fax, email, beschreibung,
                     oeffnungszeiten, website, coordinatePair, district, themen, zielgruppen, angebote);
                 // Handle Image-File Upload (Seperately)
-                log.info("> Bild File Topic Upload is file at=\"" + fileService.getFile(fileId).toString());
-                createBildAssignment(geoObject, username, fileId);
+                if (fileId != 0) {
+                    log.info("> Bild File Topic Upload is file at=\"" + fileService.getFile(fileId).toString());
+                    createBildAssignment(geoObject, username, fileId);
+                }
                 // ### Send Notification to EDITOR with basic infos on the "confirmation" process
                 viewData("message", "Vielen Dank, Sie haben erfolgreich einen neuen Ort in den Kiezatlas eingetragen. "
                     + "Eine Kiez-AdministratorIn wurde benachrichtigt und wir werden den Eintrag so schnell wie m&ouml;glich freischalten.");
@@ -249,7 +251,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService {
             }
         }
         log.info("#### Geo Object Form Processing Topic Result: " + geoObject);
-        viewData("geoobject", geoObject);
+        viewData("name", geoObject.getSimpleValue().toString());
         return getSimpleMessagePage();
     }
 

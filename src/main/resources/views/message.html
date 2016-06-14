@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title th:text="Bes&auml;tigung - Kiezatlas'"></title>
+        <title>Information - Kiezatlas</title>
         <meta charset="UTF-8"/>
         <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0"/>
 
@@ -31,10 +31,9 @@
         <div id="detail-area" th:class="${angebotsinfos} ? 'angebotsinfos'">
             <div class="commands">
             </div>
-            <div id="map"></div>
             <div class="info-area">
                 <div class="infos">
-                    <h3 th:text='${geoobject.name}'>Name des Eintrags</h3>
+                    <h3 th:text='${name}'>Name des Eintrags</h3>
                     <p th:if="${!#strings.isEmpty(message)}" th:text="${message}"></p>
                 </div>
             </div>
