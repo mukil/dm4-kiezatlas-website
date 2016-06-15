@@ -475,6 +475,10 @@ span.angebote-btn,
     position: relative;
 }
 
+#detail-area .entry-card.unconfirmed {
+    background-color: #ACC;
+}
+
 #detail-area .entry-card h3 {
     padding-left: 15px; padding-right: 10px;
     padding-top: 10px; padding-bottom: 10px;

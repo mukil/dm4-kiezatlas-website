@@ -456,7 +456,8 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
         if (typeof opening_hours !== "undefined"
             && opening_hours.length > 0) body_text += '<p><b>&Ouml;ffnungszeiten</b>' + opening_hours + '</p>'
         // _append_ to dom
-        $('#detail-area').append('<div class="entry-card" id="details-'+object.id+'">'
+        var unconfirmedClass = (object.unconfirmed) ? " unconfirmed" : ""
+        $('#detail-area').append('<div class="entry-card' + unconfirmedClass + '" id="details-'+object.id+'">'
             + '<h3>'+object.name+'</h3>'
             + '<div class="details">'
             + '<p>'

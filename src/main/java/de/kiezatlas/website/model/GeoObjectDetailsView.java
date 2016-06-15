@@ -31,7 +31,7 @@ public class GeoObjectDetailsView implements JSONEnabled {
     Topic contact = null;
     Topic opening_hours = null;
     Topic lor_nr = null;
-    // Angebote
+    boolean isUnconfirmed = false;
 
     Logger log = Logger.getLogger(GeoObjectDetailsView.class.getName());
 
@@ -53,6 +53,10 @@ public class GeoObjectDetailsView implements JSONEnabled {
             "dm4.core.child", "ka2.oeffnungszeiten");
         this.lor_nr = geoObject.getRelatedTopic("dm4.core.aggregation", "dm4.core.parent",
             "dm4.core.child", "ka2.lor_nummer");
+    }
+
+    public void setUnconfirmed() {
+        isUnconfirmed = true;
     }
 
     public JSONObject toJSON() {
@@ -85,6 +89,7 @@ public class GeoObjectDetailsView implements JSONEnabled {
             if (lor_nr != null) {
                 object.put("lor_id", lor_nr.getSimpleValue());
             }
+            object.put("unconfirmed", isUnconfirmed);
             return object;
         } catch (Exception jex) {
             throw new RuntimeException("Constructing a JSON GeoObjectDetailsView FAILED", jex);
