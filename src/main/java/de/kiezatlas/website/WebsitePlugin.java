@@ -66,6 +66,8 @@ import javax.ws.rs.core.Response.Status;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
+import org.deepamehta.plugins.signup.SignupPlugin;
+import org.deepamehta.plugins.signup.service.SignupPluginService;
 
 /**
  * The module bundling the Kiezatlas 2 Website.<br/>
@@ -88,6 +90,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService {
     @Inject private WebpageService pageService;
     @Inject private GeospatialService spatialService;
     @Inject private AngebotService angeboteService;
+    @Inject private SignupPluginService signupService;
     @Inject private GeomapsService geomapsService;
     @Inject private FacetsService facetsService;
     @Inject private FilesService fileService;
@@ -238,6 +241,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService {
                 // Assign Geo Object to Confirmation WS (at last, otherwise we could not write its facets)
                 initiallyAssignGeoObjecToWorkspace(geoObject, getPrivilegedWorkspace());
                 // ### Send Notification to EDITOR with basic infos on the "confirmation" process
+                sendAdministrationNotice("Neuer Einrichtungsdatensatz im Kiezatlas", geoObject, username);
                 viewData("message", "Vielen Dank, Sie haben erfolgreich einen neuen Ort in den Kiezatlas eingetragen. "
                     + "Die Kiez-AdministratorInnen wurden benachrichtigt und wir werden Ihren Eintrag so schnell wie m&ouml;glich freischalten.");
                 log.info("// ---------- Es wurde erfolgreiche eine neue Einrichtung im Kiezatlas ANGELEGT (" + name + ")");
@@ -263,6 +267,14 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService {
         viewData("name", geoObject.getSimpleValue().toString());
         viewData("coordinates", coordinatePair);
         return getSimpleMessagePage();
+    }
+
+    private void sendAdministrationNotice(String subject, Topic geoObject, Topic username) {
+        signupService.sendSystemMailboxNotification("Neuer Einrichtungsdatensatz im Kiezatlas", "\nLiebe/r Kiez-Administrator_in,\n\n"
+            + "es gibt einen neuen Einrichtungsdatensatz von "+username+", bitte schaue gleich mal ob Du diesen nicht gleich freischalten kannst.\n\n"
+            + "Name des neuen Eintrags: \"" + geoObject.getSimpleValue().toString() + "\"\n"
+            + "Der Link zur Freischaltung: "+SignupPlugin.DM4_HOST_URL+"/website/topic/" + geoObject.getId() + " bzw. zum Login ist:\n"
+            + SignupPlugin.DM4_HOST_URL + "/sign-up/login\n\nOk, das war's schon.\n\nDanke + Ciao!");
     }
 
     /**
