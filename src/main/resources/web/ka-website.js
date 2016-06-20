@@ -154,11 +154,11 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
         _self.setAngebotsinfoFilter(true)
         _self.set_fulltext_search_placeholder("Volltextsuche in Angeboten")
         var $legende = $('div.legende')
-        if ($legende.children('a.angebote-control').length === 0) {
-            $legende.append('<a class="angebote-control" href="javascript:kiezatlas.clear_angebote_page()">'
+        if ($legende.children('a.circle-control').length === 0) {
+            $legende.append('<a class="circle-control" href="javascript:kiezatlas.clear_angebote_page()">'
                 + 'Umkreissuche aktivieren</a>')
         } else {
-            $('a.angebote-control').show()
+            $('a.circle-control').show()
         }
         $('a.lock-control').hide()
         $('a.district-control').hide()
@@ -177,7 +177,7 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
         _self.set_anchor("")
         _self.setAngebotsinfoFilter(false)
         _self.set_fulltext_search_placeholder("Volltextsuche")
-        $('a.angebote-control').hide()
+        $('a.circle-control').hide()
         $('a.district-control').hide()
         $('a.lock-control').show()
         leafletMap.clear_circle_marker()
@@ -202,6 +202,7 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
         }
         _self.set_fulltext_search_placeholder("Volltextsuche für " + bezirk_name)
         $('a.lock-control').hide()
+        $('a.circle-control').hide()
         $('#district-area').html(bezirk_html).show()
         // ### leafletMap.map.doubleClickZoom.enable();
         leafletMap.show_anchor(anchor_name)
@@ -490,19 +491,19 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
         var bezirke = _self.getDistricts()
         for (var i in bezirke) {
             var district = bezirke[i]
-            var bezirke_html = '<li ' + 'class="bezirk">'
+            var bezirke_html = '<li ' + 'class="bezirk ' + district.uri + '">'
                     bezirke_html += '<a class="district-button" id="' + district.id
                     + '" title="zur Bezirksseite '+ district.value
                     + '" href="javascript:kiezatlas.show_district_page('
                     + district.id + ')">' + district["value"] + '</a>'
-                bezirke_html += '<ul class="bezirksregionen">'
+                /** bezirke_html += '<ul class="bezirksregionen">'
                 var subdistricts = district.childs.sort(_self.name_sort_asc)
                 for (var k in subdistricts) {
                     var region = subdistricts[k]
                     // console.log("ka_subdistrict", region)
                     bezirke_html += '<li><a id="' + region["id"] + '">' + region["name"] + '</a></li>'
                 }
-                bezirke_html += '</ul>'
+                bezirke_html += '</ul>' **/
                 bezirke_html += '</li>'
             var $bezirke = $(bezirke_html)
             $('ul.bezirke').append($bezirke)

@@ -320,6 +320,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService {
             return getUnauthorizedPage();
         }
         if (isGeoObjectTopic(geoObject) || isAssignedUsername(geoObject, username)) {
+            // ### enforce workspace re-assignment even if existing .....
             assignGeoObjecToWorkspace(geoObject, getStandardWorkspace());
             viewData("message", "Der Eintrag \"" + geoObject.getSimpleValue() + "\" erfolgreich freigeschaltet.");
         } else {
@@ -345,7 +346,10 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService {
         // Assemble Angebosinfos for Einrichtung
         List<AngebotsInfoAssigned> angebotsInfos = angeboteService.getAngebotsInfosAssigned(geoObject);
         if (angebotsInfos.size() > 0) viewData("angebotsinfos", angebotsInfos);
+        // user auth
         preparePageAuthorization();
+        // geo object auth
+        viewData("is_published",  isGeoObjectPublic(geoObject));
         viewData("editable", isGeoObjectEditable(geoObject, username));
         return view("detail");
     }
@@ -1091,6 +1095,12 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService {
         return isAssignedUsername(geoObject, username) && isKiezatlas2GeoObject(geoObject);
     }
 
+    /** ### Actually check the workspace's SharingMode **/
+    private boolean isGeoObjectPublic(Topic geoObject) {
+        Topic workspace = workspaceService.getAssignedWorkspace(geoObject.getId());
+        return (workspace.getUri().equals(WorkspacesService.DEEPAMEHTA_WORKSPACE_URI));
+    }
+
     private boolean isKiezatlas2GeoObject(Topic geoObject) {
         return !(geoObject.getUri().startsWith(KA1_GEO_OBJECT_URI_PREFIX));
     }
@@ -1208,15 +1218,15 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService {
         }
     }
 
-    private List<Topic> getAngebotCriteriaTopics() {
+    private List<? extends Topic> getAngebotCriteriaTopics() {
         return sortAlphabeticalDescending(dm4.getTopicsByType("ka2.criteria.angebot"));
     }
 
-    private List<Topic> getThemaCriteriaTopics() {
+    private List<? extends Topic> getThemaCriteriaTopics() {
         return sortAlphabeticalDescending(dm4.getTopicsByType("ka2.criteria.thema"));
     }
 
-    private List<Topic> getZielgruppeCriteriaTopics() {
+    private List<? extends Topic> getZielgruppeCriteriaTopics() {
         return sortAlphabeticalDescending(dm4.getTopicsByType("ka2.criteria.zielgruppe"));
     }
 
@@ -1259,7 +1269,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService {
         return results;
     }
 
-    private List<Topic> sortAlphabeticalDescending(List<Topic> topics) {
+    private List<? extends Topic> sortAlphabeticalDescending(List<? extends Topic> topics) {
         Collections.sort(topics, new Comparator<Topic>() {
             public int compare(Topic t1, Topic t2) {
                 String one = t1.getSimpleValue().toString();
@@ -1270,7 +1280,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService {
         return topics;
     }
 
-    private void sortAlphabeticalDescendingByChildTopic(List<Topic> topics, final String childTypeUri) {
+    private void sortAlphabeticalDescendingByChildTypeValue(List<? extends Topic> topics, final String childTypeUri) {
         Collections.sort(topics, new Comparator<Topic>() {
             public int compare(Topic t1, Topic t2) {
                 t1.loadChildTopics(childTypeUri);
@@ -1282,7 +1292,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService {
         });
     }
 
-    private void sortByModificationDateDescending(List<RelatedTopic> topics) {
+    private void sortByModificationDateDescending(List<? extends Topic> topics) {
         Collections.sort(topics, new Comparator<Topic>() {
             public int compare(Topic t1, Topic t2) {
                 long one = (Long) t1.getProperty("dm4.time.modified");

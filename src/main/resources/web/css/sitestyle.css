@@ -4,6 +4,17 @@
     zoom: 1;
 }
 
+/**
+em, rems
+margins
+paddings
+colors
+positions?
+background-colors?
+colors:
+border-boxing?
+*/
+
 body {
     padding: 0;
     margin: 0;
@@ -16,30 +27,12 @@ html, body {
     background-color: #EAEAEA;
 }
 
-#marker-name b,
-h3 {
-    color: #002856;
-}
-
-.leaflet-container a {
-    color: #002856;
-}
-
-.leaflet-container a:hover {
-    color: #8F1414;
-}
-
-#detail-area .entry-card .angebote-link .button,
-a {
-    color: #002856;
-    text-decoration: underline;
-    text-decoration-color: #8f1414;
-}
-
+/** ----- Helpers ------ **/
 .visible-ib {
     display: inline-block !important;
 }
 
+/** ---- Special Elements -------- **/
 .search-option {
     display: inline-block;
     max-width: 400px;
@@ -55,45 +48,6 @@ a {
     position: relative;
     border: 1px solid #a9a9a9;
     margin-top: 30px;
-}
-
-.search-option h1 {
-    position: absolute; top: -10px; left: 10px;
-}
-
-.search-option.a h1 {
-    color: #eaca8f;
-}
-
-.search-option.b h1 {
-    color: #0078A8;
-}
-
-.search-option.c h1 {
-    color: #8f1414;
-}
-
-.search-option.a:hover {
-    cursor: pointer;
-    border: 1px solid #EACA8F;
-}
-
-.search-option.b:hover {
-    cursor: pointer;
-    border: 1px solid #0078A8;
-}
-
-.search-option.c:hover {
-    cursor: pointer;
-    border: 1px solid #8F1414;
-}
-
-.search-option.d {
-    display: none;
-}
-
-h3.location-label {
-    color: #8f1414;
 }
 
 #places {
@@ -120,97 +74,6 @@ h3.location-label {
     position: relative;
 }
 
-/** #places li .entries[aria-expanded="true"] {
-    display: inline-block !important;
-    left: 0px !important;
-    top: 0px !important;
-    background: transparent;
-}
-
-#places li .entries.submenu[aria-expanded="true"] {
-    display: inline-block !important;
-    left: 15px !important;
-    top: 0px !important;
-    border: 0px solid transparent;
-}
-
-#places li .entries[aria-expanded="true"] .submenu-item {
-    width: 240px;
-    background-color: #fff;
-    background: #fff;
-    padding: 5px;
-} **/
-
-/** Overrding jquery ui 1.9.2 flick theme */
-
-/** .ui-menu-item a.ui-state-active,
-.ui-menu-item a.ui-state-focus {
-    color: #8F1414;
-    background-color: transparent;
-    background: transparent;
-    border: 0px solid transparent;
-    font-weight: normal;
-} **/
-
-.ui-menu .ui-menu-item {
-    width: 110px;
-}
-
-.ui-button-text-only .ui-button-text {
-    padding: 0px 3px;
-}
-
-button.star {
-    display: none;
-    cursor: pointer;
-    position: relative;
-    top: 2px;
-}
-
-button.star img {
-    position: relative;
-    top: 2px;
-}
-
-a.next-location:hover,
-a.prev-location:hover,
-button.star.ui-state-hover,
-button.star.ui-state-focus,
-.ui-widget-content .ui-state-hover,
-.ui-widget-content .ui-state-focus {
-    border: 1px solid #002856;
-    background: #002856;
-    color: #fff;
-}
-
-a.next-location.defused:hover,
-a.prev-location.defused:hover {
-    background-color: #fff;
-    border: 1px solid transparent;
-}
-
-.ui-menu .ui-menu-icon {
-    position: absolute;
-    top: 0.45em;
-    left: 0.4em;
-}
-
-#places .ui-state-active {
-    color: #8F1414;
-}
-
-/** #places {
-    display: inline-block;
-} **/
-
-img.more {
-    padding: 4px;
-}
-
-h1.my-title {
-    margin: 10px 10px;
-}
-
 #notification {
     padding: 20px; padding-bottom: 50px;
     position: fixed; bottom: 100px; left: 0px;
@@ -229,32 +92,8 @@ h1.my-title {
     display: block;
 }
 
-.kiezatlas a.button {
-    padding: 4px;
-}
-
-.kiezatlas .info-area a.button {
-    margin-left: 10px;
-}
-
-.kiezatlas .info-area .right-side a.button {
-    margin: 0px;
-    font-size: .8em;
-}
-
-.kiezatlas .info-area .right-side .button.reset {
-    color: #ff0000;
-}
-
 #close {
     margin: 10px;
-}
-
-.kiezatlas a.button,
-span.einrichtungen-btn,
-span.angebote-btn,
-#do-nearby {
-    cursor: pointer;
 }
 
 #pages,
@@ -337,16 +176,349 @@ span.angebote-btn,
     float: right; /** use display: absolute; right: 0px; instead */
 }
 
-.district-area {
+#main-menu {
+    width: 100%;
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+#main-menu h3 {
+    font-weight: normal;
+}
+
+#main-menu h3 a {
+    cursor: pointer;
+    padding: 10px;
+    border: 1px solid #EACA8F;
+    background-color: #fff;
+}
+
+#main-menu .options {
+    display:none;
+}
+
+#karte {
     position: relative;
-    top: 100px;
+    top: 45px;
+    padding-top: 5px;
+    padding-bottom: 3px;
+    /** background-color: #fff; **/
+}
+
+#karte h3 {
+    margin-left: 15px;
+    margin-right: 100px;
+    display: inline-block;
+}
+
+#karte h3 small {
+    color: #666;
+    font-size: 0.8em;
+}
+
+#map.outlined  {
+    border-bottom: 1px solid #FC3;
+    border-top: 1px solid #FC3; /** #0078A8;*/
+    -webkit-box-shadow: 3px 0px 11px 0px rgba(50, 50, 50, 0.75);
+    -moz-box-shadow:    3px 0px 11px 0px rgba(50, 50, 50, 0.75);
+    box-shadow:         3px 0px 11px 0px rgba(50, 50, 50, 0.75);
+}
+
+#map {
+    font-size: 1em;
+    display: none;
+    z-index: 110;
+}
+
+#map.fullsize {
+    width: 100%;
+    position: relative; bottom: 0px;
+    text-align: center;
+    background: #fff;
+}
+
+#spinning-wheel {
+    position: absolute; top: 0px;
+    width: 100%; height: 100%;
+    text-align: center;
+    display: none;
+    background-color: rgba(255, 255, 255, 0.9);
+}
+
+#spinning-wheel img {
+    margin: 20px;
+}
+
+#marker-name {
+    display: none;
+    border-radius: 2px;
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: #fff;
+    z-index: 2000;
+    max-width: 300px;
+    padding: 10px;
+    text-align: left;
+}
+
+#location-input .spinning-wheel {
+    position: absolute; top: 3px; right: 8px;
+    width: 40px; height: 40px;
+    text-align: center;
+    display: none;
+    background-color: rgba(255, 255, 255, 0.5);
+}
+
+#location-input .location-search-info {
+    display: none;
+    margin-top: 10px;
+    color: #ff0000;
+}
+
+#loading-area {
+    margin-right: auto; margin-left: auto;
+    width: 110px; height: 50px; z-index: 106; padding: 15px;
+    position: absolute; top: 35%;  left: 45%; color: #fff;
+    font-weight: bold; font-size: 11px; font-family: sans-serif;
+}
+
+#loading-area img.loading {
+    padding: 0px; margin: 0px; z-index: 101;
+    position: relative; left: -100px; top: 10px;
+    background: transparent;
+}
+
+/** ----------- Basic Font Styles & Colors ---------*/
+
+#marker-name b,
+h3 {
+    color: #002856;
+}
+
+.leaflet-container a {
+    color: #002856;
+}
+
+.leaflet-container a:hover {
+    color: #8F1414;
+}
+
+#detail-area .entry-card .angebote-link .button,
+a {
+    color: #002856;
+    text-decoration: underline;
+    text-decoration-color: #8f1414;
+}
+
+.search-option h1 {
+    position: absolute; top: -10px; left: 10px;
+}
+
+.search-option.a h1 {
+    color: #eaca8f;
+}
+
+.search-option.b h1 {
+    color: #0078A8;
+}
+
+.search-option.c h1 {
+    color: #8f1414;
+}
+
+.search-option.a:hover {
+    cursor: pointer;
+    border: 1px solid #EACA8F;
+}
+
+.search-option.b:hover {
+    cursor: pointer;
+    border: 1px solid #0078A8;
+}
+
+.search-option.c:hover {
+    cursor: pointer;
+    border: 1px solid #8F1414;
+}
+
+.search-option.d {
+    display: none;
+}
+
+h3.location-label {
+    color: #8f1414;
+}
+
+/** #places li .entries[aria-expanded="true"] {
+    display: inline-block !important;
+    left: 0px !important;
+    top: 0px !important;
+    background: transparent;
+}
+
+#places li .entries.submenu[aria-expanded="true"] {
+    display: inline-block !important;
+    left: 15px !important;
+    top: 0px !important;
+    border: 0px solid transparent;
+}
+
+#places li .entries[aria-expanded="true"] .submenu-item {
+    width: 240px;
+    background-color: #fff;
+    background: #fff;
+    padding: 5px;
+} **/
+
+#header ol {
+    text-align: left;
+    width: 75%;
+    margin: auto;
+}
+
+#main-menu p,
+#header .welcome {
+    max-width: 800px;
+    margin: auto;
+}
+
+#header .welcome img {
+    display: inline-block;
+}
+
+#header .welcome h3 {
+    display: inline-block;
+    vertical-align: top;
+    margin-left: 15px;
+}
+
+#header .welcome p {
+    text-align: center;
+}
+
+.confirm #header .welcome {
+    text-align: left;
+}
+
+#bottom {
+    padding: 15px;
+    background-color: #fff;
+}
+
+
+/** -------- Buttons and ### Overrides jquery ui 1.9.2 flick theme --------- */
+
+/** .ui-menu-item a.ui-state-active,
+.ui-menu-item a.ui-state-focus {
+    color: #8F1414;
+    background-color: transparent;
+    background: transparent;
+    border: 0px solid transparent;
+    font-weight: normal;
+} **/
+
+.ui-menu .ui-menu-item {
+    width: 110px;
+}
+
+.ui-button-text-only .ui-button-text {
+    padding: 0px 3px;
+}
+
+button.star {
+    display: none;
+    cursor: pointer;
+    position: relative;
+    top: 2px;
+}
+
+button.star img {
+    position: relative;
+    top: 2px;
+}
+
+a.next-location:hover,
+a.prev-location:hover,
+button.star.ui-state-hover,
+button.star.ui-state-focus,
+.ui-widget-content .ui-state-hover,
+.ui-widget-content .ui-state-focus {
+    border: 1px solid #002856;
+    background: #002856;
+    color: #fff;
+}
+
+a.next-location.defused:hover,
+a.prev-location.defused:hover {
+    background-color: #fff;
+    border: 1px solid transparent;
+}
+
+.ui-menu .ui-menu-icon {
+    position: absolute;
+    top: 0.45em;
+    left: 0.4em;
+}
+
+#places .ui-state-active {
+    color: #8F1414;
+}
+
+/** #places {
+    display: inline-block;
+} **/
+
+img.more {
+    padding: 4px;
+}
+
+h1.my-title {
+    margin: 10px 10px;
+}
+
+/** ------- ### Kiezatlas Standards? --------- */
+
+.kiezatlas a.button {
+    padding: 4px;
+}
+
+.kiezatlas .info-area a.button {
+    margin-left: 10px;
+}
+
+.kiezatlas .info-area .right-side a.button {
+    margin: 0px;
+    font-size: .8em;
+}
+
+.kiezatlas .info-area .right-side .button.reset {
+    color: #ff0000;
+}
+
+.kiezatlas a.button,
+span.einrichtungen-btn,
+span.angebote-btn,
+#do-nearby {
+    cursor: pointer;
+}
+
+/**-------- ##### District Listing ----------------- */
+.district-area {
+    margin-top: 100px;
+    margin-bottom: 100px;
     font-size: 1.2em;
-    padding-left: 75px;
+    /** padding-left: 75px;
     padding-right: 75px;
-    padding-top: 30px; padding-bottom: 30px;
+    padding-top: 30px; padding-bottom: 30px; **/
     background: #eaeaea;
     text-align: center;
     color: #343434;
+}
+
+.district-area ul.bezirke li.ka2\.bezirk\.reinickendorf,
+.district-area ul.bezirke li.ka2\.bezirk\.marzahn-hellersdorf {
+    display: none;
 }
 
 .district-area ul.bezirke li {
@@ -417,40 +589,8 @@ span.angebote-btn,
     padding-left: 0px;
 }
 
-#header ol {
-    text-align: left;
-    width: 75%;
-    margin: auto;
-}
 
-#main-menu p,
-#header .welcome {
-    max-width: 800px;
-    margin: auto;
-}
 
-#header .welcome img {
-    display: inline-block;
-}
-
-#header .welcome h3 {
-    display: inline-block;
-    vertical-align: top;
-    margin-left: 15px;
-}
-
-#header .welcome p {
-    text-align: center;
-}
-
-.confirm #header .welcome {
-    text-align: left;
-}
-
-#bottom {
-    padding: 15px;
-    background-color: #fff;
-}
 
 /** ------------------- Website Frontpage Orte Display ---------------- */
 
@@ -522,6 +662,8 @@ span.angebote-btn,
     padding-right: 10px;
     padding-top: 0px;
 }
+
+
 
 /** -------------------- Frontpage Website Elements --------------------- **/
 
@@ -612,106 +754,7 @@ span.angebote-btn,
     text-decoration: none;
 }
 
-#main-menu {
-    width: 100%;
-    text-align: center;
-    margin-bottom: 40px;
-}
 
-#main-menu h3 {
-    font-weight: normal;
-}
-
-#main-menu h3 a {
-    cursor: pointer;
-    padding: 10px;
-    border: 1px solid #EACA8F;
-    background-color: #fff;
-}
-
-
-#main-menu .options {
-    display:none;
-}
-
-#karte {
-    position: relative;
-    top: 45px;
-    padding-top: 5px;
-    padding-bottom: 3px;
-    /** background-color: #fff; **/
-}
-
-#karte h3 {
-    margin-left: 15px;
-    margin-right: 100px;
-    display: inline-block;
-}
-
-#karte h3 small {
-    color: #666;
-    font-size: 0.8em;
-}
-
-#map.outlined  {
-    border-bottom: 1px solid #FC3;
-    border-top: 1px solid #FC3; /** #0078A8;*/
-    -webkit-box-shadow: 3px 0px 11px 0px rgba(50, 50, 50, 0.75);
-    -moz-box-shadow:    3px 0px 11px 0px rgba(50, 50, 50, 0.75);
-    box-shadow:         3px 0px 11px 0px rgba(50, 50, 50, 0.75);
-}
-
-#map {
-    font-size: 1em;
-    display: none;
-    z-index: 110;
-}
-
-#map.fullsize {
-    width: 100%;
-    position: relative; bottom: 0px;
-    text-align: center;
-    background: #fff;
-}
-
-#spinning-wheel {
-    position: absolute; top: 0px;
-    width: 100%; height: 100%;
-    text-align: center;
-    display: none;
-    background-color: rgba(255, 255, 255, 0.9);
-}
-
-#spinning-wheel img {
-    margin: 20px;
-}
-
-#marker-name {
-    display: none;
-    border-radius: 2px;
-    position: absolute;
-    top: 10px;
-    left: 10px;
-    background: #fff;
-    z-index: 2000;
-    max-width: 300px;
-    padding: 10px;
-    text-align: left;
-}
-
-#location-input .spinning-wheel {
-    position: absolute; top: 3px; right: 8px;
-    width: 40px; height: 40px;
-    text-align: center;
-    display: none;
-    background-color: rgba(255, 255, 255, 0.5);
-}
-
-#location-input .location-search-info {
-    display: none;
-    margin-top: 10px;
-    color: #ff0000;
-}
 
 /** --------------------------- Geo Object Details ---------------------- **/
 
@@ -930,25 +973,14 @@ span.angebote-btn,
     color: #fff;
 } **/
 
-#loading-area {
-    margin-right: auto; margin-left: auto;
-    width: 110px; height: 50px; z-index: 106; padding: 15px;
-    position: absolute; top: 35%;  left: 45%; color: #fff;
-    font-weight: bold; font-size: 11px; font-family: sans-serif;
-}
-
-#loading-area img.loading {
-    padding: 0px; margin: 0px; z-index: 101;
-    position: relative; left: -100px; top: 10px;
-    background: transparent;
-}
-
 .fahrinfo {
     background-color: #fff;
     padding: 4px;
 }
 
-/** -------------------------------------------------- Leaflet Overrides --- **/
+
+
+/** ----------------------------------------------### Leaflet Overrides --- **/
 
 .leaflet-popup-content-wrapper .item {
     border-bottom: 2px solid #e9e9e9; padding: 5px;
@@ -1059,7 +1091,7 @@ div.legende .text-search-control img {
     margin-left: 5px;
 }
 
-div.legende a.angebote-control,
+div.legende a.circle-control,
 div.legende a.district-control,
 div.legende a.lock-control {
     position: absolute;
@@ -1078,7 +1110,7 @@ div.link-area {
 }
 
 
-/** ------------------------------------------------------------------ Sign-up Dialogs --- */
+/** --------------------------------------- Overrides for Sign-up Dialog --- */
 
 .custom-ws-up, .sign-up {
     font-family: serif;
@@ -1291,6 +1323,8 @@ div.link-area {
   position: relative; top: -25px; left: 25px;
 } **/
 
+
+
 /** --------------------- Media Specific Style Overrides ------------------ **/
 
 @media(min-width: 1600px) {
@@ -1458,9 +1492,6 @@ div.link-area {
     .legende .elements {
         display: none;
     }
-    #fulltext-search-form input[type="text"] {
-        width: 60%;
-    }
     #navigation ul {
         margin-left: 0px;
     }
@@ -1469,6 +1500,24 @@ div.link-area {
     }
     .kiezatlas.topic .info-area {
         flex-direction: column;
+    }
+}
+
+@media (max-width:500px) {
+    div.legende a.circle-control,
+    div.legende a.district-control {
+        width: 120px;
+        bottom: 10px;
+        right: 0px;
+    }
+    div.legende a.lock-control {
+        width: 100px;
+        bottom: 15px;
+        right: 0px;
+    }
+    #fulltext-search-form input[type="text"] {
+        width: 50%;
+        margin-left: 0px;
     }
 }
 

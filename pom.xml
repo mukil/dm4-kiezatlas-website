@@ -51,11 +51,11 @@
             <artifactId>deepamehta-accesscontrol</artifactId>
             <version>4.8</version>
         </dependency>
-        <!--dependency>
+        <dependency>
             <groupId>de.deepamehta</groupId>
-            <artifactId>dm44-deepamehta-images</artifactId>
-            <version>0.9.3</version>
-        </dependency-->
+            <artifactId>dm48-deepamehta-images</artifactId>
+            <version>0.9.8-SNAPSHOT</version>
+        </dependency>
         <dependency>
             <groupId>de.deepamehta</groupId>
             <artifactId>deepamehta-geomaps</artifactId>
