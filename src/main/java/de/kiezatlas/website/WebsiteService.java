@@ -51,6 +51,9 @@ public interface WebsiteService {
     static final String WEBSITE_FACET = "ka2.website.facet";
     static final String IMAGE_FACET = "ka2.bild.facet";
 
+    static final String USER_ASSIGNMENT = "de.kiezatlas.user_assignment";
+    static final String BILD_ASSIGNMENT = "de.kiezatlas.bild_assignment";
+
     // static final String CONFIRMED_TYPE = "ka2.website.confirmed";
     static final String CONFIRMATION_WS_URI = "de.kiezatlas.ws_confirmation";
     static final String CONFIRMATION_WS_NAME = "Confirmation";

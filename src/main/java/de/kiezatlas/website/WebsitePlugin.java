@@ -269,6 +269,19 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService {
         return getSimpleMessagePage();
     }
 
+    private void sendConfirmationNotice(List<RelatedTopic> mailboxes, Topic geoObject) {
+        String recipients = "";
+        int recipientCount = 0;
+        for (RelatedTopic mailbox : mailboxes) {
+            recipients += mailbox.getSimpleValue().toString();
+            if (recipientCount < mailboxes.size()) recipients += ";";
+        }
+        signupService.sendUserMailboxNotification(recipients, "Dein Kiezatlas Eintrag wurde freigeschaltet", "\nLiebe/r KiezAtlas Nutzer_in,\n\n"
+            + "dein Kiezatlas Eintrag wurde soeben von einer unserer Kiez-Administrator_innen best&auml;tigt, vielen Dank f&uuml;r deine Mithilfe!\n\n"
+            + "Name des neuen Eintrags: \"" + geoObject.getSimpleValue().toString() + "\"\n"
+            + "Link : "+SignupPlugin.DM4_HOST_URL+"/website/topic/" + geoObject.getId() + "\n\nOk, das war's schon.\n\nVielen Dank + Ciao!");
+    }
+
     private void sendAdministrationNotice(String subject, Topic geoObject, Topic username) {
         signupService.sendSystemMailboxNotification("Neuer Einrichtungsdatensatz im Kiezatlas", "\nLiebe/r Kiez-Administrator_in,\n\n"
             + "es gibt einen neuen Einrichtungsdatensatz von "+username+", bitte schaue gleich mal ob Du diesen nicht gleich freischalten kannst.\n\n"
@@ -335,6 +348,8 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService {
             moveGeoObjecToWorkspace(geoObject, getStandardWorkspace());
             moveGeoObjecFacetsToWorkspace(geoObject, getStandardWorkspace());
             viewData("message", "Der Eintrag \"" + geoObject.getSimpleValue() + "\" erfolgreich freigeschaltet.");
+            List<RelatedTopic> mailboxes = getAssignedUserMailboxes(geoObject);
+            sendConfirmationNotice(mailboxes, geoObject);
         } else {
             viewData("message", "Eine Einrichtung mit dieser ID ist uns nicht bekannt.");
             return getPageNotFound();
@@ -1279,6 +1294,22 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService {
 
     private Topic getRelatedBezirk(Topic geoObject) {
         return geoObject.getRelatedTopic("dm4.core.aggregation", "dm4.core.parent", "dm4.core.child", "ka2.bezirk");
+    }
+
+    /** Listen to Angebots Assignment Event from Kiezatlas Angebote Service */
+    private Topic getEinrichtungsMailbox(Topic geoObject) {
+        Topic kontakt = facetsService.getFacet(geoObject, KONTAKT_FACET);
+        if (kontakt != null) {
+            Topic eMail = kontakt.getChildTopics().getTopicOrNull("ka2.kontakt.email");
+            if (eMail != null) return eMail;
+        }
+        log.warning("Kontakt and Email Facet value NOT AVAILALBE");
+        return null;
+    }
+
+    /** Informs editors of their geo object about changes. */
+    private List<RelatedTopic> getAssignedUserMailboxes(Topic geoObject) {
+        return geoObject.getRelatedTopics(USER_ASSIGNMENT, "dm4.core.default", "dm4.core.default", "dm4.accesscontrol.username");
     }
 
     private boolean hasRelatedBezirk(Topic geoObject, long bezirksId) {
