@@ -32,6 +32,7 @@ import de.deepamehta.plugins.geospatial.GeospatialService;
 import de.deepamehta.thymeleaf.ThymeleafPlugin;
 import de.deepamehta.workspaces.WorkspacesService;
 import de.kiezatlas.KiezatlasService;
+import de.kiezatlas.angebote.AngebotAssignedListener;
 import de.kiezatlas.angebote.AngebotService;
 import de.kiezatlas.angebote.model.AngebotsInfoAssigned;
 import static de.kiezatlas.website.WebsiteService.BESCHREIBUNG;
@@ -94,7 +95,7 @@ import org.xml.sax.InputSource;
 @Path("/website")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
-public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService {
+public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, AngebotAssignedListener {
 
     private final Logger log = Logger.getLogger(getClass().getName());
 
@@ -280,6 +281,17 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService {
         viewData("name", geoObject.getSimpleValue().toString());
         viewData("coordinates", coordinatePair);
         return getSimpleMessagePage();
+    }
+
+    /** ---------------------------------------------------------------- Kiezatlas Notification Mechanics ---------- */
+
+    @Override
+    public void angebotsInfoAssigned(Topic angebotsInfo, Topic geoObject) {
+        log.info("Website listening to \"" + angebotsInfo.getSimpleValue() + "\" being assigned to \"" + geoObject.getSimpleValue() + "\" as a NEW ANGEBOT");
+        signupService.sendSystemMailboxNotification("Angebotsinfos einer Einrichtung zugewiesen",
+            "\nAngebotsinfo: " + angebotsInfo.getSimpleValue().toString() +
+            // ### Von + Bis
+            "\n\nEinrichtung: " + geoObject.getSimpleValue().toString() + "\n\n");
     }
 
     private void sendConfirmationNotice(List<RelatedTopic> mailboxes, Topic geoObject) {
