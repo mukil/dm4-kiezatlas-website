@@ -1,15 +1,14 @@
 {
     "topic_types": [
         {
-            "value":            "Bezirks Info Area",
-            "uri":              "ka2.website.bezirk_info",
-            "data_type_uri":    "dm4.core.html",
-            "index_mode_uris": ["dm4.core.fulltext"],
+            "value":            "Site RSS Feed URL",
+            "uri":              "ka2.website.site_rss_feed_url",
+            "data_type_uri":    "dm4.core.text",
             "view_config_topics": [
                 {
                     "type_uri": "dm4.webclient.view_config",
                     "childs": {
-                        "dm4.webclient.input_field_rows": 15,
+                        "dm4.webclient.input_field_rows": 1,
                         "dm4.webclient.show_in_create_menu": true
                     }
                 }

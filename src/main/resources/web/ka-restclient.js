@@ -34,9 +34,23 @@ var restc = (function($) {
         )
     }
 
-    restc.load_district_topics = function(callback) {
+    restc.load_districts = function(callback) {
         $.getJSON('/website/bezirk', function(results) {
                 results.sort(value_sort_asc)
+                callback(results)
+            }
+        )
+    }
+
+    restc.load_district_topics = function(id, callback) {
+        $.getJSON('/website/bezirk/' + id, function(results) {
+                callback(results)
+            }
+        )
+    }
+
+    restc.load_news_items = function(id, callback) {
+        $.getJSON('/website/bezirk/newsfeed/' + id, function(results) {
                 callback(results)
             }
         )

@@ -40,6 +40,11 @@ public class BezirkInfo implements JSONEnabled {
             "ka2.website.bezirk_info");
     }
 
+    public Topic getSiteRSSFeedURL() {
+        return this.topic.getRelatedTopic("dm4.core.association", "dm4.core.default", "dm4.core.default",
+            "ka2.website.site_rss_feed_url");
+    }
+
     private JSONArray getBezirksregionen() {
         JSONArray regionen = new JSONArray();
         List<RelatedTopic> topics = this.topic.getRelatedTopics("dm4.core.association",
@@ -69,13 +74,19 @@ public class BezirkInfo implements JSONEnabled {
             }
             Topic html = getBezirksHTML();
             String body = "<h3>Willkommen auf der Kiezatlas-Seite des Bezirks " + getBezirksname()
-                + "</h3><p><a href=\"" + link + "\">Impressum</a></p>";
+                + "</h3>";
             if (html != null) {
                 body = html.getSimpleValue().toString();
             } else if (html == null) {
                 log.warning("### Fallback because district \"" + this.topic.getSimpleValue() + "\" has no "
                     + "\"Bezirk Info Area\" associated (default, default) which we could use as content!");
             }
+            Topic siteFeedUrl = getSiteRSSFeedURL();
+            String feedUrl = "undefined";
+            if (siteFeedUrl != null) {
+                feedUrl = getSiteRSSFeedURL().getSimpleValue().toString();
+            }
+            this.json.put("newsfeed", feedUrl);
             this.json.put("imprint", imprint);
             this.json.put("html", body);
             this.json.put("value", getBezirksname());

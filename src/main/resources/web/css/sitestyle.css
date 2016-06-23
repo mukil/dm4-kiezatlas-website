@@ -38,10 +38,10 @@ html, body {
     max-width: 400px;
     min-width: 250px;
     padding: 20px;
-    padding-right: 15px;
+    padding-right: 1em;
     padding-left: 60px;
     vertical-align: top;
-    margin: 15px;
+    margin: 1em;
     text-align: left;
     color: #000;
     background-color: #fff;
@@ -108,24 +108,60 @@ html, body {
     text-align: center;
 }
 
-#district-area {
-    font-size: 1.2em;
-    display: none;
-    margin: 50px auto auto;
-    padding-left: 30px;
-    padding-right: 30px;
+#site-area {
+    flex-direction: row;
+    display: none; /** set to "flex" by ka-website.js */
+    /** font-size: 1.2em; **/
+    margin: 3em auto auto;
+    padding: 1em;
+    /* Permalink - use to edit and share this gradient: http://colorzilla.com/gradient-editor/#ffffff+1,ffffff+100&1+0,0.91+100 */
+    border-top: 1px solid #FC3;
+    border-bottom: 1px solid #FC3;
+    background: -moz-linear-gradient(top, rgba(255,255,255,1) 0%, rgba(255,255,255,1) 1%, rgba(255,255,255,0.91) 100%); /* FF3.6-15 */
+    background: -webkit-linear-gradient(top, rgba(255,255,255,1) 0%,rgba(255,255,255,1) 1%,rgba(255,255,255,0.91) 100%); /* Chrome10-25,Safari5.1-6 */
+    background: linear-gradient(to bottom, rgba(255,255,255,1) 0%,rgba(255,255,255,1) 1%,rgba(255,255,255,0.91) 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', endColorstr='#e8ffffff',GradientType=0 ); /* IE6-9 */
 }
 
-#district-area span {
-    font-weight: bold;
-    color: #002856;
+#site-area .news-item h3 a {
+    color: #8f1414;
+    font-size: .8em;
+    font-weight: normal;
+}
+
+#site-area .news-item .label.date {
+    font-style: italic;
+    color: #a9a9a9;
+}
+
+#site-area .content-area {
+    flex: 0 0 64%;
+    width: 60%;
+    display: inline-block;
+    vertical-align: top;
+    padding: 1em;
+    padding-left: 2em;
+}
+
+#site-area .news-area {
+    flex: 0 0 30%;
+    width: 32%;
+    display: inline-block;
+    vertical-align: top;
+    padding: 1em;
+    border-left: 1px solid RGBA(0, 40, 86, 0.26);
+}
+
+#site-area h2 {
+    margin-top: 0px;
+    color: #343434;
 }
 
 #pages {
     text-align: left;
     width: 90%;
     margin: auto;
-    padding: 15px;
+    padding: 1em;
     text-align: center;
 }
 
@@ -143,14 +179,14 @@ html, body {
 #pages ul li {
     background-color: #fff;
     display: inline-block;
-    padding: 7px;
+    padding: .45em;
     padding-left: 10px;
     padding-right: 10px;
-    margin-right: 15px;
+    margin-right: 1em;
 }
 
 #pages ul li {
-    margin-top: 15px;
+    margin-top: 1em;
 }
 
 #navigation ul li a,
@@ -182,10 +218,12 @@ html, body {
     margin-bottom: 40px;
 }
 
+#nearby-area h3,
 #main-menu h3 {
     font-weight: normal;
 }
 
+#nearby-area h3 a,
 #main-menu h3 a {
     cursor: pointer;
     padding: 10px;
@@ -193,8 +231,16 @@ html, body {
     background-color: #fff;
 }
 
-#main-menu .options {
-    display:none;
+#nearby-area {
+    display: block;
+    text-align: center;
+    position: relative;
+    top: 2em;
+}
+
+#nearby-area .options {
+    display: none;
+    font-size: 1.2em;
 }
 
 #karte {
@@ -206,7 +252,7 @@ html, body {
 }
 
 #karte h3 {
-    margin-left: 15px;
+    margin-left: 1em;
     margin-right: 100px;
     display: inline-block;
 }
@@ -278,7 +324,7 @@ html, body {
 
 #loading-area {
     margin-right: auto; margin-left: auto;
-    width: 110px; height: 50px; z-index: 106; padding: 15px;
+    width: 110px; height: 50px; z-index: 106; padding: 1em;
     position: absolute; top: 35%;  left: 45%; color: #fff;
     font-weight: bold; font-size: 11px; font-family: sans-serif;
 }
@@ -359,7 +405,7 @@ h3.location-label {
 
 #places li .entries.submenu[aria-expanded="true"] {
     display: inline-block !important;
-    left: 15px !important;
+    left: 1em !important;
     top: 0px !important;
     border: 0px solid transparent;
 }
@@ -390,7 +436,7 @@ h3.location-label {
 #header .welcome h3 {
     display: inline-block;
     vertical-align: top;
-    margin-left: 15px;
+    margin-left: 1em;
 }
 
 #header .welcome p {
@@ -402,7 +448,7 @@ h3.location-label {
 }
 
 #bottom {
-    padding: 15px;
+    padding: 1em;
     background-color: #fff;
 }
 
@@ -523,7 +569,7 @@ span.angebote-btn,
 
 .district-area ul.bezirke li {
     color: #002856;
-    margin: 15px;
+    margin: 1em;
     display: inline-block;
     margin-left: 0px;
     padding: 5px;
@@ -535,8 +581,9 @@ span.angebote-btn,
 
 .district-area ul.bezirke li a {
     text-decoration: none;
-    margin-left: 7px;
-    padding: 7px;
+    margin-left: .45em;
+    padding: .45em;
+    background-color: #fff;
 }
 
 .district-area ul.bezirke li a.district-button:hover {
@@ -551,7 +598,7 @@ span.angebote-btn,
 .district-area li ul.bezirksregionen {
     text-align: left;
     font-size: 0.9em;
-    margin-top: 7px;
+    margin-top: .45em;
 }
 
 .district-area li ul.bezirksregionen li {
@@ -561,8 +608,8 @@ span.angebote-btn,
     font-size: .8em;
     color: #343434;
     padding: 5px;
-    padding-left: 7px;
-    padding-right: 7px;
+    padding-left: .45em;
+    padding-right: .45em;
     border-bottom: 0px solid transparent;
 }
 
@@ -595,13 +642,13 @@ span.angebote-btn,
 /** ------------------- Website Frontpage Orte Display ---------------- */
 
 #detail-area {
-    margin-top: 15px;
-    padding: 15px;
+    margin-top: 1em;
+    padding: 1em;
     padding-top: 0px;
     background-color: #EAEAEA;
     display: none;
-    min-height: 150px;
-    margin-bottom: 70px;
+    /** min-height: 150px;
+    margin-bottom: 70px; */
 }
 
 #detail-area .entry-card {
@@ -610,7 +657,7 @@ span.angebote-btn,
     min-width: 320px;
     max-width: 370px;
     text-align: left;
-    margin: 10px 20px 10px 20px;
+    margin: 0em 1em 2em 1em;
     font-size: 1em;
     position: relative;
 }
@@ -620,7 +667,7 @@ span.angebote-btn,
 }
 
 #detail-area .entry-card h3 {
-    padding-left: 15px; padding-right: 10px;
+    padding-left: 1em; padding-right: 10px;
     padding-top: 10px; padding-bottom: 10px;
     margin-bottom: 0px;
 }
@@ -628,11 +675,11 @@ span.angebote-btn,
 #detail-area .entry-card .imprint {
     position: absolute;
     bottom: -30px;
-    right: 15px;
+    right: 1em;
 }
 
 #detail-area .entry-card .angebote-link {
-    padding-bottom: 15px;
+    padding-bottom: 1em;
     padding-top: 10px;
 }
 
@@ -643,13 +690,13 @@ span.angebote-btn,
 #detail-area .entry-card .lor-link {
     position: absolute;
     bottom: -30px;
-    left: 15px;
+    left: 1em;
 }
 
 #detail-area .details {
     background-color: #fff;
     box-shadow: 1px 2px 3px 0px #666;
-    padding: 15px;
+    padding: 1em;
 }
 
 #detail-area .details p {
@@ -680,7 +727,7 @@ span.angebote-btn,
 }
 
 #fulltext-input {
-    padding: 15px;
+    padding: 1em;
 }
 
 #fulltext-search-form input,
@@ -692,7 +739,7 @@ span.angebote-btn,
 
 #location-input input[type="text"],
 #fulltext-search-form input[type="text"] {
-    margin-left: 15px;
+    margin-left: 1em;
     width: 360px;
     margin-right: 5px;
     border: #eaeaea solid 1px;
@@ -708,7 +755,7 @@ span.angebote-btn,
 #fulltext-input input,
 #location-input input {
     padding: 5px;
-    padding-left: 7px;
+    padding-left: .45em;
     font-size: 1em;
 }
 
@@ -737,13 +784,13 @@ span.angebote-btn,
 
 .prev-location {
     margin-right: 5px;
-    padding-right: 7px;
-    padding-left: 7px;
+    padding-right: .45em;
+    padding-left: .45em;
 }
 
 .next-location {
-    padding-right: 7px;
-    padding-left: 7px;
+    padding-right: .45em;
+    padding-left: .45em;
     margin-left: 5px;
 }
 
@@ -812,7 +859,7 @@ span.angebote-btn,
 
 .kiezatlas.topic .assigned-offers {
     background: #fff;
-    padding: 15px;
+    padding: 1em;
     border: 1px solid #002856;
     cursor: pointer;
     margin: 5px;
@@ -870,7 +917,7 @@ span.angebote-btn,
 .kiezatlas.topic .infos .beschreibung p,
 .kiezatlas.topic .infos .opening p {
     margin: 0px;
-    margin-bottom: 15px;
+    margin-bottom: 1em;
 }
 
 .kiezatlas.topic .infos .imprint,
@@ -957,7 +1004,7 @@ span.angebote-btn,
     /** position: absolute; top: 0px; left: 0px; **/
     z-index: 100;
     /** padding: 10px; **/
-    /* padding-left: 15px; background-color: #fff; */
+    /* padding-left: 1em; background-color: #fff; */
     margin-left: auto;
     margin-right: auto;
     /** border-bottom: 1px solid #FC3; */
@@ -1029,7 +1076,7 @@ span.angebote-btn,
 }
 
 .leaflet-control-zoom.leaflet-control {
-    margin-top: 15px;
+    margin-top: 1em;
     z-index: 98;
 }
 
@@ -1095,7 +1142,7 @@ div.legende a.circle-control,
 div.legende a.district-control,
 div.legende a.lock-control {
     position: absolute;
-    right: 17px;
+    right: 1.5em;
     bottom: 18px;
 }
 
@@ -1133,7 +1180,7 @@ div.link-area {
 }
 
 .sign-up #receipt-view p {
-    margin-left: 15px;
+    margin-left: 1em;
 }
 
 .sign-up #account-info,
@@ -1150,7 +1197,7 @@ div.link-area {
 .sign-up #custom-ws-text label p {
     display: inline-block;
     margin: 0px;
-    margin-right: 15px;
+    margin-right: 1em;
 }
 
 .sign-up #pre-text {
@@ -1206,7 +1253,7 @@ div.link-area {
 .sign-up #receipt-view,
 .sign-up #sign-up-view,
 .sign-up #log-in-view {
-    padding: 0px 30px 30px 15px;
+    padding: 0px 30px 30px 1em;
     border-radius: 3px;
     text-align: left;
     max-width: 610px; /** 30px Margin */
@@ -1215,12 +1262,12 @@ div.link-area {
 .sign-up #receipt-view h2,
 .sign-up #sign-up-view h2,
 .sign-up #log-in-view h2 {
-    margin-left: 15px;
+    margin-left: 1em;
 }
 
 .sign-up #sign-up-view form,
 .sign-up #log-in-view form {
-    padding: 15px;
+    padding: 1em;
     position: relative;
 }
 
@@ -1257,8 +1304,8 @@ div.link-area {
 .sign-up input.custom-ws-up,
 .sign-up input.sign-up {
     font-size: 20px;
-    padding: 10px 15px 10px 15px;
-    margin: 0 0 15px 0;
+    padding: 10px 1em 10px 1em;
+    margin: 0 0 1em 0;
     border: 1px solid #ccc;
     border-radius: 5px;
     color: #555;
@@ -1295,7 +1342,7 @@ div.link-area {
 }
 
 .sign-up .logout-page #log-in-view #message {
-    margin-left: 15px;
+    margin-left: 1em;
 }
 
 .sign-up #message-view {
@@ -1328,15 +1375,14 @@ div.link-area {
 /** --------------------- Media Specific Style Overrides ------------------ **/
 
 @media(min-width: 1600px) {
-    #district-area,
     #karte {
         max-width: 70%;
         margin-left: auto;
         margin-right: auto;
     }
     #district-area {
-        padding-left: 15px;
-        padding-right: 15px;
+        padding-left: 1em;
+        padding-right: 1em;
     }
 }
 
@@ -1353,14 +1399,26 @@ div.link-area {
 }
 
 @media(max-width:900px) {
+    #site-area {
+        flex-direction: column;
+    }
+    #site-area .news-area {
+        border-left: 1px solid transparent;
+        border-top: 1px solid RGBA(0, 40, 86, 0.26);
+        width: 95%;
+    }
+    #site-area .content-area {
+        padding-left: 1em;
+        width: 95%;
+    }
     #main-menu h3 {
         border: 1px solid #EACA8F;
         background-color: #fff;
-        padding: 10px;
+        padding: 1em;
     }
     #main-menu h3 a {
         border: 1px solid #fff;
-        padding: 7px;
+        padding: .45em;
     }
     .search-option {
         margin-left: 0px;
@@ -1384,7 +1442,7 @@ div.link-area {
         margin-bottom: 5px;
     }
     #street-alternatives {
-        margin-left: 15px;
+        margin-left: 1em;
     }
     #map p,
     #main-menu p,
@@ -1392,11 +1450,11 @@ div.link-area {
         width: 75%;
         margin: auto;
         margin-bottom: 25px;
-        margin-top: 15px;
+        margin-top: 1em;
     }
     .leaflet-div-icon.leaflet-move {
-        width: 17px;
-        height: 17px;
+        width: 1.5em;
+        height: 1.5em;
         margin-top: -8px;
         margin-left: -8px;
     }
@@ -1464,7 +1522,7 @@ div.link-area {
         top: 3px;
     }
     #places {
-        right: 7px;
+        right: .45em;
         top: 0px;
     }
     #detail-area {
@@ -1483,7 +1541,7 @@ div.link-area {
     #detail-area .entry-card {
         font-size: .8em;
         min-width: 150px;
-        margin: 15px;
+        margin: 1em;
     }
     #detail-area .entry-card h3 {
         display: inline-block;
@@ -1512,7 +1570,7 @@ div.link-area {
     }
     div.legende a.lock-control {
         width: 100px;
-        bottom: 15px;
+        bottom: 1em;
         right: 0px;
     }
     #fulltext-search-form input[type="text"] {

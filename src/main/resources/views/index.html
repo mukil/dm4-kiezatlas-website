@@ -13,7 +13,7 @@
         <link rel="stylesheet" href="/de.kiezatlas.website/vendor/leaflet/markercluster/dist/MarkerCluster.Default.css"/-->
         <link rel="stylesheet" href="/de.kiezatlas.website/vendor/jquery/ui/css/kiezatlas/jquery-ui-1.9.2.custom.min.css"/>
         <link rel="stylesheet" href="/de.kiezatlas.website/css/sitestyle.css"/>
-        <link rel="icon" href="" type="image/vnd.microsoft.icon"/>
+        <!-- link rel="icon" href="" type="image/vnd.microsoft.icon"/-->
 
         <script src="/de.kiezatlas.website/vendor/pouchdb/pouchdb-3.6.0.min.js"></script>
         <script src="/de.kiezatlas.website/vendor/jquery/jquery-1.9.1.min.js"></script>
@@ -107,10 +107,10 @@
             <div class="legende">
                 <div class="text-search-control">
                     <form action="javascript:search_fulltext_geo_objects()" id="fulltext-search-form" accept-charset="ISO-8859-15">
-                        <span class="elements angebote-btn" onclick="kiezatlas.show_angebote_page()">
+                        <!--span class="elements angebote-btn" onclick="kiezatlas.show_angebote_page()">
                             <img src="/de.kiezatlas.website/images/ka-einrichtung-mit-angeboten2.png"
                                 title="Markierer: Einrichtungen mit Angeboten"/> Aktuelle Angebote
-                        </span>
+                        </span-->
                         <span class="elements einrichtungen-btn" onclick="kiezatlas.clear_angebote_page()">
                             <img src="/de.kiezatlas.website/images/ka-einrichtung2.png"
                                 title="Markierer: Einrichtungen"/> Einrichtungen
@@ -133,9 +133,6 @@
             <!-- a href="javascript:kiezatlas.close_message_window()">(x)</a-->
         </div>
 
-        <!-- District Info Area -->
-        <div id="district-area"></div>
-
         <!-- Details Area -->
         <div id="detail-area">
             <!--h3 class="help">Ausgew&auml;hlter Ort</h3-->
@@ -145,9 +142,15 @@
             </div>
         </div>
 
+        <!-- District Info Area -->
+        <div id="site-area">
+            <div class="content-area"></div>
+            <div class="news-area"></div>
+        </div>
+
         <!-- Location detection menu -->
-        <div id="main-menu">
-            <h3><a href="javascript:kiezatlas.toggle_location_menu();">In der N&auml;he von...</a></h3>
+        <div id="nearby-area">
+            <h3>Finde Soziale Einrichtungen <a href="javascript:kiezatlas.toggle_location_menu();">in der N&auml;he von...</a></h3>
             <div class="options">
                 <p>
                     Du hast drei M&ouml;glichkeiten um mit unserer Umkreissuche Informationen aus einer ganz
@@ -184,6 +187,10 @@
                         verschieben</i> und ggf. vergr&ouml;&szlig;ern. Probier es mal aus!
                 </div>
             </div>
+        </div>
+
+        <!-- ### Generic Tipps Area-->
+        <div id="main-menu">
             <p>
                 <b>Tipp:</b> Eine Liste von Lieblingsstandorten kannst du mit unserer Favoriten-Funktion in deinem Browser speichern. Diese Standorte speichern wir dann nur in deinem Browser und nicht bei Kiezatlas.
             </p>
@@ -236,7 +243,7 @@
 
         <!-- Kiezatlas District Menu -->
         <div class="district-area">
-            <h4>Bezirke im Kiezatlas</h4>
+            <h4>Bezirksauswahl</h4>
             <ul class="bezirke"></ul>
         </div>
 

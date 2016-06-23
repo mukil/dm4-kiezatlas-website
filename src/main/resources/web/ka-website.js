@@ -50,6 +50,10 @@ function search_location_by_text() {
     })
 }
 
+var monthNames = [ "Januar", "Februar", "März", "April", "Mai", "Juni",
+    "Juli", "August", "September", "Oktober", "November", "Dezember" ];
+
+
 // kiezatlas hex colors
 var colors = {
     "ka_blue": "#002856",       // circle control
@@ -120,6 +124,7 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
                 var bezirksTopic = _self.get_bezirks_topic_by_hash(hash)
                 _self.setDistrict(bezirksTopic)
                 if (_self.getDistrict()) {
+                    console.log("Rendering District Page", bezirksTopic)
                     _self.render_map(false, undefined, false) // detectLocation=false
                     // sets mitte filter
                     _self.show_district_page(_self.getDistrict().id)
@@ -192,6 +197,7 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
         _self.setDistrict(_self.get_bezirks_topic_by_id(topic_id))
         var bezirk_html = _self.getDistrict().html
         var bezirk_name = _self.getDistrict().value
+        var bezirk_feed_url = _self.getDistrict().newsfeed
         var anchor_name = '#' + encodeURIComponent(bezirk_name.toLowerCase())
         $('.location-label .text').html("Berlin " + bezirk_name) // duplicate, use render_current_location_label
         $('button.star').hide()
@@ -203,17 +209,40 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
         _self.set_fulltext_search_placeholder("Volltextsuche für " + bezirk_name)
         $('a.lock-control').hide()
         $('a.circle-control').hide()
-        $('#district-area').html(bezirk_html).show()
+        $('#site-area').show("flex")
+        $('#site-area .content-area').html('<h2>Willkommen</h2>' + bezirk_html + '<br/><a href="'+_self.getDistrict().imprint+'">Impressum</a>')
         // ### leafletMap.map.doubleClickZoom.enable();
         leafletMap.show_anchor(anchor_name)
         leafletMap.deactivate_circle_control()
         leafletMap.remove_circle_search_control()
-        _self.show_message("Die Volltextsuche liefert ab jetzt nur noch Ergebnisse aus dem Bezirk <em>"
+        _self.show_message("Die Volltextsuche liefert ab jetzt nur Ergebnisse aus dem Bezirk <em>"
             + bezirk_name + "</em>. W&auml;hlen sie <em>Bezirksfilter aufheben</em> um wieder Berlinweit"
             + " Einrichtungen zu finden.", 7000)
         _self.update_document_title(undefined, bezirk_name)
         _self.show_spinning_wheel()
-        $.getJSON('/website/bezirk/' + topic_id, function (response) {
+        // Load Newsfeed in District
+        restc.load_news_items(topic_id, function(results) {
+            var html_item
+            if (!results) {
+                $('#site-area .news-area').hide()
+                $('#site-area .content-area').css("width", "95%")
+            } else if (results.length > 0) {
+                html_item = "<h2>Neuigkeiten</h2>"
+                for (var r in results) {
+                    html_item += '<div class="news-item">'
+                        + '<span class="label date">' + _self.format_date(results[r].published) + '</span>'
+                        + '<h3>' + results[r].title + '&nbsp;<a href="' + results[r].link+'">mehr Infos</a></h3>'
+                    + '</div>'
+                }
+            } else {
+                html_item = '<h2>Entschuldigen Sie bitte</h2>'
+                html_item += '<div class="news-item">Der Newsfeed f&uuml;r diese Site (<a href="'
+                        + bezirk_feed_url + '">Link</a>) konnte gerade nicht geladen werden.</div>'
+            }
+            $('#site-area .news-area').html(html_item)
+        })
+        // Load Geo Objects in District
+        restc.load_district_topics(topic_id, function(response) {
             leafletMap.clear_circle_marker()
             _self.hide_spinning_wheel()
             leafletMap.setItems(response)
@@ -222,7 +251,7 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
     }
 
     this.clear_district_page = function() {
-        $('#district-area').hide()
+        $('#site-area').hide()
         _self.clear_district_filter()
         leafletMap.clear_circle_marker()
         leafletMap.activate_circle_control()
@@ -268,7 +297,7 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
                 $('button.star img').attr('src', '/de.kiezatlas.website/images/1441217865_black_5_favorite_star.png')
             })
         $('.search-option.d').css('display', 'inline-block')
-        $('#detail-area').show()
+        $('#detail-area').show("inline")
         $('div.legende').show()
         //
         leafletMap.setup(dom_el_id)
@@ -413,7 +442,6 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
     }
 
     this.show_selected_details = function(result_list) {
-        if (result_list.length > 0) $('#district-area').hide()
         var list_geo_object_ids = []
         for (var i in result_list) {
             var geo_object_id = result_list[i].options['geo_object_id']
@@ -481,7 +509,7 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
     // --- Kiezatlas API Service helper
 
     this.load_district_topics = function(callback) {
-        restc.load_district_topics(function(results) {
+        restc.load_districts(function(results) {
             _self.setDistricts(results.sort(_self.value_sort_asc))
             if (callback) callback()
         })
@@ -631,10 +659,10 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
 
     this.toggle_location_menu = function(show) {
         if (show) {
-            $('#main-menu .options').show()
+            $('#nearby-area .options').show()
             return
         }
-        $('#main-menu .options').toggle()
+        $('#nearby-area .options').toggle()
     }
 
     this.add_nearby_button_handler = function() {
@@ -858,6 +886,19 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
 
     this.get_locationsearch_results = function() {
         return model.locationsearch_results
+    }
+
+    this.format_date = function(timestamp) {
+        try {
+            var date = new Date(timestamp)
+            var minutes = (date.getMinutes() < 10) ? "0" + date.getMinutes() : date.getMinutes()
+            var hours = (date.getHours() < 10) ? "0" + date.getHours() : date.getHours()
+            var date_string = '' + date.getDate() + '.' + monthNames[date.getMonth()] + ' '
+                        + date.getFullYear() + ', ' + date.getHours() + ':' + minutes + ' Uhr'
+            return date_string
+        } catch (e) {
+            throw Error(e)
+        }
     }
 
     return this
