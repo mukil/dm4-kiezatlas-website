@@ -34,7 +34,7 @@ import de.deepamehta.workspaces.WorkspacesService;
 import de.kiezatlas.KiezatlasService;
 import de.kiezatlas.angebote.AngebotAssignedListener;
 import de.kiezatlas.angebote.AngebotService;
-import de.kiezatlas.angebote.model.AngebotsInfoAssigned;
+import de.kiezatlas.angebote.model.AngebotsinfosAssigned;
 import static de.kiezatlas.website.WebsiteService.BESCHREIBUNG;
 import static de.kiezatlas.website.WebsiteService.BESCHREIBUNG_FACET;
 import static de.kiezatlas.website.WebsiteService.CONFIRMATION_WS_URI;
@@ -45,6 +45,7 @@ import de.kiezatlas.website.model.BezirkInfo;
 import de.kiezatlas.website.model.EinrichtungsInfo;
 import de.kiezatlas.website.model.GeoObjectDetailsView;
 import de.kiezatlas.website.model.GeoObjectView;
+import de.kiezatlas.website.model.StreetCoordinates;
 import de.mikromedia.webpages.WebpageService;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -99,16 +100,16 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
 
     private final Logger log = Logger.getLogger(getClass().getName());
 
-    @Inject private WorkspacesService workspaceService;
-    @Inject private AccessControlService acService;
-    @Inject private WebpageService pageService;
-    @Inject private GeospatialService spatialService;
-    @Inject private AngebotService angeboteService;
-    @Inject private SignupPluginService signupService;
-    @Inject private GeomapsService geomapsService;
-    @Inject private FacetsService facetsService;
-    @Inject private FilesService fileService;
-    @Inject KiezatlasService kiezatlas;
+    @Inject private WorkspacesService workspaces;
+    @Inject private AccessControlService accesscl;
+    @Inject private WebpageService webpages;
+    @Inject private GeospatialService geospatial;
+    @Inject private AngebotService angebote;
+    @Inject private SignupPluginService signup;
+    @Inject private GeomapsService geomaps;
+    @Inject private FacetsService facets;
+    @Inject private FilesService files;
+    @Inject private KiezatlasService kiezatlas;
 
     // Application Cache of District Overview Resultsets
     HashMap<Long, List<GeoObjectView>> districtsCache = new HashMap<Long, List<GeoObjectView>>();
@@ -123,7 +124,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
      */
     @Override
     public void init() {
-        pageService.setFrontpageResource("/views/index.html", "de.kiezatlas.website");
+        webpages.setFrontpageResource("/views/index.html", "de.kiezatlas.website");
         initTemplateEngine();
     }
 
@@ -244,11 +245,11 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
                 geoObject = createGeoObjectWithoutWorkspace(mf.newTopicModel("ka2.geo_object", geoObjectTopicModel),
                     geoObject, ansprechpartner, telefon, fax, email, beschreibung, oeffnungszeiten, website,
                     coordinatePair, district, themen, zielgruppen, angebote);
-                Association assignment = createUserAssignment(geoObject, acService.getUsername());
+                Association assignment = createUserAssignment(geoObject, accesscl.getUsername());
                 privilegedAssignToWorkspace(assignment, getPrivilegedWorkspace().getId());
                 // Handles Image-File Upload (Seperately)
                 if (fileId != 0) {
-                    log.info("> Bild File Topic Upload is file at=\"" + fileService.getFile(fileId).toString());
+                    log.info("> Bild File Topic Upload is file at=\"" + files.getFile(fileId).toString());
                     createBildAssignment(geoObject, username, fileId);
                 }
                 initiallyAssignGeoObjectFacetsToWorkspace(geoObject, getPrivilegedWorkspace());
@@ -288,7 +289,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
     @Override
     public void angebotsInfoAssigned(Topic angebotsInfo, Topic geoObject) {
         log.info("Website listening to \"" + angebotsInfo.getSimpleValue() + "\" being assigned to \"" + geoObject.getSimpleValue() + "\" as a NEW ANGEBOT");
-        signupService.sendSystemMailboxNotification("Angebotsinfos einer Einrichtung zugewiesen",
+        signup.sendSystemMailboxNotification("Angebotsinfos einer Einrichtung zugewiesen",
             "\nAngebotsinfo: " + angebotsInfo.getSimpleValue().toString() +
             // ### Von + Bis
             "\n\nEinrichtung: " + geoObject.getSimpleValue().toString() + "\n\n");
@@ -301,14 +302,14 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
             recipients += mailbox.getSimpleValue().toString();
             if (recipientCount < mailboxes.size()) recipients += ";";
         }
-        signupService.sendUserMailboxNotification(recipients, "Dein Kiezatlas Eintrag wurde freigeschaltet", "\nLiebe/r KiezAtlas Nutzer_in,\n\n"
+        signup.sendUserMailboxNotification(recipients, "Dein Kiezatlas Eintrag wurde freigeschaltet", "\nLiebe/r KiezAtlas Nutzer_in,\n\n"
             + "dein Kiezatlas Eintrag wurde soeben von einer unserer Kiez-Administrator_innen best&auml;tigt, vielen Dank f&uuml;r deine Mithilfe!\n\n"
             + "Name des neuen Eintrags: \"" + geoObject.getSimpleValue().toString() + "\"\n"
             + "Link : "+SignupPlugin.DM4_HOST_URL+"/website/topic/" + geoObject.getId() + "\n\nOk, das war's schon.\n\nVielen Dank + Ciao!");
     }
 
     private void sendAdministrationNotice(String subject, Topic geoObject, Topic username) {
-        signupService.sendSystemMailboxNotification("Neuer Einrichtungsdatensatz im Kiezatlas", "\nLiebe/r Kiez-Administrator_in,\n\n"
+        signup.sendSystemMailboxNotification("Neuer Einrichtungsdatensatz im Kiezatlas", "\nLiebe/r Kiez-Administrator_in,\n\n"
             + "es gibt einen neuen Einrichtungsdatensatz von "+username+", bitte schaue gleich mal ob Du diesen nicht gleich freischalten kannst.\n\n"
             + "Name des neuen Eintrags: \"" + geoObject.getSimpleValue().toString() + "\"\n"
             + "Der Link zur Freischaltung: "+SignupPlugin.DM4_HOST_URL+"/website/topic/" + geoObject.getId() + " bzw. zum Login ist:\n"
@@ -331,8 +332,8 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
                 EinrichtungsInfo einrichtung = assembleGeneralEinrichtungsInfo(geoObject);
                 einrichtung.setAssignedUsername(username.getSimpleValue().toString());
                 viewData("geoobject", einrichtung);
-                viewData("themen", facetsService.getFacets(geoObject, THEMA_FACET));
-                viewData("zielgruppen", facetsService.getFacets(geoObject, ZIELGRUPPE_FACET));
+                viewData("themen", facets.getFacets(geoObject, THEMA_FACET));
+                viewData("zielgruppen", facets.getFacets(geoObject, ZIELGRUPPE_FACET));
                 // viewData("angebote", facetsService.getFacets(geoObject, ANGEBOT_FACET).getItems());
             } else {
                 viewData("message", "Sie haben aktuell noch nicht die n&ouml;tigen Berechtigungen "
@@ -392,11 +393,11 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
         // ### Yet Missing: Träger, Bezirksregion, Bezirk, Administrator Infos und Stichworte
         viewData("geoobject", einrichtung);
         // Assemble Category Assignments for Einrichtung;
-        viewData("zielgruppen", facetsService.getFacets(geoObject, ZIELGRUPPE_FACET));
-        viewData("themen", facetsService.getFacets(geoObject, THEMA_FACET));
+        viewData("zielgruppen", facets.getFacets(geoObject, ZIELGRUPPE_FACET));
+        viewData("themen", facets.getFacets(geoObject, THEMA_FACET));
         // viewData("angebote", facetsService.getFacets(geoObject, ANGEBOT_FACET));
         // Assemble Angebosinfos for Einrichtung
-        List<AngebotsInfoAssigned> angebotsInfos = angeboteService.getAngebotsInfosAssigned(geoObject);
+        List<AngebotsinfosAssigned> angebotsInfos = angebote.getAngebotsInfosAssigned(geoObject);
         if (angebotsInfos.size() > 0) viewData("angebotsinfos", angebotsInfos);
         // user auth
         preparePageAuthorization();
@@ -447,7 +448,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
         Topic geoObject = dm4.getTopic(topicId);
         GeoObjectDetailsView geoDetailsView = null;
         if (isGeoObjectTopic(geoObject)) {
-            geoDetailsView = new GeoObjectDetailsView(dm4.getTopic(topicId), geomapsService, angeboteService);
+            geoDetailsView = new GeoObjectDetailsView(dm4.getTopic(topicId), geomaps, angebote);
             if (isAssignedToConfirmationWorkspace(geoObject)) geoDetailsView.setUnconfirmed();
         }
         return geoDetailsView;
@@ -464,34 +465,13 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
     public List<GeoObjectView> getGeoObjectsNearBy(@PathParam("coordinatePair") String coordinates,
             @PathParam("radius") String radius) {
         // .) ### Authenticate...
-        // 0) Set default coordinates for a query
-        double lon = 13.4, lat = 52.5;
-        if (coordinates != null && !coordinates.isEmpty() && coordinates.contains(",")) {
-            lon = Double.parseDouble(coordinates.split(",")[0].trim());
-            lat = Double.parseDouble(coordinates.split(",")[1].trim());
-        }
         // 1) Set default search radius for a query
         double r = (radius.isEmpty() || radius.equals("0")) ? 1.0 : Double.parseDouble(radius);
-        List<Topic> geoCoordTopics = spatialService.getTopicsWithinDistance(new GeoCoordinate(lon, lat), r);
-        ArrayList<GeoObjectView> results = new ArrayList<GeoObjectView>();
+        List<GeoObjectView> results = new ArrayList<GeoObjectView>();
         // 2) Process spatial search results (=topics of type Geo Coordinate)
-        for (Topic geoCoordTopic : geoCoordTopics) {
-            // 2.1) Check for an Address topic
-            Topic address = geoCoordTopic.getRelatedTopic("dm4.core.composition", "dm4.core.child",
-                "dm4.core.parent", "dm4.contacts.address");
-            if (address != null) {
-                // 2.1.1) If place has an address set, create a DTO for map display
-                List<RelatedTopic> geoObjects = address.getRelatedTopics("dm4.core.composition",
-                    "dm4.core.child", "dm4.core.parent", "ka2.geo_object");
-                for (RelatedTopic geoObject : geoObjects) {
-                    if (isGeoObjectTopic(geoObject)) {
-                        results.add(new GeoObjectView(geoObject, geomapsService, angeboteService));
-                    }
-                }
-            } else {
-                // 2.1.2) If place has NO address set, skip place for map display
-                log.log(Level.INFO, "No Address Entry found for geo coordinate {0}", geoCoordTopic.getSimpleValue());
-            }
+        List<Topic> geoObjects = searchGeoObjectsNearby(coordinates, r);
+        for (Topic geoTopic : geoObjects) {
+            results.add(new GeoObjectView(geoTopic, geomaps, angebote));
         }
         return results;
     }
@@ -520,11 +500,47 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
             for (Topic topic : singleTopics) {
                 Topic geoObject = topic.getRelatedTopic("dm4.core.composition",
                     "dm4.core.child", "dm4.core.parent", "ka2.geo_object");
-                results.add(new GeoObjectView(geoObject, geomapsService, angeboteService));
+                results.add(new GeoObjectView(geoObject, geomaps, angebote));
             }
             return results;
         } catch (Exception e) {
             throw new RuntimeException("Searching geo object topics by name failed", e);
+        }
+    }
+
+    /**
+     * Fetches a list of streetname geo coordinates pairs from the kiezatlas database.
+     * @param referer
+     * @param query
+     */
+    @GET
+    @Path("/search/coordinates")
+    public List<StreetCoordinates> searchStreetCoordinatesByName(@HeaderParam("Referer") String referer,
+            @QueryParam("query") String query) {
+        if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
+        try {
+            log.info("Street Coordinates Query=\""+query+"\"");
+            String queryValue = query.trim();
+            List<StreetCoordinates> results = new ArrayList<StreetCoordinates>();
+            if (queryValue.isEmpty()) return results;
+            List<Topic> singleTopics = dm4.searchTopics(queryValue + "*", "dm4.contacts.street");
+            for (Topic streetname : singleTopics) {
+                List<RelatedTopic> addresses = streetname.getRelatedTopics("dm4.core.aggregation",
+                    "dm4.core.child", "dm4.core.parent", "dm4.contacts.address");
+                for (RelatedTopic address : addresses) {
+                    GeoCoordinate coordinates = geomaps.getGeoCoordinate(address);
+                    if (coordinates != null) {
+                        StreetCoordinates resultItem = new StreetCoordinates();
+                        resultItem.setName(streetname.getSimpleValue().toString());
+                        resultItem.setCoordinates(coordinates);
+                        results.add(resultItem);
+                    }
+                }
+            }
+            log.info("Fetched " + results.size() + " internal street coordinate values");
+            return results;
+        } catch (Exception e) {
+            throw new RuntimeException("Searching street coordinate values by name failed", e);
         }
     }
 
@@ -553,7 +569,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
             log.info("Start building response for " + geoObjects.size() + " OVERALL");
             for (Topic topic : geoObjects) {
                 if (isGeoObjectTopic(topic)) {
-                    results.add(new GeoObjectView(topic, geomapsService, angeboteService));
+                    results.add(new GeoObjectView(topic, geomaps, angebote));
                 }
             }
             log.info("Build up response " + results.size() + " geo objects across all districts");
@@ -589,7 +605,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
                 // check for district
                 if (hasRelatedBezirk(geoObject, districtId)) {
                     if (isGeoObjectTopic(geoObject)) {
-                        results.add(new GeoObjectView(geoObject, geomapsService, angeboteService));
+                        results.add(new GeoObjectView(geoObject, geomaps, angebote));
                     }
                 }
             }
@@ -794,7 +810,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
             "dm4.core.child", "dm4.core.parent", "ka2.geo_object");
         for (RelatedTopic geoObject : geoObjects) {
             if (isGeoObjectTopic(geoObject)) {
-                results.add(new GeoObjectView(geoObject, geomapsService, angeboteService));
+                results.add(new GeoObjectView(geoObject, geomaps, angebote));
             }
         }
         log.info("Populating cached list of geo object for district " + bezirkId);
@@ -822,7 +838,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
             "dm4.core.child", "dm4.core.parent", "ka2.geo_object");
         for (RelatedTopic geoObject : geoObjects) {
             if (isGeoObjectTopic(geoObject)) {
-                results.add(new GeoObjectView(geoObject, geomapsService, angeboteService));
+                results.add(new GeoObjectView(geoObject, geomaps, angebote));
             }
         }
         return results;
@@ -920,17 +936,17 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
     }
 
     private boolean isConfirmationWorkspaceMember() {
-        String username = acService.getUsername();
+        String username = accesscl.getUsername();
         if (username != null) {
             Topic workspace = getPrivilegedWorkspace();
-            return (acService.isMember(username, workspace.getId()) || acService.getWorkspaceOwner(workspace.getId()).equals(username));
+            return (accesscl.isMember(username, workspace.getId()) || accesscl.getWorkspaceOwner(workspace.getId()).equals(username));
         } else {
             return false;
         }
     }
 
     private boolean isAuthenticated() {
-        return (acService.getUsername() != null);
+        return (accesscl.getUsername() != null);
     }
 
     private List<RelatedTopic> getAssignedUsernameTopics(Topic topic) {
@@ -958,10 +974,10 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
             Topic addressTopic = geoObject.getChildTopics().getTopic(KiezatlasService.GEO_OBJECT_ADDRESS);
             einrichtung.setAddress(addressTopic);
             // Sets Latitude and Longitude
-            GeoCoordinate geoCoordinate = geomapsService.getGeoCoordinate(addressTopic);
+            GeoCoordinate geoCoordinate = geomaps.getGeoCoordinate(addressTopic);
             einrichtung.setCoordinates(geoCoordinate);
             // Sets Kontakt Facet
-            Topic kontakt = facetsService.getFacet(geoObject, KONTAKT_FACET);
+            Topic kontakt = facets.getFacet(geoObject, KONTAKT_FACET);
             if (kontakt != null) {
                 kontakt.loadChildTopics();
                 einrichtung.setEmail(kontakt.getChildTopics().getString(KONTAKT_MAIL));
@@ -989,19 +1005,19 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
             Topic imagePath = kiezatlas.getImageFileFacetByGeoObject(geoObject);
             if (imagePath != null) einrichtung.setImageUrl(imagePath.getSimpleValue().toString());
             // Öffnungszeiten Facet
-            Topic offnung = facetsService.getFacet(geoObject, OEFFNUNGSZEITEN_FACET);
+            Topic offnung = facets.getFacet(geoObject, OEFFNUNGSZEITEN_FACET);
             if (offnung != null) einrichtung.setOeffnungszeiten(offnung.getSimpleValue().toString());
             // Beschreibung Facet
-            Topic beschreibung = facetsService.getFacet(geoObject, BESCHREIBUNG_FACET);
+            Topic beschreibung = facets.getFacet(geoObject, BESCHREIBUNG_FACET);
             if (beschreibung != null) einrichtung.setBeschreibung(beschreibung.getSimpleValue().toString());
             // Stichworte Facet
-            Topic stichworte = facetsService.getFacet(geoObject, STICHWORTE_FACET);
+            Topic stichworte = facets.getFacet(geoObject, STICHWORTE_FACET);
             if (stichworte != null) einrichtung.setStichworte(stichworte.getSimpleValue().toString());
             // LOR Nummer Facet
-            Topic lor = facetsService.getFacet(geoObject, LOR_FACET);
+            Topic lor = facets.getFacet(geoObject, LOR_FACET);
             if (lor != null) einrichtung.setLORId(lor.getSimpleValue().toString());
             // Website Facet
-            Topic website = facetsService.getFacet(geoObject, WEBSITE_FACET);
+            Topic website = facets.getFacet(geoObject, WEBSITE_FACET);
             if (website != null) einrichtung.setWebpage(website.getSimpleValue().toString());
             einrichtung.setId(geoObject.getId());
         } catch (Exception ex) {
@@ -1022,7 +1038,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
 
     /** ### Actually check the workspace's SharingMode **/
     private boolean isGeoObjectPublic(Topic geoObject) {
-        Topic workspace = workspaceService.getAssignedWorkspace(geoObject.getId());
+        Topic workspace = workspaces.getAssignedWorkspace(geoObject.getId());
         return (workspace.getUri().equals(WorkspacesService.DEEPAMEHTA_WORKSPACE_URI));
     }
 
@@ -1111,7 +1127,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
                             mf.newTopicRoleModel(fileTopicId, "dm4.core.default")));
                         // ### Workspace Selection Either OR ...
                         log.info("Created Bild Assignment ("+username+") for Geo Object \"" + geoObject.getSimpleValue()
-                            + "\" and File Topic \""+fileService.getFile(fileTopicId).toString()+"\"");
+                            + "\" and File Topic \""+files.getFile(fileTopicId).toString()+"\"");
                         privilegedAssignToWorkspace(assignment, getStandardWorkspace().getId());
                         return assignment;
                     }
@@ -1123,13 +1139,32 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
         return null;
     }
 
+    private List<Topic> searchGeoObjectsNearby(String coordinates, double radius) {
+        List<Topic> results = new ArrayList<Topic>();
+        double lon, lat;
+        // 1) Parse Coordinate values
+        if (coordinates != null && !coordinates.isEmpty() && coordinates.contains(",")) {
+            lon = Double.parseDouble(coordinates.split(",")[0].trim());
+            lat = Double.parseDouble(coordinates.split(",")[1].trim());
+            List<Topic> geoCoordTopics = geospatial.getTopicsWithinDistance(new GeoCoordinate(lon, lat), radius);
+            // 2) Process spatial search results (=topics of type Geo Coordinate)
+            for (Topic geoCoordTopic : geoCoordTopics) {
+                Topic geoObject = kiezatlas.getGeoObjectByGeoCoordinateTopic(geoCoordTopic);
+                // spatial search may deliver geo coordinates topics not (anymore) related to a geo object
+                if (geoObject != null) results.add(geoObject);
+            }
+        } else {
+            log.warning("Searching Geo Objects Failed due to based Coordinates given: " + coordinates);
+        }
+        return results;
+    }
 
     /** ------------------- Model and Facet Model Helper Methods ------------------------ **/
 
     private void updateSimpleCompositeFacet(Topic geoObject, String facetTypeUri, String childTypeUri, String value) {
-        Topic oldFacetTopic = facetsService.getFacet(geoObject.getId(), facetTypeUri);
+        Topic oldFacetTopic = facets.getFacet(geoObject.getId(), facetTypeUri);
         if (!value.trim().isEmpty()) {
-            facetsService.updateFacet(geoObject.getId(), facetTypeUri, mf.newFacetValueModel(childTypeUri).put(value.trim()));
+            facets.updateFacet(geoObject.getId(), facetTypeUri, mf.newFacetValueModel(childTypeUri).put(value.trim()));
             if (oldFacetTopic != null) oldFacetTopic.delete();
         }
     }
@@ -1179,12 +1214,12 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
             .put("dm4.geomaps.longitude", longitude)
             .put("dm4.geomaps.latitude",  latitude)
         );
-        facetsService.updateFacet(address, "dm4.geomaps.geo_coordinate_facet", value);
+        facets.updateFacet(address, "dm4.geomaps.geo_coordinate_facet", value);
     }
 
     private void updateCriteriaFacets(Topic geoObject, List<Long> themen, List<Long> zielgruppen, List<Long> angebote) {
-        List<RelatedTopic> formerThemen = facetsService.getFacets(geoObject, THEMA_FACET);
-        List<RelatedTopic> formerZielgruppen = facetsService.getFacets(geoObject, ZIELGRUPPE_FACET);
+        List<RelatedTopic> formerThemen = facets.getFacets(geoObject, THEMA_FACET);
+        List<RelatedTopic> formerZielgruppen = facets.getFacets(geoObject, ZIELGRUPPE_FACET);
         // List<RelatedTopic> formerAngebote = facetsService.getFacets(geoObject, ANGEBOT_FACET);
         delFacetTopicReferences(geoObject, formerThemen, THEMA_FACET, THEMA_CRIT);
         delFacetTopicReferences(geoObject, formerZielgruppen, ZIELGRUPPE_FACET, ZIELGRUPPE_CRIT);
@@ -1195,7 +1230,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
     }
 
     private void updateContactFacet(Topic geoObject, String ansprechpartner, String telefon, String email, String fax) {
-        Topic kontakt = facetsService.getFacet(geoObject, KONTAKT_FACET);
+        Topic kontakt = facets.getFacet(geoObject, KONTAKT_FACET);
         if (kontakt == null) { // Create
             FacetValueModel facetValue = mf.newFacetValueModel(KONTAKT);
             facetValue.put(mf.newChildTopicsModel()
@@ -1204,7 +1239,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
                 .put(KONTAKT_TEL, telefon.trim())
                 .put(KONTAKT_FAX, fax.trim())
             );
-            facetsService.updateFacet(geoObject, KONTAKT_FACET, facetValue);
+            facets.updateFacet(geoObject, KONTAKT_FACET, facetValue);
         } else { // Update through Overwrite
             kontakt.getChildTopics().set(KONTAKT_ANSPRECHPARTNER, ansprechpartner.trim());
             kontakt.getChildTopics().set(KONTAKT_MAIL, email.trim());
@@ -1215,7 +1250,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
 
     private void writeSimpleKeyCompositeFacet(Topic geoObject, String facetTypeUri, String childTypeUri, String value) {
         // check if a former value was already assigned and we're updating
-        Topic oldFacetTopic = facetsService.getFacet(geoObject.getId(), facetTypeUri);
+        Topic oldFacetTopic = facets.getFacet(geoObject.getId(), facetTypeUri);
         // check if value already exist in a topic/db and if so, reference that
         try { // and if it exists, we might need to catch an AccessControlException...
             Topic keyTopic = dm4.getTopicByValue(childTypeUri, new SimpleValue(value.trim()));
@@ -1223,36 +1258,36 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
                 if (oldFacetTopic != null && !oldFacetTopic.getSimpleValue().toString().equals(value.trim())) {
                     // old value is existent and same as new value, do nothing
                 } else if (keyTopic != null) { // reference existing topic
-                    facetsService.updateFacet(geoObject.getId(), facetTypeUri,
+                    facets.updateFacet(geoObject.getId(), facetTypeUri,
                         mf.newFacetValueModel(childTypeUri).putRef(keyTopic.getId()));
                 } else { // create new topic with new value
-                    facetsService.updateFacet(geoObject.getId(), facetTypeUri,
+                    facets.updateFacet(geoObject.getId(), facetTypeUri,
                         mf.newFacetValueModel(childTypeUri).put(value.trim()));
                 }
             }
         } catch (RuntimeException re) { // If fetching an existing value fails, eg. ACL we def. create a new one
-            facetsService.updateFacet(geoObject.getId(), facetTypeUri,
+            facets.updateFacet(geoObject.getId(), facetTypeUri,
                 mf.newFacetValueModel(childTypeUri).put(value.trim()));
         }
     }
 
     private void writeBezirksFacet(Topic geoObject, long bezirksTopicId) {
         if (bezirksTopicId > -1) {
-            facetsService.updateFacet(geoObject.getId(), WebsiteService.BEZIRK_FACET,
+            facets.updateFacet(geoObject.getId(), WebsiteService.BEZIRK_FACET,
                 mf.newFacetValueModel(WebsiteService.BEZIRK).putRef(bezirksTopicId));
         }
     }
 
     private void delFacetTopicReferences(Topic geoObject, List<RelatedTopic> topics, String facetTypeUri, String childTypeUri) {
         for (Topic topic : topics) {
-            facetsService.updateFacet(geoObject, facetTypeUri,
+            facets.updateFacet(geoObject, facetTypeUri,
                 mf.newFacetValueModel(childTypeUri).addDeletionRef(topic.getId()));
         }
     }
 
     private void putFacetTopicsReferences(Topic geoObject, List<Long> ids, String facetTypeUri, String childTypeUri) {
         for (Long id : ids) {
-            facetsService.updateFacet(geoObject.getId(), facetTypeUri, mf.newFacetValueModel(childTypeUri).addRef(id));
+            facets.updateFacet(geoObject.getId(), facetTypeUri, mf.newFacetValueModel(childTypeUri).addRef(id));
         }
     }
 
@@ -1262,7 +1297,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
 
     private void initiallyAssignSingleFacetToWorkspace(Topic object, String facetTypeUri, long workspaceId) {
         log.info("Initially Assigning Single Facet Type URI: " + facetTypeUri + " to Workspace " + workspaceId);
-        Topic facetTopicValue = facetsService.getFacet(object, facetTypeUri);
+        Topic facetTopicValue = facets.getFacet(object, facetTypeUri);
         // ## Handles single-facets
         if (facetTopicValue == null) return;
         // ## Iterate over all facet value topic childs and assign them too
@@ -1276,7 +1311,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
 
     private void initiallyAssignMultiFacetToWorkspace(Topic object, String facetTypeUri, long workspaceId) {
         log.info("Initially Assigning Multi Facet Type URI: " + facetTypeUri + " to Workspace " + workspaceId);
-        List<RelatedTopic> facetTopicValues = facetsService.getFacets(object, facetTypeUri);
+        List<RelatedTopic> facetTopicValues = facets.getFacets(object, facetTypeUri);
         for (RelatedTopic facetTopicValue : facetTopicValues) {
             initiallyAssignRelatedFacetChildTopics(facetTopicValue, workspaceId);
             privilegedAssignToWorkspace(facetTopicValue.getRelatingAssociation(), workspaceId);
@@ -1301,15 +1336,15 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
 
     private void moveSingleFacetToWorkspace(Topic object, String facetTypeUri, long workspaceId) {
         log.info("Moving Single Facet Type URI: " + facetTypeUri + " to Workspace " + workspaceId);
-        Topic facetTopicValue = facetsService.getFacet(object, facetTypeUri);
+        Topic facetTopicValue = facets.getFacet(object, facetTypeUri);
         // ## Handles single-facets
         if (facetTopicValue == null) return;
         // ## Iterate over all facet value topic childs and assign them too
         moveRelatedFacetChildTopicsToWorkspace(facetTopicValue, workspaceId);
         // Association assignment first
         Association facetAssoc = dm4.getAssociation(null, object.getId(), facetTopicValue.getId(), null, null);
-        workspaceService.assignToWorkspace(facetAssoc, workspaceId);
-        workspaceService.assignToWorkspace(facetTopicValue, workspaceId);
+        workspaces.assignToWorkspace(facetAssoc, workspaceId);
+        workspaces.assignToWorkspace(facetTopicValue, workspaceId);
         log.info("Moved \""+facetTypeUri+"\" Facet Topic Value : " + facetTopicValue.getId() + " to Workspace incl. relating Association");
     }
 
@@ -1321,8 +1356,8 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
         Iterator<RelatedTopic> iterator = childTopics.iterator();
         while (iterator.hasNext()) {
             RelatedTopic topic = iterator.next();
-            workspaceService.assignToWorkspace(topic, workspaceId);
-            workspaceService.assignToWorkspace(topic.getRelatingAssociation(), workspaceId);
+            workspaces.assignToWorkspace(topic, workspaceId);
+            workspaces.assignToWorkspace(topic.getRelatingAssociation(), workspaceId);
             log.info("> Moved Facet Child Topic " + topic.toString()
                 + " and relating Assoc " + topic.getRelatingAssociation() + " to Workspace \"" + workspaceId + "\"");
         }
@@ -1330,11 +1365,11 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
 
     private void moveMultiFacetToWorkspace(Topic object, String facetTypeUri, long workspaceId) {
         log.info("Move Multi Facet Type URI: " + facetTypeUri + " to Workspace " + workspaceId);
-        List<RelatedTopic> facetTopicValues = facetsService.getFacets(object, facetTypeUri);
+        List<RelatedTopic> facetTopicValues = facets.getFacets(object, facetTypeUri);
         for (RelatedTopic facetTopicValue : facetTopicValues) {
             moveRelatedFacetChildTopicsToWorkspace(facetTopicValue, workspaceId);
-            workspaceService.assignToWorkspace(facetTopicValue.getRelatingAssociation(), workspaceId);
-            workspaceService.assignToWorkspace(facetTopicValue, workspaceId);
+            workspaces.assignToWorkspace(facetTopicValue.getRelatingAssociation(), workspaceId);
+            workspaces.assignToWorkspace(facetTopicValue, workspaceId);
         }
     }
 
@@ -1374,11 +1409,11 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
     /** ----------------- Rest of the Kiezatlas Application Model Related Getter Utilies -------------------------- */
 
     private Topic getAssignedWorkspace(Topic geoObject) {
-        return workspaceService.getAssignedWorkspace(geoObject.getId());
+        return workspaces.getAssignedWorkspace(geoObject.getId());
     }
 
     private Topic getStandardWorkspace() {
-        return workspaceService.getWorkspace(workspaceService.DEEPAMEHTA_WORKSPACE_URI);
+        return workspaces.getWorkspace(workspaces.DEEPAMEHTA_WORKSPACE_URI);
     }
 
     private Topic getPrivilegedWorkspace() {
@@ -1386,9 +1421,9 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
     }
 
     private Topic getUsernameTopic() {
-        String username = acService.getUsername();
+        String username = accesscl.getUsername();
         if (username != null && !username.isEmpty()) {
-            return acService.getUsernameTopic(username);
+            return accesscl.getUsernameTopic(username);
         } else {
             return null;
         }
@@ -1423,7 +1458,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
 
     /** Listen to Angebots Assignment Event from Kiezatlas Angebote Service */
     private Topic getEinrichtungsMailbox(Topic geoObject) {
-        Topic kontakt = facetsService.getFacet(geoObject, KONTAKT_FACET);
+        Topic kontakt = facets.getFacet(geoObject, KONTAKT_FACET);
         if (kontakt != null) {
             Topic eMail = kontakt.getChildTopics().getTopicOrNull("ka2.kontakt.email");
             if (eMail != null) return eMail;
@@ -1554,17 +1589,17 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
         ChildTopics addressChilds = addressObject.loadChildTopics().getChildTopics();
         Topic coordinateTopic = kiezatlas.getGeoCoordinateFacet(addressObject);
         coordinateTopic.loadChildTopics();
-        workspaceService.assignToWorkspace(geoObject, workspace.getId());
-        workspaceService.assignToWorkspace(geoObjectChilds.getTopic("ka2.geo_object.name"), workspace.getId());
-        workspaceService.assignToWorkspace(coordinateTopic, workspace.getId());
-        workspaceService.assignToWorkspace(coordinateTopic.getChildTopics().getTopic("dm4.geomaps.longitude"), workspace.getId());
-        workspaceService.assignToWorkspace(coordinateTopic.getChildTopics().getTopic("dm4.geomaps.latitude"), workspace.getId());
-        workspaceService.assignToWorkspace(addressObject, workspace.getId());
-        workspaceService.assignToWorkspace(addressChilds.getTopicOrNull("dm4.contacts.street"), workspace.getId());
-        workspaceService.assignToWorkspace(addressChilds.getTopic("dm4.contacts.postal_code"), workspace.getId());
-        workspaceService.assignToWorkspace(addressChilds.getTopic("dm4.contacts.city"), workspace.getId());
+        workspaces.assignToWorkspace(geoObject, workspace.getId());
+        workspaces.assignToWorkspace(geoObjectChilds.getTopic("ka2.geo_object.name"), workspace.getId());
+        workspaces.assignToWorkspace(coordinateTopic, workspace.getId());
+        workspaces.assignToWorkspace(coordinateTopic.getChildTopics().getTopic("dm4.geomaps.longitude"), workspace.getId());
+        workspaces.assignToWorkspace(coordinateTopic.getChildTopics().getTopic("dm4.geomaps.latitude"), workspace.getId());
+        workspaces.assignToWorkspace(addressObject, workspace.getId());
+        workspaces.assignToWorkspace(addressChilds.getTopicOrNull("dm4.contacts.street"), workspace.getId());
+        workspaces.assignToWorkspace(addressChilds.getTopic("dm4.contacts.postal_code"), workspace.getId());
+        workspaces.assignToWorkspace(addressChilds.getTopic("dm4.contacts.city"), workspace.getId());
         Topic addressCountry = addressChilds.getTopicOrNull("dm4.contacts.country");
-        workspaceService.assignToWorkspace(addressCountry, workspace.getId());
+        workspaces.assignToWorkspace(addressCountry, workspace.getId());
         log.info("Basic Geo Object, Address and Coordinate Facet moved to Workspace \"" + workspace.getSimpleValue() + "\"");
     }
 

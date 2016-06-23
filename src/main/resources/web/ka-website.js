@@ -546,7 +546,7 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
         if (!location) {
             location_string = leafletMap.getCurrentLocationLongitude() + ', '+ leafletMap.getCurrentLocationLatitude()
         } else {
-            location_string = location.lng + ', '+location.lat
+            location_string = location.lng.toFixed(4) + ', '+location.lat.toFixed(4)
         }
         $.getJSON('/website/search/'+encodeURIComponent(location_string)+'/' + (radius_value / 1000),
             function (geo_objects) {
@@ -789,15 +789,15 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
         //
         if (!navigator.geolocation) {
             console.warn("Geolocation is not supported by your browser")
-            return
-        }
-        //
-        if (typeof options === "undefined") { // ??? do this options work for us?
-            options =  {
-                "setView" : true, "maxZoom" : mapping.zoomDetailLevel
+        } else {
+            //
+            if (typeof options === "undefined") { // ??? do this options work for us?
+                options =  {
+                    "setView" : true, "maxZoom" : mapping.zoomDetailLevel
+                }
             }
+            leafletMap.map.locate(options)
         }
-        leafletMap.map.locate(options)
     }
 
     this.set_anchor = function(custom_anchor) {
