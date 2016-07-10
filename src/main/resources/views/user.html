@@ -32,7 +32,7 @@
             </div>
         </div>
 
-        <div th:include="partials :: navigation (publisher=${is_publisher},loggedin=${authenticated})"></div>
+        <div class="top-menu" th:include="fragments/navigation :: top (publisher=${is_publisher})"></div>
 
         <div id="bottom" class="padding">
             <a href="/" title="zur Startseite"><img src="/de.kiezatlas.website/images/kiezatlas2-logo.png" width="150" /></a>

@@ -1,6 +1,6 @@
 
-<!--- Standard Horizontal Navigation -->
-<div th:fragment="top_navigation (publisher,loggedin)">
+<!--- Standard Horizontal Navigation (Wider Page > 900px) -->
+<div th:fragment="top (publisher)">
 
     <div class="ui menu">
         <div th:class="${publisher} ? 'ui container fluid' : 'ui container'">
@@ -38,8 +38,8 @@
 
 </div>
 
-<!--- Standard Vertical Navigation -->
-<div th:fragment="navigation (publisher,loggedin)">
+<!--- Standard Vertical Navigation (Experimental) -->
+<div th:fragment="vertical (publisher)">
 
     <div class="ui vertical menu">
         <div th:if="${publisher}" class="item administration">
@@ -111,30 +111,5 @@
         </div>
     </div-->
 
-    <!-- div class="website-menu">
-        
-        <ul class="administration" th:if="${publisher}">
-            <li><a href="/geoobject/confirmation/" class="button">Freischalten</a></li>
-            <li><a href="/site/administration/" class="button">Listenansicht</a></li>
-            <li><a href="/geoobject/site/" class="button">Site-Infos</a></li>
-        </ul>
-        <ul class="entries" th:if="${loggedin}">
-            <li><a href="/angebote/my" class="button">Angebotsinfos</a></li>
-            <li><a href="/geoobject/create" class="button">Neue Einrichtung</a></li>
-            <li><a href="/#mitte" class="button">Impressums Link</a></li>
-        </ul>
-        <ul class="account" th:if="${loggedin}">
-            <li><a href="/sign-up/edit" class="button">Mein Account</a></li>
-        </ul>
-        <ul class="general">
-            <li><a href="/angebote" class="button bezirk-link">Gesamtstadtplan</a></li>
-            <li><a href="/#mitte" class="button bezirk-link">Bezirk Mitte</a></li>
-            <li><a href="/angebote" class="button bezirk-link">Aktuelle Angebote</a></li>
-        </ul>
-        <ul class="search">
-            <li><a href="/#mitte" class="button bezirk-link">Bezirk Mitte</a></li>
-            <li><a href="/angebote" class="button bezirk-link">Aktuellen Angebote</a></li>
-        </ul>
-    </div-->
 
 </div>

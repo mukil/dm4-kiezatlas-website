@@ -32,7 +32,7 @@
     </head>
     <body class="kiezatlas confirm">
 
-        <div th:include="partials :: top_navigation (publisher=${is_publisher},loggedin=${authenticated})"></div>
+        <div class="top-menu" th:include="fragments/navigation :: top (publisher=${is_publisher})"></div>
 
         <div id="header">
             <p th:if="${is_publisher}">Hier k&ouml;nnen Sie neu eingetragene Einrichtungen freischalten und ihren Kiezatlas Websites zuordnen.</p>

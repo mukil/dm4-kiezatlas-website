@@ -59,7 +59,7 @@
     </head>
     <body class="kiezatlas frontpage">
 
-        <div class="top-menu" th:include="partials :: top_navigation (publisher=${is_publisher},loggedin=${authenticated})"></div>
+        <div class="top-menu" th:include="fragments/navigation :: top (publisher=${is_publisher})"></div>
 
         <div id="header">
             <div class="welcome">
