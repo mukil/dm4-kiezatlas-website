@@ -146,8 +146,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
     @GET
     @Produces(MediaType.TEXT_HTML)
     public Viewable getWebsite() {
-        preparePageAuthorization();
-        return view("ka-index");
+        return getFrontpageView();
     }
 
     @GET
@@ -156,7 +155,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
     public Viewable getWebsiteMenu() throws URISyntaxException {
         // if (!isAuthenticated()) return getUnauthorizedPage();
         // if (!isConfirmationWorkspaceMember()) throw new WebApplicationException(Response.temporaryRedirect(new URI("/angebote/my")).build());
-        preparePageAuthorization();
+        prepareGeneralPageData("user");
         return view("user");
     }
 
@@ -179,11 +178,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
             einrichtung.setAssignedUsername(getFirstUsernameAssigned(geoObject));
             results.add(einrichtung);
         }
-        preparePageAuthorization();
-        viewData("availableLor", getAvailableLORNumberTopics());
-        viewData("workspace", getStandardWorkspace());
-        viewData("geoobjects", results);
-        return view("confirmation");
+        return getConfirmationView(results);
     }
 
     /**
@@ -202,7 +197,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
         viewData("themen", new ArrayList<RelatedTopic>());
         viewData("zielgruppen", new ArrayList<RelatedTopic>());
         prepareFormWithAvailableTopics();
-        preparePageAuthorization();
+        prepareGeneralPageData("edit");
         viewData("workspace", getPrivilegedWorkspace());
         return view("edit");
     }
@@ -419,7 +414,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
         List<AngebotsinfosAssigned> angebotsInfos = angebote.getAngebotsInfosAssigned(geoObject);
         if (angebotsInfos.size() > 0) viewData("angebotsinfos", angebotsInfos);
         // user auth
-        preparePageAuthorization();
+        prepareGeneralPageData("detail");
         // geo object auth
         viewData("is_published",  isGeoObjectPublic(geoObject));
         viewData("editable", isGeoObjectEditable(geoObject, username));
@@ -427,7 +422,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
     }
 
     public Viewable getSimpleMessagePage() {
-        preparePageAuthorization();
+        prepareGeneralPageData("message");
         return view("message");
     }
 
@@ -883,6 +878,19 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
 
     /** --------------------------- Thymeleaf Template Accessor and Helper Methods -------------------------- */
 
+    private Viewable getFrontpageView() {
+        prepareGeneralPageData("ka-index");
+        return view("ka-index");
+    }
+
+    private Viewable getConfirmationView(List<EinrichtungsInfo> results) {
+        prepareGeneralPageData("confirmation");
+        viewData("availableLor", getAvailableLORNumberTopics());
+        viewData("workspace", getStandardWorkspace());
+        viewData("geoobjects", results);
+        return view("confirmation");
+    }
+
     private Viewable getPageNotFound() {
         return getPageNotFound(null, null);
     }
@@ -923,11 +931,12 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
         log.info("> Prepare Form Template with available Topics");
     }
 
-    private void preparePageAuthorization() {
+    private void prepareGeneralPageData(String templateName) {
         boolean isAuthenticated = isAuthenticated();
         boolean isPrivileged = isConfirmationWorkspaceMember();
         viewData("authenticated", isAuthenticated);
         viewData("is_publisher", isPrivileged);
+        viewData("template", templateName);
         log.info("Checking Authorization (isPrivileged=" + isPrivileged + ", isAuthenticated=" + isAuthenticated() + ")");
     }
 

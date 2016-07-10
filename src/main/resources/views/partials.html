@@ -1,24 +1,37 @@
 
 <!--- Standard Horizontal Navigation -->
-
 <div th:fragment="top_navigation (publisher,loggedin)">
 
     <div class="ui menu">
-        <a th:if="${publisher}" href="/geoobject/confirmation/" class="item">Freischalten</a>
-        <a th:if="${publisher}" href="/site/administration/" class="item">Listenansicht</a>
-        <a th:if="${publisher}" href="/geoobject/site/" class="item">Site-Infos</a>
-        <a th:if="${authenticated}" href="/geoobject/create" class="item">Neue Einrichtung</a>
-        <a th:if="${authenticated}" href="/angebote/my" class="item">Meine Angebote</a>
-        <a th:if="${authenticated}" href="/sign-up/edit" class="item">Account</a>
-        <a th:if="!${authenticated}" href="/sign-up/login" class="item">Login</a>
-        <a href="/" class="item">Gesamtstadtplan</a>
-        <!--a href="/#mitte" class="item">Bezirk Mitte</a-->
-        <a href="/angebote" class="item">Angebotsinfos</a>
-        <a th:if="!${authenticated}" href="/sign-up/" class="item">Registrieren</a>
-        <a th:if="${authenticated}" href="/sign-up/login" class="item">Logout</a>
-        <div class="right menu">
-            <div class="item">
-                <div class="ui input"><input placeholder="Suche..." type="text" id="topsearch" /></div>
+        <div th:class="${publisher} ? 'ui container fluid' : 'ui container'">
+            <a th:if="!${authenticated}" href="/sign-up/login" class="item">Login</a>
+            <a th:if="${authenticated}"
+               th:class="${#strings.contains(template, 'edit')} ? 'active item' : 'item'"
+               href="/geoobject/create">Neue Einrichtung</a>
+            <a th:if="${authenticated}" href="/angebote/my" class="item">Meine Angebote</a>
+            <!--a th:if="${authenticated}" href="/sign-up/edit" class="item">Account</a-->
+            <a th:class="${#strings.contains(template, 'index')} ? 'active item' : 'item'"
+               href="/">Gesamtstadtplan</a>
+            <!--a href="/#mitte" class="item">Bezirk Mitte</a-->
+            <a href="/angebote" class="item">Angebotsinfos</a>
+            <a th:if="!${authenticated}" href="/sign-up/" class="item">Registrieren</a>
+            <a th:if="${authenticated}" href="/sign-up/login" class="item">Logout</a>
+            <div class="right menu">
+                <div class="item">
+                    <div class="ui small input focus">
+                        <input placeholder="Suche" type="text" id="topsearch" />
+                    </div>
+                </div>
+                <div th:if="${publisher}" class="ui simple dropdown item">
+                    <i class="setting icon"></i>
+                    <i class="dropdown icon"></i>
+                    <div class="menu">
+                        <a th:class="${#strings.contains(template, 'confirmation')} ? 'active item' : 'item'"
+                           href="/geoobject/confirmation/">Freischalten</a>
+                        <a href="/site/administration/" class="item">Listenansicht</a>
+                        <a href="/geoobject/site/" class="item">Site-Infos</a>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -26,7 +39,6 @@
 </div>
 
 <!--- Standard Vertical Navigation -->
-
 <div th:fragment="navigation (publisher,loggedin)">
 
     <div class="ui vertical menu">

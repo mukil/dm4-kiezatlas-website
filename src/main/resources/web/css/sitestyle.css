@@ -1481,6 +1481,9 @@ div.link-area {
         width: 100%;
         overflow-y: hidden;
     }
+    .frontpage .top-menu {
+        display: none;
+    }
 }
 
 @media (max-width:600px), (max-width:720px) {

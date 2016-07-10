@@ -15,10 +15,13 @@
         <link rel="stylesheet" href="/de.kiezatlas.website/css/sitestyle.css"/>
 
         <!-- New Semantic UI Styles -->
+        <link media="all" href="/de.kiezatlas.website/css/semantic-ui/components/container.min.css" rel="stylesheet" />
+        <link media="all" href="/de.kiezatlas.website/css/semantic-ui/components/dropdown.min.css" rel="stylesheet" />
         <link media="all" href="/de.kiezatlas.website/css/semantic-ui/components/header.min.css" rel="stylesheet" />
         <link media="all" href="/de.kiezatlas.website/css/semantic-ui/components/menu.min.css" rel="stylesheet" />
         <link media="all" href="/de.kiezatlas.website/css/semantic-ui/components/item.min.css" rel="stylesheet" />
         <link media="all" href="/de.kiezatlas.website/css/semantic-ui/components/input.min.css" rel="stylesheet" />
+        <link media="all" href="/de.kiezatlas.website/css/semantic-ui/components/icon.min.css" rel="stylesheet" />
         <!-- link rel="icon" href="" type="image/vnd.microsoft.icon"/-->
 
         <script src="/de.kiezatlas.website/vendor/pouchdb/pouchdb-3.6.0.min.js"></script>
@@ -56,7 +59,7 @@
     </head>
     <body class="kiezatlas frontpage">
 
-        <div th:include="partials :: top_navigation (publisher=${is_publisher},loggedin=${authenticated})"></div>
+        <div class="top-menu" th:include="partials :: top_navigation (publisher=${is_publisher},loggedin=${authenticated})"></div>
 
         <div id="header">
             <div class="welcome">
