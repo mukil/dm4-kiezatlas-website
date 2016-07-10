@@ -1,4 +1,15 @@
 
+
+/** -- New Semantic UI Styles -- **/
+@import url('/de.kiezatlas.website/css/semantic-ui/components/container.min.css');
+@import url('/de.kiezatlas.website/css/semantic-ui/components/dropdown.min.css');
+@import url('/de.kiezatlas.website/css/semantic-ui/components/header.min.css');
+@import url('/de.kiezatlas.website/css/semantic-ui/components/menu.min.css');
+@import url('/de.kiezatlas.website/css/semantic-ui/components/item.min.css');
+@import url('/de.kiezatlas.website/css/semantic-ui/components/input.min.css');
+@import url('/de.kiezatlas.website/css/semantic-ui/components/icon.min.css');
+
+
 @-o-viewport {
     width: device-width;
     zoom: 1;
@@ -1164,9 +1175,9 @@ div.link-area {
     font-size: 16px;
 }
 
-.sign-up {
+/** .sign-up {
     margin: 20px;
-}
+}*/
 
 .sign-up label {
     margin-left: 5px;

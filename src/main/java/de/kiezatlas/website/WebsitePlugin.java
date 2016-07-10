@@ -126,19 +126,26 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
     @Override
     public void serviceArrived(Object service) {
         if (service instanceof WebpageService) {
-            log.info("Announcing our bundle as additional template resource with the WebpageService");
+            log.info("Announcing our Website Bundle as additional template resource at Webpages TemplateEngines");
             webpages.addTemplateResolverBundle(bundle);
             webpages.overrideFrontpageTemplate("ka-index");
             webpages.reinitTemplateEngine();
+        } else if (service instanceof SignupPluginService) {
+            log.info("Announcing our Website Bundle as additional template resource at Signup TemplateEngines");
+            signup.addTemplateResolverBundle(bundle);
+            signup.reinitTemplateEngine();
         }
     }
 
     @Override
     public void serviceGone(Object service) {
+        log.info("Unregistering our Website Bundle as additional template resource from other TemplateEngines");
         if (service instanceof WebpageService) {
-            log.info("Unregistering our bundle as additional template resource with the WebpageService");
             webpages.removeTemplateResolverBundle(bundle);
             webpages.reinitTemplateEngine();
+        } else if (service instanceof SignupPluginService) {
+            signup.removeTemplateResolverBundle(bundle);
+            signup.reinitTemplateEngine();
         }
     }
 

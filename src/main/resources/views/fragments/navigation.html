@@ -4,7 +4,8 @@
 
     <div class="ui menu">
         <div th:class="${publisher} ? 'ui container fluid' : 'ui container'">
-            <a th:if="!${authenticated}" href="/sign-up/login" class="item">Login</a>
+            <a th:if="!${authenticated}" href="/sign-up/login"
+               th:class="${#strings.contains(template, 'login')} ? 'active item' : 'item'">Login</a>
             <a th:if="${authenticated}"
                th:class="${#strings.contains(template, 'edit')} ? 'active item' : 'item'"
                href="/geoobject/create">Neue Einrichtung</a>
@@ -14,8 +15,10 @@
                href="/">Gesamtstadtplan</a>
             <!--a href="/#mitte" class="item">Bezirk Mitte</a-->
             <a href="/angebote" class="item">Angebotsinfos</a>
-            <a th:if="!${authenticated}" href="/sign-up/" class="item">Registrieren</a>
-            <a th:if="${authenticated}" href="/sign-up/login" class="item">Logout</a>
+            <a th:if="!${authenticated}" href="/sign-up/"
+               th:class="${#strings.contains(template, 'sign-up')} ? 'active item' : 'item'">Registrieren</a>
+            <a th:if="${authenticated}" href="/sign-up/login"
+               th:class="${#strings.contains(template, 'logout')} ? 'active item' : 'item'">Logout</a>
             <div class="right menu">
                 <div class="item">
                     <div class="ui small input focus">
