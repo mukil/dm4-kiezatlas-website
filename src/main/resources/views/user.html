@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <title>Herzlich Willkommen</title>
+
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0"/>
+
+        <link media="all" href="/de.kiezatlas.website/css/semantic-ui/components/header.min.css" rel="stylesheet" />
+        <link media="all" href="/de.kiezatlas.website/css/semantic-ui/components/menu.min.css" rel="stylesheet" />
+        <link media="all" href="/de.kiezatlas.website/css/semantic-ui/components/item.min.css" rel="stylesheet" />
+        <link media="all" href="/de.mikromedia.webpages/css/sitestyle.css" rel="stylesheet" />
+        <!--script src="/de.kiezatlas.website/vendor/jquery/jquery-1.9.1.min.js"></script>
+        <script src="/de.kiezatlas.website/css/semantic-ui/semantic.min.js"></script>
+        <script type="text/javascript">
+            $('.ui .dropdown').dropdown()
+        </script-->
+
+    </head>
+    <body class="page menu">
+
+        <div id="header">
+            <div class="welcome">
+                <h1>Willkommen - Hauptmen&uuml;</h1>
+                <span class="bezirk-name"></span>
+            </div>
+        </div>
+
+        <div th:include="partials :: navigation (publisher=${is_publisher},loggedin=${authenticated})"></div>
+
+        <div id="bottom" class="padding">
+            <a href="/" title="zur Startseite"><img src="/de.kiezatlas.website/images/kiezatlas2-logo.png" width="150" /></a>
+        </div>
+
+        <div class="footer" th:utext="${footerText}"></div>
+
+    </body>
+</html>

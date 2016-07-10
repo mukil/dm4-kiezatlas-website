@@ -8,6 +8,11 @@
         <link rel="stylesheet" href="/de.kiezatlas.website/vendor/leaflet/leaflet.css"/>
         <link rel="stylesheet" href="/de.kiezatlas.website/css/sitestyle.css"/>
 
+        <!-- New Semantic UI Styles -->
+        <link media="all" href="/de.kiezatlas.website/css/semantic-ui/components/header.min.css" rel="stylesheet" />
+        <link media="all" href="/de.kiezatlas.website/css/semantic-ui/components/menu.min.css" rel="stylesheet" />
+        <link media="all" href="/de.kiezatlas.website/css/semantic-ui/components/item.min.css" rel="stylesheet" />
+
         <script src="/de.kiezatlas.website/vendor/jquery/jquery-1.9.1.min.js"></script>
         <script src="/de.kiezatlas.website/vendor/leaflet/leaflet.js"></script>
         <script src="/de.deepamehta.webclient/script/util/rest_client.js"></script>
@@ -40,17 +45,7 @@
     </head>
     <body class="kiezatlas topic">
 
-        <div id="navigation">
-            <ul>
-                <!--li class="register"><a href="/sign-up/">Registrieren</a></li-->
-                <li class="angebote"><a href="/">Startseite</a></li>
-                <li class="angebote"><a href="/angebote/">Angebote</a></li>
-                <li class="login" th:if="!${authenticated}"><a href="/sign-up/login">Login</a></li>
-                <!--li class="angebote"><a href="/kiezatlas/angebot/">Orte</a></li-->
-                <!-- li class="angebote"><a href="/sign-up/edit/">Mein Account</a></li-->
-                <li class="logout visible-ib" th:if="${authenticated}"><a href="#" onclick="javascript:logout()">Abmelden</a></li>
-            </ul>
-        </div>
+        <div th:include="partials :: top_navigation (publisher=${is_publisher},loggedin=${authenticated})"></div>
 
         <div id="header">
             <div class="welcome">
@@ -61,8 +56,8 @@
         <div id="detail-area" th:class="${angebotsinfos} ? 'angebotsinfos'">
             <div class="commands">
                 <p th:if="${!#strings.isEmpty(message)}" th:text="${message}"></p>
-                <a class="button edit" th:if="${authenticated} and ${editable}" th:href="'/website/topic/edit/' + ${geoobject.id}">Edit</a>
-                <a class="button publish" th:if="${is_publisher} and ${!is_published}" th:href="'/website/topic/confirm/' + ${geoobject.id}">Freischalten</a>
+                <a class="button edit" th:if="${authenticated} and ${editable}" th:href="'/geoobject/edit/' + ${geoobject.id}">Edit</a>
+                <a class="button publish" th:if="${is_publisher} and ${!is_published}" th:href="'/geoobject/confirm/' + ${geoobject.id}">Freischalten</a>
             </div>
             <div id="map"></div>
             <div class="info-area">

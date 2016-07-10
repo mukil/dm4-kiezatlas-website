@@ -53,7 +53,6 @@ import java.io.InputStreamReader;
 import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
 import java.math.RoundingMode;
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
@@ -91,9 +90,9 @@ import org.xml.sax.InputSource;
  * <a href="http://github.com/mukil/dm4-kiezatlas-website">Source Code</a>
  *
  * @author Malte Reißig (<a href="mailto:malte@mikromedia.de">Contact</a>)
- * @version 0.3-SNAPSHOT
+ * @version 0.4-SNAPSHOT
  */
-@Path("/website")
+@Path("/geoobject")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, AngebotAssignedListener {
@@ -119,29 +118,46 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
     // The remaining part of the URI is the original KA1 topic id.
     private static final String KA1_GEO_OBJECT_URI_PREFIX = "de.kiezatlas.topic.";
 
-    /**
-     * Sets the Kiezatlas Website index.html as main resource to be served at "/" by the webpages-module.
-     */
     @Override
     public void init() {
-        webpages.setFrontpageResource("/views/index.html", "de.kiezatlas.website");
-        initTemplateEngine();
+        initTemplateEngine(); // initting a thymeleaf template engine for this bundle specifically too
+    }
+
+    @Override
+    public void serviceArrived(Object service) {
+        if (service instanceof WebpageService) {
+            log.info("Announcing our bundle as additional template resource with the WebpageService");
+            webpages.addTemplateResolverBundle(bundle);
+            webpages.overrideFrontpageTemplate("ka-index");
+            webpages.reinitTemplateEngine();
+        }
+    }
+
+    @Override
+    public void serviceGone(Object service) {
+        if (service instanceof WebpageService) {
+            log.info("Unregistering our bundle as additional template resource with the WebpageService");
+            webpages.removeTemplateResolverBundle(bundle);
+            webpages.reinitTemplateEngine();
+        }
     }
 
     /** Responds witha a Viewable,the frontpage of the Kiezatlas Website. */
     @GET
     @Produces(MediaType.TEXT_HTML)
     public Viewable getWebsite() {
-        return view("index");
+        preparePageAuthorization();
+        return view("ka-index");
     }
 
     @GET
-    @Path("/user/menu")
+    @Path("/menu")
     @Produces(MediaType.TEXT_HTML)
     public Viewable getWebsiteMenu() throws URISyntaxException {
-        if (!isAuthenticated()) return getUnauthorizedPage();
-        if (!isConfirmationWorkspaceMember()) throw new WebApplicationException(Response.temporaryRedirect(new URI("/angebote/my")).build());
-        return view("menu");
+        // if (!isAuthenticated()) return getUnauthorizedPage();
+        // if (!isConfirmationWorkspaceMember()) throw new WebApplicationException(Response.temporaryRedirect(new URI("/angebote/my")).build());
+        preparePageAuthorization();
+        return view("user");
     }
 
     /** Responds with a Viewable, the administrative confirmation page of the Kiezatlas Website.  */
@@ -175,7 +191,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
      */
     @GET
     @Produces(MediaType.TEXT_HTML)
-    @Path("/topic/create")
+    @Path("/create")
     public Viewable getGeoObjectEditPage() {
         if (!isAuthenticated()) return getUnauthorizedPage();
         EinrichtungsInfo geoObject = new EinrichtungsInfo();
@@ -197,7 +213,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
     @POST
     @Produces(MediaType.TEXT_HTML)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    @Path("/topic/save")
+    @Path("/save")
     @Transactional
     public Viewable processGeoObjectForm(@FormParam("id") long topicId, @FormParam("name") String name, @FormParam("strasse") String strasse,
             @FormParam("plz") String plz, @FormParam("city") long city, @FormParam("district") long district, @FormParam("fileTopicId") long fileId,
@@ -256,6 +272,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
                 // Assign Geo Object to Confirmation WS (at last, otherwise we could not write its facets)
                 initiallyAssignGeoObjecToWorkspace(geoObject, getPrivilegedWorkspace());
                 // ### Send Notification to EDITOR with basic infos on the "confirmation" process
+                // Note: If notification fails, confirmation fails too
                 sendAdministrationNotice("Neuer Einrichtungsdatensatz im Kiezatlas", geoObject, username);
                 viewData("message", "Vielen Dank, Sie haben erfolgreich einen neuen Ort in den Kiezatlas eingetragen. "
                     + "Die Kiez-AdministratorInnen wurden benachrichtigt und wir werden Ihren Eintrag so schnell wie m&ouml;glich freischalten.");
@@ -289,30 +306,32 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
     @Override
     public void angebotsInfoAssigned(Topic angebotsInfo, Topic geoObject) {
         log.info("Website listening to \"" + angebotsInfo.getSimpleValue() + "\" being assigned to \"" + geoObject.getSimpleValue() + "\" as a NEW ANGEBOT");
+        // ### use sendUserMailboxNotification and include Einrichtungs-Inhaberin..
         signup.sendSystemMailboxNotification("Angebotsinfos einer Einrichtung zugewiesen",
             "\nAngebotsinfo: " + angebotsInfo.getSimpleValue().toString() +
             // ### Von + Bis
             "\n\nEinrichtung: " + geoObject.getSimpleValue().toString() + "\n\n");
     }
 
-    private void sendConfirmationNotice(List<RelatedTopic> mailboxes, Topic geoObject) {
+    private void sendConfirmationNotice(List<String> mailboxes, Topic geoObject) {
         String recipients = "";
-        int recipientCount = 0;
-        for (RelatedTopic mailbox : mailboxes) {
-            recipients += mailbox.getSimpleValue().toString();
+        int recipientCount = 1;
+        for (String mailbox : mailboxes) {
+            recipients += mailbox;
             if (recipientCount < mailboxes.size()) recipients += ";";
         }
-        signup.sendUserMailboxNotification(recipients, "Dein Kiezatlas Eintrag wurde freigeschaltet", "\nLiebe/r KiezAtlas Nutzer_in,\n\n"
-            + "dein Kiezatlas Eintrag wurde soeben von einer unserer Kiez-Administrator_innen best&auml;tigt, vielen Dank f&uuml;r deine Mithilfe!\n\n"
-            + "Name des neuen Eintrags: \"" + geoObject.getSimpleValue().toString() + "\"\n"
-            + "Link : "+SignupPlugin.DM4_HOST_URL+"/website/topic/" + geoObject.getId() + "\n\nOk, das war's schon.\n\nVielen Dank + Ciao!");
+        signup.sendUserMailboxNotification(recipients, "Der Kiezatlas Eintrag wurde freigeschaltet", "\nLiebe_r KiezAtlas Nutzer_in,\n\n"
+            + "dein Eintrag wurde soeben bestätigt.\n\n"
+            + "Name des Eintrags: \"" + geoObject.getSimpleValue().toString() + "\"\n"
+            + "Link: " + SignupPlugin.DM4_HOST_URL+"/geoobject/" + geoObject.getId() + "\n\nOk, vielen Dank für deine Mithilfe.\n\nCiao!");
     }
 
     private void sendAdministrationNotice(String subject, Topic geoObject, Topic username) {
-        signup.sendSystemMailboxNotification("Neuer Einrichtungsdatensatz im Kiezatlas", "\nLiebe/r Kiez-Administrator_in,\n\n"
+        // ### use sendUserMailboxNotification and include Kiez-Administrator..
+        signup.sendSystemMailboxNotification(subject, "\nLiebe/r Kiez-Administrator_in,\n\n"
             + "es gibt einen neuen Einrichtungsdatensatz von "+username+", bitte schaue gleich mal ob Du diesen nicht gleich freischalten kannst.\n\n"
             + "Name des neuen Eintrags: \"" + geoObject.getSimpleValue().toString() + "\"\n"
-            + "Der Link zur Freischaltung: "+SignupPlugin.DM4_HOST_URL+"/website/topic/" + geoObject.getId() + " bzw. zum Login ist:\n"
+            + "Der Link zur Freischaltung: "+SignupPlugin.DM4_HOST_URL+"/geoobject/" + geoObject.getId() + " bzw. zum Login ist:\n"
             + SignupPlugin.DM4_HOST_URL + "/sign-up/login\n\nOk, das war's schon.\n\nDanke + Ciao!");
     }
 
@@ -321,7 +340,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
      */
     @GET
     @Produces(MediaType.TEXT_HTML)
-    @Path("/topic/edit/{topicId}")
+    @Path("/edit/{topicId}")
     public Viewable getGeoObjectEditPage(@PathParam("topicId") long topicId) {
         // ### Handle the case if user cannot edit anymore (just see) directly after confirmation.
         Topic geoObject = dm4.getTopic(topicId);
@@ -359,7 +378,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
      */
     @GET
     @Produces(MediaType.TEXT_HTML)
-    @Path("/topic/confirm/{topicId}")
+    @Path("/confirm/{topicId}")
     @Transactional
     public Viewable doConfirmGeoObject(@PathParam("topicId") long topicId) {
         // ### Handle the case if user cannot edit anymore (just see) directly after confirmation.
@@ -374,7 +393,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
             moveGeoObjecToWorkspace(geoObject, getStandardWorkspace());
             moveGeoObjecFacetsToWorkspace(geoObject, getStandardWorkspace());
             viewData("message", "Der Eintrag \"" + geoObject.getSimpleValue() + "\" erfolgreich freigeschaltet.");
-            List<RelatedTopic> mailboxes = getAssignedUserMailboxes(geoObject);
+            List<String> mailboxes = getAssignedUserMailboxes(geoObject);
             sendConfirmationNotice(mailboxes, geoObject);
         } else {
             viewData("message", "Eine Einrichtung mit dieser ID ist uns nicht bekannt.");
@@ -408,6 +427,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
     }
 
     public Viewable getSimpleMessagePage() {
+        preparePageAuthorization();
         return view("message");
     }
 
@@ -418,7 +438,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
      * @return
      */
     @GET
-    @Path("/topic/{topicId}")
+    @Path("/{topicId}")
     @Produces(MediaType.TEXT_HTML)
     public Viewable getGeoObjectDetailsPage(@PathParam("topicId") String topicId) {
         Topic geoObject = null;
@@ -440,7 +460,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
      * @return A GeoObject DetailsView as DTO to presend details about a place.
      */
     @GET
-    @Path("/topic/{topicId}")
+    @Path("/{topicId}")
     @Produces(MediaType.APPLICATION_JSON)
     public GeoObjectDetailsView getGeoObjectDetails(@HeaderParam("Referer") String referer,
             @PathParam("topicId") long topicId) {
@@ -1468,8 +1488,17 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
     }
 
     /** Informs editors of their geo object about changes. */
-    private List<RelatedTopic> getAssignedUserMailboxes(Topic geoObject) {
-        return geoObject.getRelatedTopics(USER_ASSIGNMENT, "dm4.core.default", "dm4.core.default", "dm4.accesscontrol.username");
+    private List<String> getAssignedUserMailboxes(Topic geoObject) {
+        List<String> mailboxes = new ArrayList<String>();
+        List<RelatedTopic> usernames = geoObject.getRelatedTopics(USER_ASSIGNMENT, "dm4.core.default",
+            "dm4.core.default", "dm4.accesscontrol.username");
+        for (RelatedTopic username : usernames) {
+            String emailAddress = dm4.getAccessControl().getEmailAddress(username.getSimpleValue().toString());
+            if (emailAddress != null && !emailAddress.isEmpty()) {
+                mailboxes.add(emailAddress);
+            }
+        }
+        return mailboxes;
     }
 
     private boolean hasRelatedBezirk(Topic geoObject, long bezirksId) {

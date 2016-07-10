@@ -13,6 +13,12 @@
         <link rel="stylesheet" href="/de.kiezatlas.website/vendor/leaflet/markercluster/dist/MarkerCluster.Default.css"/-->
         <link rel="stylesheet" href="/de.kiezatlas.website/vendor/jquery/ui/css/kiezatlas/jquery-ui-1.9.2.custom.min.css"/>
         <link rel="stylesheet" href="/de.kiezatlas.website/css/sitestyle.css"/>
+
+        <!-- New Semantic UI Styles -->
+        <link media="all" href="/de.kiezatlas.website/css/semantic-ui/components/header.min.css" rel="stylesheet" />
+        <link media="all" href="/de.kiezatlas.website/css/semantic-ui/components/menu.min.css" rel="stylesheet" />
+        <link media="all" href="/de.kiezatlas.website/css/semantic-ui/components/item.min.css" rel="stylesheet" />
+        <link media="all" href="/de.kiezatlas.website/css/semantic-ui/components/input.min.css" rel="stylesheet" />
         <!-- link rel="icon" href="" type="image/vnd.microsoft.icon"/-->
 
         <script src="/de.kiezatlas.website/vendor/pouchdb/pouchdb-3.6.0.min.js"></script>
@@ -50,19 +56,8 @@
     </head>
     <body class="kiezatlas frontpage">
 
-        <div id="navigation">
-            <ul>
-                <!--li class="register"><a href="/sign-up/">Registrieren</a></li-->
-                <li class="login"><a href="/sign-up/login">Login</a></li>
-                <li class="angebote-my"><a href="/angebote/my">Meine Angebote</a></li>
-                <li class="angebote"><a href="/angebote/">Angebote</a></li>
-                <li class="new"><a href="/sign-up/login">Neueintrag</a></li>
-                <li class="confirm"><a href="/website/confirmation">Einrichtungen freischalten</a></li>
-                <li class="account"><a href="/sign-up/edit/">Mein Account</a></li>
-                <li class="logout"><a href="/#logout/" onclick="kiezatlas.do_logout()">Abmelden</a></li>
-            </ul>
-        </div>
-        
+        <div th:include="partials :: top_navigation (publisher=${is_publisher},loggedin=${authenticated})"></div>
+
         <div id="header">
             <div class="welcome">
                 <img src="/de.kiezatlas.website/images/kiezatlas2-logo.png" width="150" />

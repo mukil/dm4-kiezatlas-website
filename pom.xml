@@ -13,7 +13,7 @@
     <parent>
         <groupId>de.deepamehta</groupId>
         <artifactId>deepamehta-plugin</artifactId>
-        <version>4.8</version>
+        <version>4.8.1</version>
     </parent>
 
     <properties>
@@ -21,6 +21,7 @@
     </properties>
 
     <dependencies>
+        <!-- Kiezatlas 2 Modules -->
         <dependency>
             <groupId>de.kiezatlas</groupId>
             <artifactId>dm48-kiezatlas</artifactId>
@@ -36,30 +37,32 @@
             <artifactId>dm48-kiezatlas-angebote</artifactId>
             <version>0.2-SNAPSHOT</version>
         </dependency>
+        <!-- DeepaMehta 4 Standard Plugins -->
         <dependency>
             <groupId>de.deepamehta</groupId>
             <artifactId>deepamehta-workspaces</artifactId>
-            <version>4.8</version>
+            <version>4.8.1</version>
         </dependency>
         <dependency>
             <groupId>de.deepamehta</groupId>
             <artifactId>deepamehta-facets</artifactId>
-            <version>4.8</version>
+            <version>4.8.1</version>
         </dependency>
         <dependency>
             <groupId>de.deepamehta</groupId>
             <artifactId>deepamehta-accesscontrol</artifactId>
-            <version>4.8</version>
-        </dependency>
-        <dependency>
-            <groupId>de.deepamehta</groupId>
-            <artifactId>dm48-deepamehta-images</artifactId>
-            <version>0.9.8-SNAPSHOT</version>
+            <version>4.8.1</version>
         </dependency>
         <dependency>
             <groupId>de.deepamehta</groupId>
             <artifactId>deepamehta-geomaps</artifactId>
-            <version>4.8</version>
+            <version>4.8.1</version>
+        </dependency>
+        <!-- Integrated Third Party Plugins-->
+        <dependency>
+            <groupId>de.deepamehta</groupId>
+            <artifactId>dm48-deepamehta-images</artifactId>
+            <version>0.9.8-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>de.deepamehta</groupId>
@@ -69,7 +72,7 @@
         <dependency>
             <groupId>de.deepamehta</groupId>
             <artifactId>dm48-thymeleaf</artifactId>
-            <version>0.5</version>
+            <version>0.6-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>de.mikromedia</groupId>

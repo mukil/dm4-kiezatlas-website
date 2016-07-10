@@ -1261,7 +1261,7 @@ div.link-area {
 .sign-up #receipt-view h2,
 .sign-up #sign-up-view h2,
 .sign-up #log-in-view h2 {
-    margin-left: 1em;
+    margin-left: .7em;
 }
 
 .sign-up #sign-up-view form,

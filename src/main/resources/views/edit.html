@@ -8,6 +8,11 @@
         <link rel="stylesheet" href="/de.kiezatlas.website/vendor/leaflet/leaflet.css"/>
         <link rel="stylesheet" href="/de.kiezatlas.website/css/sitestyle.css"/>
 
+        <!-- New Semantic UI Styles -->
+        <link media="all" href="/de.kiezatlas.website/css/semantic-ui/components/header.min.css" rel="stylesheet" />
+        <link media="all" href="/de.kiezatlas.website/css/semantic-ui/components/menu.min.css" rel="stylesheet" />
+        <link media="all" href="/de.kiezatlas.website/css/semantic-ui/components/item.min.css" rel="stylesheet" />
+
         <script src="/de.kiezatlas.website/vendor/jquery/jquery-1.9.1.min.js"></script>
         <link rel="stylesheet" href="/de.deepamehta.webclient/script/vendor/jquery/css/custom-theme/jquery-ui-1.10.3.custom.min.css" type="text/css"/>
         <script src="/de.deepamehta.webclient/script/vendor/jquery/jquery-ui-1.10.3.custom.min.js"></script>
@@ -188,16 +193,7 @@
     </head>
     <body class="kiezatlas topic edit">
 
-        <div id="navigation">
-            <ul>
-                <!--li class="register"><a href="/sign-up/">Registrieren</a></li-->
-                <li class="angebote"><a href="/">Startseite</a></li>
-                <li class="angebote"><a href="/angebote/">Angebote</a></li>
-                <li class="login" th:if="!${authenticated}" ><a href="/sign-up/login">Login</a></li>
-                <!-- li class="angebote"><a href="/sign-up/edit/">Mein Account</a></li-->
-                <li class="logout" th:if="${authenticated}" ><a href="/#logout/" onclick="javascript:restc.logout()">Abmelden</a></li>
-            </ul>
-        </div>
+        <div th:include="partials :: top_navigation (publisher=${is_publisher},loggedin=${authenticated})"></div>
 
         <div id="header">
             <div class="welcome"></div>
@@ -207,10 +203,10 @@
         <div id="detail-area">
             <div class="commands">
                 <span th:if="${!#strings.isEmpty(message)}" th:utext="${message}" class="message"></span>
-                <!--a th:if="${editable} and ${authenticated}" th:href="'/website/topic/' + ${geoobject.id}">Cancel</a-->
+                <!--a th:if="${editable} and ${authenticated}" th:href="'/geoobject/' + ${geoobject.id}">Cancel</a-->
             </div>
             <div id="map"></div>
-                <form class="infos" action="/website/topic/save" method="POST">
+                <form class="infos" action="/geoobject/save" method="POST">
                     <input th:if="${!#strings.isEmpty(geoobject.id)}" type="hidden" name="id" th:value='${geoobject.id}'/>
 
                     <div class="info-area">
@@ -298,7 +294,7 @@
                     </div>
                     <div class="info-area">
                         <input type="submit" value="Ok"/>
-                        <a class="button" th:href="'/website/topic/' + ${geoobject.id}">Cancel</a>
+                        <a class="button" th:href="'/geoobject/' + ${geoobject.id}">Cancel</a>
                     </div>
                 </form>
             <div class="categories">

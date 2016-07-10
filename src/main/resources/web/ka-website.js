@@ -142,16 +142,17 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
         if (zoomLevel) leafletMap.map.setZoom(zoomLevel)
     }
 
+    // ### Depracated
     this.render_user_menu = function(state) {
-        if (state) {
+        /** if (state) {
             $('li.login').remove()
-            $('li.new a').attr("href", "/website/topic/create")
+            $('li.new a').attr("href", "/geoobject/create")
             $('li.logout').show()
         } else {
             $('li.angebote-my').hide()
             $('li.login').show()
             $('li.logout').hide()
-        }
+        } **/
     }
 
     this.show_angebote_page = function() {
@@ -464,7 +465,7 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
         var angebote_link = ''
         if (object.angebote_count > 0) {
             angebote_link = '<div class="angebote-link">'
-                + '<a class="button" href="/website/topic/' + object.id + '">Aktuelle Angebote anzeigen</a></div>'
+                + '<a class="button" href="/geoobject/' + object.id + '">Aktuelle Angebote anzeigen</a></div>'
         }
         var body_text = ""
         // if (description) body_text += '<p><b>Info</b> ' + description + '</p>'
@@ -494,7 +495,7 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
                 + '' + body_text + ''
             + '</p>'
             + angebote_link
-            + '<a href="/website/topic/' + object.id + '" title="Zeige Details">Details zur Einrichtung</a>'
+            + '<a href="/geoobject/' + object.id + '" title="Zeige Details">Details zur Einrichtung</a>'
             /* + '<a href="http://www.kiezatlas.de/map/'+web_alias+'/p/'+topic_id+'" title="Diesen'
                 + ' Datensatz in seinem ursprünglichen Stadtplan anzeigen">Details im Stadtplan</a>' **/
             + '<a href="https://fahrinfo.bvg.de/Fahrinfo/bin/query.bin/dn?Z=' + object.address_name.toString()
@@ -548,7 +549,7 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
         } else {
             location_string = location.lng.toFixed(4) + ', '+location.lat.toFixed(4)
         }
-        $.getJSON('/website/search/'+encodeURIComponent(location_string)+'/' + (radius_value / 1000),
+        $.getJSON('/geoobject/search/'+encodeURIComponent(location_string)+'/' + (radius_value / 1000),
             function (geo_objects) {
                 if (geo_objects.length > 0) {
                     leafletMap.setItems(geo_objects) // ### let markers add up
@@ -562,9 +563,9 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
     }
 
     this.do_text_search_geo_objects = function(text) {
-        var queryUrl = '/website/search/?search='+text
+        var queryUrl = '/geoobject/search/?search='+text
         var district = _self.getDistrict()
-        if (district)  queryUrl = '/website/search/' + district.id + '/?search=' + text
+        if (district)  queryUrl = '/geoobject/search/' + district.id + '/?search=' + text
         _self.clear_details_area()
         _self.show_spinning_wheel()
         $.getJSON(queryUrl, function (geo_objects) {
@@ -604,7 +605,7 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
     }
 
     this.do_reverse_geocode = function(e) {
-        $.getJSON('/website/reverse-geocode/' + leafletMap.getCurrentLocationLatitude()
+        $.getJSON('/geoobject/reverse-geocode/' + leafletMap.getCurrentLocationLatitude()
                 + ',' + leafletMap.getCurrentLocationLongitude(), function (geo_names) {
             _self.hide_spinning_wheel(true)
             if (geo_names.results.length > 0) {

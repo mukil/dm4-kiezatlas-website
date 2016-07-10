@@ -17,7 +17,7 @@ var restc = (function($) {
     
     restc.do_geocode = function(streetValue, callback) {
         $.ajax({
-            type: "GET", url: "/website/geocode?query=" + streetValue,
+            type: "GET", url: "/geoobject/geocode?query=" + streetValue,
             success: function(obj) {
                 callback(obj)
             },
@@ -35,7 +35,7 @@ var restc = (function($) {
     }
 
     restc.load_districts = function(callback) {
-        $.getJSON('/website/bezirk', function(results) {
+        $.getJSON('/geoobject/bezirk', function(results) {
                 results.sort(value_sort_asc)
                 callback(results)
             }
@@ -43,21 +43,21 @@ var restc = (function($) {
     }
 
     restc.load_district_topics = function(id, callback) {
-        $.getJSON('/website/bezirk/' + id, function(results) {
+        $.getJSON('/geoobject/bezirk/' + id, function(results) {
                 callback(results)
             }
         )
     }
 
     restc.load_news_items = function(id, callback) {
-        $.getJSON('/website/bezirk/newsfeed/' + id, function(results) {
+        $.getJSON('/geoobject/bezirk/newsfeed/' + id, function(results) {
                 callback(results)
             }
         )
     }
     
     restc.load_geo_object_detail = function(geo_object_id, callback) {
-        $.getJSON('/website/topic/' + geo_object_id, function (geo_object) {
+        $.getJSON('/geoobject/' + geo_object_id, function (geo_object) {
                 if (geo_object) {
                     callback(geo_object)
                 } else {

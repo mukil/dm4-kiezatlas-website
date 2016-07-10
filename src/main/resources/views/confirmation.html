@@ -8,6 +8,11 @@
         <link rel="stylesheet" href="/de.kiezatlas/style/kiezatlas.css"/>
         <link rel="stylesheet" href="/de.kiezatlas.website/css/sitestyle.css"/>
 
+        <!-- New Semantic UI Styles -->
+        <link media="all" href="/de.kiezatlas.website/css/semantic-ui/components/header.min.css" rel="stylesheet" />
+        <link media="all" href="/de.kiezatlas.website/css/semantic-ui/components/menu.min.css" rel="stylesheet" />
+        <link media="all" href="/de.kiezatlas.website/css/semantic-ui/components/item.min.css" rel="stylesheet" />
+
         <!--script src="/de.kiezatlas.website/vendor/jquery/jquery-1.9.1.min.js"></script-->
         <!-- script src="/de.kiezatlas.website/ka-restclient.js"></script-->
         <!-- script src="/de.kiezatlas.website/ka-map.js"></script-->
@@ -23,14 +28,7 @@
     </head>
     <body class="kiezatlas confirm">
 
-        <div id="navigation">
-            <ul>
-                <li class="angebote"><a href="/">Startseite</a></li>
-                <li class="login" th:if="!${authenticated}" ><a href="/website/user/menu">Hauptmen&uuml;</a></li>
-                <li class="login" th:if="!${authenticated}" ><a href="/sign-up/login">Login</a></li>
-                <li class="logout visible-ib" th:if="${is_publisher}"><a href="/#logout/" onclick="javascript:restc.logout()">Abmelden</a></li>
-            </ul>
-        </div>
+        <div th:include="partials :: top_navigation (publisher=${is_publisher},loggedin=${authenticated})"></div>
 
         <div id="header">
             <p th:if="${is_publisher}">Hier k&ouml;nnen Sie neu eingetragene Einrichtungen freischalten und ihren Kiezatlas Websites zuordnen.</p>
@@ -54,7 +52,7 @@
                                 <!--select>
                                     <option th:each="site : ${websites}" th:text="${site.simpleValue}" th:value="${site.id}"></option>
                                 </select-->
-                                <a class="read-more" th:href="'/website/topic/' + ${geoobject.id}">Link zum Eintrag</a>
+                                <a class="read-more" th:href="'/geoobject/' + ${geoobject.id}">Link zum Eintrag</a>
                             </div>
                     </li>
                 </ul>
