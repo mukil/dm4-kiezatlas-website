@@ -9,18 +9,18 @@
             <a th:if="${authenticated}"
                th:class="${#strings.contains(template, 'edit')} ? 'active item' : 'item'"
                href="/geoobject/create">Neue Einrichtung</a>
-            <a th:if="${authenticated}" href="/angebote/my" class="item">Meine Angebote</a>
-            <!--a th:if="${authenticated}" href="/sign-up/edit" class="item">Account</a-->
             <a th:class="${#strings.contains(template, 'index')} ? 'active item' : 'item'"
                href="/">Gesamtstadtplan</a>
+            <a th:if="${authenticated}" href="/angebote/my" class="item">Meine Angebote</a>
+            <!--a th:if="${authenticated}" href="/sign-up/edit" class="item">Account</a-->
             <!--a href="/#mitte" class="item">Bezirk Mitte</a-->
-            <a href="/angebote" class="item">Angebotsinfos</a>
+            <a href="/angebote" class="item">Angebote</a>
             <a th:if="!${authenticated}" href="/sign-up/"
                th:class="${#strings.contains(template, 'sign-up')} ? 'active item' : 'item'">Registrieren</a>
             <a th:if="${authenticated}" href="/sign-up/login"
                th:class="${#strings.contains(template, 'logout')} ? 'active item' : 'item'">Logout</a>
             <div class="right menu">
-                <div class="item">
+                <div class="item" th:if="${#strings.contains(template, 'ka-index')}">
                     <div class="ui small input focus">
                         <input placeholder="Suche" type="text" id="topsearch" />
                     </div>

@@ -441,12 +441,20 @@ h3.location-label {
 
 #header .welcome img {
     display: inline-block;
+    vertical-align: middle;
 }
 
 #header .welcome h3 {
     display: inline-block;
-    vertical-align: top;
+    vertical-align: middle;
     margin-left: 1em;
+    text-align: left;
+}
+
+#header .welcome .small {
+    font-size: .7em;
+    font-weight: normal;
+    color: #343434;
 }
 
 #header .welcome p {
