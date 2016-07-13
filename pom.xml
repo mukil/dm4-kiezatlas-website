@@ -82,7 +82,7 @@
         <dependency>
             <groupId>org.deepamehta</groupId>
             <artifactId>dm48-sign-up</artifactId>
-            <version>1.4-SNAPSHOT</version>
+            <version>1.5-SNAPSHOT</version>
         </dependency>
     </dependencies>
 
