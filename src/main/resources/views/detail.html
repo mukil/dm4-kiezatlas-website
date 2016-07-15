@@ -60,9 +60,9 @@
                     <!--h3 class="label">Aktuelle Angebote dieser Einrichtung</h3-->
                     <div class="assigned-offers" th:each="angebotsinfo : ${angebotsinfos}">
                         <h3 th:text="${angebotsinfo.angebotsName}">Name des Angebots</h3>
-                        <p th:utext="${angebotsinfo.description}"></p>
-                        <p th:if="${!#strings.isEmpty(angebotsinfo.additionalInfo)}"><span th:utext="${angebotsinfo.additionalInfo}"></span></p>
-                        <p th:if="${!#strings.isEmpty(angebotsinfo.additionalContact)}"><span th:text="${angebotsinfo.additionalContact}"></span></p>
+                        <div th:utext="${angebotsinfo.description}"></div>
+                        <div th:if="${!#strings.isEmpty(angebotsinfo.additionalInfo)}"><span th:utext="${angebotsinfo.additionalInfo}"></span></div>
+                        <div th:if="${!#strings.isEmpty(angebotsinfo.additionalContact)}"><span th:text="${angebotsinfo.additionalContact}"></span></div>
                         <p th:text="${angebotsinfo.startDate} + ' &ndash; ' + ${angebotsinfo.endDate}"></p>
                         <a class="read-more" th:href="'/angebote/' + ${angebotsinfo.angebotsId}">Mehr</a>
                     </div>

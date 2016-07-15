@@ -16,7 +16,7 @@
             <!--a href="/#mitte" class="item">Bezirk Mitte</a-->
             <a href="/angebote" class="item">Angebote</a>
             <a th:if="!${authenticated}" href="/sign-up/"
-               th:class="${(#strings.contains(template, 'sign-up') or #strings.contains(template, 'account')} ? 'active item' : 'item'">Registrieren</a>
+               th:class="${#strings.contains(template, 'sign-up')} ? 'active item' : 'item'">Registrieren</a>
             <a th:if="${authenticated}" href="/sign-up/login"
                th:class="${#strings.contains(template, 'logout')} ? 'active item' : 'item'">Logout</a>
             <div class="right menu">
