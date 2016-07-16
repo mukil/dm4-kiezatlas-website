@@ -309,10 +309,24 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
     public void angebotsInfoAssigned(Topic angebotsInfo, Topic geoObject) {
         log.info("Website listening to \"" + angebotsInfo.getSimpleValue() + "\" being assigned to \"" + geoObject.getSimpleValue() + "\" as a NEW ANGEBOT");
         // ### use sendUserMailboxNotification and include Einrichtungs-Inhaberin..
-        signup.sendSystemMailboxNotification("Angebotsinfos einer Einrichtung zugewiesen",
+        Topic contactFacet = getFacettedContactChildTopic(geoObject);
+        String eMailAddress = getAnsprechpartnerMailboxValue(contactFacet);
+        String recipients = "malte@mikromedia.de; ";
+        if (!eMailAddress.isEmpty()) {
+            log.info("> AngebotsinfoAssignment Notification: " + eMailAddress.toString() + " (cushioned=using malte@)");
+            recipients += "support@kiezatlas.de";
+        } else {
+            log.warning("AngebotsinfoAssignment Notification to NO MAILBOX using System Mailbox Configuration topic"
+                + "(resp. support@kiezatlas.de)");
+            recipients += "support@kiezatlas.de";
+        }
+        String message = "Falls dieses Angebot nicht an ihrer Einrichtung stattfindet bzw. nicht stattfinden soll,"
+            + "nutzen Sie bitte auf der folgenden Seite die Funktion zur Aufhebung dieser Zuordnung:\n"
+            + "http://www.kiezatlas.de/edit/web-alias"; // ### topic id or web-alias
+        signup.sendUserMailboxNotification(recipients, "Angebotsinfos ihrer Einrichtung zugewiesen",
             "\nAngebotsinfo: " + angebotsInfo.getSimpleValue().toString() +
             // ### Von + Bis
-            "\n\nEinrichtung: " + geoObject.getSimpleValue().toString() + "\n\n");
+            "\nEinrichtung: " + geoObject.getSimpleValue().toString() + "\n\n" + message + "\n\n");
     }
 
     private void sendConfirmationNotice(List<String> mailboxes, Topic geoObject) {
@@ -1000,6 +1014,22 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
     }
 
     /** ------------------- Kiezatlas Application Model Related Helper Methods -------------------------- **/
+
+    private String getAnsprechpartnerMailboxValue(Topic kontaktTopic) {
+        if (kontaktTopic != null) {
+            kontaktTopic.loadChildTopics();
+            Topic eMail = kontaktTopic.getChildTopics().getTopic("ka2.kontakt.email");
+            if (eMail != null && !eMail.getSimpleValue().toString().isEmpty()) {
+                return eMail.getSimpleValue().toString();
+            }
+        }
+        return null;
+    }
+
+    private Topic getFacettedContactChildTopic(Topic facettedTopic) {
+        return facettedTopic.getRelatedTopic("dm4.core.composition", "dm4.core.parent",
+            "dm4.core.child", "ka2.kontakt");
+    }
 
     private EinrichtungsInfo assembleGeneralEinrichtungsInfo(Topic geoObject) {
         EinrichtungsInfo einrichtung = new EinrichtungsInfo();
