@@ -4,6 +4,7 @@
 
     <div class="ui menu">
         <div th:class="${publisher} ? 'ui container fluid' : 'ui container'">
+            <img src="/de.kiezatlas.website/images/kiezatlas2-logo.png" height="40" class="mobile-logo" />
             <a th:if="!${authenticated}" href="/sign-up/login"
                th:class="${#strings.contains(template, 'login')} ? 'active item' : 'item'">Login</a>
             <a th:if="${authenticated}"
