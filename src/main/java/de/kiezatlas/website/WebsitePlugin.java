@@ -34,6 +34,7 @@ import de.deepamehta.workspaces.WorkspacesService;
 import de.kiezatlas.KiezatlasService;
 import de.kiezatlas.angebote.AngebotAssignedListener;
 import de.kiezatlas.angebote.AngebotService;
+import static de.kiezatlas.angebote.AngebotService.ANGEBOT_BESCHREIBUNG;
 import de.kiezatlas.angebote.model.AngebotsinfosAssigned;
 import static de.kiezatlas.website.WebsiteService.BESCHREIBUNG;
 import static de.kiezatlas.website.WebsiteService.BESCHREIBUNG_FACET;
@@ -58,6 +59,7 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLEncoder;
 import java.net.UnknownHostException;
+import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.util.logging.Level;
 import java.util.HashMap;
@@ -117,6 +119,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
     // The URIs of KA2 Geo Object topics synchronized (and kept up-to-date in) Kiezatlas 1 have this prefix.
     // The remaining part of the URI is the original KA1 topic id.
     private static final String KA1_GEO_OBJECT_URI_PREFIX = "de.kiezatlas.topic.";
+    private DateFormat df = DateFormat.getDateInstance(DateFormat.LONG, Locale.GERMANY);
 
     @Override
     public void init() {
@@ -306,27 +309,35 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
     /** ---------------------------------------------------------------- Kiezatlas Notification Mechanics ---------- */
 
     @Override
-    public void angebotsInfoAssigned(Topic angebotsInfo, Topic geoObject) {
+    public void angebotsInfoAssigned(Topic angebotsInfo, Topic geoObject, Association assignmentEdge) {
         log.info("Website listening to \"" + angebotsInfo.getSimpleValue() + "\" being assigned to \"" + geoObject.getSimpleValue() + "\" as a NEW ANGEBOT");
         // ### use sendUserMailboxNotification and include Einrichtungs-Inhaberin..
         Topic contactFacet = getFacettedContactChildTopic(geoObject);
         String eMailAddress = getAnsprechpartnerMailboxValue(contactFacet);
         String recipients = "malte@mikromedia.de; ";
-        if (!eMailAddress.isEmpty()) {
-            log.info("> AngebotsinfoAssignment Notification: " + eMailAddress.toString() + " (cushioned=using malte@)");
+        if (eMailAddress != null && !eMailAddress.isEmpty()) {
+            log.info("Angebotsinfo Assignment Notification \"" + eMailAddress.toString() + "\" (cushioned=using malte@)");
             recipients += "support@kiezatlas.de";
         } else {
-            log.warning("AngebotsinfoAssignment Notification to NO MAILBOX using System Mailbox Configuration topic"
+            log.info("Angebotsinfo Assignment Notification to NO MAILBOX using System Mailbox Configuration topic"
                 + "(resp. support@kiezatlas.de)");
             recipients += "support@kiezatlas.de";
         }
-        String message = "Falls dieses Angebot nicht an ihrer Einrichtung stattfindet bzw. nicht stattfinden soll,"
-            + "nutzen Sie bitte auf der folgenden Seite die Funktion zur Aufhebung dieser Zuordnung:\n"
-            + "http://www.kiezatlas.de/edit/web-alias"; // ### topic id or web-alias
-        signup.sendUserMailboxNotification(recipients, "Angebotsinfos ihrer Einrichtung zugewiesen",
-            "\nAngebotsinfo: " + angebotsInfo.getSimpleValue().toString() +
-            // ### Von + Bis
-            "\nEinrichtung: " + geoObject.getSimpleValue().toString() + "\n\n" + message + "\n\n");
+        String key = UUID.randomUUID().toString();
+        assignmentEdge.setProperty("revision_key", key, false);
+        String message = "Falls dieses Angebot nicht an ihrer Einrichtung stattfindet bzw. nicht stattfinden soll, "
+            + "nutzen Sie bitte auf der folgenden Seite die Funktion zur Aufhebung dieser terminlichen Zuordnung:\n"
+            + SignupPlugin.DM4_HOST_URL + "angebote/revise/" + key + "/" + assignmentEdge.getId() ;
+        long startTime = angebote.getAssignmentStartTime(assignmentEdge);
+        long endTime = angebote.getAssignmentEndTime(assignmentEdge);
+        StringBuilder mailBody = new StringBuilder();
+        mailBody.append("\nName des Angebots: " + angebotsInfo.getSimpleValue().toString());
+        String standardBeschreibung = angebotsInfo.getChildTopics().getStringOrNull(ANGEBOT_BESCHREIBUNG);
+        if (standardBeschreibung != null) mailBody.append("\nAngebotsbeschreibung:\n" + angebotsInfo.getSimpleValue().toString());
+        mailBody.append("\nFür den Zeitraum vom " + df.format(startTime) + " bis zum " + df.format(endTime));
+        mailBody.append("\nEinrichtung: " + geoObject.getSimpleValue().toString() + "\n\n" + message + "\n\n");
+        mailBody.append("Vielen Dank!");
+        signup.sendUserMailboxNotification(recipients, "Neue Angebotsinfos ihrer Einrichtung zugewiesen", mailBody.toString());
     }
 
     private void sendConfirmationNotice(List<String> mailboxes, Topic geoObject) {
@@ -390,7 +401,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
     }
 
     /**
-     * Builds up a form for editing a Kiezatlas Einrichtung.
+     * Moves a \"Geo Object\" topic into our public default workspace.
      */
     @GET
     @Produces(MediaType.TEXT_HTML)
@@ -398,14 +409,13 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
     @Transactional
     public Viewable doConfirmGeoObject(@PathParam("topicId") long topicId) {
         // ### Handle the case if user cannot edit anymore (just see) directly after confirmation.
-        Topic geoObject = dm4.getTopic(topicId);
         if (!isAuthenticated()) return getUnauthorizedPage();
-        Topic username = getUsernameTopic();
         if (!isConfirmationWorkspaceMember()) {
-            viewData("message", "Sie haben aktuell noch keine Berechtigungen neue Datens&auml;tze zu veröffentlichen.");
+            viewData("message", "Sie haben aktuell keine Berechtigungen neue Datens&auml;tze zu ver&ouml;ffentlichen.");
             return getUnauthorizedPage();
         }
-        if (isGeoObjectTopic(geoObject) || isAssignedUsername(geoObject, username)) {
+        Topic geoObject = dm4.getTopic(topicId);
+        if (isGeoObjectTopic(geoObject)) {
             moveGeoObjecToWorkspace(geoObject, getStandardWorkspace());
             moveGeoObjecFacetsToWorkspace(geoObject, getStandardWorkspace());
             viewData("message", "Der Eintrag \"" + geoObject.getSimpleValue() + "\" erfolgreich freigeschaltet.");
@@ -416,35 +426,6 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
             return getPageNotFound();
         }
         return getGeoObjectDetailsPage(geoObject.getId());
-    }
-
-    public Viewable getGeoObjectDetailsPage(@PathParam("topicId") long topicId) {
-        // ### redirect if user has no READ permission on this topic
-        Topic username = getUsernameTopic();
-        Topic geoObject = dm4.getTopic(topicId);
-        if (!isGeoObjectTopic(geoObject)) return getPageNotFound();
-        // Assemble Generic Einrichtungs Infos
-        EinrichtungsInfo einrichtung = assembleGeneralEinrichtungsInfo(geoObject);
-        // ### Yet Missing: Träger, Bezirksregion, Bezirk, Administrator Infos und Stichworte
-        viewData("geoobject", einrichtung);
-        // Assemble Category Assignments for Einrichtung;
-        viewData("zielgruppen", facets.getFacets(geoObject, ZIELGRUPPE_FACET));
-        viewData("themen", facets.getFacets(geoObject, THEMA_FACET));
-        // viewData("angebote", facetsService.getFacets(geoObject, ANGEBOT_FACET));
-        // Assemble Angebosinfos for Einrichtung
-        List<AngebotsinfosAssigned> angebotsInfos = angebote.getAngebotsInfosAssigned(geoObject);
-        if (angebotsInfos.size() > 0) viewData("angebotsinfos", angebotsInfos);
-        // user auth
-        prepareGeneralPageData("detail");
-        // geo object auth
-        viewData("is_published",  isGeoObjectPublic(geoObject));
-        viewData("editable", isGeoObjectEditable(geoObject, username));
-        return view("detail");
-    }
-
-    public Viewable getSimpleMessagePage() {
-        prepareGeneralPageData("message");
-        return view("message");
     }
 
     /**
@@ -464,6 +445,29 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
             geoObject = dm4.getTopic(Long.parseLong(topicId));
         }
         return (geoObject != null) ? getGeoObjectDetailsPage(geoObject.getId()) : getPageNotFound();
+    }
+
+    public Viewable getGeoObjectDetailsPage(@PathParam("topicId") long topicId) {
+        // ### redirect if user has no READ permission on this topic
+        Topic username = getUsernameTopic();
+        Topic geoObject = dm4.getTopic(topicId);
+        if (!isGeoObjectTopic(geoObject)) return getPageNotFound();
+        // Assemble Generic Einrichtungs Infos
+        EinrichtungsInfo einrichtung = assembleGeneralEinrichtungsInfo(geoObject);
+        // ### Yet Missing: Träger, Bezirksregion, Bezirk, Administrator Infos und Stichworte
+        viewData("geoobject", einrichtung);
+        // Assemble Category Assignments for Einrichtung;
+        viewData("zielgruppen", facets.getFacets(geoObject, ZIELGRUPPE_FACET));
+        viewData("themen", facets.getFacets(geoObject, THEMA_FACET));
+        // viewData("angebote", facetsService.getFacets(geoObject, ANGEBOT_FACET));
+        List<AngebotsinfosAssigned> angebotsInfos = angebote.getCurrentAngebotsinfosAssigned(geoObject);
+        if (angebotsInfos.size() > 0) viewData("angebotsinfos", angebotsInfos);
+        // user auth
+        prepareGeneralPageData("detail");
+        // geo object auth
+        viewData("is_published",  isGeoObjectPublic(geoObject));
+        viewData("editable", isGeoObjectEditable(geoObject, username));
+        return view("detail");
     }
 
     /**
@@ -912,6 +916,11 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
         return view("confirmation");
     }
 
+    private Viewable getSimpleMessagePage() {
+        prepareGeneralPageData("message");
+        return view("message");
+    }
+
     private Viewable getPageNotFound() {
         return getPageNotFound(null, null);
     }
@@ -986,7 +995,16 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
     }
 
     private boolean isConfirmationWorkspaceMember() {
-        String username = accesscl.getUsername();
+        return isConfirmationWorkspaceMember(null);
+    }
+
+    private boolean isConfirmationWorkspaceMember(Topic usernameTopic) {
+        String username = "";
+        if (usernameTopic == null) {
+            username = accesscl.getUsername();
+        } else {
+            username = usernameTopic.getSimpleValue().toString();
+        }
         if (username != null) {
             Topic workspace = getPrivilegedWorkspace();
             return (accesscl.isMember(username, workspace.getId()) || accesscl.getWorkspaceOwner(workspace.getId()).equals(username));

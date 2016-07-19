@@ -145,6 +145,7 @@ public class GeoObjectView implements JSONEnabled {
                 .put("id", geoObject.getId())
                 .put("name", getName())
                 .put("address_id", getAggregatedAddressTopicId())
+                .put("anschrift", getAddressValue())
                 .put("geo_coordinate_lat", getGeoCoordinateLatValue())
                 .put("geo_coordinate_lon", getGeoCoordinateLngValue())
                 .put("bezirk_uri", getBezirkUri())
