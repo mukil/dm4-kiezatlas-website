@@ -1379,7 +1379,7 @@ div.link-area {
 }
 
 .sign-up #message-view {
-    padding: 5px;
+    padding-left: 2em;
     margin-bottom: 10px;
     color: rgba(39, 99, 140, 1.0);
 }

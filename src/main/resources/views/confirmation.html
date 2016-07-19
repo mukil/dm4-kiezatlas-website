@@ -26,7 +26,7 @@
         <div class="top-menu" th:include="fragments/navigation :: top (publisher=${is_publisher})"></div>
 
         <div id="header">
-            <p th:if="${is_publisher}">Hier k&ouml;nnen Sie neu eingetragene Einrichtungen freischalten und ihren Kiezatlas Websites zuordnen.</p>
+            <p th:if="${is_publisher}">Hier findest Du eine Auflistung neu eingetragener Einrichtungsdatens&auml;tze zum freischalten.</p>
             <p th:if="${not is_publisher}"><b>Sorry!</b><br/>Sie haben aktuell nicht die n&ouml;tigen Berechtigungen um neue Einrichtungen im Kiezatlas freizuschalten.</p>
         </div>
 
@@ -39,16 +39,16 @@
             <div id="listing">
                 <ul class="soziale-einrichtungen">
                     <li th:each="geoobject : ${geoobjects}">
-                            <div class="list-item">
-                                <h3 th:text="${geoobject.name}"></h3>
-                                <p>
-                                    Eingepflegt von <span th:text="${geoobject.assignedUsername}"></span> am <span th:text="${geoobject.lastModified}"></span>
-                                </p>
-                                <!--select>
-                                    <option th:each="site : ${websites}" th:text="${site.simpleValue}" th:value="${site.id}"></option>
-                                </select-->
-                                <a class="read-more" th:href="'/geoobject/' + ${geoobject.id}">Link zum Eintrag</a>
-                            </div>
+                        <div class="list-item">
+                            <h3 th:text="${geoobject.name}"></h3>
+                            <p>
+                                Eingepflegt von <span th:text="${geoobject.assignedUsername}"></span> am <span th:text="${geoobject.lastModified}"></span>
+                            </p>
+                            <!--select>
+                                <option th:each="site : ${websites}" th:text="${site.simpleValue}" th:value="${site.id}"></option>
+                            </select-->
+                            <a class="read-more" th:href="'/geoobject/' + ${geoobject.id}">Link zum Eintrag</a>
+                        </div>
                     </li>
                 </ul>
             </div>

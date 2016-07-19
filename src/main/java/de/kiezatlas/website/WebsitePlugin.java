@@ -24,6 +24,7 @@ import de.deepamehta.core.service.Inject;
 import de.deepamehta.core.service.Transactional;
 import de.deepamehta.accesscontrol.AccessControlService;
 import de.deepamehta.core.model.facets.FacetValueModel;
+import de.deepamehta.core.service.accesscontrol.Operation;
 import de.deepamehta.facets.FacetsService;
 import de.deepamehta.files.FilesService;
 import de.deepamehta.geomaps.model.GeoCoordinate;
@@ -54,7 +55,6 @@ import java.io.InputStreamReader;
 import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
 import java.math.RoundingMode;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLEncoder;
@@ -120,6 +120,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
     // The remaining part of the URI is the original KA1 topic id.
     private static final String KA1_GEO_OBJECT_URI_PREFIX = "de.kiezatlas.topic.";
     private DateFormat df = DateFormat.getDateInstance(DateFormat.LONG, Locale.GERMANY);
+    private static final String SYSTEM_MAINTENANCE_MAILBOX = "support@kiezatlas.de;malte@mikromedia.de";
 
     @Override
     public void init() {
@@ -159,7 +160,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
         return getFrontpageView();
     }
 
-    @GET
+    /** @GET
     @Path("/menu")
     @Produces(MediaType.TEXT_HTML)
     public Viewable getWebsiteMenu() throws URISyntaxException {
@@ -167,7 +168,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
         // if (!isConfirmationWorkspaceMember()) throw new WebApplicationException(Response.temporaryRedirect(new URI("/angebote/my")).build());
         prepareGeneralPageData("user");
         return view("user");
-    }
+    } **/
 
     /** Responds with a Viewable, the administrative confirmation page of the Kiezatlas Website.  */
     @GET
@@ -276,9 +277,8 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
                 initiallyAssignGeoObjectFacetsToWorkspace(geoObject, getPrivilegedWorkspace());
                 // Assign Geo Object to Confirmation WS (at last, otherwise we could not write its facets)
                 initiallyAssignGeoObjecToWorkspace(geoObject, getPrivilegedWorkspace());
-                // ### Send Notification to EDITOR with basic infos on the "confirmation" process
                 // Note: If notification fails, confirmation fails too
-                sendAdministrationNotice("Neuer Einrichtungsdatensatz im Kiezatlas", geoObject, username);
+                sendKiezAdministrationNotice("Neuer Einrichtungsdatensatz im Kiezatlas", geoObject, username);
                 viewData("message", "Vielen Dank, Sie haben erfolgreich einen neuen Ort in den Kiezatlas eingetragen. "
                     + "Die Kiez-AdministratorInnen wurden benachrichtigt und wir werden Ihren Eintrag so schnell wie m&ouml;glich freischalten.");
                 log.info("// ---------- Es wurde erfolgreiche eine neue Einrichtung im Kiezatlas ANGELEGT (" + name + ")");
@@ -311,20 +311,28 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
     @Override
     public void angebotsInfoAssigned(Topic angebotsInfo, Topic geoObject, Association assignmentEdge) {
         log.info("Website listening to \"" + angebotsInfo.getSimpleValue() + "\" being assigned to \"" + geoObject.getSimpleValue() + "\" as a NEW ANGEBOT");
-        // ### use sendUserMailboxNotification and include Einrichtungs-Inhaberin..
+        // Include Einrichtungs-Inhaberin into Recipients
         Topic contactFacet = getFacettedContactChildTopic(geoObject);
         String eMailAddress = getAnsprechpartnerMailboxValue(contactFacet);
-        String recipients = "malte@mikromedia.de; ";
+        StringBuilder recipients = new StringBuilder();
         if (eMailAddress != null && !eMailAddress.isEmpty()) {
-            log.info("Angebotsinfo Assignment Notification \"" + eMailAddress.toString() + "\" (cushioned=using malte@)");
-            recipients += "support@kiezatlas.de";
+            log.info("Angebotsinfo Assignment Notification \"" + eMailAddress + "\" (cushioned=using malte@)");
+            if (signup.isValidEmailAddress(eMailAddress)) {
+                recipients.append(eMailAddress);
+                recipients.append(";");
+            } else {
+                log.warning("Einrichtung has AnsprechpartnerIn set but \"" + eMailAddress + "\" is sadly NOT A VALID EMAIL");
+            }
+            recipients.append(collectDistrictAdministrativeRecipients(geoObject));
         } else {
-            log.info("Angebotsinfo Assignment Notification to NO MAILBOX using System Mailbox Configuration topic"
-                + "(resp. support@kiezatlas.de)");
-            recipients += "support@kiezatlas.de";
+            log.info("NO ANSPRECHPARTNERIN set for Angebotsinfo Assignment Notification, informing Kiez-Administrators "
+                + "(and " + SYSTEM_MAINTENANCE_MAILBOX + ")");
+            recipients.append(collectDistrictAdministrativeRecipients(geoObject));
         }
+        // Create revision key
         String key = UUID.randomUUID().toString();
         assignmentEdge.setProperty("revision_key", key, false);
+        // Create mail message details
         String message = "Falls dieses Angebot nicht an ihrer Einrichtung stattfindet bzw. nicht stattfinden soll, "
             + "nutzen Sie bitte auf der folgenden Seite die Funktion zur Aufhebung dieser terminlichen Zuordnung:\n"
             + SignupPlugin.DM4_HOST_URL + "angebote/revise/" + key + "/" + assignmentEdge.getId() ;
@@ -337,29 +345,52 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
         mailBody.append("\nFür den Zeitraum vom " + df.format(startTime) + " bis zum " + df.format(endTime));
         mailBody.append("\nEinrichtung: " + geoObject.getSimpleValue().toString() + "\n\n" + message + "\n\n");
         mailBody.append("Vielen Dank!");
-        signup.sendUserMailboxNotification(recipients, "Neue Angebotsinfos ihrer Einrichtung zugewiesen", mailBody.toString());
+        // Send notification
+        signup.sendUserMailboxNotification(recipients.toString(), "Neue Angebotsinfos ihrer Einrichtung zugewiesen", mailBody.toString());
     }
 
     private void sendConfirmationNotice(List<String> mailboxes, Topic geoObject) {
+        String recipients = buildRecipientsString(mailboxes);
+        signup.sendUserMailboxNotification(recipients, "Dein Kiezatlas Eintrag wurde freigeschaltet", "\nLiebe/r KiezAtlas-Nutzer_in,\n\n"
+            + "dein Eintrag wurde soeben bestätigt.\n\n"
+            + "Name des Eintrags: \"" + geoObject.getSimpleValue().toString() + "\"\n"
+            + "Link: " + SignupPlugin.DM4_HOST_URL+"geoobject/" + geoObject.getId() + "\n\nVielen Dank für deine Mithilfe.\n\nCiao!");
+    }
+
+    private void sendKiezAdministrationNotice(String subject, Topic geoObject, Topic username) {
+        String recipients = collectDistrictAdministrativeRecipients(geoObject);
+        signup.sendUserMailboxNotification(recipients, subject, "\nLiebe/r Kiez-Administrator_in,\n\n"
+            + "es gibt einen neuen Einrichtungsdatensatz von "+username.getSimpleValue().toString()+", bitte schaue mal ob Du diesen nicht gleich freischalten kannst.\n\n"
+            + "Name des neuen Eintrags: \"" + geoObject.getSimpleValue().toString() + "\"\n"
+            + "Der Link zur Freischaltung: "+SignupPlugin.DM4_HOST_URL+"geoobject/" + geoObject.getId() + " bzw. zum Login ist:\n"
+            + SignupPlugin.DM4_HOST_URL + "sign-up/login\n\nOk, das war's schon.\n\nDanke + Ciao!");
+    }
+
+    private String collectDistrictAdministrativeRecipients(Topic geoObject) {
+        log.info("Collecting Kiez-Administrative Notifications Recipients...");
+        Topic bezirksTopic = getRelatedBezirk(geoObject);
+        List<String> mailboxes = getAssignedAdministrativeMailboxes(bezirksTopic);
+        StringBuilder recipients = new StringBuilder(buildRecipientsString(mailboxes));
+        if (mailboxes.size() > 0) {
+            recipients.append(";");
+        } else {
+            log.warning("No additional Kiez-Administrators configured at district "
+                + "\"" + bezirksTopic.getSimpleValue() + "\" to NOTIFY, just System Mailbx");
+        }
+        // Include System Maintenance into Kiez-Administrator Recipients
+        recipients.append(SYSTEM_MAINTENANCE_MAILBOX);
+        return recipients.toString();
+    }
+
+    private String buildRecipientsString(List<String> mailboxes) {
         String recipients = "";
         int recipientCount = 1;
         for (String mailbox : mailboxes) {
             recipients += mailbox;
             if (recipientCount < mailboxes.size()) recipients += ";";
+            recipientCount++;
         }
-        signup.sendUserMailboxNotification(recipients, "Der Kiezatlas Eintrag wurde freigeschaltet", "\nLiebe_r KiezAtlas Nutzer_in,\n\n"
-            + "dein Eintrag wurde soeben bestätigt.\n\n"
-            + "Name des Eintrags: \"" + geoObject.getSimpleValue().toString() + "\"\n"
-            + "Link: " + SignupPlugin.DM4_HOST_URL+"/geoobject/" + geoObject.getId() + "\n\nOk, vielen Dank für deine Mithilfe.\n\nCiao!");
-    }
-
-    private void sendAdministrationNotice(String subject, Topic geoObject, Topic username) {
-        // ### use sendUserMailboxNotification and include Kiez-Administrator..
-        signup.sendSystemMailboxNotification(subject, "\nLiebe/r Kiez-Administrator_in,\n\n"
-            + "es gibt einen neuen Einrichtungsdatensatz von "+username+", bitte schaue gleich mal ob Du diesen nicht gleich freischalten kannst.\n\n"
-            + "Name des neuen Eintrags: \"" + geoObject.getSimpleValue().toString() + "\"\n"
-            + "Der Link zur Freischaltung: "+SignupPlugin.DM4_HOST_URL+"/geoobject/" + geoObject.getId() + " bzw. zum Login ist:\n"
-            + SignupPlugin.DM4_HOST_URL + "/sign-up/login\n\nOk, das war's schon.\n\nDanke + Ciao!");
+        return recipients;
     }
 
     /**
@@ -408,7 +439,6 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
     @Path("/confirm/{topicId}")
     @Transactional
     public Viewable doConfirmGeoObject(@PathParam("topicId") long topicId) {
-        // ### Handle the case if user cannot edit anymore (just see) directly after confirmation.
         if (!isAuthenticated()) return getUnauthorizedPage();
         if (!isConfirmationWorkspaceMember()) {
             viewData("message", "Sie haben aktuell keine Berechtigungen neue Datens&auml;tze zu ver&ouml;ffentlichen.");
@@ -442,7 +472,11 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
         if (topicId.startsWith("t-")) {
             geoObject = dm4.getTopicByUri("de.kiezatlas.topic." + topicId);
         } else {
-            geoObject = dm4.getTopic(Long.parseLong(topicId));
+            if (dm4.getAccessControl().hasPermission(accesscl.getUsername(), Operation.READ, Long.parseLong(topicId))) {
+                geoObject = dm4.getTopic(Long.parseLong(topicId));
+            } else {
+                return getUnauthorizedPage("Sie haben aktuell nicht die Berechtigung diesen Datensatz zu sehen");
+            }
         }
         return (geoObject != null) ? getGeoObjectDetailsPage(geoObject.getId()) : getPageNotFound();
     }
@@ -1117,7 +1151,12 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
     }
 
     private boolean isGeoObjectEditable(Topic geoObject, Topic username) {
-        return isAssignedUsername(geoObject, username) && isKiezatlas1GeoObject(geoObject);
+        if (isAssignedUsername(geoObject, username) && isKiezatlas1GeoObject(geoObject)) {
+            return true;
+        } else if (isConfirmationWorkspaceMember(username) && isKiezatlas1GeoObject(geoObject)) {
+            return true;
+        }
+        return false;
     }
 
     /** ### Actually check the workspace's SharingMode **/
@@ -1537,18 +1576,22 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
     }
 
     private Topic getRelatedBezirk(Topic geoObject) {
-        return geoObject.getRelatedTopic("dm4.core.aggregation", "dm4.core.parent", "dm4.core.child", "ka2.bezirk");
+        Topic bezirk = geoObject.getRelatedTopic("dm4.core.aggregation", "dm4.core.parent", "dm4.core.child", "ka2.bezirk");
+        if (bezirk == null) log.warning("Geo Object is NOT related to a specific BEZIRK " + geoObject);
+        return bezirk;
     }
 
-    /** Listen to Angebots Assignment Event from Kiezatlas Angebote Service */
-    private Topic getEinrichtungsMailbox(Topic geoObject) {
-        Topic kontakt = facets.getFacet(geoObject, KONTAKT_FACET);
-        if (kontakt != null) {
-            Topic eMail = kontakt.getChildTopics().getTopicOrNull("ka2.kontakt.email");
-            if (eMail != null) return eMail;
+    private List<String> getAssignedAdministrativeMailboxes(Topic bezirksTopic) {
+        List<String> mailboxes = new ArrayList<String>();
+        List<RelatedTopic> usernames = bezirksTopic.getRelatedTopics("dm4.core.association", "dm4.core.default",
+            "dm4.core.default", "dm4.accesscontrol.username");
+        for (RelatedTopic username : usernames) {
+            String emailAddress = dm4.getAccessControl().getEmailAddress(username.getSimpleValue().toString());
+            if (emailAddress != null && !emailAddress.isEmpty()) {
+                mailboxes.add(emailAddress);
+            }
         }
-        log.warning("Kontakt and Email Facet value NOT AVAILALBE");
-        return null;
+        return mailboxes;
     }
 
     /** Informs editors of their geo object about changes. */
