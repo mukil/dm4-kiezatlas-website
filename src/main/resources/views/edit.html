@@ -200,6 +200,7 @@
                 <span th:if="${!#strings.isEmpty(message)}" th:utext="${message}" class="message"></span>
                 <!--a th:if="${editable} and ${authenticated}" th:href="'/geoobject/' + ${geoobject.id}">Cancel</a-->
             </div>
+            <!-- -->
             <div id="map"></div>
                 <form class="infos" action="/geoobject/save" method="POST">
                     <input th:if="${!#strings.isEmpty(geoobject.id)}" type="hidden" name="id" th:value='${geoobject.id}'/>
@@ -236,9 +237,9 @@
                             <input type="text" name="email" th:value='${geoobject.email}'/>
                             <label for="fax">Fax</label>
                             <input type="text" name="fax" th:value='${geoobject.fax}'/>
-                            <!-- ### Image File Upload, Träger, LOR Nummer -->
-                            <input type="button" class="button" value="Bild hinzufügen" onclick="start_upload()"/>
-                            <input type="hidden" id="bild-topic" name="fileTopicId" value=""/>
+                            <!-- Image File Upload, Träger, LOR Nummer -->
+                            <!-- input type="button" class="button" value="Bild hinzufügen" onclick="start_upload()"/>
+                            <input type="hidden" id="bild-topic" name="fileTopicId" value=""/-->
                         </div>
 
                         <div class="right-side">

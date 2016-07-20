@@ -57,16 +57,16 @@ var monthNames = [ "Januar", "Februar", "März", "April", "Mai", "Juni",
 // kiezatlas hex colors
 var colors = {
     "ka_blue": "#002856",       // circle control
-    "blue": "#1944fc",          // unused
-    "b_blue": "#5a78f3",        // unused
-    "ka_water": "#ccdddd",      // unused
     "ka_red": "#8f1414",        // districs layer polygon outline
     "m_blue": "#5784b8",        // marker: medium blue outline and fill-in (selected)
     "ka_gold": "#EACA8F",       // marker: yellow fill-ine and outline (selected)
+    "bright_grey": "#a9a9a9",   // circlemarker: fill-in
+    "yellow": "#FFCC33",        // circle control
     "darkgrey": "#343434",      // unused
-    "bright_grey": "#a9a9a9",   // unused
-    "grey": "#868686",          // unused
-    "yellow": "#FFCC33"         // circle control
+    "blue": "#1944fc",          // unused
+    "b_blue": "#5a78f3",        // unused
+    "ka_water": "#ccdddd",      // unused
+    "grey": "#868686"           // unused
 }
 
 var settings = {
@@ -82,10 +82,13 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
         "districts": [],              // Bezirks- & Bezirksregionen Child Topics
         "locationsearch_results": [], // near-by search street-alternatives
         "autocomplete_item": 0,
-        "view_angebote" : false
+        "view_angebote" : false,
+        "fulltextSearchMode" : false
     }
 
     this.setDistrict = function(district) { model.district = district }
+    this.setFulltextSearchMode = function(value) { model.fulltextSearchMode = value }
+    this.getFulltextSearchMode = function(value) { return model.fulltextSearchMode }
     this.getDistrict = function() { return model.district }
     this.setAngebotsinfoFilter = function(value) { model.view_angebote = value }
     this.getAngebotsinfoFilter = function() { return model.view_angebote }
@@ -106,12 +109,22 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
     this.render_page = function(name) {
         // get current page alias
         var hash = window.location.hash
+        var subdomain_mitte = (window.location.host.indexOf("mitte.") !== -1 || window.location.hostname.indexOf("mitte.") !== -1) ? true : false
+        var bezirksTopic = undefined
         if (!hash || hash === "#karte" || hash === "#logout/") {
-            // render main kiezatlas page
-            _self.render_map(true, undefined, false) // detectLocation=true
-            _self.load_district_topics(function(e) {
-                _self.show_district_listing()
-            })
+            if (subdomain_mitte) {
+                _self.load_district_topics(function(e) {
+                    _self.show_district_listing()
+                    bezirksTopic = _self.get_bezirks_topic_by_hash("#mitte")
+                    _self.render_bezirks_topic(bezirksTopic)
+                })
+            } else {
+                // render main kiezatlas page
+                _self.render_map(true, undefined, false) // detectLocation=true
+                _self.load_district_topics(function(e) {
+                    _self.show_district_listing()
+                })
+            }
         } else if (name === "angebote" || hash === "#angebote") {
             _self.render_map(false, undefined, false) // detectLocation=false
             _self.show_angebote_page()
@@ -121,15 +134,19 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
         } else {
             _self.load_district_topics(function() {
                 _self.show_district_listing()
-                var bezirksTopic = _self.get_bezirks_topic_by_hash(hash)
-                _self.setDistrict(bezirksTopic)
-                if (_self.getDistrict()) {
-                    console.log("Rendering District Page", bezirksTopic)
-                    _self.render_map(false, undefined, false) // detectLocation=false
-                    // sets mitte filter
-                    _self.show_district_page(_self.getDistrict().id)
-                }
+                bezirksTopic = _self.get_bezirks_topic_by_hash(hash)
+                _self.render_bezirks_topic(bezirksTopic)
             })
+        }
+    }
+
+    this.render_bezirks_topic = function(bezirksTopic) {
+        _self.setDistrict(bezirksTopic)
+        if (_self.getDistrict()) {
+            console.log("Rendering Bezirks Topic", bezirksTopic)
+            _self.render_map(false, undefined, false) // detectLocation=false
+            // sets mitte filter
+            _self.show_district_page(_self.getDistrict().id)
         }
     }
 
@@ -253,6 +270,7 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
 
     this.clear_district_page = function() {
         $('#site-area').hide()
+        _self.setFulltextSearchMode(false)
         _self.clear_district_filter()
         leafletMap.clear_circle_marker()
         leafletMap.activate_circle_control()
@@ -303,7 +321,7 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
         //
         leafletMap.setup(dom_el_id)
         leafletMap.listen_to('drag', function(e) {
-            if (mapping.circleSearchLocked) {
+            if (mapping.circleSearchLocked & !fd_self.getFulltextSearchMode()) {
                 leafletMap.setCurrentLocationCoordinate(leafletMap.map.getCenter())
                 leafletMap.setControlCircleRadiusValue(leafletMap.getControlCircleRadius())
                 leafletMap.render_circle_search_control(false)
@@ -311,7 +329,7 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
         })
         leafletMap.listen_to('drag_end', function(e) {
             if (e.detail >= 8) {
-                if (mapping.circleSearchActive && mapping.circleSearchLocked && !_self.getDistrict()) {
+                if (mapping.circleSearchActive && mapping.circleSearchLocked && !_self.getDistrict() && !_self.getFulltextSearchMode()) {
                     _self.do_circle_search(undefined, undefined)
                     _self.do_reverse_geocode()
                 }
@@ -541,6 +559,7 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
 
     this.do_circle_search = function(location, radius) {
         _self.show_spinning_wheel()
+        _self.setFulltextSearchMode(false)
         var location_string = ''
         var radius_value = radius
         if (!radius) radius_value = leafletMap.getControlCircleRadius()
@@ -563,6 +582,7 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
     }
 
     this.do_text_search_geo_objects = function(text) {
+        _self.setFulltextSearchMode(true)
         var queryUrl = '/geoobject/search/?search='+text
         var district = _self.getDistrict()
         if (district)  queryUrl = '/geoobject/search/' + district.id + '/?search=' + text
@@ -645,16 +665,17 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
     // --- Simple HTML click handler
 
     this.toggle_circle_search_lock_button = function(e) {
-        mapping.circleSearchLocked = (mapping.circleSearchLocked) ? false : true;
+        mapping.circleSearchLocked = (mapping.circleSearchLocked) ? false : true
+        _self.setFulltextSearchMode(false)
         if (mapping.circleSearchLocked) {
-            $('.lock-control').text('Unlock circle')
+            $('.lock-control').text('Umkreissuche')
             $('.leaflet-editing-icon').hide()
             leafletMap.setCurrentLocationCoordinate(leafletMap.map.getCenter())
             leafletMap.setControlCircleRadiusValue(leafletMap.getControlCircleRadius())
             leafletMap.render_circle_search_control()
         } else {
             $('.leaflet-editing-icon').show()
-            $('.lock-control').text('Lock circle')
+            $('.lock-control').text('Kreis fixieren')
         }
     }
 

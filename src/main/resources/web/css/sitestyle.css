@@ -1520,6 +1520,16 @@ div.link-area {
     }
 }
 
+@media (max-width:767px) {
+    .top-menu .ui.menu .gesamt.item,
+    .top-menu .ui.menu .angebote.item,
+    .top-menu .ui.menu .create.item,
+    .top-menu .ui.menu .logout.item,
+    .top-menu .ui.menu .login.item {
+        display: none !important;
+    }
+}
+
 @media (max-width:600px), (max-width:720px) {
     #header {
         top: 10px;
@@ -1671,6 +1681,9 @@ div.link-area {
 @media (max-height: 750px) {
     .frontpage #header {
         display: none;
+    }
+    .top-menu .ui.menu a img {
+        border: none;
     }
     .mobile-logo {
         display: inline-block;

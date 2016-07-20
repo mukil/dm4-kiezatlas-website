@@ -26,7 +26,7 @@
             <div class="info-area">
                 <div class="infos">
                     <h3 th:text='${name}'>Name des Eintrags</h3>
-                    <p th:if="${!#strings.isEmpty(message)}" th:text="${message}"></p>
+                    <p th:if="${!#strings.isEmpty(message)}" th:utext="${message}"></p>
                 </div>
             </div>
         </div>

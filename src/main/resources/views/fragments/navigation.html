@@ -3,37 +3,39 @@
 <div th:fragment="top (publisher)">
 
     <div class="ui menu">
-        <div th:class="${publisher} ? 'ui container fluid' : 'ui container'">
-            <img src="/de.kiezatlas.website/images/kiezatlas2-logo.png" height="40" class="mobile-logo" />
+        <div th:class="${is_publisher} ? 'ui container fluid' : 'ui container'">
+            <a href="/">
+                <img src="/de.kiezatlas.website/images/kiezatlas2-logo.png" height="40" class="mobile-logo" />
+            </a>
             <a th:if="!${authenticated}" href="/sign-up/login"
-               th:class="${#strings.contains(template, 'login')} ? 'active item' : 'item'">Login</a>
+               th:class="${#strings.contains(template, 'login')} ? 'active item login' : 'item login'">Login</a>
             <a th:if="${authenticated}"
-               th:class="${#strings.contains(template, 'edit')} ? 'active item' : 'item'"
-               href="/geoobject/create">Neue Einrichtung</a>
-            <a th:class="${#strings.contains(template, 'index')} ? 'active item' : 'item'"
+               th:class="${#strings.contains(template, 'edit')} ? 'active item create' : 'item create'"
+               href="/geoobject/create">Neueintragung</a>
+            <a th:class="${#strings.contains(template, 'index')} ? 'active item gesamt' : 'item gesamt'"
                href="/">Gesamtstadtplan</a>
-            <a th:if="${authenticated}" href="/angebote/my" class="item">Meine Angebote</a>
+            <a th:if="${authenticated}" href="/angebote/my" class="item angebote">Meine Angebote</a>
             <!--a th:if="${authenticated}" href="/sign-up/edit" class="item">Account</a-->
             <!--a href="/#mitte" class="item">Bezirk Mitte</a-->
-            <a href="/angebote" class="item">Angebote</a>
+            <a href="/angebote" class="item all-angebote">Angebote</a>
             <a th:if="!${authenticated}" href="/sign-up/"
-               th:class="${#strings.contains(template, 'sign-up')} ? 'active item' : 'item'">Registrieren</a>
+               th:class="${#strings.contains(template, 'sign-up')} ? 'active item register' : 'register item'">Registrieren</a>
             <a th:if="${authenticated}" href="/sign-up/login"
-               th:class="${#strings.contains(template, 'logout')} ? 'active item' : 'item'">Logout</a>
+               th:class="${#strings.contains(template, 'logout')} ? 'active item logout' : 'item logout'">Logout</a>
             <div class="right menu">
-                <div class="item" th:if="${#strings.contains(template, 'ka-index')}">
+                <!--div class="item" th:if="${#strings.contains(template, 'ka-index')}">
                     <div class="ui small input focus">
                         <input placeholder="Suche" type="text" id="topsearch" disabled="disabled"/>
                     </div>
-                </div>
-                <div th:if="${publisher}" class="ui simple dropdown item">
+                </div-->
+                <div th:if="${is_publisher}" class="ui simple dropdown item">
                     <i class="setting icon"></i>
                     <i class="dropdown icon"></i>
                     <div class="menu">
                         <a th:class="${#strings.contains(template, 'confirmation')} ? 'active item' : 'item'"
                            href="/geoobject/confirmation/">Freischalten</a>
-                        <a href="/site/administration/" class="item">Listenansicht</a>
-                        <a href="/geoobject/site/" class="item">Site-Infos</a>
+                        <!-- a href="/site/administration/" class="item">Listenansicht</a-->
+                        <!--a href="/geoobject/site/" class="item">Site-Infos</a-->
                     </div>
                 </div>
             </div>
@@ -46,7 +48,7 @@
 <div th:fragment="vertical (publisher)">
 
     <div class="ui vertical menu">
-        <div th:if="${publisher}" class="item administration">
+        <div th:if="${is_publisher}" class="item administration">
             <div class="header">Administration</div>
             <div class="menu">
                 <a href="/geoobject/confirmation/" class="item">Freischalten</a>

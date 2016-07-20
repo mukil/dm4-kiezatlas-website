@@ -35,7 +35,7 @@
         <dependency>
             <groupId>de.kiezatlas</groupId>
             <artifactId>dm48-kiezatlas-angebote</artifactId>
-            <version>0.2-SNAPSHOT</version>
+            <version>0.3-SNAPSHOT</version>
         </dependency>
         <!-- DeepaMehta 4 Standard Plugins -->
         <dependency>
