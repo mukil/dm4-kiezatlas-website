@@ -321,7 +321,7 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
         //
         leafletMap.setup(dom_el_id)
         leafletMap.listen_to('drag', function(e) {
-            if (mapping.circleSearchLocked & !fd_self.getFulltextSearchMode()) {
+            if (mapping.circleSearchLocked && !_self.getFulltextSearchMode()) {
                 leafletMap.setCurrentLocationCoordinate(leafletMap.map.getCenter())
                 leafletMap.setControlCircleRadiusValue(leafletMap.getControlCircleRadius())
                 leafletMap.render_circle_search_control(false)
