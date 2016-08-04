@@ -25,12 +25,12 @@
         <dependency>
             <groupId>de.kiezatlas</groupId>
             <artifactId>dm48-kiezatlas</artifactId>
-            <version>2.1.8-SNAPSHOT</version>
+            <version>2.1.9-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>de.kiezatlas</groupId>
             <artifactId>dm48-kiezatlas-etl</artifactId>
-            <version>0.5-SNAPSHOT</version>
+            <version>0.6-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>de.kiezatlas</groupId>
@@ -61,18 +61,18 @@
         <!-- Integrated Third Party Plugins-->
         <dependency>
             <groupId>de.deepamehta</groupId>
-            <artifactId>dm48-deepamehta-images</artifactId>
-            <version>0.9.8-SNAPSHOT</version>
+            <artifactId>dm48-images</artifactId>
+            <version>0.9.10</version>
         </dependency>
         <dependency>
             <groupId>de.deepamehta</groupId>
             <artifactId>dm48-geospatial</artifactId>
-            <version>0.2.2-SNAPSHOT</version>
+            <version>0.3-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>de.deepamehta</groupId>
             <artifactId>dm48-thymeleaf</artifactId>
-            <version>0.6-SNAPSHOT</version>
+            <version>0.6</version>
         </dependency>
         <dependency>
             <groupId>de.mikromedia</groupId>

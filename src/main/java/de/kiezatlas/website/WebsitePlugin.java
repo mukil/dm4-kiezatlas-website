@@ -699,7 +699,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
      *  <li>Stichworte Facet</li>
      *  <li>Bezirksregion Facet</li>
      * </ul>
-     * @param query
+     * @param queryValue
      * @return A list of unique topics of type "ka2.geo_object".
      */
     @Override
@@ -707,15 +707,16 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
         // ### Authenticate
         // ### Todo: Fetch for ka2.ansprechpartner, traeger name, too
         HashMap<Long, Topic> uniqueResults = new HashMap<Long, Topic>();
-        List<Topic> searchResults = dm4.searchTopics(query, "ka2.geo_object.name");
-        List<Topic> descrResults = dm4.searchTopics(query, "ka2.beschreibung");
-        List<Topic> stichworteResults = dm4.searchTopics(query, "ka2.stichworte");
+        String queryValue = query.trim();
+        List<Topic> searchResults = dm4.searchTopics(queryValue, "ka2.geo_object.name");
+        List<Topic> descrResults = dm4.searchTopics(queryValue, "ka2.beschreibung");
+        List<Topic> stichworteResults = dm4.searchTopics(queryValue, "ka2.stichworte");
         // List<Topic> sonstigesResults = dm4.searchTopics(query, "ka2.sonstiges");
-        List<Topic> bezirksregionResults = dm4.searchTopics(query, "ka2.bezirksregion"); // many
+        List<Topic> bezirksregionResults = dm4.searchTopics(queryValue, "ka2.bezirksregion"); // many
         // List<Topic> traegerNameResults = dm4.searchTopics(query, "ka2.traeger.name");
         // List<Topic> traegerNameResults = dm4.searchTopics(query, "dm4.contacts.street");
         log.info("> " + searchResults.size() + ", "+ descrResults.size() +", "+stichworteResults.size() + ", " + bezirksregionResults.size()
-                + " results in four child types for query=\""+query+"\" in FULLTEXT");
+                + " results in four child types for query=\""+queryValue+"\" in FULLTEXT");
         // merge all three types in search results
         searchResults.addAll(descrResults);
         searchResults.addAll(stichworteResults);
