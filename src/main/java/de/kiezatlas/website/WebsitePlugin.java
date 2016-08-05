@@ -719,28 +719,34 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
         log.info("> " + searchResults.size() + ", "+ descrResults.size() +", "+stichworteResults.size() + ", "
             + bezirksregionResults.size() + ", "  + streetNameResults.size()
                 + " results in five child types for query=\""+queryValue+"\" in FULLTEXT");
-        // merge all types in search results
+        // merge all types in search into one results set
         searchResults.addAll(descrResults);
         searchResults.addAll(stichworteResults);
         searchResults.addAll(bezirksregionResults);
         searchResults.addAll(streetNameResults);
-        // make search results only contain unique geo object topics
         log.info("Building up unique search resultset of fulltext search...");
         Iterator<Topic> iterator = searchResults.iterator();
         while (iterator.hasNext()) {
             Topic next = iterator.next();
-            // ### may be "null" (check for Facets? relatio) of search child types
-            Topic geoObject = null;
             if (next.getTypeUri().equals("ka2.bezirksregion")) {
-                geoObject = getFirstParentGeoObjectTopic(next);
+                List<RelatedTopic> geoObjects = next.getRelatedTopics("dm4.core.aggregation", "dm4.core.child", "dm4.core.parent",
+                    "ka2.geo_object");
+                log.info("Collecting " + geoObjects.size() + " geo objects associated with \"" + next.getSimpleValue().toString() + "\"");
+                for (RelatedTopic geoObject : geoObjects) {
+                    addGeoObjectToResults(uniqueResults, geoObject);
+                }
             } else if (next.getTypeUri().equals("ka2.geo_object.name") || next.getTypeUri().equals("ka2.stichworte")
                 || next.getTypeUri().equals("ka2.beschreibung")) {
-                geoObject = getParentGeoObjectTopic(next);
+                addGeoObjectToResults(uniqueResults, getParentGeoObjectTopic(next));
             } else if (next.getTypeUri().equals("dm4.contacts.street")) {
-                log.info("TODO: Found "+next.getSimpleValue().toString()+ " fetch related Geo Object - SKIPPING item");
-            }
-            if (geoObject != null && !uniqueResults.containsKey(geoObject.getId())) {
-                uniqueResults.put(geoObject.getId(), geoObject);
+                log.info("Collecting all geo objects associated with \"" + next.getSimpleValue().toString() + "\"");
+                List<RelatedTopic> addresses = next.getRelatedTopics("dm4.core.aggregation", "dm4.core.child", "dm4.core.parent",
+                    "dm4.contacts.address");
+                for (RelatedTopic address : addresses) {
+                    Topic geoObject = address.getRelatedTopic("dm4.core.composition", "dm4.core.child", "dm4.core.parent",
+                        "ka2.geo_object");
+                    addGeoObjectToResults(uniqueResults, geoObject);
+                }
             }
         }
         log.info("searchResultLength=" + (searchResults.size()) + ", " + "uniqueResultLength=" + uniqueResults.size());
@@ -1536,6 +1542,12 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
 
     /** ----------------- Rest of the Kiezatlas Application Model Related Getter Utilies -------------------------- */
 
+    private void addGeoObjectToResults(HashMap<Long, Topic> uniqueResults, Topic geoObject) {
+        if (geoObject != null && !uniqueResults.containsKey(geoObject.getId())) {
+            uniqueResults.put(geoObject.getId(), geoObject);
+        }
+    }
+
     private Topic getAssignedWorkspace(Topic geoObject) {
         return workspaces.getAssignedWorkspace(geoObject.getId());
     }
@@ -1575,9 +1587,9 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
     private Topic getFirstParentGeoObjectTopic(Topic entry) {
         List<RelatedTopic> results = entry.getRelatedTopics("dm4.core.aggregation", "dm4.core.child",
             "dm4.core.parent", KiezatlasService.GEO_OBJECT);
-        if (results == null) log.warning("Search Result Entry: " +entry.getTypeUri()
-            + ", " +entry.getId() +" has NOT ONE Geo Object as PARENT");  // fulltext-search incl. "abandoned" facets
-        return (results.size() > 0 ) ? results.get(0) : null;
+        /** if (results == null) log.warning("Search Result Entry: " +entry.getTypeUri()
+            + ", " +entry.getId() +" has NOT ONE Geo Object as PARENT"); // fulltext-search incl. "abandoned" facets */
+        return (results != null && results.size() > 0 ) ? results.get(0) : null;
     }
 
     private Topic getRelatedBezirk(Topic geoObject) {
