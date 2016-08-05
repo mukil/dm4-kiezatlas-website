@@ -171,7 +171,7 @@ html, body {
 
 #site-area .news-area {
     flex: 0 0 30%;
-    width: 32%;
+    width: 30%;
     display: inline-block;
     vertical-align: top;
     padding: 1em;
@@ -680,8 +680,8 @@ span.angebote-btn,
     padding-top: 0px;
     background-color: #EAEAEA;
     display: none;
-    /** min-height: 150px;
-    margin-bottom: 70px; */
+    /** min-height: 150px; */
+    margin-bottom: 2em
 }
 
 #detail-area .entry-card {
@@ -1384,6 +1384,14 @@ div.link-area {
     color: rgba(39, 99, 140, 1.0);
 }
 
+.ok-page.sign-up .sign-up #message-view,
+.log-in-page.sign-up .sign-up #message-view {
+    padding-left: 0em;
+}
+
+.sign-up .password-reset a {
+    font-size: 0.9em;
+}
 
 /** Webclient specific styles */
 
@@ -1575,6 +1583,7 @@ div.link-area {
         padding: 0px;
         margin-top: 0px;
         min-height: 0px;
+        margin-bottom: 4em;
     }
     #detail-area h3 {
         display: none;
@@ -1610,18 +1619,22 @@ div.link-area {
 @media (max-width:500px) {
     div.legende a.circle-control,
     div.legende a.district-control {
-        width: 120px;
+        width: 110px;
         bottom: 10px;
         right: 0px;
     }
     div.legende a.lock-control {
-        width: 100px;
-        bottom: 1em;
+        width: 110px;
+        bottom: 1.2em;
         right: 0px;
     }
     #fulltext-search-form input[type="text"] {
         width: 50%;
         margin-left: 0px;
+    }
+    #nearby-area .finde-infos,
+    #nearby-area a {
+        display: block;
     }
 }
 

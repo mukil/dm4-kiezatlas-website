@@ -639,7 +639,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
                 return results;
             }
             // 1) Fetch unique geo object topics by text query string
-            List<Topic> geoObjects = searchFulltextInGeoObjectChilds(query);
+            List<Topic> geoObjects = searchFulltextInGeoObjectChilds(query, false, false);
             // 2) Process saerch results and create DTS for map display
             log.info("Start building response for " + geoObjects.size() + " OVERALL");
             for (Topic topic : geoObjects) {
@@ -673,7 +673,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
                 log.warning("No search term entered, returning empty resultset");
                 return results;
             }
-            List<Topic> geoObjects = searchFulltextInGeoObjectChilds(query);
+            List<Topic> geoObjects = searchFulltextInGeoObjectChilds(query, false, false);
             // iterate over merged results
             log.info("Start building response for " + geoObjects.size() + " and FILTER by DISTRICT");
             for (Topic geoObject: geoObjects) {
@@ -703,26 +703,27 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
      * @return A list of unique topics of type "ka2.geo_object".
      */
     @Override
-    public List<Topic> searchFulltextInGeoObjectChilds(String query) {
+    public List<Topic> searchFulltextInGeoObjectChilds(String query, boolean doWildcard, boolean orFuzzy) {
         // ### Authenticate
         // ### Todo: Fetch for ka2.ansprechpartner, traeger name, too
         HashMap<Long, Topic> uniqueResults = new HashMap<Long, Topic>();
         String queryValue = query.trim();
+        if (doWildcard) queryValue += "*";
+        if (orFuzzy) queryValue += " OR " + query.trim() + "~0.8";
+        log.info("Search Fulltext Query \"" + queryValue + "\"");
         List<Topic> searchResults = dm4.searchTopics(queryValue, "ka2.geo_object.name");
         List<Topic> descrResults = dm4.searchTopics(queryValue, "ka2.beschreibung");
         List<Topic> stichworteResults = dm4.searchTopics(queryValue, "ka2.stichworte");
-        // List<Topic> sonstigesResults = dm4.searchTopics(query, "ka2.sonstiges");
         List<Topic> bezirksregionResults = dm4.searchTopics(queryValue, "ka2.bezirksregion"); // many
-        // List<Topic> traegerNameResults = dm4.searchTopics(query, "ka2.traeger.name");
-        // List<Topic> traegerNameResults = dm4.searchTopics(query, "dm4.contacts.street");
-        log.info("> " + searchResults.size() + ", "+ descrResults.size() +", "+stichworteResults.size() + ", " + bezirksregionResults.size()
-                + " results in four child types for query=\""+queryValue+"\" in FULLTEXT");
-        // merge all three types in search results
+        List<Topic> streetNameResults = dm4.searchTopics(query, "dm4.contacts.street"); // deeply related
+        log.info("> " + searchResults.size() + ", "+ descrResults.size() +", "+stichworteResults.size() + ", "
+            + bezirksregionResults.size() + ", "  + streetNameResults.size()
+                + " results in five child types for query=\""+queryValue+"\" in FULLTEXT");
+        // merge all types in search results
         searchResults.addAll(descrResults);
         searchResults.addAll(stichworteResults);
-        // searchResults.addAll(sonstigesResults);
         searchResults.addAll(bezirksregionResults);
-        // searchResults.addAll(traegerNameResults);
+        searchResults.addAll(streetNameResults);
         // make search results only contain unique geo object topics
         log.info("Building up unique search resultset of fulltext search...");
         Iterator<Topic> iterator = searchResults.iterator();
@@ -735,6 +736,8 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
             } else if (next.getTypeUri().equals("ka2.geo_object.name") || next.getTypeUri().equals("ka2.stichworte")
                 || next.getTypeUri().equals("ka2.beschreibung")) {
                 geoObject = getParentGeoObjectTopic(next);
+            } else if (next.getTypeUri().equals("dm4.contacts.street")) {
+                log.info("TODO: Found "+next.getSimpleValue().toString()+ " fetch related Geo Object - SKIPPING item");
             }
             if (geoObject != null && !uniqueResults.containsKey(geoObject.getId())) {
                 uniqueResults.put(geoObject.getId(), geoObject);
