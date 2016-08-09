@@ -16,9 +16,9 @@
         <version>4.8.1</version>
     </parent>
 
-    <properties>
+    <!--properties>
         <dm4.deploy.dir>/home/malted/source/mikro/deepamehta/bundle-deploy</dm4.deploy.dir>
-    </properties>
+    </properties-->
 
     <dependencies>
         <!-- Kiezatlas 2 Modules -->
@@ -67,12 +67,12 @@
         <dependency>
             <groupId>de.deepamehta</groupId>
             <artifactId>dm48-geospatial</artifactId>
-            <version>0.3-SNAPSHOT</version>
+            <version>0.3</version>
         </dependency>
         <dependency>
             <groupId>de.deepamehta</groupId>
             <artifactId>dm48-thymeleaf</artifactId>
-            <version>0.6.1-SNAPSHOT</version>
+            <version>0.6.1</version>
         </dependency>
         <dependency>
             <groupId>de.mikromedia</groupId>
@@ -82,7 +82,7 @@
         <dependency>
             <groupId>org.deepamehta</groupId>
             <artifactId>dm48-sign-up</artifactId>
-            <version>1.5-SNAPSHOT</version>
+            <version>1.5</version>
         </dependency>
     </dependencies>
 
