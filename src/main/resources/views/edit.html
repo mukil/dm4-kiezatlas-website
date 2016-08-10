@@ -279,10 +279,10 @@
                                         th:selected="${themen.contains(category)}"
                                         th:value="${category.id}" th:text="${category.simpleValue}"></option>
                             </select>
-                            <!--label for="angebote-crit">Angebot</label>
+                            <label for="angebote-crit">Angebot</label>
                             <select id="angebote-crit" name="angebote" multiple="true">
                                 <option th:each="thema : ${availableAngebote}" th:value="${thema.id}" th:text="${thema.simpleValue}"></option>
-                            </select-->
+                            </select>
                         </div>
                         <!--
                         <p class="sozialraumdaten" th:if="${!#strings.isEmpty(geoobject.lor)}"><a th:href="@{http://sozialraumdaten.kiezatlas.de/seiten/2014/12/(lor=${geoobject.lor})}">Sozialraumdaten</a></p>

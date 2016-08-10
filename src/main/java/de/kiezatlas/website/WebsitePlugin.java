@@ -208,6 +208,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
         viewData("geoobject", geoObject);
         viewData("themen", new ArrayList<RelatedTopic>());
         viewData("zielgruppen", new ArrayList<RelatedTopic>());
+        viewData("angebote", new ArrayList<RelatedTopic>());
         prepareFormWithAvailableTopics();
         prepareGeneralPageData("edit");
         viewData("workspace", getPrivilegedWorkspace());
@@ -412,7 +413,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
                 viewData("geoobject", einrichtung);
                 viewData("themen", facets.getFacets(geoObject, THEMA_FACET));
                 viewData("zielgruppen", facets.getFacets(geoObject, ZIELGRUPPE_FACET));
-                // viewData("angebote", facetsService.getFacets(geoObject, ANGEBOT_FACET).getItems());
+                viewData("angebote", facets.getFacets(geoObject, ANGEBOT_FACET));
             } else {
                 viewData("message", "Sie haben aktuell noch nicht die n&ouml;tigen Berechtigungen "
                     + "um diesen Einrichtungsdatensatz zu bearbeiten.");
@@ -494,7 +495,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
         // Assemble Category Assignments for Einrichtung;
         viewData("zielgruppen", facets.getFacets(geoObject, ZIELGRUPPE_FACET));
         viewData("themen", facets.getFacets(geoObject, THEMA_FACET));
-        // viewData("angebote", facetsService.getFacets(geoObject, ANGEBOT_FACET));
+        viewData("angebote", facets.getFacets(geoObject, ANGEBOT_FACET));
         List<AngebotsinfosAssigned> angebotsInfos = angebote.getCurrentAngebotsinfosAssigned(geoObject);
         if (angebotsInfos.size() > 0) viewData("angebotsinfos", angebotsInfos);
         // user auth
@@ -1001,7 +1002,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
         viewData("availableThemen", getThemaCriteriaTopics());
         viewData("availableTraeger", getAvailableTraegerTopics());
         // viewData("availableLor", getAvailableLORNumberTopics());
-        // viewData("availableAngebote", getAngebotCriteriaTopics());
+        viewData("availableAngebote", getAngebotCriteriaTopics());
         viewData("availableZielgruppen", getZielgruppeCriteriaTopics());
         log.info("> Prepare Form Template with available Topics");
     }

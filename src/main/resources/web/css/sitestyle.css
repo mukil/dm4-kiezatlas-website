@@ -1384,8 +1384,8 @@ div.link-area {
     color: rgba(39, 99, 140, 1.0);
 }
 
-.ok-page.sign-up .sign-up #message-view,
-.log-in-page.sign-up .sign-up #message-view {
+.ok-page.sign-up #message-view,
+.sign-up #log-in-view #message-view {
     padding-left: 0em;
 }
 
