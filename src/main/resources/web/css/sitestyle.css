@@ -1,13 +1,13 @@
 
 
-/** -- New Semantic UI Styles -- **/
-@import url('/de.kiezatlas.website/css/semantic-ui/components/container.min.css');
-@import url('/de.kiezatlas.website/css/semantic-ui/components/dropdown.min.css');
-@import url('/de.kiezatlas.website/css/semantic-ui/components/header.min.css');
-@import url('/de.kiezatlas.website/css/semantic-ui/components/menu.min.css');
-@import url('/de.kiezatlas.website/css/semantic-ui/components/item.min.css');
-@import url('/de.kiezatlas.website/css/semantic-ui/components/input.min.css');
-@import url('/de.kiezatlas.website/css/semantic-ui/components/icon.min.css');
+/** -- New Semantic UI Styles - 2.2 Release -- **/
+@import url('/de.kiezatlas.website/css/semantic-ui/2.2/components/container.min.css');
+@import url('/de.kiezatlas.website/css/semantic-ui/2.2/components/dropdown.min.css');
+@import url('/de.kiezatlas.website/css/semantic-ui/2.2/components/header.min.css');
+@import url('/de.kiezatlas.website/css/semantic-ui/2.2/components/menu.min.css');
+@import url('/de.kiezatlas.website/css/semantic-ui/2.2/components/item.min.css');
+@import url('/de.kiezatlas.website/css/semantic-ui/2.2/components/input.min.css');
+@import url('/de.kiezatlas.website/css/semantic-ui/2.2/components/icon.min.css');
 
 
 @-o-viewport {
