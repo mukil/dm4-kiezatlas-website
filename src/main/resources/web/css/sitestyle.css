@@ -298,7 +298,7 @@ html, body {
 #map {
     font-size: 1em;
     display: none;
-    z-index: 110;
+    z-index: 10;
 }
 
 #map.fullsize {

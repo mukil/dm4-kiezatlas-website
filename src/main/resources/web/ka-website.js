@@ -111,10 +111,9 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
         var hash = window.location.hash
         var subdomain_mitte = (window.location.host.indexOf("mitte.") !== -1 || window.location.hostname.indexOf("mitte.") !== -1) ? true : false
         var bezirksTopic = undefined
-        if (!hash || hash === "#karte" || hash === "#logout/") {
+        if (!hash || hash === "#karte" || hash === "#gesamt" || hash === "#logout/") {
             if (subdomain_mitte) {
                 _self.load_district_topics(function(e) {
-                    _self.show_district_listing()
                     bezirksTopic = _self.get_bezirks_topic_by_hash("#mitte")
                     _self.render_bezirks_topic(bezirksTopic)
                 })
@@ -122,18 +121,17 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
                 // render main kiezatlas page
                 _self.render_map(true, undefined, false) // detectLocation=true
                 _self.load_district_topics(function(e) {
-                    _self.show_district_listing()
+                    _self.render_district_menu()
                 })
             }
         } else if (name === "angebote" || hash === "#angebote") {
             _self.render_map(false, undefined, false) // detectLocation=false
             _self.show_angebote_page()
             _self.load_district_topics(function(e) {
-              _self.show_district_listing()
+              _self.render_district_menu()
             })
         } else {
             _self.load_district_topics(function() {
-                _self.show_district_listing()
                 bezirksTopic = _self.get_bezirks_topic_by_hash(hash)
                 _self.render_bezirks_topic(bezirksTopic)
             })
@@ -141,6 +139,7 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
     }
 
     this.render_bezirks_topic = function(bezirksTopic) {
+        console.log("Render Bezirks Topic", bezirksTopic)
         _self.setDistrict(bezirksTopic)
         if (_self.getDistrict()) {
             console.log("Rendering Bezirks Topic", bezirksTopic)
@@ -148,6 +147,7 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
             // sets mitte filter
             _self.show_district_page(_self.getDistrict().id)
         }
+        _self.render_district_menu(bezirksTopic)
     }
 
     this.render_map = function(detectLocation, zoomLevel, jumpToMap) {
@@ -157,6 +157,34 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
         if (jumpToMap) leafletMap.show_anchor()
         if (detectLocation) _self.get_browser_location()
         if (zoomLevel) leafletMap.map.setZoom(zoomLevel)
+    }
+
+    this.render_district_menu = function(districtValueObject) {
+        var $bezirk = $('#bezirksauswahl')
+        var bezirke = _self.getDistricts()
+            $bezirk.empty()
+            if (!districtValueObject) {
+                $bezirk.append('<a href="#gesamt" id="gesamt" class="item active gesamt">Gesamtstadtplan</a>')
+            } else {
+                $bezirk.append('<a href="#gesamt" id="gesamt" class="item gesamt">Gesamtstadtplan</a>')
+            }
+        for (var idx in bezirke) {
+            var bezirk = bezirke[idx]
+            var anchor_name = '#' + encodeURIComponent(bezirk.value.toLowerCase())
+            var $menuitem = $('<a href="'+anchor_name+'" id="'+encodeURIComponent(bezirk.value.toLowerCase())+'" class="item '+anchor_name+'">'+ bezirk.value +'</a>')
+                if (districtValueObject) {
+                    if (bezirk.id === districtValueObject.id) $menuitem.addClass('active')
+                }
+                $menuitem.click(function(e) {
+                    var click_href = e.target.getAttribute("href")
+                    if (click_href === "#gesamt") {
+                        _self.clear_district_page()
+                    } else {
+                        _self.render_bezirks_topic(_self.get_bezirks_topic_by_hash())
+                    }
+                })
+            $bezirk.append($menuitem)
+        }
     }
 
     // ### Depracated
