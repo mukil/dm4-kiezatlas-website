@@ -73,8 +73,8 @@ public class EinrichtungsInfo implements JSONEnabled {
     public void setAddress(Topic address) {
         try {
             json.put("anschrift", address.getSimpleValue().toString()); // Utility
-            setStrasse(address.getChildTopics().getString("dm4.contacts.street"));
-            setPLZ(address.getChildTopics().getString("dm4.contacts.postal_code"));
+            setStrasse(address.getChildTopics().getStringOrNull("dm4.contacts.street"));
+            setPLZ(address.getChildTopics().getStringOrNull("dm4.contacts.postal_code"));
             setCity(address.getChildTopics().getString("dm4.contacts.city"));
         } catch (JSONException ex) {
             Logger.getLogger(EinrichtungsInfo.class.getName()).log(Level.SEVERE, null, ex);
