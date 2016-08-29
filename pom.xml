@@ -13,7 +13,7 @@
     <parent>
         <groupId>de.deepamehta</groupId>
         <artifactId>deepamehta-plugin</artifactId>
-        <version>4.8.1</version>
+        <version>4.8.3-SNAPSHOT</version>
     </parent>
 
     <!--properties>
@@ -41,22 +41,22 @@
         <dependency>
             <groupId>de.deepamehta</groupId>
             <artifactId>deepamehta-workspaces</artifactId>
-            <version>4.8.1</version>
+            <version>4.8.3-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>de.deepamehta</groupId>
             <artifactId>deepamehta-facets</artifactId>
-            <version>4.8.1</version>
+            <version>4.8.3-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>de.deepamehta</groupId>
             <artifactId>deepamehta-accesscontrol</artifactId>
-            <version>4.8.1</version>
+            <version>4.8.3-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>de.deepamehta</groupId>
             <artifactId>deepamehta-geomaps</artifactId>
-            <version>4.8.1</version>
+            <version>4.8.3-SNAPSHOT</version>
         </dependency>
         <!-- Integrated Third Party Plugins-->
         <dependency>
