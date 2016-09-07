@@ -190,7 +190,11 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
                 if (districtValueObject) {
                     if (bezirk.id === districtValueObject.id) $menuitem.addClass('active')
                 }
+            if (anchor_name.indexOf("marzahn") !== -1 || anchor_name.indexOf("reinickendorf") !== -1 || anchor_name.indexOf("pankow") !== -1) {
+                $menuitem.addClass("disabled")
+            } else {
                 $menuitem.click(handle_menu_item_click)
+            }
             $bezirk.append($menuitem)
         }
     }
