@@ -195,19 +195,6 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
         }
     }
 
-    // ### Depracated
-    this.render_user_menu = function(state) {
-        /** if (state) {
-            $('li.login').remove()
-            $('li.new a').attr("href", "/geoobject/create")
-            $('li.logout').show()
-        } else {
-            $('li.angebote-my').hide()
-            $('li.login').show()
-            $('li.logout').hide()
-        } **/
-    }
-
     /** this.show_angebote_page = function() {
         _self.set_anchor("angebote")
         _self.setAngebotsinfoFilter(true)

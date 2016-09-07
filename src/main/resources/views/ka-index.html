@@ -41,10 +41,6 @@
                 kiezatlas.render_page()
                 // add click and touch handlers on our "three near by options"
                 kiezatlas.add_nearby_button_handler()
-                // render user menu
-                restc.is_logged_in(function(response) {
-                    kiezatlas.render_user_menu(response)
-                })
             })
         /*]]>*/
         </script>
@@ -234,7 +230,7 @@
             <ul class="bezirke"></ul>
         </div>
 
-        <!-- Piwik>
+        <!-- Piwik-->
         <script type="text/javascript">
         var pkBaseURL = "//stats.infokitchen.net/";
         document.write(unescape("%3Cscript src='" + pkBaseURL + "piwik.js' type='text/javascript'%3E%3C/script%3E"));
@@ -246,9 +242,9 @@
         } catch( err ) {}
         </script>
         <noscript>
-            <img th:src="@{https://stats.infokitchen.net/piwik.php(idsite=2,rec=1,action_name='Kiezatlas+2+Website')}" style="border:0" alt="" />
+            <img th:src="@{https://stats.infokitchen.net/piwik.php(idsite=2,rec=1,action_name='Kiezatlas+2+Startseite')}" style="border:0" alt="" />
         </noscript>
-        End Piwik Tracking Code -->
+        <!-- End Piwik Tracking Code -->
 
     </body>
 </html>
