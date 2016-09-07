@@ -53,7 +53,6 @@ function search_location_by_text() {
 var monthNames = [ "Januar", "Februar", "März", "April", "Mai", "Juni",
     "Juli", "August", "September", "Oktober", "November", "Dezember" ];
 
-
 // kiezatlas hex colors
 var colors = {
     "ka_blue": "#002856",       // circle control

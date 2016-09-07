@@ -12,10 +12,11 @@
             <a th:if="${authenticated}"
                th:class="${#strings.contains(template, 'edit')} ? 'active item create' : 'item create'"
                href="/geoobject/create">Neueintragung</a>
-            <div class="ui simple dropdown item">
+            <div th:if="${#strings.contains(template, 'index')}" class="ui simple dropdown item">
                 Bezirke <i class="dropdown icon"></i>
                 <div class="menu" id="bezirksauswahl"></div>
             </div>
+            <a th:if="!${#strings.contains(template, 'index')}" href="/" class="item">Gesamtstadtplan</a>
             <a th:if="${authenticated}" href="/angebote/my" class="item angebote">Meine Angebote</a>
             <!--a th:if="${authenticated}" href="/sign-up/edit" class="item">Account</a-->
             <!--a href="/#mitte" class="item">Bezirk Mitte</a-->
