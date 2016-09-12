@@ -95,12 +95,18 @@ public class GeoObjectView implements JSONEnabled {
         return (geoCoordinate != null) ? geoCoordinate.lon : -1000;
     }
 
+    /** Aggregated used to "cluster" geo objects on the map which share the same address. **/
     public String getAggregatedAddressTopicId() {
         if (addressTopic == null) {
             return "-1:-1";
         }
-        return addressTopic.getChildTopics().getTopic("dm4.contacts.street").getId() + ":"
-            + addressTopic.getChildTopics().getTopic("dm4.contacts.postal_code").getId();
+        Topic street = addressTopic.getChildTopics().getTopicOrNull("dm4.contacts.street");
+        Topic postalCode = addressTopic.getChildTopics().getTopicOrNull("dm4.contacts.postal_code");
+        String result = "";
+        result += (street != null) ? street.getId() : "-1";
+        result += ":";
+        result += (postalCode != null) ? postalCode.getId() : "-1";
+        return result;
     }
 
     public String getAddressValue() {

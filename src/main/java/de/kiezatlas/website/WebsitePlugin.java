@@ -586,6 +586,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
 
     /**
      * Fetches a list of streetname geo coordinates pairs from the kiezatlas database.
+     * TODO: Just deliver UNIQUE Streets (by NAME and NR)
      * @param referer
      * @param query
      */
@@ -599,7 +600,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
             String queryValue = query.trim();
             List<StreetCoordinates> results = new ArrayList<StreetCoordinates>();
             if (queryValue.isEmpty()) return results;
-            List<Topic> singleTopics = dm4.searchTopics(queryValue + "*", "dm4.contacts.street");
+            /** List<Topic> singleTopics = dm4.searchTopics(queryValue, "dm4.contacts.street");
             for (Topic streetname : singleTopics) {
                 List<RelatedTopic> addresses = streetname.getRelatedTopics("dm4.core.aggregation",
                     "dm4.core.child", "dm4.core.parent", "dm4.contacts.address");
@@ -613,8 +614,10 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
                     }
                 }
             }
-            log.info("Fetched " + results.size() + " internal street coordinate values");
-            return results;
+            log.info("Fetched " + results.size() + " internal street coordinate values"); **/
+            List<StreetCoordinates> googleResults = getGoogleStreetCoordinates(query + ", Berlin, Germany");
+            log.info("Fetched " + googleResults.size() + " google street coordinate values");
+            return googleResults;
         } catch (Exception e) {
             throw new RuntimeException("Searching street coordinate values by name failed", e);
         }
@@ -1808,6 +1811,31 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
             throw new RuntimeException(ex);
         }
         return result;
+    }
+
+    private List<StreetCoordinates> getGoogleStreetCoordinates(String addressInput) {
+        String response = geoCodeAddressInput(addressInput);
+        List<StreetCoordinates> entries = new ArrayList();
+        try {
+            JSONObject objects = new JSONObject(response);
+            JSONArray results = objects.getJSONArray("results");
+            for (int i=0; i < results.length(); i++) {
+                JSONObject item = results.getJSONObject(i);
+                // JSONArray address_c = item.getJSONArray("address_components");
+                JSONObject geometry = item.getJSONObject("geometry");
+                if (geometry != null) {
+                    JSONObject location = geometry.getJSONObject("location");
+                    String name = item.getString("formatted_address");
+                    StreetCoordinates streetCoords = new StreetCoordinates();
+                    streetCoords.setCoordinates(new GeoCoordinate(location.getDouble("lng"), location.getDouble("lat")));
+                    streetCoords.setName(name);
+                    entries.add(streetCoords);
+                }
+            }
+        } catch (JSONException ex) {
+            Logger.getLogger(WebsitePlugin.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return entries;
     }
 
     /**
