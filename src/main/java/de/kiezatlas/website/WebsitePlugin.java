@@ -1287,7 +1287,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
             List<Topic> geoCoordTopics = geospatial.getTopicsWithinDistance(new GeoCoordinate(lon, lat), radius);
             // 2) Process spatial search results (=topics of type Geo Coordinate)
             for (Topic geoCoordTopic : geoCoordTopics) {
-                Topic geoObject = kiezatlas.getGeoObjectByGeoCoordinateTopic(geoCoordTopic);
+                Topic geoObject = kiezatlas.getGeoObjectByGeoCoordinate(geoCoordTopic);
                 // spatial search may deliver geo coordinates topics not (anymore) related to a geo object
                 if (geoObject != null) results.add(geoObject);
             }
