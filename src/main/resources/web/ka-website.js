@@ -110,7 +110,7 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
            var locationHash = window.location.hash
            var subdomain_mitte = (window.location.host.indexOf("mitte.") !== -1 || window.location.hostname.indexOf("mitte.") !== -1) ? true : false
            var bezirksTopic = undefined
-           if (locationHash) {
+           if (locationHash && locationHash !== "#karte") {
                console.log("Render page for anchor/hash ", locationHash)
                 _self.load_district_topics(function() {
                     bezirksTopic = _self.get_bezirks_topic_by_hash(locationHash)
@@ -843,7 +843,7 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
             //
             if (typeof options === "undefined") { // ??? do this options work for us?
                 options =  {
-                    "setView" : true, "maxZoom" : mapping.zoomDetailLevel
+                    "setView" : true, "maxZoom" : mapping.zoomDetailLevel, enableHighAccuracy: true
                 }
             }
             leafletMap.map.locate(options)
