@@ -161,15 +161,17 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
         return getFrontpageView();
     }
 
-    /** @GET
-    @Path("/menu")
-    @Produces(MediaType.TEXT_HTML)
-    public Viewable getWebsiteMenu() throws URISyntaxException {
-        // if (!isAuthenticated()) return getUnauthorizedPage();
-        // if (!isConfirmationWorkspaceMember()) throw new WebApplicationException(Response.temporaryRedirect(new URI("/angebote/my")).build());
-        prepareGeneralPageData("user");
-        return view("user");
-    } **/
+    @GET
+    @Path("/my")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<Topic> getUsersSocialInstitutions() {
+        ArrayList<Topic> my = new ArrayList<Topic>();
+        Topic username = accesscl.getUsernameTopic();
+        if (username != null) {
+            my.addAll(username.getRelatedTopics(USER_ASSIGNMENT, null, null, KiezatlasService.GEO_OBJECT));
+        }
+        return my;
+    }
 
     /** Responds with a Viewable, the administrative confirmation page of the Kiezatlas Website.  */
     @GET
