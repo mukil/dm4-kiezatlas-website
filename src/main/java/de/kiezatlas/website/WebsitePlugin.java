@@ -427,6 +427,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
             return getPageNotFound("Eine Einrichtung mit dieser ID ist uns nicht bekannt.");
         }
         prepareFormWithAvailableTopics();
+        prepareGeneralPageData("edit");
         // this makes sure we keep all (potentially new) child topics in the same workspace its parent is while editing
         viewData("workspace", getAssignedWorkspace(geoObject));
         viewData("editable", isGeoObjectEditable(geoObject, username));
