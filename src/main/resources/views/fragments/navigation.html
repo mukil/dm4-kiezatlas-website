@@ -9,6 +9,8 @@
             </a>
             <a th:if="!${authenticated}" href="/sign-up/login"
                th:class="${#strings.contains(template, 'login')} ? 'active item login' : 'item login'">Login</a>
+            <a th:if="${authenticated}" href="/sign-up/login"
+               th:class="${#strings.contains(template, 'logout')} ? 'active item logout' : 'item logout'">Logout</a>
             <div th:if="${#strings.contains(template, 'index')}" class="ui simple dropdown item">
                 Bezirke <i class="dropdown icon"></i>
                 <div class="menu" id="bezirksauswahl"></div>
@@ -16,8 +18,6 @@
             <a th:if="!${#strings.contains(template, 'index')}" href="/" class="item">Einrichtungen</a>
             <a th:if="${authenticated}" href="/angebote/my" class="item angebote">Meine Eintr&auml;ge</a>
             <a href="/angebote" class="item all-angebote">Angebote</a>
-            <a th:if="${authenticated}" href="/sign-up/login"
-               th:class="${#strings.contains(template, 'logout')} ? 'active item logout' : 'item logout'">Logout</a>
             <a class="item star" title="Die aktuelle Kartenposition zu Ihren Standort-Favoriten hinzufügen" alt:="Icon: Favourite this location."
                th:if="${#strings.contains(template, 'ka-index')}"><i class="icon star empty"></i></a>
             <div class="right menu">
