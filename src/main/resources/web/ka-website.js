@@ -246,7 +246,7 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
         var bezirk_feed_url = _self.getDistrict().newsfeed
         var anchor_name = '#' + encodeURIComponent(bezirk_name.toLowerCase())
         $('.location-label .text').html("Berlin " + bezirk_name) // duplicate, use render_current_location_label
-        $('button.star').hide()
+        $('.top.menu a.star').hide()
         // TODO: rewrite filter button container
         if ($('div.legende').children('a.district-control').length === 0) {
             $('div.legende').append('<a class="district-control" href="javascript:kiezatlas.clear_district_page()">'
@@ -335,14 +335,14 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
             $map.addClass('outlined')
             $map.height('550px')
             $map.show()
-        var $star_button = $("button.star")
+        var $star_button = $('.top.menu a.star')
             $star_button.show()
-            $star_button.button()
-            $star_button.hover(function (e) {
+            // $star_button.button()
+            /** $star_button.hover(function (e) {
                 $('button.star img').attr('src', '/de.kiezatlas.website/images/1441217865_black_5_favorite_star-white.png')
             }, function (e) {
                 $('button.star img').attr('src', '/de.kiezatlas.website/images/1441217865_black_5_favorite_star.png')
-            })
+            }) **/
         $('.search-option.d').css('display', 'inline-block')
         $('#detail-area').show("inline")
         $('div.legende').show()
@@ -474,15 +474,17 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
         $('.location-label .text').html(leafletMap.getCurrentLocationName()
             + ' <small>('+latitude+' N, '+longitude+' E)</small>')
         if (favourites.is_available()) {
-            var $star_button = $('button.star')
+            var $star_button = $('.top.menu a.star')
                 $star_button.unbind('click')
                 $star_button.click(function(e) {
                     favourites.add_entry_to_local_db(leafletMap.getCurrentLocation())
                 })
             if (hideFavBtn) {
-                $star_button.button("disable")
+                // $star_button.button("disable")
+                $star_button.hide()
             } else {
-                $star_button.button("enable")
+                $star_button.show()
+                // $star_button.button("enable")
             }
         }
         _self.update_document_title(leafletMap.getCurrentLocationName())

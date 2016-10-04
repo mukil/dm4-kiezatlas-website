@@ -499,7 +499,8 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
         viewData("zielgruppen", facets.getFacets(geoObject, ZIELGRUPPE_FACET));
         viewData("themen", facets.getFacets(geoObject, THEMA_FACET));
         viewData("angebote", facets.getFacets(geoObject, ANGEBOT_FACET));
-        List<AngebotsinfosAssigned> angebotsInfos = angebote.getCurrentAngebotsinfosAssigned(geoObject);
+        // fetch related angebote, includeFutureOnes=true
+        List<AngebotsinfosAssigned> angebotsInfos = angebote.getActiveAngebotsinfosAssigned(geoObject, true);
         if (angebotsInfos.size() > 0) viewData("angebotsinfos", angebotsInfos);
         // user auth
         prepareGeneralPageData("detail");

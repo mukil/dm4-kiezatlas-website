@@ -2,29 +2,24 @@
 <!--- Standard Horizontal Navigation (Wider Page > 900px) -->
 <div th:fragment="top (publisher)">
 
-    <div class="ui menu">
+    <div class="ui menu top fixed">
         <div th:class="${is_publisher} ? 'ui container fluid' : 'ui container'">
             <a href="/">
                 <img src="/de.kiezatlas.website/images/kiezatlas2-logo.png" height="40" class="mobile-logo" />
             </a>
             <a th:if="!${authenticated}" href="/sign-up/login"
                th:class="${#strings.contains(template, 'login')} ? 'active item login' : 'item login'">Login</a>
-            <a th:if="${authenticated}"
-               th:class="${#strings.contains(template, 'edit')} ? 'active item create' : 'item create'"
-               href="/geoobject/create">Neueintragung</a>
             <div th:if="${#strings.contains(template, 'index')}" class="ui simple dropdown item">
                 Bezirke <i class="dropdown icon"></i>
                 <div class="menu" id="bezirksauswahl"></div>
             </div>
-            <a th:if="!${#strings.contains(template, 'index')}" href="/" class="item">Gesamtstadtplan</a>
-            <a th:if="${authenticated}" href="/angebote/my" class="item angebote">Meine Angebote</a>
-            <!--a th:if="${authenticated}" href="/sign-up/edit" class="item">Account</a-->
-            <!--a href="/#mitte" class="item">Bezirk Mitte</a-->
+            <a th:if="!${#strings.contains(template, 'index')}" href="/" class="item">Einrichtungen</a>
+            <a th:if="${authenticated}" href="/angebote/my" class="item angebote">Meine Eintr&auml;ge</a>
             <a href="/angebote" class="item all-angebote">Angebote</a>
-            <a th:if="!${authenticated}" href="/sign-up/"
-               th:class="${#strings.contains(template, 'sign-up')} ? 'active item register' : 'register item'">Registrieren</a>
             <a th:if="${authenticated}" href="/sign-up/login"
                th:class="${#strings.contains(template, 'logout')} ? 'active item logout' : 'item logout'">Logout</a>
+            <a class="item star" title="Die aktuelle Kartenposition zu Ihren Standort-Favoriten hinzufügen" alt:="Icon: Favourite this location."
+               th:if="${#strings.contains(template, 'ka-index')}"><i class="icon star empty"></i></a>
             <div class="right menu">
                 <!--div class="item" th:if="${#strings.contains(template, 'ka-index')}">
                     <div class="ui small input focus">

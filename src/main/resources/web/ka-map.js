@@ -273,7 +273,6 @@ var leafletMap = (function($, L) {
     }
 
     map.show_anchor = function(custom_anchor) {
-        window.document.location.href = window.document.location.protocol + '//' + window.document.location.host + "/#karte"
         if (custom_anchor) { // but maybe alter anchor name
             window.document.location.href = window.document.location.protocol + '//' + window.document.location.host + "/" + custom_anchor
         }
