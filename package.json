@@ -1,0 +1,28 @@
+{
+  "name": "dm4-kiezatlas-website-ui",
+  "version": "0.4-SNAPSHOT",
+  "description": "Kiezatlas 2 Website",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mukil/dm4-kiezatlas-website.git"
+  },
+  "keywords": [
+    "kiezatlas",
+    "frontend"
+  ],
+  "author": "Malte Reißig",
+  "license": "SEE LICENSE IN LICENSE.txt",
+  "bugs": {
+    "url": "https://github.com/mukil/dm4-kiezatlas-website/issues"
+  },
+  "homepage": "https://github.com/mukil/dm4-kiezatlas-website#readme",
+  "devDependencies": {
+    "grunt": "^1.0.1",
+    "grunt-contrib-concat": "^1.0.1",
+    "grunt-contrib-uglify": "^2.0.0"
+  }
+}
