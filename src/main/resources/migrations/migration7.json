@@ -1,0 +1,25 @@
+{
+    "topic_types": [
+        {
+            "value":           "Web Alias",
+            "uri":             "ka2.website.web_alias",
+            "data_type_uri":   "dm4.core.text",
+            "index_mode_uris": ["dm4.core.key"]
+        },
+        {
+            "value":            "Site Info Area",
+            "uri":              "ka2.website.site_info",
+            "data_type_uri":    "dm4.core.html",
+            "index_mode_uris": ["dm4.core.fulltext"],
+            "view_config_topics": [
+                {
+                    "type_uri": "dm4.webclient.view_config",
+                    "childs": {
+                        "dm4.webclient.input_field_rows": 15,
+                        "dm4.webclient.show_in_create_menu": false
+                    }
+                }
+            ]
+        }
+    ]
+}

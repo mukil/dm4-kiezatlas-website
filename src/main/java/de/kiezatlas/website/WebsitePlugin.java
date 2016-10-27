@@ -133,7 +133,10 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
         if (service instanceof WebpageService) {
             log.info("Announcing our Website Bundle as additional template resource at Webpages TemplateEngines");
             webpages.addTemplateResolverBundle(bundle);
+            // Overrides root resource response of the dm4-webpages plugin
             webpages.overrideFrontpageTemplate("ka-index");
+            // Register additional root resource names we want to respond to
+            webpages.setFrontpageAliases(fetchAllWebsiteAliases());
             webpages.reinitTemplateEngine();
         } else if (service instanceof SignupPluginService) {
             log.info("Announcing our Website Bundle as additional template resource at Signup TemplateEngines");
@@ -1085,6 +1088,21 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
     }
 
     /** ------------------- Kiezatlas Application Model Related Helper Methods -------------------------- **/
+
+    private HashMap<String, String[]> fetchAllWebsiteAliases() {
+        HashMap<String, String[]> aliases = new HashMap();
+        List<Topic> websiteAliases = dm4.getTopicsByType("ka2.website.web_alias");
+        for (Topic alias : websiteAliases) {
+            Topic websiteParent = alias.getRelatedTopic("dm4.core.composition", "dm4.core.child",
+                "dm4.core.parent", "ka2.website");
+            String pageName = (websiteParent == null) ? "Stadtplan" : websiteParent.getSimpleValue().toString();
+            String templateName = "site"; // ### Thymeleaf Template File Name for all Kiezatlas Website topics
+            String[] templateValue = { templateName, pageName };
+            aliases.put(alias.getSimpleValue().toString(), templateValue);
+        }
+        log.info("Fetched all ("+aliases.size()+") kiezatlas website aliases");
+        return aliases;
+    }
 
     private String getAnsprechpartnerMailboxValue(Topic kontaktTopic) {
         if (kontaktTopic != null) {

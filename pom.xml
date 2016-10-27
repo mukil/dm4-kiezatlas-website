@@ -7,7 +7,7 @@
     <name>DeepaMehta 4 Kiezatlas - Website</name>
     <groupId>de.kiezatlas</groupId>
     <artifactId>dm48-kiezatlas-website</artifactId>
-    <version>0.4-SNAPSHOT</version>
+    <version>0.5-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <parent>
@@ -77,7 +77,7 @@
         <dependency>
             <groupId>de.mikromedia</groupId>
             <artifactId>dm48-webpages</artifactId>
-            <version>0.4</version>
+            <version>0.4.1-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.deepamehta</groupId>
