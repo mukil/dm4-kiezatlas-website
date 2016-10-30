@@ -105,7 +105,8 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
      *  - Standard Frontpage (Berlin wide) with Einrichtungen or Angeboten
      *  - District Frontpage (District Infos, District Fulltext search)
      **/
-    this.render_page = function(name) {
+    this.render_page = function(name, karteNone) {
+        console.log("Render Page with Map?", karteNone)
         if (!name) { // get current page alias
            var locationHash = window.location.hash
            var subdomain_mitte = (window.location.host.indexOf("mitte.") !== -1 || window.location.hostname.indexOf("mitte.") !== -1) ? true : false
@@ -147,7 +148,7 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
     this.render_bezirkspage = function(bezirksTopic) {
         _self.setDistrict(bezirksTopic)
         if (_self.getDistrict()) {
-            _self.render_map(false, undefined, false) // detectLocation=false
+            _self.render_map(false, undefined, false, false) // detectLocation=false
             // sets district filter
             _self.show_district_page(_self.getDistrict().id)
         }
@@ -155,16 +156,19 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
     }
 
     this.render_kiezatlas_site = function(pageAlias) {
-        _self.render_map(false, undefined, false)
+        // Init our map container
+        _self.render_map(false, undefined, false, false)
+        // Adapt our default leaflet map handling options
         leafletMap.zoom.setPosition("topleft")
+        // show loading indicator
         _self.show_spinning_wheel()
         // Load Site Info
         restc.load_website_info(pageAlias, function(response) {
-            console.log("Load Kiezatlas Website ", pageAlias, response)
+            // console.log("Load Kiezatlas Website ", pageAlias, response)
             $('.citymap-title').text(response.value)
             $('.welcome .title').text(response.value)
             $('.welcome .slogan').text('')
-            console.log("Site Logo", response.logo)
+            $('.welcome .imprint').html('<a href="'+response.imprint+'" target="_blank">Impressum</a>')
             $('.welcome .logo').attr("src", response.logo).attr("title", "Logo des " + response.value)
             _self.show_newsfeed_area(response.id, response.newsfeed)
             // Load Geo Objects in Website
@@ -178,9 +182,9 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
         })
     }
 
-    this.render_map = function(detectLocation, zoomLevel, jumpToMap) {
+    this.render_map = function(detectLocation, zoomLevel, jumpToMap, mouseWheelZoom) {
         if (!leafletMap.is_initialized()) {
-            _self.setup_map_area('map', false)
+            _self.setup_map_area('map', mouseWheelZoom)
         }
         if (jumpToMap) leafletMap.show_anchor()
         if (detectLocation) _self.get_browser_location()
@@ -349,7 +353,7 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
 
     this.show_favourite_location = function(object) {
         if (!leafletMap.is_initialized()) {
-            _self.setup_map_area('map', true)
+            _self.setup_map_area('map')
         }
         leafletMap.setCurrentLocation(object)
         leafletMap.map.setView(leafletMap.getCurrentLocationCoordinate(), mapping.zoomStreetLevel)
@@ -358,7 +362,7 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
         _self.render_current_location_label()
     }
 
-    this.setup_map_area = function(dom_el_id) {
+    this.setup_map_area = function(dom_el_id, mouseWheelZoom) {
         var $map = $('#map')
             $map.empty()
             $map.show()
@@ -374,7 +378,7 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
         $('#detail-area').show("inline")
         $('div.legende').show()
         //
-        leafletMap.setup(dom_el_id)
+        leafletMap.setup(dom_el_id, mouseWheelZoom)
         leafletMap.listen_to('drag', function(e) {
             if (mapping.circleSearchLocked && !_self.getFulltextSearchMode()) {
                 leafletMap.setCurrentLocationCoordinate(leafletMap.map.getCenter())
@@ -754,19 +758,19 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
 
         function handle_option_a (e) {
             // initialize map on browser location
-            _self.render_map(true, null, true)
+            _self.render_map(true, null, true, false)
         }
 
     }
 
     this.handle_option_c = function(e) {
         // initiate map with edible circle control
-        _self.render_map(false, mapping.zoomKiezLevel, true)
+        _self.render_map(false, mapping.zoomKiezLevel, true, false)
     }
 
     this.handle_option_b = function(e) {
         // initiate map with edible circle control but focus on street
-        _self.render_map(false, mapping.zoomStreetLevel, true)
+        _self.render_map(false, mapping.zoomStreetLevel, true, false)
     }
 
     // --- GUI Manipulation Utility Methods

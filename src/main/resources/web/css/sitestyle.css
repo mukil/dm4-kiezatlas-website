@@ -332,6 +332,10 @@ html, body {
     margin-top: 3em;
 }
 
+.citymap #sidebar .welcome .imprint {
+    float: right; margin-top: 3px;
+}
+
 .citymap #detail-area {
     border-top: 1px solid #FC3;
     background-color: #fff;
@@ -361,9 +365,7 @@ html, body {
 
 .citymap #detail-area .search-option.d {
     background-color: #eaeaea;
-    padding: 1em;
-    margin: 0em;
-    margin-top: 2em;
+    padding: 1em; margin: 0em; margin-top: .5em;
 }
 
 .citymap #site-area {
@@ -1570,6 +1572,9 @@ body.sign-up {
         padding: 0.5em 1em 0.5em 1em;
         border-left: 0px solid transparent;
     }
+    .citymap #sidebar {
+        width: 34%;
+    }
 }
 
 @media(max-width: 1200px) {
@@ -1581,6 +1586,15 @@ body.sign-up {
     }
     .kiezatlas.topic #detail-area {
         margin: 30px;
+    }
+    .citymap #sidebar {
+        width: 33%;
+    }
+}
+
+@media(max-width:1024px) {
+    .citymap #sidebar {
+        width: 32%;
     }
 }
 
@@ -1596,6 +1610,9 @@ body.sign-up {
     #site-area .content-area {
         padding-left: 1em;
         width: 95%;
+    }
+    .citymap #sidebar {
+        width: 30%;
     }
     #main-menu h3 {
         border: 1px solid #EACA8F;
@@ -1687,6 +1704,20 @@ body.sign-up {
         display: inline-block;
         padding: 0.5em 1em 0.5em 1em;
         border-left: 0px solid transparent;
+    }
+    .citymap #sidebar #detail-area .search-option.d,
+    .citymap #karte {
+        display: none !important;
+    }
+    .citymap #sidebar {
+        width: 100%;
+        padding: 0em;
+    }
+    .citymap .welcome,
+    .citymap #detail-area,
+    .citymap #notification,
+    .citymap #site-area{
+        padding: 2em;
     }
     #header .welcome p {
         display: inline-block;

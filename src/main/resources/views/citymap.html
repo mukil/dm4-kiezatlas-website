@@ -26,26 +26,33 @@
 
         <script type="text/javascript" th:inline="javascript">
         /*<![CDATA[*/
+        
+            function set_sidebar_height() {
+                if ($('#karte').css("display") === "none") {
+                    $('#sidebar').height(window.innerHeight - 4)
+                } else {
+                    $('#sidebar').height(window.innerHeight - 36)
+                }
+            }
 
             // App initialization
             $(document).ready(function(e) {
                 // initiates an indexDB (if we're not on the MS IE)
+                var karteNone = ($('#karte').css("display") !== "none")
                 favourites.start_local_db()
                 favourites.list_entries_in_local_db()
-                // render all co mponents of the page requested
-                var pageAlias = window.location.pathname.substr(1)
-                kiezatlas.render_page(pageAlias)
-
+                // render all components of the page requested
+                kiezatlas.render_page(window.location.pathname.substr(1), karteNone)
                 $(window).resize(function() {
                     setTimeout(function() {
                         leafletMap.fit_to_height(65)
-                        $('#sidebar').height(window.innerHeight - 36)
+                        set_sidebar_height()
                     }, 50)
                 })
                 // add click and touch handlers on our "three near by options"
                 kiezatlas.add_nearby_button_handler()
                 leafletMap.fit_to_height(65)
-                $('#sidebar').height(window.innerHeight - 36)
+                set_sidebar_height()
             })
         /*]]>*/
         </script>
@@ -58,14 +65,13 @@
 
             <div id="karte">
 
+                <div id="spinning-wheel">
+                    <img src="/de.kiezatlas.website/images/ajax-loader.gif" />
+                </div>
                 <!-- Leaflet Area -->
                 <div id="map" class="fullsize"></div>
                 <!-- Mobile Listing Area -->
                 <div id="listing" class="fullsize"></div>
-
-                <div id="spinning-wheel">
-                    <img src="/de.kiezatlas.website/images/ajax-loader.gif" />
-                </div>
 
                 <!-- Favourite locations dialog -->
                 <!--h3 class="location-label">
@@ -106,6 +112,7 @@
 
                 <!-- Citymap Header Area -->
                 <div class="welcome">
+                    <div class="imprint"></div>
                     <h3>
                         <span class="title"></span>
                         <span class="small slogan">Hier findest du Infos &uuml;ber sozial-kulturelle Einrichtungen in Berlin und ihre Angebote</span>
@@ -120,6 +127,7 @@
 
                 <!-- Details Area -->
                 <div id="detail-area">
+                    <h2>Orte</h2>
                     <div class="search-option d">
                         Bitte w&auml;hlen sie einen Markierer auf der <a href="#karte">Karte</a> aus um Details zu einem Ort
                         zu erfahren.
