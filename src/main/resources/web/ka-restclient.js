@@ -49,6 +49,18 @@ var restc = (function($) {
         )
     }
 
+    restc.load_website_info = function(pageAlias, callback) {
+        $.getJSON('/geoobject/siteinfo/' + pageAlias, function(results) {
+            callback(results)
+        })
+    }
+
+    restc.load_website_topics = function(siteId, callback) {
+        $.getJSON('/geoobject/website/' + siteId, function(results) {
+            callback(results)
+        })
+    }
+
     restc.load_news_items = function(id, callback) {
         $.getJSON('/geoobject/bezirk/newsfeed/' + id, function(results) {
                 callback(results)

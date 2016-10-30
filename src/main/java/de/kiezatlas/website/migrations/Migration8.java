@@ -33,9 +33,9 @@ public class Migration8 extends Migration {
         AssociationType bildAssignmentEdgeType = dm4.getAssociationType("de.kiezatlas.bild_assignment");
         AssociationType userAssignmentEdgeType = dm4.getAssociationType("de.kiezatlas.user_assignment");
         TopicType webAlias = dm4.getTopicType("ka2.website.web_alias");
-        TopicType siteInfoAreaType = dm4.getTopicType("ka2.website.site_info");
+        TopicType infoArea = dm4.getTopicType("ka2.website.info_area");
         workspaceService.assignTypeToWorkspace(siteRSSFeedUrlType, kiezatlas.getId());
-        workspaceService.assignTypeToWorkspace(siteInfoAreaType, kiezatlas.getId());
+        workspaceService.assignTypeToWorkspace(infoArea, kiezatlas.getId());
         workspaceService.assignTypeToWorkspace(bezirkInfoAreaType, kiezatlas.getId());
         workspaceService.assignTypeToWorkspace(bildAssignmentEdgeType, kiezatlas.getId());
         workspaceService.assignTypeToWorkspace(userAssignmentEdgeType, kiezatlas.getId());
@@ -47,11 +47,11 @@ public class Migration8 extends Migration {
         kaWebsite.addAssocDef(mf.newAssociationDefinitionModel("dm4.core.composition_def", kaWebsite.getUri(),
             siteRSSFeedUrlType.getUri(), "dm4.core.one", "dm4.core.one"));
         kaWebsite.addAssocDef(mf.newAssociationDefinitionModel("dm4.core.composition_def", kaWebsite.getUri(),
-            siteInfoAreaType.getUri(), "dm4.core.one", "dm4.core.one"));
+            infoArea.getUri(), "dm4.core.one", "dm4.core.one"));
         // 4) Configure custom dm-webclient renderer to webalias type
         ViewConfiguration viewConfig = webAlias.getViewConfig();
         viewConfig.addSetting("dm4.webclient.view_config",
                 "dm4.webclient.simple_renderer_uri", "ka2.website.web_alias_renderer");
-        log.info("##### Kiezatlas Website Migration Nr. 8 COMPLETED #####");
+        log.info("##### Migration Nr. 8: Kiezatlas Website Type Definition Extension COMPLETE #####");
     }
 }

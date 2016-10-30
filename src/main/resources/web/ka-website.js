@@ -117,20 +117,21 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
                     _self.render_bezirkspage(bezirksTopic)
                 })
            } else {
-               console.log("Render page without anchor/hash given, Subdomain?", subdomain_mitte)
-               if (subdomain_mitte) {
+                if (subdomain_mitte) {
+                    console.log("Render page for Subdomain Mitte", subdomain_mitte)
                    _self.load_district_topics(function(e) {
                        bezirksTopic = _self.get_bezirks_topic_by_hash("#mitte")
                        _self.render_bezirkspage(bezirksTopic)
                    })
-               } else {
-                   _self.render_gesamtstadtplan()
-               }
+                } else {
+                    console.log("Render Gesamtstadtplan cause of unknown Page Name, Anchor and unspecific Subdomain")
+                    _self.render_gesamtstadtplan()
+                }
            }
         // 1) page name given
         } else {
-            console.log("Render page with name", name)
-            _self.render_gesamtstadtplan()
+            console.log("Render kiezatlas site named \"" + name + "\"")
+            _self.render_kiezatlas_site(name)
         }
     }
 
@@ -151,6 +152,21 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
             _self.show_district_page(_self.getDistrict().id)
         }
         _self.render_district_menu(bezirksTopic)
+    }
+
+    this.render_kiezatlas_site = function(pageAlias) {
+        // Load Site Info
+        restc.load_website_info(pageAlias, function(response) {
+            console.log("Load Kiezatlas Website ", pageAlias, response)
+            // Load Geo Objects in Website
+            restc.load_website_topics(response.id, function(results) {
+                console.log("Loaded Geo Objects", results)
+                leafletMap.clear_circle_marker()
+                _self.hide_spinning_wheel()
+                leafletMap.setItems(results)
+                leafletMap.render_geo_objects(true)
+            })
+        })
     }
 
     this.render_map = function(detectLocation, zoomLevel, jumpToMap) {
@@ -504,7 +520,7 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
 
     this.render_selected_details_card = function(object) {
         var imprint_html = _self.get_imprint_html(object)
-        var web_alias = object.bezirksregion_uri.slice(18) // ### number of chars the prefix has
+        // var web_alias = object.bezirksregion_uri.slice(18) // ### number of chars the prefix has
         var topic_id = object.uri.slice(19) // ### number of chars the prefix has)
         // var description = object.beschreibung
         var contact = object.kontakt

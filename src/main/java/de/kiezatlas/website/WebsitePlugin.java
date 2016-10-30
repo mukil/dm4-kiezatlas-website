@@ -48,6 +48,7 @@ import de.kiezatlas.website.model.BezirkInfo;
 import de.kiezatlas.website.model.EinrichtungsInfo;
 import de.kiezatlas.website.model.GeoObjectDetailsView;
 import de.kiezatlas.website.model.GeoObjectView;
+import de.kiezatlas.website.model.SiteInfo;
 import de.kiezatlas.website.model.StreetCoordinates;
 import de.mikromedia.webpages.WebpageService;
 import java.io.BufferedReader;
@@ -114,8 +115,8 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
     @Inject private KiezatlasService kiezatlas;
 
     // Application Cache of District Overview Resultsets
-    HashMap<Long, List<GeoObjectView>> districtsCache = new HashMap<Long, List<GeoObjectView>>();
-    HashMap<Long, Long> districtCachedAt = new HashMap<Long, Long>();
+    HashMap<Long, List<GeoObjectView>> citymapCache = new HashMap<Long, List<GeoObjectView>>();
+    HashMap<Long, Long> citymapCachedAt = new HashMap<Long, Long>();
 
     // The URIs of KA2 Geo Object topics synchronized (and kept up-to-date in) Kiezatlas 1 have this prefix.
     // The remaining part of the URI is the original KA1 topic id.
@@ -487,6 +488,75 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
             }
         }
         return (geoObject != null) ? getGeoObjectDetailsPage(geoObject.getId()) : getPageNotFound();
+    }
+
+    /**
+     * Loads site info for a given kieatlas site web alias.
+     *
+     * @param pageAlias  String  ka2.website.web_alias
+     * @return
+     */
+    @GET
+    @Path("/siteinfo/{webAlias}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public SiteInfo getSiteInfoByWebAlias(@PathParam("webAlias") String pageAlias) {
+        SiteInfo result = null;
+        try {
+            Topic webAlias = dm4.getTopicByValue("ka2.website.web_alias", new SimpleValue(pageAlias));
+            Topic site = webAlias.getRelatedTopic("dm4.core.composition", "dm4.core.child",
+                "dm4.core.parent", "ka2.website");
+            log.info("Identified Kiezatlas Website: " + site.getSimpleValue());
+            if (site != null) {
+                result = new SiteInfo(site);
+            }
+        } catch (NoSuchElementException nsex) {
+            log.warning("Probably this web alias is not unique among websites: " + nsex.getLocalizedMessage());
+        }
+        return result;
+    }
+
+    /**
+     * Loads geo objects for a given kieatlas site web alias.
+     *
+     * @param siteId long   Topic id of Kiezatlas Website Topic
+     * @return
+     */
+    @GET
+    @Path("/website/{siteId}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<GeoObjectView> getSiteGeoObjects(@HeaderParam("Referer") String referer, @PathParam("siteId") long siteId) {
+        if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
+        // use cache
+        Topic site = dm4.getTopic(siteId);
+        if (citymapCache.containsKey(siteId)) {
+            // caching lifetime is 30 000 or 12 000 ms for testing purposes
+            if (citymapCachedAt.get(siteId) > new Date().getTime() - 21600000) { // 21600000 for approx. 6hr in ms
+                log.info("Returning cached list of geo object for site " + site.getSimpleValue());
+                return citymapCache.get(siteId);
+            }
+            // invalidate cache
+            citymapCache.remove(siteId);
+            citymapCachedAt.remove(siteId);
+        }
+        // populate new resultset
+        List<GeoObjectView> results = new ArrayList<GeoObjectView>();
+        try {
+            log.info("Attempting to load a site's geo objects: " + site.getSimpleValue() + "...");
+            List<RelatedTopic> geoObjects = site.getRelatedTopics("dm4.core.association", "dm4.core.default",
+                "dm4.core.default", "ka2.geo_object");
+            for (RelatedTopic geoObject : geoObjects) {
+                if (isGeoObjectTopic(geoObject)) {
+                    results.add(new GeoObjectView(geoObject, geomaps));
+                }
+            }
+            log.info("Populated cached list of geo object for site " + site.getSimpleValue());
+        } catch (NoSuchElementException nsex) {
+            log.warning("Probably this web alias is not unique among websites: " + nsex.getLocalizedMessage());
+        }
+        // insert new result into cache
+        citymapCache.put(siteId, results);
+        citymapCachedAt.put(siteId, new Date().getTime());
+        return results;
     }
 
     public Viewable getGeoObjectDetailsPage(@PathParam("topicId") long topicId) {
@@ -889,15 +959,15 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
     public List<GeoObjectView> getGeoObjectsByDistrict(@HeaderParam("Referer") String referer, @PathParam("topicId") long bezirkId) {
         if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
         // use cache
-        if (districtsCache.containsKey(bezirkId)) {
+        if (citymapCache.containsKey(bezirkId)) {
             // caching lifetime is 30 000 or 12 000 ms for testing purposes
-            if (districtCachedAt.get(bezirkId) > new Date().getTime() - 21600000) { // 21600000 for approx. 6hr in ms
+            if (citymapCachedAt.get(bezirkId) > new Date().getTime() - 21600000) { // 21600000 for approx. 6hr in ms
                 log.info("Returning cached list of geo object for district " + bezirkId);
-                return districtsCache.get(bezirkId);
+                return citymapCache.get(bezirkId);
             }
             // invalidate cache
-            districtsCache.remove(bezirkId);
-            districtCachedAt.remove(bezirkId);
+            citymapCache.remove(bezirkId);
+            citymapCachedAt.remove(bezirkId);
         }
         // populate new resultset
         ArrayList<GeoObjectView> results = new ArrayList<GeoObjectView>();
@@ -911,8 +981,8 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
         }
         log.info("Populating cached list of geo object for district " + bezirkId);
         // insert new result into cache
-        districtsCache.put(bezirkId, results);
-        districtCachedAt.put(bezirkId, new Date().getTime());
+        citymapCache.put(bezirkId, results);
+        citymapCachedAt.put(bezirkId, new Date().getTime());
         return results;
     }
 

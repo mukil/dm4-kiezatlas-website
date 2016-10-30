@@ -7,8 +7,8 @@
             "index_mode_uris": ["dm4.core.key"]
         },
         {
-            "value":            "Site Info Area",
-            "uri":              "ka2.website.site_info",
+            "value":            "Info Area",
+            "uri":              "ka2.website.info_area",
             "data_type_uri":    "dm4.core.html",
             "index_mode_uris": ["dm4.core.fulltext"],
             "view_config_topics": [

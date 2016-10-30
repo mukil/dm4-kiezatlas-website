@@ -33,7 +33,8 @@
                 favourites.start_local_db()
                 favourites.list_entries_in_local_db()
                 // render all co mponents of the page requested
-                kiezatlas.render_page()
+                var pageAlias = window.location.pathname.substr(1)
+                kiezatlas.render_page(pageAlias)
                 // add click and touch handlers on our "three near by options"
                 kiezatlas.add_nearby_button_handler()
             })

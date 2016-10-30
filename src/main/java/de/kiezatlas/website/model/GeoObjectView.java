@@ -24,12 +24,16 @@ public class GeoObjectView implements JSONEnabled {
     long geoCoordTopicId = -1;
     // Kiez
     Topic bezirk = null;
-    Topic bezirksregion = null;
     Topic addressTopic = null;
     // Angebote
     int angeboteCount = 0;
 
     Logger log = Logger.getLogger(GeoObjectView.class.getName());
+
+    public GeoObjectView(Topic geoObject, GeomapsService geomaps) {
+        this.geoObject = geoObject;
+        getGeoCoordinate(geomaps);
+    }
 
     public GeoObjectView(Topic geoObject, GeomapsService geomaps, AngebotService angebote) {
         this.geoObject = geoObject;
@@ -39,16 +43,6 @@ public class GeoObjectView implements JSONEnabled {
 
     public String getName() {
         return this.geoObject.getChildTopics().getTopic("ka2.geo_object.name").getSimpleValue().toString();
-    }
-
-    public Topic getBezirksregion() {
-        bezirksregion = geoObject.getRelatedTopic("dm4.core.aggregation", "dm4.core.parent",
-            "dm4.core.child", "ka2.bezirksregion"); // ### many
-        if (bezirksregion == null) {
-            log.log(Level.WARNING, "### Geo Object ({0}, {1}) has no BEZIRKSREGION set!",
-                new Object[]{geoObject.getUri(), geoObject.getSimpleValue()});
-        }
-        return bezirksregion;
     }
 
     public Topic getBezirk() {
@@ -120,31 +114,15 @@ public class GeoObjectView implements JSONEnabled {
         return (bezirk != null) ? bezirk.getUri() : "";
     }
 
-    public String getBezirkName() {
-        return (bezirk != null) ? bezirk.getSimpleValue().toString() : "";
-    }
-
-    public String getBezirksregionUri() {
-        return (bezirksregion != null) ? bezirksregion.getUri() : "";
-    }
-
-    public String getBezirksregionName() {
-        return (bezirksregion != null) ? bezirksregion.getSimpleValue().toString() : "";
-    }
-
     public boolean hasGeoCoordinateValues() {
-        return (getGeoCoordinateLatValue() == -1000 || getGeoCoordinateLngValue() == -1000) ? false : true;
+        return (getGeoCoordinateLatValue() != -1000 && getGeoCoordinateLngValue() != -1000);
     }
 
     public JSONObject toJSON() {
         // needed to display geo object
-        if (!hasGeoCoordinateValues()) {
-            return null;
-        }
-        // needed to link into orginal citymap
+        if (!hasGeoCoordinateValues()) return null;
+        // needed to show the correct impressum on frontpage details card
         getBezirk();
-        getBezirksregion(); // has stadtplan web alias in uri
-        // return valid object
         try {
             return new JSONObject()
                 .put("uri", geoObject.getUri())
@@ -155,9 +133,6 @@ public class GeoObjectView implements JSONEnabled {
                 .put("geo_coordinate_lat", getGeoCoordinateLatValue())
                 .put("geo_coordinate_lon", getGeoCoordinateLngValue())
                 .put("bezirk_uri", getBezirkUri())
-                .put("bezirk_name", getBezirkName())
-                .put("bezirksregion_uri", getBezirksregionUri())
-                .put("bezirksregion_name", getBezirksregionName())
                 .put("angebote_count", this.angeboteCount);
         } catch (Exception jex) {
             throw new RuntimeException("Constructing a JSON GeoObjectView FAILED", jex);
