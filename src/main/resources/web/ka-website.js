@@ -155,13 +155,22 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
     }
 
     this.render_kiezatlas_site = function(pageAlias) {
+        _self.render_map(false, undefined, false)
+        leafletMap.zoom.setPosition("topleft")
+        _self.show_spinning_wheel()
         // Load Site Info
         restc.load_website_info(pageAlias, function(response) {
             console.log("Load Kiezatlas Website ", pageAlias, response)
+            $('.citymap-title').text(response.value)
+            $('.welcome .title').text(response.value)
+            $('.welcome .slogan').text('')
+            console.log("Site Logo", response.logo)
+            $('.welcome .logo').attr("src", response.logo).attr("title", "Logo des " + response.value)
+            _self.show_newsfeed_area(response.id, response.newsfeed)
             // Load Geo Objects in Website
             restc.load_website_topics(response.id, function(results) {
                 console.log("Loaded Geo Objects", results)
-                leafletMap.clear_circle_marker()
+                // leafletMap.clear_circle_marker()
                 _self.hide_spinning_wheel()
                 leafletMap.setItems(results)
                 leafletMap.render_geo_objects(true)
@@ -283,6 +292,17 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
         _self.update_document_title(undefined, bezirk_name)
         _self.show_spinning_wheel()
         // Load Newsfeed in District
+        _self.show_newsfeed_area(topic_id, bezirk_feed_url)
+        // Load Geo Objects in District
+        restc.load_district_topics(topic_id, function(response) {
+            leafletMap.clear_circle_marker()
+            _self.hide_spinning_wheel()
+            leafletMap.setItems(response)
+            leafletMap.render_geo_objects(true)
+        })
+    }
+
+    this.show_newsfeed_area = function(topic_id, feedUrl) {
         restc.load_news_items(topic_id, function(results) {
             var html_item
             if (!results) {
@@ -293,22 +313,15 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
                 for (var r in results) {
                     html_item += '<div class="news-item">'
                         + '<span class="label date">' + _self.format_date(results[r].published) + '</span>'
-                        + '<h3>' + results[r].title + '&nbsp;<a href="' + results[r].link+'">mehr Infos</a></h3>'
+                        + '<h3>' + results[r].title + '&nbsp;<a href="' + results[r].link+'" target="_blank">mehr Infos</a></h3>'
                     + '</div>'
                 }
             } else {
                 html_item = '<h2>Entschuldigen Sie bitte</h2>'
-                html_item += '<div class="news-item">Der Newsfeed f&uuml;r diese Site (<a href="'
-                        + bezirk_feed_url + '">Link</a>) konnte gerade nicht geladen werden.</div>'
+                html_item += '<div class="news-item">Der Newsfeed f&uuml;r diese Site (<a target="_blank" href="'
+                        + feedUrl + '">Link</a>) konnte gerade nicht geladen werden.</div>'
             }
             $('#site-area .news-area').html(html_item)
-        })
-        // Load Geo Objects in District
-        restc.load_district_topics(topic_id, function(response) {
-            leafletMap.clear_circle_marker()
-            _self.hide_spinning_wheel()
-            leafletMap.setItems(response)
-            leafletMap.render_geo_objects(true)
         })
     }
 
@@ -348,8 +361,6 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
     this.setup_map_area = function(dom_el_id) {
         var $map = $('#map')
             $map.empty()
-            $map.addClass('outlined')
-            $map.height('550px')
             $map.show()
         var $star_button = $('.top.menu a.star')
             $star_button.show()
@@ -520,9 +531,6 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
 
     this.render_selected_details_card = function(object) {
         var imprint_html = _self.get_imprint_html(object)
-        // var web_alias = object.bezirksregion_uri.slice(18) // ### number of chars the prefix has
-        var topic_id = object.uri.slice(19) // ### number of chars the prefix has)
-        // var description = object.beschreibung
         var contact = object.kontakt
         var opening_hours = object.oeffnungszeiten
         var lor_link = _self.get_lor_link(object)

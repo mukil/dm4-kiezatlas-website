@@ -3,6 +3,7 @@
 <div th:fragment="top (publisher)">
 
     <div class="ui menu top fixed">
+        <h3 class="citymap-title"></h3>
         <div th:class="${is_publisher} ? 'ui container fluid' : 'ui container'">
             <a href="/">
                 <img src="/de.kiezatlas.website/images/kiezatlas2-logo.png" height="40" class="mobile-logo" />
@@ -15,7 +16,7 @@
                 Bezirke <i class="dropdown icon"></i>
                 <div class="menu" id="bezirksauswahl"></div>
             </div>
-            <a th:if="!${#strings.contains(template, 'index')}" href="/" class="item">Einrichtungen</a>
+            <a th:if="!${#strings.contains(template, 'index')}" href="/" class="item">Startseite</a>
             <a th:if="${authenticated}" href="/angebote/my" class="item angebote">Meine Eintr&auml;ge</a>
             <a href="/angebote" class="item all-angebote">Angebote</a>
             <a class="item star" title="Die aktuelle Kartenposition zu Ihren Standort-Favoriten hinzufügen" alt:="Icon: Favourite this location."

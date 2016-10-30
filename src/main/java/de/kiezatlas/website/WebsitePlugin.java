@@ -847,21 +847,25 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
     }
 
     @GET
-    @Path("/bezirk/newsfeed/{topicId}")
-    public List<NewsFeedItem> getSiteNewsfeedContent(@HeaderParam("Referer") String referer, @PathParam("topicId") long bezirkId) {
-        // if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
+    @Path("/newsfeed/{siteItemId}")
+    public List<NewsFeedItem> getSiteNewsfeedContent(@HeaderParam("Referer") String referer,
+            @PathParam("siteItemId") long siteItemId) {
+        if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
         List<NewsFeedItem> newsItems = new ArrayList<NewsFeedItem>();
         try {
-            Topic bezirk = dm4.getTopic(bezirkId);
+            Topic siteItem = dm4.getTopic(siteItemId);
             URL rssFeedUrl = null;
-            if (bezirk.getTypeUri().equals("ka2.bezirk")) {
-                BezirkInfo infoTopic = new BezirkInfo(bezirk);
+            if (siteItem.getTypeUri().equals("ka2.bezirk")) {
+                BezirkInfo infoTopic = new BezirkInfo(siteItem);
                 if (infoTopic.getSiteRSSFeedURL() == null) return null;
                 rssFeedUrl = new URL(infoTopic.getSiteRSSFeedURL().getSimpleValue().toString());
-                newsItems = fetchSiteRSSFeed(rssFeedUrl);
-                return newsItems;
+            } else if (siteItem.getTypeUri().equals("ka2.website")) {
+                SiteInfo infoTopic = new SiteInfo(siteItem);
+                if (infoTopic.getSiteRSSFeedURL() == null) return null;
+                rssFeedUrl = new URL(infoTopic.getSiteRSSFeedURL());
             }
-            return null;
+            newsItems = fetchSiteRSSFeed(rssFeedUrl);
+            return newsItems;
         } catch (Exception ex) {
             log.warning("Site XML Feed could either not be parsed or loaded, please try again: "
                 + ex.getMessage() + " caused By: " + ex.getCause().getMessage());
@@ -1166,7 +1170,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
             Topic websiteParent = alias.getRelatedTopic("dm4.core.composition", "dm4.core.child",
                 "dm4.core.parent", "ka2.website");
             String pageName = (websiteParent == null) ? "Stadtplan" : websiteParent.getSimpleValue().toString();
-            String templateName = "site"; // ### Thymeleaf Template File Name for all Kiezatlas Website topics
+            String templateName = "citymap"; // ### Thymeleaf Template File Name for all Kiezatlas Website topics
             String[] templateValue = { templateName, pageName };
             aliases.put(alias.getSimpleValue().toString(), templateValue);
         }

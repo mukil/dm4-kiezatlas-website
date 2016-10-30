@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Kiezatlas 2 Stadtplan</title>
+
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+        <!--link rel="stylesheet" href="/de.kiezatlas.website/vendor/jquery/jquery.mobile.theme-1.3.0.min.css"-->
+        <!--link rel="stylesheet" href="/de.kiezatlas.website/vendor/jquery/jquery.mobile-1.3.0.min.css"-->
+        <link rel="stylesheet" href="/de.kiezatlas.website/vendor/leaflet/leaflet.css"/>
+        <!--link rel="stylesheet" href="/de.kiezatlas.website/vendor/leaflet/markercluster/dist/MarkerCluster.css"/>
+        <link rel="stylesheet" href="/de.kiezatlas.website/vendor/leaflet/markercluster/dist/MarkerCluster.Default.css"/-->
+        <link rel="stylesheet" href="/de.kiezatlas.website/vendor/jquery/ui/css/kiezatlas/jquery-ui-1.9.2.custom.min.css"/>
+        <link rel="stylesheet" href="/de.kiezatlas.website/css/sitestyle.css"/>
+
+        <!-- link rel="icon" href="" type="image/vnd.microsoft.icon"/-->
+
+        <script src="/de.kiezatlas.website/vendor/pouchdb/pouchdb-3.6.0.min.js"></script>
+        <script src="/de.kiezatlas.website/dist/vendor/jquery-1.9.1-ui-1.9.2.min.js"></script>
+        <script src="/de.kiezatlas.website/dist/vendor/leaflet-custom-0.7.7.min.js"></script>
+        <!--script src="/de.kiezatlas.website/vendor/leaflet/markercluster/dist/leaflet.markercluster.js"></script-->
+        <!--script src="/de.kiezatlas.website/vendor/jquery/jquery.mobile-1.3.0.min.js"></script-->
+        <script src="/de.kiezatlas.website/dist/ka-website-frontpage.js"></script>
+        <!--script src="/de.kiezatlas.website/dist/website-frontpage.min.js"></script-->
+
+        <script type="text/javascript" th:inline="javascript">
+        /*<![CDATA[*/
+
+            // App initialization
+            $(document).ready(function(e) {
+                // initiates an indexDB (if we're not on the MS IE)
+                favourites.start_local_db()
+                favourites.list_entries_in_local_db()
+                // render all co mponents of the page requested
+                var pageAlias = window.location.pathname.substr(1)
+                kiezatlas.render_page(pageAlias)
+
+                $(window).resize(function() {
+                    setTimeout(function() {
+                        leafletMap.fit_to_height(65)
+                        $('#sidebar').height(window.innerHeight - 36)
+                    }, 50)
+                })
+                // add click and touch handlers on our "three near by options"
+                kiezatlas.add_nearby_button_handler()
+                leafletMap.fit_to_height(65)
+                $('#sidebar').height(window.innerHeight - 36)
+            })
+        /*]]>*/
+        </script>
+    </head>
+    <body class="kiezatlas citymap"><!-- ### change classname to citymap -->
+
+        <div class="top-menu" th:include="fragments/navigation :: top (publisher=${is_publisher})"></div>
+
+        <div class="flex-container">
+
+            <div id="karte">
+
+                <!-- Leaflet Area -->
+                <div id="map" class="fullsize"></div>
+                <!-- Mobile Listing Area -->
+                <div id="listing" class="fullsize"></div>
+
+                <div id="spinning-wheel">
+                    <img src="/de.kiezatlas.website/images/ajax-loader.gif" />
+                </div>
+
+                <!-- Favourite locations dialog -->
+                <!--h3 class="location-label">
+                    <span class="text"></span>
+                    <button class="star no-favs">
+                        <img class="fav-icon" title="zu Favoriten hinzufügen" alt="Icon: Favourite this location."
+                             src="/de.kiezatlas.website/images/1441217865_black_5_favorite_star.png"/>
+                    </button>
+                </h3-->
+
+                <!-- Location detection by text delivers alternatives -->
+                <!--div id="street-alternatives"></div>
+                <ul id="places">
+                    <li class="ui-menu-item ui-corner-all ui-widget-content">
+                        <a href="#">Favoriten</a>
+                        <ul class="entries submenu"></ul>
+                    </li>
+                </ul-->
+
+                <!--- Filter & Map Controls Area -->
+                <!--div class="legende">
+                    <div class="text-search-control">
+                        <form action="javascript:search_fulltext_geo_objects()" id="fulltext-search-form" accept-charset="ISO-8859-15">
+                            <span class="elements einrichtungen-btn">
+                                <img src="/de.kiezatlas.website/images/ka-einrichtung2.png"
+                                    title="Markierer: Einrichtungen"/> Einrichtungen
+                            </span>
+                            <input id="fulltext-search" type="text" placeholder="Volltextsuche" />
+                            <input id="fulltext-do" type="submit" class="btn" value="Suchen" />
+                        </form>
+                    </div>
+                    <a href="javascript:kiezatlas.toggle_circle_search_lock_button()" class="lock-control">Umkreissuche</a>
+                </div-->
+
+            </div>
+
+            <div id="sidebar">
+
+                <!-- Citymap Header Area -->
+                <div class="welcome">
+                    <h3>
+                        <span class="title"></span>
+                        <span class="small slogan">Hier findest du Infos &uuml;ber sozial-kulturelle Einrichtungen in Berlin und ihre Angebote</span>
+                    </h3>
+                    <img class="logo" src="/de.kiezatlas.website/images/kiezatlas2-logo.png"/>
+                </div>
+
+                <!-- Notification area -->
+                <div id="notification" onclick="kiezatlas.close_message_window()">
+                    <span class="message">Hi!</span>
+                </div>
+
+                <!-- Details Area -->
+                <div id="detail-area">
+                    <div class="search-option d">
+                        Bitte w&auml;hlen sie einen Markierer auf der <a href="#karte">Karte</a> aus um Details zu einem Ort
+                        zu erfahren.
+                    </div>
+                </div>
+
+                <!-- District Info Area -->
+                <div id="site-area">
+                    <div class="content-area"></div>
+                    <div class="news-area"></div>
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- Piwik
+        <script type="text/javascript">
+        var pkBaseURL = "//stats.infokitchen.net/";
+        document.write(unescape("%3Cscript src='" + pkBaseURL + "piwik.js' type='text/javascript'%3E%3C/script%3E"));
+        </script><script type="text/javascript">
+        try {
+        var piwikTracker = Piwik.getTracker(pkBaseURL + "piwik.php", 2);
+        piwikTracker.trackPageView();
+        piwikTracker.enableLinkTracking();
+        } catch( err ) {}
+        </script>
+        <noscript>
+            <img th:src="@{https://stats.infokitchen.net/piwik.php(idsite=2,rec=1,action_name='Kiezatlas+2+Stadtplan')}" style="border:0" alt="" />
+        </noscript>
+        End Piwik Tracking Code -->
+
+    </body>
+</html>
+

@@ -29,7 +29,8 @@ var leafletMap = (function($, L) {
             dragging: true, touchZoom: true, scrollWheelZoom: false, doubleClickZoom: true,
             zoomControl: false, minZoom: 9, maxBounds: mapping.maxBounds,
         })
-        L.control.zoom( { position: "topright" }).addTo(map.map)
+        map.zoom = L.control.zoom({ position: "topright" })
+        map.zoom.addTo(map.map)
         L.control.scale( { imperial: false, updateWhenIdle: true } ).addTo(map.map)
         L.tileLayer('https://api.tiles.mapbox.com/v4/kiezatlas.pd8lkp64/{z}/{x}/{y}.png?' // old style id="kiezatlas.map-feifsq6f"
             + 'access_token=pk.eyJ1Ijoia2llemF0bGFzIiwiYSI6ImNpa3BndjU2ODAwYm53MGxzM3JtOXFmb2IifQ._PcBhOcfLYDD8RP3BS0U_g', {
@@ -63,6 +64,13 @@ var leafletMap = (function($, L) {
             }
             map.update_geo_object_marker_radius()
         })
+    }
+
+    map.fit_to_height = function(minus) {
+        var value = window.innerHeight
+        if (minus) value -= minus
+        $('#' + map.elementId).height(value)
+        map.map.invalidateSize()
     }
 
     map.clear_circle_marker = function() {

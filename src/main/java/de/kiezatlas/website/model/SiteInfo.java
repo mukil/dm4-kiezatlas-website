@@ -68,9 +68,12 @@ public class SiteInfo implements JSONEnabled {
                 log.warning("### Fallback because district \"" + this.topic.getSimpleValue() + "\" has no "
                     + "\"Bezirk Info Area\" associated (default, default) which we could use as content!");
             }
+            Topic logo = getSiteLogoFile();
+            if (logo != null) {
+                this.json.put("logo", "/filerepo/" + logo.getChildTopics().getString("dm4.files.path"));
+            }
             this.json.put("newsfeed", getSiteRSSFeedURL());
             this.json.put("imprint", imprint);
-            this.json.put("logo", getSiteLogoFile());
             this.json.put("html", body);
             this.json.put("webAlias", getSiteWebAlias());
             this.json.put("value", getSitename());

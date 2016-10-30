@@ -29,24 +29,21 @@ var restc = (function($) {
 
     restc.load_current_angebotsinfos = function(callback) {
         $.getJSON('/angebote/locations', function(results) {
-                callback(results)
-            }
-        )
+            callback(results)
+        })
     }
 
     restc.load_districts = function(callback) {
         $.getJSON('/geoobject/bezirk', function(results) {
-                results.sort(value_sort_asc)
-                callback(results)
-            }
-        )
+            results.sort(value_sort_asc)
+            callback(results)
+        })
     }
 
     restc.load_district_topics = function(id, callback) {
         $.getJSON('/geoobject/bezirk/' + id, function(results) {
-                callback(results)
-            }
-        )
+            callback(results)
+        })
     }
 
     restc.load_website_info = function(pageAlias, callback) {
@@ -62,21 +59,19 @@ var restc = (function($) {
     }
 
     restc.load_news_items = function(id, callback) {
-        $.getJSON('/geoobject/bezirk/newsfeed/' + id, function(results) {
-                callback(results)
-            }
-        )
+        $.getJSON('/geoobject/newsfeed/' + id, function(results) {
+            callback(results)
+        })
     }
     
     restc.load_geo_object_detail = function(geo_object_id, callback) {
         $.getJSON('/geoobject/' + geo_object_id, function (geo_object) {
-                if (geo_object) {
-                    callback(geo_object)
-                } else {
-                    console.warn("Error while loading details for geo object", result_list[i])
-                }
+            if (geo_object) {
+                callback(geo_object)
+            } else {
+                console.warn("Error while loading details for geo object", result_list[i])
             }
-        )
+        })
     }
 
     // --- Methods for Authentication
