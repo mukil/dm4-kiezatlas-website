@@ -385,6 +385,24 @@ html, body {
     margin: 0em;
 }
 
+.citymap #spinning-wheel {
+    top: 55px;
+    width: 55px;
+    height: 50px;
+    z-index: 2002;
+    border-radius: 5px;
+    left: -2px;
+}
+
+.ui.search {
+    display: none;
+}
+
+.citymap .ui.search {
+    display: inline-block;
+    top: 10px;
+}
+
 #map.outlined  {
     border-bottom: 1px solid #FC3;
     border-top: 1px solid #FC3; /** #0078A8;*/
@@ -413,15 +431,6 @@ html, body {
     text-align: center;
     display: none;
     background-color: rgba(255, 255, 255, 0.9);
-}
-
-.citymap #spinning-wheel {
-    top: 55px;
-    width: 55px;
-    height: 50px;
-    z-index: 2002;
-    border-radius: 5px;
-    left: -2px;
 }
 
 #spinning-wheel img {

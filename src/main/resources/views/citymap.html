@@ -13,6 +13,7 @@
         <link rel="stylesheet" href="/de.kiezatlas.website/vendor/leaflet/markercluster/dist/MarkerCluster.Default.css"/-->
         <link rel="stylesheet" href="/de.kiezatlas.website/vendor/jquery/ui/css/kiezatlas/jquery-ui-1.9.2.custom.min.css"/>
         <link rel="stylesheet" href="/de.kiezatlas.website/css/sitestyle.css"/>
+        <link rel="stylesheet" href="/de.kiezatlas.website/css/semantic-ui/2.2/components/button.min.css"/>
 
         <!-- link rel="icon" href="" type="image/vnd.microsoft.icon"/-->
 
@@ -53,6 +54,25 @@
                 kiezatlas.add_nearby_button_handler()
                 leafletMap.fit_to_height(65)
                 set_sidebar_height()
+                $('.citymap .ui.search input').keyup(function(e) {
+                    console.log("Search Keyinput", e)
+                    if (e.target.value.length >= 3) {
+                        searchValue = e.target.value
+                        console.log("We could do a clocked name search on ", e.target.value, " by now.")
+                    }
+                })
+                $('.citymap .ui.search button').click(function(e) {
+                    var query = $('.citymap .ui.search input').val()
+                    console.log("fire fulltext search on citymap", e.target.value)
+                    if (query.length >= 3) {
+                        kiezatlas.do_text_search_geo_objects(query.trim(), function(e) {
+                            $('.citymap .ui.search button .icon').removeClass("loading").removeClass("circled")
+                            $('.citymap .ui.search button .icon').addClass("search")
+                        })
+                        $('.citymap .ui.search button .icon').addClass("loading").addClass("circle")
+                        $('.citymap .ui.search button .icon').removeClass("search")
+                    }
+                })
             })
         /*]]>*/
         </script>

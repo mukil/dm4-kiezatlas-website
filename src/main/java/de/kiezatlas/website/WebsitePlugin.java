@@ -542,8 +542,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
         List<GeoObjectView> results = new ArrayList<GeoObjectView>();
         try {
             log.info("Attempting to load a site's geo objects: " + site.getSimpleValue() + "...");
-            List<RelatedTopic> geoObjects = site.getRelatedTopics("dm4.core.association", "dm4.core.default",
-                "dm4.core.default", "ka2.geo_object");
+            List<RelatedTopic> geoObjects = kiezatlas.getGeoObjectsBySite(siteId);
             for (RelatedTopic geoObject : geoObjects) {
                 if (isGeoObjectTopic(geoObject)) {
                     results.add(new GeoObjectView(geoObject, geomaps));
@@ -720,7 +719,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
                 return results;
             }
             // 1) Fetch unique geo object topics by text query string
-            List<Topic> geoObjects = searchFulltextInGeoObjectChilds(query, false, false);
+            List<Topic> geoObjects = searchFulltextInGeoObjectChilds(query, true, false);
             // 2) Process saerch results and create DTS for map display
             log.info("Start building response for " + geoObjects.size() + " OVERALL");
             for (Topic topic : geoObjects) {
@@ -739,14 +738,14 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
      * Builds up a list of search results (Geo Objects to be displayed in a map) by district
      * topic id and text query.
      * @param referer
-     * @param districtId
+     * @param contextId
      * @param query
      */
     @GET
-    @Path("/search/{districtId}")
+    @Path("/search/{contextId}")
     @Transactional
-    public List<GeoObjectView> searchGeoObjectsFulltextInDistrict(@HeaderParam("Referer") String referer,
-            @PathParam("districtId") long districtId, @QueryParam("search") String query) {
+    public List<GeoObjectView> searchGeoObjectsFulltextInContext(@HeaderParam("Referer") String referer,
+            @PathParam("contextId") long contextId, @QueryParam("search") String query) {
         if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
         try {
             ArrayList<GeoObjectView> results = new ArrayList<GeoObjectView>();
@@ -754,18 +753,17 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
                 log.warning("No search term entered, returning empty resultset");
                 return results;
             }
-            List<Topic> geoObjects = searchFulltextInGeoObjectChilds(query, false, false);
-            // iterate over merged results
-            log.info("Start building response for " + geoObjects.size() + " and FILTER by DISTRICT");
+            List<Topic> geoObjects = searchFulltextInGeoObjectChilds(query, true, false);
+            log.info("Start building response for " + geoObjects.size() + " and FILTER by CONTEXT");
             for (Topic geoObject: geoObjects) {
-                // check for district
-                if (hasRelatedBezirk(geoObject, districtId)) {
+                // checks for district OR site relation
+                if (hasRelatedTopicAssociatedAsChild(geoObject, contextId)) {
                     if (isGeoObjectTopic(geoObject)) {
                         results.add(new GeoObjectView(geoObject, geomaps, angebote));
                     }
                 }
             }
-            log.info("Build up response " + results.size() + " geo objects in district=\""+districtId+"\"");
+            log.info("Build up response " + results.size() + " geo objects in context=\""+contextId+"\"");
             return results;
         } catch (Exception e) {
             throw new RuntimeException("Searching geo object topics failed", e);
@@ -1730,6 +1728,17 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
         if (relatedBezirk == null) return false;
         if (relatedBezirk.getId() == bezirksId) return true;
         return false;
+    }
+
+    /**
+     * Works for "dm4.core.aggregation" edges and "dm4.core.association".
+     * @param geoObject
+     * @param topicId
+     * @return boolean  A primitate value representing wether a relation exists or not.
+     */
+    private boolean hasRelatedTopicAssociatedAsChild(Topic geoObject, long topicId) {
+        return (dm4.getAssociation(null, geoObject.getId(), topicId,
+            "dm4.core.parent", "dm4.core.child") != null);
     }
 
     private List<? extends Topic> getAngebotCriteriaTopics() {

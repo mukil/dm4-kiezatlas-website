@@ -22,6 +22,16 @@
             <a class="item star" title="Die aktuelle Kartenposition zu Ihren Standort-Favoriten hinzufügen" alt:="Icon: Favourite this location."
                th:if="${#strings.contains(template, 'ka-index')}"><i class="icon star empty"></i></a>
             <div class="right menu">
+                <div class="ui search">
+                    <div class="ui icon input">
+                        <input class="prompt" type="text" placeholder="Volltextsuche.." />
+                        <i class="search icon"></i>
+                    </div>
+                    <button class="circular ui icon button">
+                        <i class="icon search"></i>
+                    </button>
+                    <div class="results"></div>
+                </div>
                 <!--div class="item" th:if="${#strings.contains(template, 'ka-index')}">
                     <div class="ui small input focus">
                         <input placeholder="Suche" type="text" id="topsearch" disabled="disabled"/>
