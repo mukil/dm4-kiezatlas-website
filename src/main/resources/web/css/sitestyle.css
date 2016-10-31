@@ -336,12 +336,35 @@ html, body {
     float: right; margin-top: 3px;
 }
 
+.citymap .ui.tabular.menu {
+    border-bottom: 1px solid #FC3;
+    margin-top: 0em;
+}
+
 .citymap #detail-area {
-    border-top: 1px solid #FC3;
     background-color: #fff;
     padding: 0em;
     top: 0em;
     margin-top: 0em;
+    text-align: left;
+    font-size: 1em;
+}
+
+/** .citymap #sidebar .news-area h2 {
+    display: none;
+} **/
+
+.citymap #search-area .results {
+    padding-left: 0px;
+}
+
+.citymap #search-area .results .anschrift {
+    color: #666;
+}
+
+.citymap #search-area .results a,
+.citymap #search-area .results .anschrift {
+    font-weight: normal;
 }
 
 .citymap #detail-area .entry-card {
@@ -365,7 +388,7 @@ html, body {
 
 .citymap #detail-area .search-option.d {
     background-color: #eaeaea;
-    padding: 1em; margin: 0em; margin-top: .5em;
+    padding: 1em; margin: 2em;
 }
 
 .citymap #site-area {
@@ -373,7 +396,8 @@ html, body {
     flex-direction: row;
     padding: 0em;
     border-bottom: 0px solid transparent;
-    margin-top: 0em;
+    margin-top: 0em;0px solid transparent;
+    border-top: 0px solid transparent;
 }
 
 .citymap #site-area .content-area,
@@ -383,6 +407,7 @@ html, body {
     padding: 0em;
     flex: 0 0 100%;
     margin: 0em;
+    margin-top: 1em;
 }
 
 .citymap #spinning-wheel {
@@ -1613,7 +1638,7 @@ body.sign-up {
     }
     #site-area .news-area {
         border-left: 1px solid transparent;
-        border-top: 1px solid RGBA(0, 40, 86, 0.26);
+        /** border-top: 1px solid RGBA(0, 40, 86, 0.26); **/
         width: 95%;
     }
     #site-area .content-area {
@@ -1774,6 +1799,9 @@ body.sign-up {
         font-size: .8em;
         min-width: 150px;
         margin: 1em;
+    }
+    .citymap #detail-area .entry-card {
+        font-size: 1em;
     }
     #detail-area .entry-card h3 {
         display: inline-block;

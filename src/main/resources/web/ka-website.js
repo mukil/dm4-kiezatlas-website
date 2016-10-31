@@ -172,7 +172,7 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
 
     this.render_kiezatlas_site = function(pageAlias) {
         // Init our map container
-        _self.render_map(false, undefined, false, false)
+        _self.render_map(false, undefined, false, true)
         // Adapt our default leaflet map handling options
         leafletMap.zoom.setPosition("topleft")
         // show loading indicator
@@ -186,10 +186,10 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
             $('.welcome .slogan').text('')
             $('.welcome .imprint').html('<a href="'+response.imprint+'" target="_blank">Impressum</a>')
             $('.welcome .logo').attr("src", response.logo).attr("title", "Logo des " + response.value)
+            $('#sidebar .content-area').html(response.html)
             _self.show_newsfeed_area(response.id, response.newsfeed)
             // Load Geo Objects in Website
             restc.load_website_topics(response.id, function(results) {
-                console.log("Loaded Geo Objects", results)
                 // leafletMap.clear_circle_marker()
                 _self.hide_spinning_wheel()
                 leafletMap.setItems(results)
@@ -660,7 +660,7 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
         _self.setFulltextSearchMode(true)
         var queryUrl = '/geoobject/search/?search='+text
         if (_self.getSiteId())  queryUrl = '/geoobject/search/' + _self.getSiteId() + '/?search=' + text
-        _self.clear_details_area()
+        // _self.clear_details_area()
         _self.show_spinning_wheel()
         $.getJSON(queryUrl, function (geo_objects) {
             console.log("> Text based Geo Object Search returned", geo_objects)
@@ -681,7 +681,7 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
 
     this.do_text_search_angebotsinfos = function(text) { // Remove Duplicate Lines
         var queryUrl = '/angebote/search/geoobjects/?search=' + text
-        _self.clear_details_area()
+        // _self.clear_details_area()
         _self.show_spinning_wheel()
         $.getJSON(queryUrl, function (geo_objects) {
                 console.log("> Text based Angebotsinfo Search returned", geo_objects)
