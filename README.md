@@ -28,8 +28,17 @@ and on the Tile Map Service of [www.mapbox.com](http://www.mapbox.com).
 
 If you want to adapt this software make sure to have your development environment set up like described in the DeepaMehta [Plugin Development Guide](https://trac.deepamehta.de/wiki/PluginDevelopmentGuide).
 
+To install and setup hot-deployment for this plugin when having just downloaded and unzipped deepamehta, you could, for example configure your deepamehta bundle directory in the `pom.xml` of this plugin. Therefore add a `dm4.deploy.dir` path as a property to the `pom.xml` in this directory. For example:
+
 ```
-cd dm4-kiezatlas-website
+    <properties>
+        <dm4.deploy.dir>/home/oscar/deepamehta-4.8.3/bundle-deploy</dm4.deploy.dir>
+    </properties>
+
+```
+
+Then, to build and hot-deploy the sources use the following commands:
+```
 grunt
 mvn clean package
 ```

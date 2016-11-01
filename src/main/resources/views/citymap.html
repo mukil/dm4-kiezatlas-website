@@ -83,7 +83,7 @@
                         $('.citymap .ui.search button .icon').addClass("search")
                         // switch to results tab
                         if ($('.tabular.menu #search-tab').length === 0) {
-                            $('.tabular.menu').append('<div id="search-tab" class="item" data-tab="third">Suchergebnisse</div>')
+                            $('.tabular.menu').append('<div id="search-tab" class="item" data-tab="third">Ergebnisse</div>')
                         }
                         $('.tabular.menu .item').tab('change tab', 'third')
                         // render list of results in orte section
@@ -173,7 +173,7 @@
                             <input class="prompt" type="text" placeholder="Suchanfrage" />
                             <i class="search icon"></i>
                         </div>
-                        <button class="circular ui icon button small">
+                        <button class="circular ui icon button basic small">
                             <i class="icon search"></i>
                         </button>
                     </div>
@@ -198,7 +198,7 @@
                         </div>
                         <div class="mobile-load">
                             <div class="ui input">
-                                <button class="ui button show-all small" onclick="render_mobile_citymap()">Alle Orte dieses Stadtplans auflisten...</button>
+                                <button class="ui button show-all basic small" onclick="render_mobile_citymap()">Alle Orte dieses Stadtplans auflisten...</button>
                             </div>
                         </div>
                     </div>

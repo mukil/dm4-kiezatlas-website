@@ -331,6 +331,17 @@ html, body {
     display: none;
 }
 
+.facet-editor form label {
+    display: block;
+    color: #666;
+    margin-bottom: 1.5em;
+}
+
+.facet-editor form label .ui.input {
+    display: block;
+    margin-bottom: .5em;
+}
+
 .sites .flex-container .selector {
     margin-top: 1em;
 }
@@ -407,7 +418,7 @@ html, body {
     width: 90%;
 }
 
-.citymap #detail-area .logo {
+.citymap #sidebar .logo {
     max-height: 200px;
     padding-bottom: 1em;
 }
@@ -1110,6 +1121,11 @@ span.angebote-btn,
     display: inline-block;
     text-align: left;
     width: 100%;
+}
+
+.kiezatlas.topic .infos .bild img {
+    max-width: 100%;
+    height: auto;
 }
 
 .kiezatlas.topic .assigned-offers {

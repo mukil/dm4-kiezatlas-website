@@ -209,7 +209,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
     }
 
     @GET
-    @Path("/sites")
+    @Path("/sites/entries")
     @Produces(MediaType.APPLICATION_JSON)
     public List<Topic> getKiezatlasWebsites() {
         isAuthorizedSiteManager();
@@ -1106,10 +1106,12 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
     private void prepareGeneralPageData(String templateName) {
         boolean isAuthenticated = isAuthenticated();
         boolean isPrivileged = isConfirmationWorkspaceMember();
+        boolean isSiteManager = isAuthorizedSiteManager();
         viewData("authenticated", isAuthenticated);
         viewData("is_publisher", isPrivileged);
+        viewData("is_site_manager", isSiteManager);
         viewData("template", templateName);
-        log.info("Checking Authorization (isPrivileged=" + isPrivileged + ", isAuthenticated=" + isAuthenticated() + ")");
+        log.info("Checking Authorization (isPrivileged=" + isPrivileged + ", isSiteManager="+isSiteManager+", isAuthenticated=" + isAuthenticated + ")");
     }
 
 

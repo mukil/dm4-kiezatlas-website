@@ -5,6 +5,7 @@ var mapping = {
     "zoomKiezLevel": 13,
     "zoomDistrictLevel" : 12,
     "zoomCityLevel": 11,
+    "fixedMarkerRadius": false,
     "circleMarkerRadius": 5,
     "circleMarkerSelectedRadius": 12,
     "circleSearchRadius": 750,
@@ -47,6 +48,7 @@ var leafletMap = (function($, L) {
         map.map.setView(map.getCurrentLocationCoordinate(), mapping.zoomKiezLevel)
         //
         map.map.on('zoomend', function(e) {
+            if (mapping.fixedMarkerRadius) return;
             if (map.map.getZoom() <= 12) {
                 mapping.circleMarkerRadius = 3
                 mapping.circleMarkerSelectedRadius = 5
@@ -74,9 +76,9 @@ var leafletMap = (function($, L) {
         map.map.invalidateSize()
     }
 
-    map.clear_circle_marker = function() {
+    map.clear_marker = function() {
         // TODO revise this (returns straight for e.g. init via districts page)
-        if (!mapping.markerGroup) return
+        if (!mapping.markerGroup) return;
         // clear complete marker group, e.g. for fulltext_search
         mapping.markerGroup.eachLayer(function (marker){
             leafletMap.map.removeLayer(marker)
@@ -145,7 +147,7 @@ var leafletMap = (function($, L) {
             })
         }
         // ### clear all pre-existing marker from map
-        leafletMap.clear_circle_marker()
+        leafletMap.clear_marker()
         // build up: create new markerGroup
         mapping.markerGroup = L.featureGroup(list_of_markers)
         //
@@ -256,7 +258,7 @@ var leafletMap = (function($, L) {
 
     map.calculate_geo_object_dash_array = function(item) {
         var value = item["angebote_count"]
-        if (value === 0) return [75]
+        if (value === 0) return [100]
         if (value === 1) return [2,75]
         if (value === 2) return [2,5, 2,70]
         if (value === 3) return [2,5, 2,5, 2,65]
@@ -343,6 +345,18 @@ var leafletMap = (function($, L) {
 
     map.setCurrentLocation = function(obj) {
         mapping.currentLocation = obj
+    }
+
+    map.setMarkerRadius = function(val) {
+        mapping.circleMarkerRadius = val
+    }
+
+    map.setFixedMarkerRadius = function(val) {
+        mapping.fixedMarkerRadius = val
+    }
+
+    map.setMarkerSelectedRadius = function(val) {
+        mapping.circleMarkerSelectedRadius = val
     }
 
     map.setCurrentLocationName = function(name) {

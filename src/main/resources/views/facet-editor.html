@@ -37,10 +37,13 @@
         <div class="facet-editor" th:if="${geoobject}">
             <div class="editor" th:if="${site}">
                 <div class="site" th:id="${site.id}"></div>
-                <h2 class="title">Facet-Editor f&uuml;r Einrichtungen im Stadtplan <i th:text="${site.simpleValue}"></i></h2>
+                <h2 class="title">Facettier-Werkzeug f&uuml;r Datens&auml;tze im Stadtplan <i th:text="${site.simpleValue}"></i></h2>
             </div>
             <div class="object" th:id="${geoobject.id}">
-                <h3 th:text="'Einrichtung: ' + ${geoobject.simpleValue}"></h3>
+                <span class="label">Name des Datensatzes</span>
+                <h3 th:text="${geoobject.simpleValue}"></h3>
+                <form id="facets">
+                </form>
             </div>
         </div>
 

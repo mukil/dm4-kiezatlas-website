@@ -14,6 +14,8 @@
                 Bezirke <i class="dropdown icon"></i>
                 <div class="menu" id="bezirksauswahl"></div>
             </div>
+            <a th:if="${is_site_manager}" href="/geoobject/sites"
+               th:class="${#strings.contains(template, 'site')} ? 'active item sites' : 'item sites'">Sites</a>
             <a href="/angebote" class="item all-angebote">Angebote</a>
             <a class="item star" title="Die aktuelle Kartenposition zu Ihren Standort-Favoriten hinzufügen" alt:="Icon: Favourite this location."
                th:if="${#strings.contains(template, 'ka-index')}"><i class="icon star empty"></i></a>
@@ -27,7 +29,7 @@
                         <input class="prompt" type="text" placeholder="Suchanfrage" />
                         <i class="search icon"></i>
                     </div>
-                    <button class="circular ui icon button small">
+                    <button class="circular ui icon basic button small">
                         <i class="icon search"></i>
                     </button>
                 </div>
