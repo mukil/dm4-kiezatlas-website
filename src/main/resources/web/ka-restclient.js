@@ -58,14 +58,20 @@ var restc = (function($) {
         })
     }
 
+    restc.load_topics_by_type = function(typeUri, callback) {
+        $.getJSON('/core/topic/by_type/' + typeUri, function(results) {
+            callback(results)
+        })
+    }
+
     restc.load_website_facets = function(siteId, callback) {
-        $.getJSON('/site/' + siteId + '/facets', function(results) {
+        $.getJSON('/site/' + siteId + '/facets/typedefs', function(results) {
             callback(results)
         })
     }
 
     restc.load_websites = function(callback) {
-        $.getJSON('/geoobject/sites', function(results) {
+        $.getJSON('/geoobject/sites/entries', function(results) {
             callback(results)
         })
     }
