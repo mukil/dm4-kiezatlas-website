@@ -8,6 +8,12 @@ import java.util.List;
 
 public interface WebsiteService {
 
+    static final String USER_ASSIGNMENT = "de.kiezatlas.user_assignment";
+    static final String BILD_ASSIGNMENT = "de.kiezatlas.bild_assignment";
+
+    static final String CONFIRMATION_WS_URI = "de.kiezatlas.ws_confirmation";
+    static final String CONFIRMATION_WS_NAME = "Confirmation";
+
     static final String THEMA_FACET = "ka2.criteria.thema.facet";
     static final String THEMA_CRIT = "ka2.criteria.thema";
     static final String ANGEBOT_FACET = "ka2.criteria.angebot.facet";
@@ -50,13 +56,6 @@ public interface WebsiteService {
 
     static final String WEBSITE_FACET = "ka2.website.facet";
     static final String IMAGE_FACET = "ka2.bild.facet";
-
-    static final String USER_ASSIGNMENT = "de.kiezatlas.user_assignment";
-    static final String BILD_ASSIGNMENT = "de.kiezatlas.bild_assignment";
-
-    // static final String CONFIRMED_TYPE = "ka2.website.confirmed";
-    static final String CONFIRMATION_WS_URI = "de.kiezatlas.ws_confirmation";
-    static final String CONFIRMATION_WS_NAME = "Confirmation";
 
     static final String POSTAL_CODE_DUMMY_VALUE = "0";
 

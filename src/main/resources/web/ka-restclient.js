@@ -52,9 +52,49 @@ var restc = (function($) {
         })
     }
 
-    restc.load_website_topics = function(siteId, callback) {
+    restc.load_website_geoobjects = function(siteId, callback) {
         $.getJSON('/geoobject/website/' + siteId, function(results) {
             callback(results)
+        })
+    }
+
+    restc.load_website_facets = function(siteId, callback) {
+        $.getJSON('/site/' + siteId + '/facets', function(results) {
+            callback(results)
+        })
+    }
+
+    restc.load_websites = function(callback) {
+        $.getJSON('/geoobject/sites', function(results) {
+            callback(results)
+        })
+    }
+
+    restc.remove_website_assignment = function(geoId, siteId, callback) {
+        $.ajax({
+            type: "DELETE", url: "/site/" + geoId + "/" + siteId,
+            success: function() {
+                console.log("Successfully deleted geo-website assignment")
+                callback({ state : "ok" })
+            },
+            error: function(x, s, e) {
+                callback({ state : "error", detail: e })
+                console.log("Deleting geo-website assignment failed", x,s,e)
+            }
+        })
+    }
+
+    restc.create_website_assignment = function(geoId, siteId, callback) {
+        $.ajax({
+            type: "POST", url: "/site/" + geoId + "/" + siteId,
+            success: function() {
+                console.log("Successfully created a geo-website assignment")
+                callback({ state : "ok" })
+            },
+            error: function(x, s, e) {
+                callback({ state : "error", detail: e })
+                console.log("Deleting geo-website assignment failed", x,s,e)
+            }
         })
     }
 
@@ -63,13 +103,23 @@ var restc = (function($) {
             callback(results)
         })
     }
-    
+
+    restc.load_facetted_geo_object = function(topic_id, site_id, callback) {
+        $.getJSON('/geoobject/' + topic_id + '/site/' + site_id, function (geo_object) {
+            if (geo_object) {
+                callback(geo_object)
+            } else {
+                console.warn("Error while loading details for core topic ", geo_object)
+            }
+        })
+    }
+
     restc.load_geo_object_detail = function(geo_object_id, callback) {
         $.getJSON('/geoobject/' + geo_object_id, function (geo_object) {
             if (geo_object) {
                 callback(geo_object)
             } else {
-                console.warn("Error while loading details for geo object", result_list[i])
+                console.warn("Error while loading details for geo object", geo_object)
             }
         })
     }

@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <title>List - Kiezatlas Websites</title>
+
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+        <link rel="stylesheet" href="/de.kiezatlas.angebote/vendor/jquery/1.12.1.custom/jquery-ui.min.css"/>
+        <link rel="stylesheet" href="/de.kiezatlas.angebote/vendor/jquery/1.12.1.custom/jquery-ui.theme.min.css"/>
+
+        <link rel="stylesheet" href="/de.kiezatlas.website/css/sitestyle.css"/>
+        <link rel="stylesheet" href="/de.kiezatlas.website/css/semantic-ui/2.2/components/button.min.css"/>
+        <link rel="stylesheet" href="/de.kiezatlas.website/css/semantic-ui/2.2/components/search.min.css"/>
+
+        <script src="/de.kiezatlas.website/vendor/pouchdb/pouchdb-3.6.0.min.js"></script>
+        <script src="/de.kiezatlas.website/dist/vendor/jquery-1.9.1-ui-1.9.2.min.js"></script>
+
+        <script src="/de.deepamehta.webclient/script/util/js_utils.js"></script>
+
+        <script src="/de.kiezatlas.angebote/vendor/jquery/1.12.1.custom/jquery-ui.min.js"></script>
+
+        <script src="/de.kiezatlas.website/ka-restclient.js"></script>
+        <script src="/de.kiezatlas.website/ka-site-editor.js"></script>
+        <script th:inline="javascript">
+        /*<![CDATA[*/
+            $(document).ready(function(e) {
+                var page = /*[[${page}]]*/ undefined
+                console.log("Sites Rendering Page", page)
+                if (page === "site-editor") {
+                    sites.init_site_editor()
+                } else if (page === "site-listing") {
+                    sites.init_list()
+                } 
+            })
+        /*]]>*/
+        </script>
+    </head>
+    <body class="kiezatlas sites">
+
+        <div class="top-menu" th:include="fragments/navigation :: top (publisher=${is_publisher})"></div>
+
+        <div id="header">
+            <div class="welcome" th:if="${!site}">
+                <h2 class="title">Kiezatlas 2 Stadtpl&auml;ne</h2>
+            </div>
+        </div>
+
+        <div class="listing" th:if="${#strings.contains(page, 'site-listing')}">
+            <ul class="sites"></ul>
+        </div>
+
+        <div class="editor" th:if="${site}">
+            <div class="site" th:id="${site.id}">
+                <h3 th:text="${site.simpleValue}"></h3>
+                <div class="label">Neue Einrichtungen diesem Stadtplan zuweisen</div>
+            </div>
+            <div class="flex-container" th:if="${#strings.contains(page, 'site-editor')}">
+                <div class="selector">
+                    <div class="ui search">
+                        <div class="ui icon input">
+                            <input class="prompt" type="text" placeholder="Suche nach Einrichtungen" />
+                            <i class="search icon"></i>
+                        </div>
+                        <button class="circular ui icon button small">
+                            <i class="icon search"></i>
+                        </button>
+                    </div>
+                    <ul class="results"></ul>
+                </div>
+                <div class="assigned">
+                    <div class="label"><span th:if="${geoobjects}" th:text="${geoobjects.size}"></span> Einrichtungen sind diesem Stadtplan aktuell zugewiesen:</div>
+                    <ul class="geoobjects" th:if="${geoobjects}">
+                        <li th:each="item : ${geoobjects}" th:id="${item.id}">
+                            <span style="font-weight: bold;" th:text="${item.simpleValue}">Einrichtung</span><br/>
+                            <a th:href="'/geoobject/sites/' + ${site.id} + '/facets/' + ${item.id}">Facetten bearbeiten</a>,
+                            <a href="#remove" th:onclick="'sites.remove_assignment(' + ${item.id} + ', '+${site.id}+')'">Aus dem Stadtplan entfernen</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div id="dialog-confirm"></div>
+        </div>
+
+        <div id="bottom" class="padding">
+            <a href="/" title="zur Startseite"><img src="/de.kiezatlas.website/images/kiezatlas2-logo.png" width="150" /></a>
+        </div>
+
+        <div class="footer" th:utext="${footerText}"></div>
+
+    </body>
+</html>

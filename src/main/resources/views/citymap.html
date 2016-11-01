@@ -65,7 +65,8 @@
                         do_citymap_fulltext_search(e.target.value)
                     }
                 })
-                $('.citymap .ui.search button').click(function() {
+                $('.citymap .ui.search button').click(function(e) {
+                    console.log("Klicked search button..", e)
                     var query = $('.citymap .ui.search input').val()
                     if (query.length >= 3) {
                         do_citymap_fulltext_search(query)
@@ -78,10 +79,12 @@
 
                 function do_citymap_fulltext_search(query) {
                     kiezatlas.do_text_search_geo_objects(query.trim(), function(geoobjects) {
-                        $('.citymap .ui.search button .icon').removeClass("loading").removeClass("circled")
+                        $('.citymap .ui.search button .icon').removeClass("loading").removeClass("circle").removeClass('notched')
                         $('.citymap .ui.search button .icon').addClass("search")
                         // switch to results tab
-                        $('.tabular.menu').append('<div class="item" data-tab="third">Suchergebnisse</div>')
+                        if ($('.tabular.menu #search-tab').length === 0) {
+                            $('.tabular.menu').append('<div id="search-tab" class="item" data-tab="third">Suchergebnisse</div>')
+                        }
                         $('.tabular.menu .item').tab('change tab', 'third')
                         // render list of results in orte section
                         var $ul = $('#search-area ul.results')
@@ -97,7 +100,7 @@
                             $ul.append($item)
                         }
                     })
-                    $('.citymap .ui.search button .icon').addClass("loading").addClass("circle")
+                    $('.citymap .ui.search button .icon').addClass("loading").addClass("circle").addClass('notched')
                     $('.citymap .ui.search button .icon').removeClass("search")
                 }
             })
@@ -165,6 +168,15 @@
                         <span class="small slogan">Hier findest du Infos &uuml;ber sozial-kulturelle Einrichtungen in Berlin und ihre Angebote</span>
                     </h3>
                     <img class="logo" src="/de.kiezatlas.website/images/kiezatlas2-logo.png"/>
+                    <div class="ui search">
+                        <div class="ui icon input">
+                            <input class="prompt" type="text" placeholder="Suchanfrage" />
+                            <i class="search icon"></i>
+                        </div>
+                        <button class="circular ui icon button small">
+                            <i class="icon search"></i>
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Notification area -->
@@ -183,6 +195,11 @@
                         <div class="search-option d">
                             Bitte w&auml;hlen sie einen Markierer auf der <a href="#karte">Karte</a> aus um Details zu einem Ort
                             zu erfahren.
+                        </div>
+                        <div class="mobile-load">
+                            <div class="ui input">
+                                <button class="ui button show-all small" onclick="render_mobile_citymap()">Alle Orte dieses Stadtplans auflisten...</button>
+                            </div>
                         </div>
                     </div>
                 </div>

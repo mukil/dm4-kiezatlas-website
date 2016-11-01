@@ -189,13 +189,23 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
             $('#sidebar .content-area').html(response.html)
             _self.show_newsfeed_area(response.id, response.newsfeed)
             // Load Geo Objects in Website
-            restc.load_website_topics(response.id, function(results) {
+            restc.load_website_geoobjects(response.id, function(results) {
                 // leafletMap.clear_circle_marker()
                 _self.hide_spinning_wheel()
                 leafletMap.setItems(results)
                 leafletMap.render_geo_objects(true)
             })
         })
+    }
+
+    this.render_mobile_citymap = function() {
+        console.log("Render all items into the places tab..")
+        var places = leafletMap.getItems()
+        for (var p in places) {
+            var geo = places[p]
+            _self.render_mobile_details_card(geo)
+        }
+        $('#detail-area .mobile-load').hide()
     }
 
     this.render_map = function(detectLocation, zoomLevel, jumpToMap, mouseWheelZoom) {
@@ -597,6 +607,22 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
             + '</div>'
             + lor_link
             + imprint_html
+        + '</div>')
+    }
+
+    this.render_mobile_details_card = function(object) {
+        // _append_ to dom
+        var unconfirmedClass = (object.unconfirmed) ? " unconfirmed" : ""
+        $('#detail-area').append('<div class="entry-card' + unconfirmedClass + '" id="details-'+object.id+'">'
+            + '<h3>'+object.name+'</h3>'
+            + '<div class="details">'
+            + '<p>' + object.anschrift + '<br/>'
+            + '</p>'
+            + '<a href="/geoobject/' + object.id + '" title="Zeige Details">mehr Infos</a>'
+            + '<a href="https://fahrinfo.bvg.de/Fahrinfo/bin/query.bin/dn?Z=' + encodeURIComponent(object.anschrift)
+                + '&REQ0JourneyStopsZA1=2&start=1&pk_campaign=kiezatlas.de">'
+                + '<img src="/de.kiezatlas.website/images/fahrinfo.gif"></a>'
+            + '</div>'
         + '</div>')
     }
 
