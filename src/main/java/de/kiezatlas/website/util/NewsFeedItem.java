@@ -1,4 +1,4 @@
-package de.kiezatlas.website.model;
+package de.kiezatlas.website.util;
 
 import de.deepamehta.core.JSONEnabled;
 import java.util.logging.Logger;

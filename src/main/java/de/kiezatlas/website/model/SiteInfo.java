@@ -2,6 +2,7 @@ package de.kiezatlas.website.model;
 
 import de.deepamehta.core.JSONEnabled;
 import de.deepamehta.core.Topic;
+import de.kiezatlas.website.model.GeoObjectDetailsView;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 

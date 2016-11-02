@@ -1,6 +1,6 @@
 package de.kiezatlas.website;
 
-import de.kiezatlas.website.model.NewsFeedItem;
+import de.kiezatlas.website.util.NewsFeedItem;
 import com.sun.jersey.api.view.Viewable;
 import de.deepamehta.core.Association;
 import de.deepamehta.core.ChildTopics;
@@ -51,17 +51,14 @@ import de.kiezatlas.website.model.GeoObjectDetailsView;
 import de.kiezatlas.website.model.GeoObjectView;
 import de.kiezatlas.website.model.SiteInfo;
 import de.kiezatlas.website.model.StreetCoordinates;
+import de.kiezatlas.website.util.NewsFeedClient;
 import de.mikromedia.webpages.WebpageService;
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.StringReader;
-import java.io.UnsupportedEncodingException;
 import java.math.RoundingMode;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLEncoder;
-import java.net.UnknownHostException;
 import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.util.logging.Level;
@@ -75,19 +72,11 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 import org.deepamehta.plugins.signup.SignupPlugin;
 import org.deepamehta.plugins.signup.service.SignupPluginService;
-import org.w3c.dom.CharacterData;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.xml.sax.InputSource;
 
 /**
  * The module bundling the Kiezatlas 2 Website.<br/>
@@ -226,7 +215,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
     @Path("/edit/{siteId}/facets/{objectId}")
     @Produces(MediaType.APPLICATION_JSON)
     @Transactional
-    public Topic updateSiteFacets(@PathParam("siteId") long siteId, @PathParam("objectId") long objectId, TopicModel tm) {
+    public Topic updateWebsiteFacets(@PathParam("siteId") long siteId, @PathParam("objectId") long objectId, TopicModel tm) {
         if (!isAuthorizedSiteManager()) throw new WebApplicationException(Status.UNAUTHORIZED);
         Topic object = dm4.getTopic(objectId);
         if (isGeoObjectTopic(object)) {
@@ -247,7 +236,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
     @GET
     @Path("/{siteId}/geo")
     @Produces(MediaType.APPLICATION_JSON)
-    public List<GeoObjectView> getGeoObjectsBySite(@HeaderParam("Referer") String referer, @PathParam("siteId") long siteId) {
+    public List<GeoObjectView> getWebsiteGeoObjects(@HeaderParam("Referer") String referer, @PathParam("siteId") long siteId) {
         if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
         // use cache
         Topic site = dm4.getTopic(siteId);
@@ -290,7 +279,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
     @GET
     @Path("/info/{webAlias}")
     @Produces(MediaType.APPLICATION_JSON)
-    public SiteInfo getSiteInfoByWebAlias(@PathParam("webAlias") String pageAlias) {
+    public SiteInfo getWebsiteInfo(@PathParam("webAlias") String pageAlias) {
         SiteInfo result = null;
         try {
             Topic webAlias = dm4.getTopicByValue("ka2.website.web_alias", new SimpleValue(pageAlias));
@@ -554,7 +543,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
     @Produces(MediaType.TEXT_HTML)
     @Path("/geo/confirm/{topicId}")
     @Transactional
-    public Viewable confirmGeoObject(@PathParam("topicId") long topicId) {
+    public Viewable doConfirmGeoObject(@PathParam("topicId") long topicId) {
         if (!isAuthenticated()) return getUnauthorizedPage();
         if (!isConfirmationWorkspaceMember()) {
             viewData("message", "Sie haben aktuell keine Berechtigungen neue Datens&auml;tze zu ver&ouml;ffentlichen.");
@@ -642,6 +631,24 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
             }
         }
         return results;
+    }
+
+    // --- Bezirk Specific Resource Search, Overall, Listing
+
+    @GET
+    @Path("/bezirk")
+    public List<BezirkInfo> fetchKiezatlasDistricts() {
+        ArrayList<BezirkInfo> results = new ArrayList<BezirkInfo>();
+        for (Topic bezirk : dm4.getTopicsByType("ka2.bezirk")) {
+            results.add(new BezirkInfo(bezirk));
+        }
+        return results;
+    }
+
+    @GET
+    @Path("/bezirksregion")
+    public List<Topic> fetchKiezatlasSubregions() {
+        return dm4.getTopicsByType("ka2.bezirksregion");
     }
 
     /**
@@ -808,26 +815,6 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
         }
     }
 
-    // --- Bezirk Specific Resource Search, Overall, Listing
-
-    @GET
-    @Path("/bezirk")
-    public List<BezirkInfo> getKiezatlasDistricts() {
-        ArrayList<BezirkInfo> results = new ArrayList<BezirkInfo>();
-        for (Topic bezirk : dm4.getTopicsByType("ka2.bezirk")) {
-            results.add(new BezirkInfo(bezirk));
-        }
-        return results;
-    }
-
-    @GET
-    @Path("/bezirksregion")
-    public List<Topic> getKiezatlasSubregions() {
-        return dm4.getTopicsByType("ka2.bezirksregion");
-    }
-
-
-
     /*** ------------------------- Website Fulltext Search Method ----------------------------- **/
 
     /**
@@ -967,84 +954,12 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
                 if (infoTopic.getSiteRSSFeedURL() == null) return null;
                 rssFeedUrl = new URL(infoTopic.getSiteRSSFeedURL());
             }
-            newsItems = fetchSiteRSSFeed(rssFeedUrl);
-            return newsItems;
+            NewsFeedClient newsClient = new NewsFeedClient(rssFeedUrl);
+            return newsClient.fetchSiteRSSFeed();
         } catch (Exception ex) {
             log.warning("Site XML Feed could either not be parsed or loaded, please try again: "
                 + ex.getMessage() + " caused By: " + ex.getCause().getMessage());
             return newsItems;
-        }
-    }
-
-
-
-    /*** ---------------------- Internal Helper Methods --------------------------- ***/
-
-    private List<NewsFeedItem> fetchSiteRSSFeed(URL rssFeedUrl) {
-        StringBuffer result = new StringBuffer();
-        try {
-            log.info("Fetching XML Site Feed " + rssFeedUrl);
-            URLConnection connection = rssFeedUrl.openConnection();
-            connection.setRequestProperty("Content-Type", MediaType.APPLICATION_XML);
-            // 2) Read in the response
-            BufferedReader rd = new BufferedReader(new InputStreamReader(connection.getInputStream(), "UTF-8"));
-            String line = "";
-            while (rd.ready()) {
-                line = rd.readLine();
-                result.append(line);
-            }
-            rd.close();
-            List<NewsFeedItem> newsfeed = parseXMLNewsfeedString(result, 3);
-            log.info("Site Feed OK - Fetched " + newsfeed.size() + " news items");
-            return newsfeed;
-        } catch (UnknownHostException uke) {
-            throw new WebApplicationException(uke);
-        } catch (UnsupportedEncodingException ex) {
-            throw new WebApplicationException(ex);
-        } catch (IOException ex) {
-            throw new WebApplicationException(ex);
-        }
-    }
-
-    private List<NewsFeedItem> parseXMLNewsfeedString(StringBuffer result, int maxItems) {
-        try {
-            DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-            DocumentBuilder db = dbf.newDocumentBuilder();
-            InputSource is = new InputSource();
-            is.setCharacterStream(new StringReader(result.toString()));
-            Document doc = db.parse(is);
-            NodeList nodes = doc.getElementsByTagName("item");
-            // iterate the employees
-            int count = 0;
-            List<NewsFeedItem> feedItems = new ArrayList<NewsFeedItem>();
-            for (int i = 0; i < nodes.getLength(); i++) {
-               Element element = (Element) nodes.item(i);
-               NewsFeedItem newsItem = new NewsFeedItem();
-               // Title of News
-               NodeList name = element.getElementsByTagName("title");
-               Element line = (Element) name.item(0);
-               newsItem.setTitle(getCharacterDataFromElement(line));
-               // Text of News
-               NodeList description = element.getElementsByTagName("description");
-               line = (Element) description.item(0);
-               newsItem.setDescription(getCharacterDataFromElement(line));
-               // Link URL
-               NodeList link = element.getElementsByTagName("link");
-               line = (Element) link.item(0);
-               newsItem.setLink(getCharacterDataFromElement(line));
-               // Date Published
-               NodeList title = element.getElementsByTagName("pubDate");
-               line = (Element) title.item(0);
-               newsItem.setPublished(getCharacterDataFromElement(line));
-               // Add news Item
-               feedItems.add(newsItem);
-               count++;
-               if (count == maxItems) break;
-            }
-            return feedItems;
-        }
-        catch (Exception e) {
-            throw new WebApplicationException(e);
         }
     }
 
@@ -1983,15 +1898,6 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
 
 
     /** -----------------------  Other Utility Resources (Geo Coding and Reverse Geo Coding) ----------------------- */
-
-    private String getCharacterDataFromElement(Element e) {
-        Node child = e.getFirstChild();
-        if (child instanceof CharacterData) {
-            CharacterData cd = (CharacterData) child;
-            return cd.getData();
-        }
-        return "?";
-    }
 
     private long mapGoogleDistrictNameToKiezatlasBezirksTopic(String googleDistrict) {
         List<Topic> districts = getAvailableDistrictTopics();
