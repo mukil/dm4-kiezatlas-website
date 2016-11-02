@@ -45,12 +45,12 @@ import static de.kiezatlas.website.WebsiteService.CONFIRMATION_WS_URI;
 import static de.kiezatlas.website.WebsiteService.OEFFNUNGSZEITEN;
 import static de.kiezatlas.website.WebsiteService.OEFFNUNGSZEITEN_FACET;
 import static de.kiezatlas.website.WebsiteService.WEBSITE_FACET;
-import de.kiezatlas.website.model.BezirkInfo;
-import de.kiezatlas.website.model.EinrichtungsInfo;
-import de.kiezatlas.website.model.GeoObjectDetailsView;
-import de.kiezatlas.website.model.GeoObjectView;
-import de.kiezatlas.website.model.SiteInfo;
-import de.kiezatlas.website.model.StreetCoordinates;
+import de.kiezatlas.website.model.BezirkViewModel;
+import de.kiezatlas.website.model.EinrichtungPageModel;
+import de.kiezatlas.website.model.GeoDetailsViewModel;
+import de.kiezatlas.website.model.GeoViewModel;
+import de.kiezatlas.website.model.SiteViewModel;
+import de.kiezatlas.website.model.CoordinatesViewModel;
 import de.kiezatlas.website.util.NewsFeedClient;
 import de.mikromedia.webpages.WebpageService;
 import java.io.BufferedReader;
@@ -106,7 +106,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
     @Inject private KiezatlasService kiezatlas;
 
     // Application Cache of District Overview Resultsets
-    HashMap<Long, List<GeoObjectView>> citymapCache = new HashMap<Long, List<GeoObjectView>>();
+    HashMap<Long, List<GeoViewModel>> citymapCache = new HashMap<Long, List<GeoViewModel>>();
     HashMap<Long, Long> citymapCachedAt = new HashMap<Long, Long>();
 
     // The URIs of KA2 Geo Object topics synchronized (and kept up-to-date in) Kiezatlas 1 have this prefix.
@@ -236,7 +236,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
     @GET
     @Path("/{siteId}/geo")
     @Produces(MediaType.APPLICATION_JSON)
-    public List<GeoObjectView> getWebsiteGeoObjects(@HeaderParam("Referer") String referer, @PathParam("siteId") long siteId) {
+    public List<GeoViewModel> getWebsiteGeoObjects(@HeaderParam("Referer") String referer, @PathParam("siteId") long siteId) {
         if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
         // use cache
         Topic site = dm4.getTopic(siteId);
@@ -251,13 +251,13 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
             citymapCachedAt.remove(siteId);
         }
         // populate new resultset
-        List<GeoObjectView> results = new ArrayList<GeoObjectView>();
+        List<GeoViewModel> results = new ArrayList<GeoViewModel>();
         try {
             log.info("Attempting to load a site's geo objects: " + site.getSimpleValue() + "...");
             List<RelatedTopic> geoObjects = kiezatlas.getGeoObjectsBySite(siteId);
             for (RelatedTopic geoObject : geoObjects) {
                 if (isGeoObjectTopic(geoObject)) {
-                    results.add(new GeoObjectView(geoObject, geomaps));
+                    results.add(new GeoViewModel(geoObject, geomaps));
                 }
             }
             log.info("Populated cached list of geo object for site " + site.getSimpleValue());
@@ -279,15 +279,15 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
     @GET
     @Path("/info/{webAlias}")
     @Produces(MediaType.APPLICATION_JSON)
-    public SiteInfo getWebsiteInfo(@PathParam("webAlias") String pageAlias) {
-        SiteInfo result = null;
+    public SiteViewModel getWebsiteInfo(@PathParam("webAlias") String pageAlias) {
+        SiteViewModel result = null;
         try {
             Topic webAlias = dm4.getTopicByValue("ka2.website.web_alias", new SimpleValue(pageAlias));
             Topic site = webAlias.getRelatedTopic("dm4.core.composition", "dm4.core.child",
                 "dm4.core.parent", "ka2.website");
             log.info("Identified Kiezatlas Website: " + site.getSimpleValue());
             if (site != null) {
-                result = new SiteInfo(site);
+                result = new SiteViewModel(site);
             }
         } catch (NoSuchElementException nsex) {
             log.warning("Probably this web alias is not unique among websites: " + nsex.getLocalizedMessage());
@@ -396,7 +396,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
     @Path("/geo/create")
     public Viewable getGeoObjectEditPage() {
         if (!isAuthenticated()) return getUnauthorizedPage();
-        EinrichtungsInfo geoObject = new EinrichtungsInfo();
+        EinrichtungPageModel geoObject = new EinrichtungPageModel();
         geoObject.setCoordinates(new GeoCoordinate(13.4, 52.5));
         geoObject.setName("Neuer Eintrag");
         geoObject.setId(-1);
@@ -423,7 +423,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
         Topic username = getUsernameTopic();
         if (isGeoObjectTopic(geoObject)) {
             if (isAssignedUsername(geoObject, username)) {
-                EinrichtungsInfo einrichtung = assembleGeneralEinrichtungsInfo(geoObject);
+                EinrichtungPageModel einrichtung = assembleGeneralEinrichtungsInfo(geoObject);
                 einrichtung.setAssignedUsername(username.getSimpleValue().toString());
                 viewData("geoobject", einrichtung);
                 viewData("themen", facets.getFacets(geoObject, THEMA_FACET));
@@ -482,13 +482,13 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
     @GET
     @Path("/geo/{topicId}")
     @Produces(MediaType.APPLICATION_JSON)
-    public GeoObjectDetailsView getGeoObjectDetails(@HeaderParam("Referer") String referer,
+    public GeoDetailsViewModel getGeoObjectDetails(@HeaderParam("Referer") String referer,
                                                     @PathParam("topicId") long topicId) {
         if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
         Topic geoObject = dm4.getTopic(topicId);
-        GeoObjectDetailsView geoDetailsView = null;
+        GeoDetailsViewModel geoDetailsView = null;
         if (isGeoObjectTopic(geoObject)) {
-            geoDetailsView = new GeoObjectDetailsView(dm4.getTopic(topicId), geomaps, angebote);
+            geoDetailsView = new GeoDetailsViewModel(dm4.getTopic(topicId), geomaps, angebote);
             if (isAssignedToConfirmationWorkspace(geoObject)) geoDetailsView.setUnconfirmed();
         }
         return geoDetailsView;
@@ -526,10 +526,10 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
         // ResultList<RelatedTopic> availableWebsites = dm4.getTopics("ka2.website", 0);
         // viewData("websites", availableWebsites);
         List<RelatedTopic> sortedGeoObjects = unconfirmedGeoObjects;
-        List<EinrichtungsInfo> results = new ArrayList();
+        List<EinrichtungPageModel> results = new ArrayList();
         sortByModificationDateDescending(sortedGeoObjects);
         for (RelatedTopic geoObject : sortedGeoObjects) {
-            EinrichtungsInfo einrichtung = assembleGeneralEinrichtungsInfo(geoObject);
+            EinrichtungPageModel einrichtung = assembleGeneralEinrichtungsInfo(geoObject);
             einrichtung.setAssignedUsername(getFirstUsernameAssigned(geoObject));
             results.add(einrichtung);
         }
@@ -563,8 +563,12 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
         return getWebsiteGeoDetailsPage(geoObject.getId());
     }
 
+    /**
+     * @see The JS restclient of Angebote UI (dm4-kiezatlas-angebote).
+     * @return A JSON array containing TopicModels each representing a "ka2.geo_object".
+     */
     @GET
-    @Path("/geo/my")
+    @Path("/geo/my/json")
     @Produces(MediaType.APPLICATION_JSON)
     public List<Topic> getGeoObjectsByUser() {
         List<Topic> my = new ArrayList<Topic>();
@@ -586,7 +590,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
     @GET
     @Path("/bezirk/{topicId}")
     @Produces(MediaType.APPLICATION_JSON)
-    public List<GeoObjectView> getGeoObjectsByDistrict(@HeaderParam("Referer") String referer, @PathParam("topicId") long bezirkId) {
+    public List<GeoViewModel> getGeoObjectsByDistrict(@HeaderParam("Referer") String referer, @PathParam("topicId") long bezirkId) {
         if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
         // use cache
         if (citymapCache.containsKey(bezirkId)) {
@@ -600,13 +604,13 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
             citymapCachedAt.remove(bezirkId);
         }
         // populate new resultset
-        ArrayList<GeoObjectView> results = new ArrayList<GeoObjectView>();
+        ArrayList<GeoViewModel> results = new ArrayList<GeoViewModel>();
         Topic bezirk = dm4.getTopic(bezirkId);
         List<RelatedTopic> geoObjects = bezirk.getRelatedTopics("dm4.core.aggregation",
             "dm4.core.child", "dm4.core.parent", "ka2.geo_object");
         for (RelatedTopic geoObject : geoObjects) {
             if (isGeoObjectTopic(geoObject)) {
-                results.add(new GeoObjectView(geoObject, geomaps, angebote));
+                results.add(new GeoViewModel(geoObject, geomaps, angebote));
             }
         }
         log.info("Populating cached list of geo object for district " + bezirkId);
@@ -619,15 +623,15 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
     @GET
     @Path("/bezirksregion/{topicId}")
     @Produces(MediaType.APPLICATION_JSON)
-    public List<GeoObjectView> getGeoObjectsBySubregions(@HeaderParam("Referer") String referer, @PathParam("topicId") long bezirksregionId) {
+    public List<GeoViewModel> getGeoObjectsBySubregions(@HeaderParam("Referer") String referer, @PathParam("topicId") long bezirksregionId) {
         if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
-        ArrayList<GeoObjectView> results = new ArrayList<GeoObjectView>();
+        ArrayList<GeoViewModel> results = new ArrayList<GeoViewModel>();
         Topic bezirksregion = dm4.getTopic(bezirksregionId);
         List<RelatedTopic> geoObjects = bezirksregion.getRelatedTopics("dm4.core.aggregation",
             "dm4.core.child", "dm4.core.parent", "ka2.geo_object");
         for (RelatedTopic geoObject : geoObjects) {
             if (isGeoObjectTopic(geoObject)) {
-                results.add(new GeoObjectView(geoObject, geomaps, angebote));
+                results.add(new GeoViewModel(geoObject, geomaps, angebote));
             }
         }
         return results;
@@ -637,10 +641,10 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
 
     @GET
     @Path("/bezirk")
-    public List<BezirkInfo> fetchKiezatlasDistricts() {
-        ArrayList<BezirkInfo> results = new ArrayList<BezirkInfo>();
+    public List<BezirkViewModel> fetchKiezatlasDistricts() {
+        ArrayList<BezirkViewModel> results = new ArrayList<BezirkViewModel>();
         for (Topic bezirk : dm4.getTopicsByType("ka2.bezirk")) {
-            results.add(new BezirkInfo(bezirk));
+            results.add(new BezirkViewModel(bezirk));
         }
         return results;
     }
@@ -659,13 +663,13 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
      */
     @GET
     @Path("/search/by_name")
-    public List<GeoObjectView> searchGeoObjectsByName(@HeaderParam("Referer") String referer,
+    public List<GeoViewModel> searchGeoObjectsByName(@HeaderParam("Referer") String referer,
             @QueryParam("query") String query) {
         if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
         try {
             log.log(Level.INFO, "> nameQuery=\"{0}\"", query);
             String queryValue = query.trim();
-            ArrayList<GeoObjectView> results = new ArrayList<GeoObjectView>();
+            ArrayList<GeoViewModel> results = new ArrayList<GeoViewModel>();
             if (queryValue.isEmpty()) {
                 log.warning("No search term entered, returning empty resultset");
                 return results;
@@ -675,7 +679,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
             for (Topic topic : singleTopics) {
                 Topic geoObject = topic.getRelatedTopic("dm4.core.composition",
                     "dm4.core.child", "dm4.core.parent", "ka2.geo_object");
-                results.add(new GeoObjectView(geoObject, geomaps, angebote));
+                results.add(new GeoViewModel(geoObject, geomaps, angebote));
             }
             return results;
         } catch (Exception e) {
@@ -691,16 +695,16 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
      */
     @GET
     @Path("/search/{coordinatePair}/{radius}")
-    public List<GeoObjectView> searchGeoObjectsNearBy(@PathParam("coordinatePair") String coordinates,
+    public List<GeoViewModel> searchGeoObjectsNearBy(@PathParam("coordinatePair") String coordinates,
             @PathParam("radius") String radius) {
         // .) ### Authenticate...
         // 1) Set default search radius for a query
         double r = (radius.isEmpty() || radius.equals("0")) ? 1.0 : Double.parseDouble(radius);
-        List<GeoObjectView> results = new ArrayList<GeoObjectView>();
+        List<GeoViewModel> results = new ArrayList<GeoViewModel>();
         // 2) Process spatial search results (=topics of type Geo Coordinate)
         List<Topic> geoObjects = searchGeoObjectsNearby(coordinates, r);
         for (Topic geoTopic : geoObjects) {
-            results.add(new GeoObjectView(geoTopic, geomaps, angebote));
+            results.add(new GeoViewModel(geoTopic, geomaps, angebote));
         }
         return results;
     }
@@ -713,13 +717,13 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
      */
     @GET
     @Path("/search/coordinates")
-    public List<StreetCoordinates> searchStreetCoordinatesByName(@HeaderParam("Referer") String referer,
+    public List<CoordinatesViewModel> searchStreetCoordinatesByName(@HeaderParam("Referer") String referer,
             @QueryParam("query") String query) {
         if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
         try {
             log.info("Street Coordinates Query=\""+query+"\"");
             String queryValue = query.trim();
-            List<StreetCoordinates> results = new ArrayList<StreetCoordinates>();
+            List<CoordinatesViewModel> results = new ArrayList<CoordinatesViewModel>();
             if (queryValue.isEmpty()) return results;
             /** List<Topic> singleTopics = dm4.searchTopics(queryValue, "dm4.contacts.street");
             for (Topic streetname : singleTopics) {
@@ -736,7 +740,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
                 }
             }
             log.info("Fetched " + results.size() + " internal street coordinate values"); **/
-            List<StreetCoordinates> googleResults = getGoogleStreetCoordinates(query + ", Berlin, Germany");
+            List<CoordinatesViewModel> googleResults = getGoogleStreetCoordinates(query + ", Berlin, Germany");
             log.info("Fetched " + googleResults.size() + " google street coordinate values");
             return googleResults;
         } catch (Exception e) {
@@ -751,14 +755,14 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
      */
     @GET
     @Path("/search")
-    public List<GeoObjectView> searchGeoObjectsFulltext(@HeaderParam("Referer") String referer,
+    public List<GeoViewModel> searchGeoObjectsFulltext(@HeaderParam("Referer") String referer,
             @QueryParam("search") String query) {
         // .) ### Authenticate
         if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
         // TODO: Maybe it is also desirable that we wrap the users query into quotation marks
         // (to allow users to search for a combination of words)
         try {
-            ArrayList<GeoObjectView> results = new ArrayList<GeoObjectView>();
+            ArrayList<GeoViewModel> results = new ArrayList<GeoViewModel>();
             if (query.isEmpty()) {
                 log.warning("No search term entered, returning empty resultset");
                 return results;
@@ -769,7 +773,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
             log.info("Start building response for " + geoObjects.size() + " OVERALL");
             for (Topic topic : geoObjects) {
                 if (isGeoObjectTopic(topic)) {
-                    results.add(new GeoObjectView(topic, geomaps, angebote));
+                    results.add(new GeoViewModel(topic, geomaps, angebote));
                 }
             }
             log.info("Build up response " + results.size() + " geo objects across all districts");
@@ -789,11 +793,11 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
     @GET
     @Path("/search/{contextId}")
     @Transactional
-    public List<GeoObjectView> searchGeoObjectsFulltextInContext(@HeaderParam("Referer") String referer,
+    public List<GeoViewModel> searchGeoObjectsFulltextInContext(@HeaderParam("Referer") String referer,
             @PathParam("contextId") long contextId, @QueryParam("search") String query) {
         if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
         try {
-            ArrayList<GeoObjectView> results = new ArrayList<GeoObjectView>();
+            ArrayList<GeoViewModel> results = new ArrayList<GeoViewModel>();
             if (query.isEmpty()) {
                 log.warning("No search term entered, returning empty resultset");
                 return results;
@@ -804,7 +808,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
                 // checks for district OR site relation
                 if (hasRelatedTopicAssociatedAsChild(geoObject, contextId)) {
                     if (isGeoObjectTopic(geoObject)) {
-                        results.add(new GeoObjectView(geoObject, geomaps, angebote));
+                        results.add(new GeoViewModel(geoObject, geomaps, angebote));
                     }
                 }
             }
@@ -946,11 +950,11 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
             Topic siteItem = dm4.getTopic(siteItemId);
             URL rssFeedUrl = null;
             if (siteItem.getTypeUri().equals("ka2.bezirk")) {
-                BezirkInfo infoTopic = new BezirkInfo(siteItem);
+                BezirkViewModel infoTopic = new BezirkViewModel(siteItem);
                 if (infoTopic.getSiteRSSFeedURL() == null) return null;
                 rssFeedUrl = new URL(infoTopic.getSiteRSSFeedURL().getSimpleValue().toString());
             } else if (siteItem.getTypeUri().equals("ka2.website")) {
-                SiteInfo infoTopic = new SiteInfo(siteItem);
+                SiteViewModel infoTopic = new SiteViewModel(siteItem);
                 if (infoTopic.getSiteRSSFeedURL() == null) return null;
                 rssFeedUrl = new URL(infoTopic.getSiteRSSFeedURL());
             }
@@ -976,7 +980,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
         Topic geoObject = dm4.getTopic(topicId);
         if (!isGeoObjectTopic(geoObject)) return getNotFoundPage();
         // Assemble Generic Einrichtungs Infos
-        EinrichtungsInfo einrichtung = assembleGeneralEinrichtungsInfo(geoObject);
+        EinrichtungPageModel einrichtung = assembleGeneralEinrichtungsInfo(geoObject);
         // ### Yet Missing: Träger, Bezirksregion, Bezirk, Administrator Infos und Stichworte
         viewData("geoobject", einrichtung);
         // Assemble Category Assignments for Einrichtung;
@@ -994,7 +998,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
         return view("detail");
     }
 
-    private Viewable getConfirmationPage(List<EinrichtungsInfo> results) {
+    private Viewable getConfirmationPage(List<EinrichtungPageModel> results) {
         prepareGeneralPageData("confirmation");
         viewData("availableLor", getAvailableLORNumberTopics());
         viewData("workspace", getStandardWorkspace());
@@ -1197,8 +1201,8 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
             "dm4.core.child", "ka2.kontakt");
     }
 
-    private EinrichtungsInfo assembleGeneralEinrichtungsInfo(Topic geoObject) {
-        EinrichtungsInfo einrichtung = new EinrichtungsInfo();
+    private EinrichtungPageModel assembleGeneralEinrichtungsInfo(Topic geoObject) {
+        EinrichtungPageModel einrichtung = new EinrichtungPageModel();
         try {
             geoObject.loadChildTopics();
             einrichtung.setName(geoObject.getChildTopics().getString(KiezatlasService.GEO_OBJECT_NAME));
@@ -1226,7 +1230,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
             } else {
                 einrichtung.setBezirk(bezirk.getSimpleValue().toString());
                 einrichtung.setBezirkId(bezirk.getId());
-                BezirkInfo bezirkInfo = new BezirkInfo(bezirk);
+                BezirkViewModel bezirkInfo = new BezirkViewModel(bezirk);
                 if (bezirkInfo.getImprintLink() != null) {
                     einrichtung.setImprintUrl(bezirkInfo.getImprintLink().getSimpleValue().toString());
                 }
@@ -1936,9 +1940,9 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
         return result;
     }
 
-    private List<StreetCoordinates> getGoogleStreetCoordinates(String addressInput) {
+    private List<CoordinatesViewModel> getGoogleStreetCoordinates(String addressInput) {
         String response = geoCodeAddressInput(addressInput);
-        List<StreetCoordinates> entries = new ArrayList();
+        List<CoordinatesViewModel> entries = new ArrayList();
         try {
             JSONObject objects = new JSONObject(response);
             JSONArray results = objects.getJSONArray("results");
@@ -1949,7 +1953,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
                 if (geometry != null) {
                     JSONObject location = geometry.getJSONObject("location");
                     String name = item.getString("formatted_address");
-                    StreetCoordinates streetCoords = new StreetCoordinates();
+                    CoordinatesViewModel streetCoords = new CoordinatesViewModel();
                     streetCoords.setCoordinates(new GeoCoordinate(location.getDouble("lng"), location.getDouble("lat")));
                     streetCoords.setName(name);
                     entries.add(streetCoords);

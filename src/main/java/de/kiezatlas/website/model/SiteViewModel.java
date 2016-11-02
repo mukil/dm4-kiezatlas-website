@@ -2,7 +2,7 @@ package de.kiezatlas.website.model;
 
 import de.deepamehta.core.JSONEnabled;
 import de.deepamehta.core.Topic;
-import de.kiezatlas.website.model.GeoObjectDetailsView;
+import de.kiezatlas.website.model.GeoDetailsViewModel;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 
@@ -13,14 +13,14 @@ import java.util.logging.Logger;
  *
  * @author Malte Reißig (<a href="mailto:malte@mikromedia.de">Contact</a>)
  */
-public class SiteInfo implements JSONEnabled {
+public class SiteViewModel implements JSONEnabled {
 
-    Logger log = Logger.getLogger(GeoObjectDetailsView.class.getName());
+    Logger log = Logger.getLogger(GeoDetailsViewModel.class.getName());
 
     private Topic topic;
     private JSONObject json = new JSONObject();
 
-    public SiteInfo(Topic site) {
+    public SiteViewModel(Topic site) {
         this.topic = site;
         this.topic.loadChildTopics();
     }

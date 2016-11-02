@@ -17,10 +17,10 @@ import org.codehaus.jettison.json.JSONObject;
  *
  * @author Malte Reißig (<a href="mailto:malte@mikromedia.de">Contact</a>)
  * */
-public class GeoObjectDetailsView implements JSONEnabled {
+public class GeoDetailsViewModel implements JSONEnabled {
 
     // Einrichtung
-    GeoObjectView geoObjectView = null;
+    GeoViewModel geoObjectView = null;
     long geoCoordinateTopicId = -1;
     // Related Categories
     List<RelatedTopic> relatedTopics = null;
@@ -33,10 +33,10 @@ public class GeoObjectDetailsView implements JSONEnabled {
     Topic lor_nr = null;
     boolean isUnconfirmed = false;
 
-    Logger log = Logger.getLogger(GeoObjectDetailsView.class.getName());
+    Logger log = Logger.getLogger(GeoDetailsViewModel.class.getName());
 
-    public GeoObjectDetailsView(Topic geoObject, GeomapsService geomaps, AngebotService angebote) {
-        this.geoObjectView = new GeoObjectView(geoObject, geomaps, angebote);
+    public GeoDetailsViewModel(Topic geoObject, GeomapsService geomaps, AngebotService angebote) {
+        this.geoObjectView = new GeoViewModel(geoObject, geomaps, angebote);
         // related categories
         relatedTopics = geoObject.getRelatedTopics("dm4.core.aggregation", "dm4.core.parent",
             "dm4.core.child", "ka2.criteria.thema");
