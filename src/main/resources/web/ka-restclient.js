@@ -104,6 +104,22 @@ var restc = (function($) {
         })
     }
 
+    restc.update_facets = function(geoId, siteId, tm, callback) {
+        $.ajax({
+            type: "PUT", url: "/geoobject/sites/" + siteId + "/facets/" + geoId,
+            data: JSON.stringify(tm),
+            contentType : 'application/json',
+            success: function() {
+                console.log("Successfully updated geo-objects site facets")
+                callback({ state : "ok" })
+            },
+            error: function(x, s, e) {
+                callback({ state : "error", detail: e })
+                console.log("Updating geo-website site facets failed", x,s,e)
+            }
+        })
+    }
+
     restc.load_news_items = function(id, callback) {
         $.getJSON('/geoobject/newsfeed/' + id, function(results) {
             callback(results)

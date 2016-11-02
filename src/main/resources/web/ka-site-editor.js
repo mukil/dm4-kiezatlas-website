@@ -39,21 +39,24 @@ var sites = {
             }
         })
         $('.sites .ui.search button').click(function(e) {
-            console.log("Klicked search button..", e)
             var query = $('.sites .ui.search input').val()
             if (query.length >= 3) {
                 sites.do_citymap_fulltext_search(query)
             }
         })
     },
+    transform_element_selector: function(typeUri) {
+        return typeUri.split(".").join("\\.")
+    },
     activate_options: function(typeUri, facetTopicTypeUri, addEmpty, existingMany) {
-        var facetTypeUriInputFieldSelector = facetTopicTypeUri.split(".").join("\\.")
+        console.log("This? Button", this)
+        var facetTypeUriInputFieldSelector = sites.transform_element_selector(facetTopicTypeUri)
         $('#' + facetTypeUriInputFieldSelector).removeAttr("disabled")
         sites.load_facet_value_options(typeUri, facetTopicTypeUri, addEmpty, existingMany)
     },
     load_facet_value_options: function(typeUri, facetTopicTypeUri, addEmpty, existingMany) {
         restc.load_topics_by_type(typeUri, function(results) {
-            var facetTypeUriInputFieldSelector = facetTopicTypeUri.split(".").join("\\.")
+            var facetTypeUriInputFieldSelector = sites.transform_element_selector(facetTopicTypeUri)
             var $selectBox = $('#' + facetTypeUriInputFieldSelector)
             if ($selectBox.attr("data-initalized")) {
                 return;
@@ -94,18 +97,56 @@ var sites = {
             geoobject = object
             restc.load_website_facets(siteId, function(facetTypes) {
                 console.log("Loaded Websites Facet Type Definitions", facetTypes)
-                sites.render_facet_form(facetTypes)
+                sites.render_facet_form(siteId, facetTypes)
             })
         })
     },
-    render_facet_form: function(facetTypeDefs) {
-        var $facetForm = $('#facets').html('<div class="ui input">')
+    save_facet_edits: function(siteId, facetTypeDefs) {
+        var tm = {
+            id: geoobject.id,
+            childs: {}
+        }
+        for (var fi in facetTypeDefs) {
+            var facetTopicType = facetTypeDefs[fi]
+            // console.log("Facet Topic Type Def", facetTopicType)
+            var facetTypeUri = sites.get_first_child_type_uri(facetTopicType)
+            var assocDefType = facetTopicType.assoc_defs[0].type_uri
+            var assocDefCardinality = facetTopicType.assoc_defs[0].child_cardinality_uri
+            var $input = $('#' + sites.transform_element_selector(facetTopicType.uri))
+            var manyValues = ($input.val() instanceof Array)
+            // ### calculate value references
+            if ($input.val() === "Bitte auswählen" || $input.val() == null) break;
+            // if (facetTypeUri === "ka2.bezirk" || facetTypeUri === "ka2.criteria.thema") break;
+            if (assocDefType.indexOf("composition_def") !== -1) {
+                tm.childs[facetTypeUri] = $input.val()
+            } else if (assocDefCardinality.indexOf("many") !== -1) {
+                tm.childs[facetTypeUri] = []
+                for (var v in $input.val()) {
+                    var val = $input.val()[v]
+                    tm.childs[facetTypeUri].push("ref_id:" + val)
+                }
+            } else {
+                tm.childs[facetTypeUri] = "ref_id:" + $input.val()
+            }
+        }
+        console.log("Topic Model", tm)
+        restc.update_facets(geoobject.id, siteId, tm, function(res) {
+            sites.handle_response_err(res)
+        })
+    },
+    render_facet_form: function(siteId, facetTypeDefs) {
+        var $submit = $('<span class="ui button small basic">')
+            $submit.html("&Auml;nderungen speichern")
+            $submit.click(function(e) {
+                sites.save_facet_edits(siteId, facetTypeDefs)
+            })
+        var $facetForm = $('#facets')
         for (var fi in facetTypeDefs) {
             var facetTopicType = facetTypeDefs[fi]
             // Analyze Type Definition
-            var facetTypeUri = get_first_child_type_uri(facetTopicType)
-            var assocDefType = get_first_assoc_def_type(facetTopicType)
-            var assocDefCardinality = get_first_assoc_def_child_cardinality(facetTopicType)
+            var facetTypeUri = sites.get_first_child_type_uri(facetTopicType)
+            var assocDefType = facetTopicType.assoc_defs[0].type_uri
+            var assocDefCardinality = facetTopicType.assoc_defs[0].child_cardinality_uri
             var facetValueTopics = geoobject.childs[facetTypeUri]
             console.log("Geo Object Facet", facetValueTopics, facetTypeUri, assocDefType, assocDefCardinality)
             // Construct Label and Container
@@ -155,26 +196,16 @@ var sites = {
             $facetLabel.append($facetLabelDiv)
             $facetForm.append($facetLabel)
         }
-        
-        // --- Form Render Helper Methods
+        $facetForm.append($submit)
 
-        function get_first_assoc_def_type(topicType) {
-            return topicType.assoc_defs[0].type_uri
+    },
+    get_first_child_type_uri: function(topicType) {
+        var childType = topicType.assoc_defs[0]
+        if (childType.role_2.role_type_uri === "dm4.core.child_type") {
+            return childType.role_2.topic_uri
+        } else {
+            return childType.role_1.topic_uri
         }
-
-        function get_first_assoc_def_child_cardinality(topicType) {
-            return topicType.assoc_defs[0].child_cardinality_uri
-        }
-
-        function get_first_child_type_uri(topicType) {
-            var childType = topicType.assoc_defs[0]
-            if (childType.role_2.role_type_uri === "dm4.core.child_type") {
-                return childType.role_2.topic_uri
-            } else {
-                return childType.role_1.topic_uri
-            }
-        }
-
     },
     assign_to_site: function(id) {
         restc.create_website_assignment(id, siteId, function(response) {

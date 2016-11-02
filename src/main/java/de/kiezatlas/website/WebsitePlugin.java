@@ -70,6 +70,7 @@ import java.util.concurrent.Callable;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
@@ -170,7 +171,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
     @Path("/sites")
     @Produces(MediaType.TEXT_HTML)
     public Viewable getWebsiteListing() {
-        isAuthorizedSiteManager();
+        if (!isAuthenticated() || !isAuthorizedSiteManager()) return getUnauthorizedPage();
         viewData("page", "site-listing");
         prepareGeneralPageData("sites");
         return view("sites");
@@ -180,7 +181,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
     @Path("/sites/{siteId}")
     @Produces(MediaType.TEXT_HTML)
     public Viewable getWebsiteEditor(@PathParam("siteId") long topicId) {
-        isAuthorizedSiteManager();
+        if (!isAuthenticated() || !isAuthorizedSiteManager()) return getUnauthorizedPage();
         viewData("site", dm4.getTopic(topicId));
         viewData("page", "site-editor");
         List<RelatedTopic> websites = kiezatlas.getGeoObjectsBySite(topicId);
@@ -194,7 +195,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
     @Path("/sites/{siteId}/facets/{objectId}")
     @Produces(MediaType.TEXT_HTML)
     public Viewable getWebsiteFacetEditor(@PathParam("siteId") long siteId, @PathParam("objectId") long objectId) {
-        isAuthorizedSiteManager();
+        if (!isAuthenticated() || !isAuthorizedSiteManager()) return getUnauthorizedPage();
         Topic object = dm4.getTopic(objectId);
         if (isGeoObjectTopic(object)) {
             viewData("site", dm4.getTopic(siteId));
@@ -208,13 +209,31 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
         }
     }
 
+    @PUT
+    @Path("/sites/{siteId}/facets/{objectId}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Transactional
+    public Topic updateSiteFacets(@PathParam("siteId") long siteId, @PathParam("objectId") long objectId, TopicModel tm) {
+        if (!isAuthorizedSiteManager()) throw new WebApplicationException(Status.UNAUTHORIZED);
+        Topic object = dm4.getTopic(objectId);
+        if (isGeoObjectTopic(object)) {
+            log.info("Updating facets for geo object in site with TopicModel=" + tm.toJSON().toString());
+            kiezatlas.updateFacets(objectId, kiezatlas.getFacetTypes(siteId), tm);
+        } else {
+            log.warning("Can not update facets of a non geo-object for siteId=" + siteId + ", tm=" + tm.toJSON());
+        }
+        return object;
+    }
+
     @GET
     @Path("/sites/entries")
     @Produces(MediaType.APPLICATION_JSON)
     public List<Topic> getKiezatlasWebsites() {
-        isAuthorizedSiteManager();
-        List<Topic> sites = dm4.getTopicsByType("ka2.website");
-        DeepaMehtaUtils.loadChildTopics(sites);
+        List<Topic> sites = new ArrayList<Topic>();
+        if (isAuthorizedSiteManager()) {
+            sites = dm4.getTopicsByType("ka2.website");
+            DeepaMehtaUtils.loadChildTopics(sites);
+        }
         return sites;
     }
 

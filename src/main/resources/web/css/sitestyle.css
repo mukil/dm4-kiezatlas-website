@@ -342,6 +342,14 @@ html, body {
     margin-bottom: .5em;
 }
 
+.facet-editor form label select:disabled {
+    opacity: .6;
+}
+
+.facet-editor form label select[multiple="true"] {
+    min-height: 225px;
+}
+
 .sites .flex-container .selector {
     margin-top: 1em;
 }
