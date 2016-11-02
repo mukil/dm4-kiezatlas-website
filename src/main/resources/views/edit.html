@@ -198,11 +198,11 @@
         <div id="detail-area">
             <div class="commands">
                 <span th:if="${!#strings.isEmpty(message)}" th:utext="${message}" class="message"></span>
-                <!--a th:if="${editable} and ${authenticated}" th:href="'/geoobject/' + ${geoobject.id}">Cancel</a-->
+                <!--a th:if="${editable} and ${authenticated}" th:href="'/website/geo/' + ${geoobject.id}">Cancel</a-->
             </div>
             <!-- -->
             <div id="map"></div>
-                <form class="infos" action="/geoobject/save" method="POST">
+                <form class="infos" action="/website/geo/save" method="POST">
                     <input th:if="${!#strings.isEmpty(geoobject.id)}" type="hidden" name="id" th:value='${geoobject.id}'/>
 
                     <div class="info-area">
@@ -290,7 +290,7 @@
                     </div>
                     <div class="info-area">
                         <input type="submit" value="Ok"/>
-                        <a class="button" th:href="'/geoobject/' + ${geoobject.id}">Cancel</a>
+                        <a class="button" th:href="'/website/geo/' + ${geoobject.id}">Cancel</a>
                     </div>
                 </form>
             <div class="categories">

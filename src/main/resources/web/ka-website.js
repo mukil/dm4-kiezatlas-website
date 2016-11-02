@@ -576,7 +576,7 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
         var angebote_link = ''
         if (object.angebote_count > 0) {
             angebote_link = '<div class="angebote-link">'
-                + '<a class="button" href="/geoobject/' + object.id + '">Aktuelle Angebote anzeigen</a></div>'
+                + '<a class="button" href="/website/geo/' + object.id + '">Aktuelle Angebote anzeigen</a></div>'
         }
         var body_text = ""
         // if (description) body_text += '<p><b>Info</b> ' + description + '</p>'
@@ -606,7 +606,7 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
                 + '' + body_text + ''
             + '</p>'
             + angebote_link
-            + '<a href="/geoobject/' + object.id + '" title="Zeige Details">mehr Infos</a>'
+            + '<a href="/website/geo/' + object.id + '" title="Zeige Details">mehr Infos</a>'
             /* + '<a href="http://www.kiezatlas.de/map/'+web_alias+'/p/'+topic_id+'" title="Diesen'
                 + ' Datensatz in seinem ursprünglichen Stadtplan anzeigen">Details im Stadtplan</a>' **/
             + '<a href="https://fahrinfo.bvg.de/Fahrinfo/bin/query.bin/dn?Z=' + object.address_name.toString()
@@ -626,7 +626,7 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
             + '<div class="details">'
             + '<p>' + object.anschrift + '<br/>'
             + '</p>'
-            + '<a href="/geoobject/' + object.id + '" title="Zeige Details">mehr Infos</a>'
+            + '<a href="/website/geo/' + object.id + '" title="Zeige Details">mehr Infos</a>'
             + '<a href="https://fahrinfo.bvg.de/Fahrinfo/bin/query.bin/dn?Z=' + encodeURIComponent(object.anschrift)
                 + '&REQ0JourneyStopsZA1=2&start=1&pk_campaign=kiezatlas.de">'
                 + '<img src="/de.kiezatlas.website/images/fahrinfo.gif"></a>'
@@ -677,7 +677,7 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
         } else {
             location_string = location.lng.toFixed(4) + ', '+location.lat.toFixed(4)
         }
-        $.getJSON('/geoobject/search/'+encodeURIComponent(location_string)+'/' + (radius_value / 1000),
+        $.getJSON('/website/search/'+encodeURIComponent(location_string)+'/' + (radius_value / 1000),
             function (geo_objects) {
                 if (geo_objects.length > 0) {
                     leafletMap.setItems(geo_objects) // ### let markers add up
@@ -692,8 +692,8 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
 
     this.do_text_search_geo_objects = function(text, callback) {
         _self.setFulltextSearchMode(true)
-        var queryUrl = '/geoobject/search/?search='+text
-        if (_self.getSiteId())  queryUrl = '/geoobject/search/' + _self.getSiteId() + '/?search=' + text
+        var queryUrl = '/website/search/?search='+text
+        if (_self.getSiteId())  queryUrl = '/website/search/' + _self.getSiteId() + '/?search=' + text
         // _self.clear_details_area()
         _self.show_spinning_wheel()
         $.getJSON(queryUrl, function (geo_objects) {
@@ -734,7 +734,7 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
     }
 
     this.do_reverse_geocode = function(e) {
-        $.getJSON('/geoobject/reverse-geocode/' + leafletMap.getCurrentLocationLatitude()
+        $.getJSON('/website/reverse-geocode/' + leafletMap.getCurrentLocationLatitude()
                 + ',' + leafletMap.getCurrentLocationLongitude(), function (geo_names) {
             _self.hide_spinning_wheel(true)
             if (geo_names.results.length > 0) {

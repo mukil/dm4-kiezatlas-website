@@ -14,7 +14,7 @@
                 Bezirke <i class="dropdown icon"></i>
                 <div class="menu" id="bezirksauswahl"></div>
             </div>
-            <a th:if="${is_site_manager}" href="/geoobject/sites"
+            <a th:if="${is_site_manager}" href="/website/sites"
                th:class="${#strings.contains(template, 'site')} ? 'active item sites' : 'item sites'">Sites</a>
             <a href="/angebote" class="item all-angebote">Angebote</a>
             <a class="item star" title="Die aktuelle Kartenposition zu Ihren Standort-Favoriten hinzufügen" alt:="Icon: Favourite this location."
@@ -43,9 +43,9 @@
                     <i class="dropdown icon"></i>
                     <div class="menu">
                         <a th:class="${#strings.contains(template, 'confirmation')} ? 'active item' : 'item'"
-                           href="/geoobject/confirmation/">Freischalten</a>
+                           href="/website/geo/freischalten/">Freischalten</a>
                         <!-- a href="/site/administration/" class="item">Listenansicht</a-->
-                        <!--a href="/geoobject/site/" class="item">Site-Infos</a-->
+                        <!--a href="/website/sites/" class="item">Sites</a-->
                     </div>
                 </div>
             </div>
@@ -61,16 +61,16 @@
         <div th:if="${is_publisher}" class="item administration">
             <div class="header">Administration</div>
             <div class="menu">
-                <a href="/geoobject/confirmation/" class="item">Freischalten</a>
+                <a href="/website/geo/freischalten/" class="item">Freischalten</a>
                 <a href="/site/administration/" class="item">Listenansicht</a>
-                <a href="/geoobject/site/" class="item">Site-Infos</a>
+                <a href="/website/sites/" class="item">Sites</a>
             </div>
         </div>
         <div th:if="${authenticated}" class="item entries">
             <div class="header">Meine Eintr&auml;ge</div>
             <div class="menu">
                 <a href="/angebote/my" class="item">Angebotsinfos</a>
-                <a href="/geoobject/create" class="item">Neue Einrichtung</a>
+                <a href="/website/geo/create" class="item">Neue Einrichtung</a>
             </div>
         </div>
         <div th:if="${authenticated}" class="item account">
@@ -89,7 +89,7 @@
         </div>
         <div class="item general">
             <div class="menu">
-                <a href="/" class="item">Gesamtstadtplan</a>
+                <a href="/" class="item">Startseite</a>
                 <!--a href="/#mitte" class="item">Bezirk Mitte</a-->
                 <a href="/angebote" class="item">Aktuelle Angebote</a>
             </div>

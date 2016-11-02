@@ -93,7 +93,7 @@
                             var obj = geoobjects[geoidx]
                             var $item = $('<li class="item" id="'+obj.id+'"><h3>' + obj.name
                                 + ', <span class="anschrift">'+obj.anschrift.replace(" Deutschland", "") +'</span>, '
-                                + '<a href="/geoobject/'+obj.id+'">mehr Infos</a></h3></li>')
+                                + '<a href="/website/geo/'+obj.id+'">mehr Infos</a></h3></li>')
                                 $item.click(function(e) {
                                     console.log("Clicked on Result list item focus in map..", e.target.id)
                                 })

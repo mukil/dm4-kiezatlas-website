@@ -17,7 +17,7 @@ var restc = (function($) {
     
     restc.do_geocode = function(streetValue, callback) {
         $.ajax({
-            type: "GET", url: "/geoobject/geocode?query=" + streetValue,
+            type: "GET", url: "/website/geocode?query=" + streetValue,
             success: function(obj) {
                 callback(obj)
             },
@@ -34,26 +34,26 @@ var restc = (function($) {
     }
 
     restc.load_districts = function(callback) {
-        $.getJSON('/geoobject/bezirk', function(results) {
+        $.getJSON('/website/bezirk', function(results) {
             results.sort(value_sort_asc)
             callback(results)
         })
     }
 
     restc.load_district_topics = function(id, callback) {
-        $.getJSON('/geoobject/bezirk/' + id, function(results) {
-            callback(results)
-        })
-    }
-
-    restc.load_website_info = function(pageAlias, callback) {
-        $.getJSON('/geoobject/siteinfo/' + pageAlias, function(results) {
+        $.getJSON('/website/bezirk/' + id, function(results) {
             callback(results)
         })
     }
 
     restc.load_website_geoobjects = function(siteId, callback) {
-        $.getJSON('/geoobject/website/' + siteId, function(results) {
+        $.getJSON('/website/' + siteId + '/geo', function(results) {
+            callback(results)
+        })
+    }
+
+    restc.load_website_info = function(pageAlias, callback) {
+        $.getJSON('/website/info/' + pageAlias, function(results) {
             callback(results)
         })
     }
@@ -71,7 +71,7 @@ var restc = (function($) {
     }
 
     restc.load_websites = function(callback) {
-        $.getJSON('/geoobject/sites/entries', function(results) {
+        $.getJSON('/website/sites/json', function(results) {
             callback(results)
         })
     }
@@ -106,7 +106,7 @@ var restc = (function($) {
 
     restc.update_facets = function(geoId, siteId, tm, callback) {
         $.ajax({
-            type: "PUT", url: "/geoobject/sites/" + siteId + "/facets/" + geoId,
+            type: "PUT", url: "/website/edit/" + siteId + "/facets/" + geoId,
             data: JSON.stringify(tm),
             contentType : 'application/json',
             success: function() {
@@ -121,13 +121,13 @@ var restc = (function($) {
     }
 
     restc.load_news_items = function(id, callback) {
-        $.getJSON('/geoobject/newsfeed/' + id, function(results) {
+        $.getJSON('/website/newsfeed/' + id, function(results) {
             callback(results)
         })
     }
 
     restc.load_facetted_geo_object = function(topic_id, site_id, callback) {
-        $.getJSON('/geoobject/' + topic_id + '/site/' + site_id, function (geo_object) {
+        $.getJSON('/website/geo/' + topic_id + '/facetted/' + site_id, function (geo_object) {
             if (geo_object) {
                 callback(geo_object)
             } else {
@@ -137,7 +137,7 @@ var restc = (function($) {
     }
 
     restc.load_geo_object_detail = function(geo_object_id, callback) {
-        $.getJSON('/geoobject/' + geo_object_id, function (geo_object) {
+        $.getJSON('/website/geo/' + geo_object_id, function (geo_object) {
             if (geo_object) {
                 callback(geo_object)
             } else {

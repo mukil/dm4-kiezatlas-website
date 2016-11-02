@@ -274,13 +274,13 @@ var sites = {
         $('.sites .ui.search button .icon').removeClass("search")
     },
     global_geo_object_search: function(text, callback) {
-        var queryUrl = '/geoobject/search/?search='+text
+        var queryUrl = '/website/search/?search='+text
         $.getJSON(queryUrl, function (geo_objects) {
             if (callback) callback(geo_objects)
         })
     },
     go_to_site_edit: function(siteId) {
-        window.location.assign("/geoobject/sites/" + siteId)
+        window.location.assign("/website/edit/" + siteId)
     },
     go_to_site: function(webAlias) {
         window.location.assign("/" + webAlias)
