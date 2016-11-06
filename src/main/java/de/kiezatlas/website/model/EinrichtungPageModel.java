@@ -3,6 +3,7 @@ package de.kiezatlas.website.model;
 import de.deepamehta.core.JSONEnabled;
 import de.deepamehta.core.Topic;
 import de.deepamehta.geomaps.model.GeoCoordinate;
+import javax.ws.rs.FormParam;
 import java.text.DateFormat;
 import java.util.Locale;
 import java.util.logging.Level;
@@ -20,6 +21,30 @@ public class EinrichtungPageModel implements JSONEnabled {
 
     public EinrichtungPageModel() {
         json = new JSONObject();
+    }
+
+    public EinrichtungPageModel(@FormParam("id") long topicId, @FormParam("name") String name, @FormParam("strasse") String strasse,
+            @FormParam("plz") String plz, @FormParam("city") long city, @FormParam("district") long district, @FormParam("fileTopicId") long fileId,
+            @FormParam("country") long country, @FormParam("beschreibung") String beschreibung,
+            @FormParam("open") String oeffnungszeiten, @FormParam("ansprechpartner") String ansprechpartner,
+            @FormParam("telefon") String telefon, @FormParam("email") String email, @FormParam("fax") String fax,
+            @FormParam("website") String website, @FormParam("lat") double latitude, @FormParam("lon") double longitude) {
+        json = new JSONObject();
+        setId(topicId);
+        setName(name);
+        setStrasse(strasse);
+        setPLZ(plz);
+        // setCity(city);
+        // setBezirk(district);
+        // setCountry(country);
+        setBeschreibung(beschreibung);
+        setOeffnungszeiten(oeffnungszeiten);
+        setAnsprechpartner(ansprechpartner);
+        setTelefon(telefon);
+        setEmail(email);
+        setFax(fax);
+        setWebpage(website);
+        // setCoordinates(coordinate);
     }
 
     public void setName(String nameValue) {
