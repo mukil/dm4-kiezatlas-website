@@ -118,6 +118,11 @@ html, body {
     display: none;
 }
 
+.warning {
+    padding: 1em;
+    color: #8F1414;
+}
+
 #pages,
 #bottom,
 #filter-container,
@@ -396,6 +401,8 @@ html, body {
     padding-right: 2em;
 }
 
+.kiezatlas.topic .right.menu .ui.search,
+.sign-up .ui.search,
 .citymap .welcome .ui.search {
     display: none;
 }
@@ -1916,6 +1923,7 @@ body.sign-up {
     }
     .citymap #detail-area .entry-card {
         font-size: 1em;
+        margin: 1em;
     }
     #detail-area .entry-card h3 {
         display: inline-block;

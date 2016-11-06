@@ -80,7 +80,7 @@ import org.deepamehta.plugins.signup.service.SignupPluginService;
 
 /**
  * The module bundling the Kiezatlas 2 Website.<br/>
- * Based on dm48-kiezatlas-2.1.9-SNAPSHOT, dm47-kiezatlas-etl-0.6.1-SNAPSHOT and dm48-webpages-0.4.1-SNAPSHOT.<br/>
+ * Based on dm48-kiezatlas-2.1.9-SNAPSHOT, dm47-kiezatlas-etl-0.6.2 and dm48-webpages-0.4.1.<br/>
  * Compatible with DeepaMehta 4.8.3
  * <a href="http://github.com/mukil/dm4-kiezatlas-website">Source Code</a>
  *
@@ -114,6 +114,11 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
     private static final String KA1_GEO_OBJECT_URI_PREFIX = "de.kiezatlas.topic.";
     private DateFormat df = DateFormat.getDateInstance(DateFormat.LONG, Locale.GERMANY);
     private static final String SYSTEM_MAINTENANCE_MAILBOX = "support@kiezatlas.de;malte@mikromedia.de";
+
+    // Geo Object Form Input Validation Utilities
+    private static final long NEW_TOPIC_ID = -1;
+    private static final String INVALID_ZIPCODE_INPUT = "Bitte geben Sie eine f&uuml;nfstellige Postleitzahl f&uuml;r diese Einrichtung an.";
+    private static final String INVALID_DISTRICT_SELECTION = "Bitte w&auml;hlen Sie den Stadtbezirk f&uuml;r diese Einrichtung aus.";
 
     @Override
     public void init() {
@@ -238,17 +243,21 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
     @Produces(MediaType.APPLICATION_JSON)
     public List<GeoViewModel> getWebsiteGeoObjects(@HeaderParam("Referer") String referer, @PathParam("siteId") long siteId) {
         if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
+        // ### TODO: Make "Cache Site"  an option of "Kiezatlas Website" topic
         // use cache
         Topic site = dm4.getTopic(siteId);
-        if (citymapCache.containsKey(siteId)) {
-            // caching lifetime is 30 000 or 12 000 ms for testing purposes
-            if (citymapCachedAt.get(siteId) > new Date().getTime() - 21600000) { // 21600000 for approx. 6hr in ms
-                log.info("Returning cached list of geo object for site " + site.getSimpleValue());
-                return citymapCache.get(siteId);
+        if (siteId != 499904) {
+            // Do not cache Showcase Stadtplan "VSKA Stadtteilzentren"
+            if (citymapCache.containsKey(siteId)) {
+                // caching lifetime is 30 000 or 12 000 ms for testing purposes
+                if (citymapCachedAt.get(siteId) > new Date().getTime() - 21600000) { // 21600000 for approx. 6hr in ms
+                    log.info("Returning cached list of geo object for site " + site.getSimpleValue());
+                    return citymapCache.get(siteId);
+                }
+                // invalidate cache
+                citymapCache.remove(siteId);
+                citymapCachedAt.remove(siteId);
             }
-            // invalidate cache
-            citymapCache.remove(siteId);
-            citymapCachedAt.remove(siteId);
         }
         // populate new resultset
         List<GeoViewModel> results = new ArrayList<GeoViewModel>();
@@ -305,7 +314,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
     @Transactional
     public Viewable processGeoObjectForm(@FormParam("id") long topicId, @FormParam("name") String name, @FormParam("strasse") String strasse,
             @FormParam("plz") String plz, @FormParam("city") long city, @FormParam("district") long district, @FormParam("fileTopicId") long fileId,
-            @FormParam("googleDistrictName") String googleDistrict, @FormParam("country") long country, @FormParam("beschreibung") String beschreibung,
+            @FormParam("country") long country, @FormParam("beschreibung") String beschreibung,
             @FormParam("open") String oeffnungszeiten, @FormParam("ansprechpartner") String ansprechpartner,
             @FormParam("telefon") String telefon, @FormParam("email") String email, @FormParam("fax") String fax,
             @FormParam("website") String website, @FormParam("lat") double latitude, @FormParam("lon") double longitude,
@@ -314,20 +323,22 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
         Topic geoObject = null;
         Topic username = getUsernameTopic();
         String coordinatePair = "", geoLocation = "";
-        if (district == -1 && !googleDistrict.isEmpty()) { // no district selected, trying magic
-            district = mapGoogleDistrictNameToKiezatlasBezirksTopic(googleDistrict);
-            if (district == -1) log.warning("> Automatisches Mapping des Bezirks für Einrichtung ist FEHLGESCHLAGEN.");
-            if (district > 0) log.info("> Automatisches Mapping des Bezirks für Einrichtung war ERFOLGREICH, ID: " + district);
-        } else if (district == -1 && googleDistrict.isEmpty()) {
-            viewData("message", "Bitte w&auml;hlen Sie den passenden Bezirk f&uuml;r diese Einrichtung aus");
-            // ### Test this route
+        // Input Validation
+        if (district == NEW_TOPIC_ID) {
+            log.warning("Saving new geo object prohibited - NO DISTRICT Given");
+            viewData("warning", INVALID_DISTRICT_SELECTION);
+            return (topicId == -1 || topicId == 0) ? getGeoObjectEditPage() : getGeoObjectEditPage(topicId);
+        }
+        if (plz.equals("0") || plz.isEmpty() || plz.length() < 5) {
+            log.warning("Saving new geo object prohibited - NO Postleitzahl Given");
+            viewData("warning", INVALID_ZIPCODE_INPUT);
             return (topicId == -1 || topicId == 0) ? getGeoObjectEditPage() : getGeoObjectEditPage(topicId);
         }
         // Handle Geo Coordinates of Geo Object
         if (latitude == -1000 || longitude == -1000) {
             geoLocation = geoCodeAddressInput(URLEncoder.encode(strasse + ", " + plz + " " + city));
             coordinatePair = parseFirstCoordinatePair(geoLocation);
-            log.info("> Reset Geo Coordinates by Street, Postal Code, City Value to \"" + coordinatePair + "\"");
+            log.info("Auto-set geo coordinates by Street, Postal Code, City Value to \"" + coordinatePair + "\"");
         } else {
             log.info("Geo Coordinates provided: " + latitude + ", " + longitude);
             coordinatePair = longitude + "," + latitude;
@@ -341,7 +352,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
         ChildTopicsModel geoObjectTopicModel = mf.newChildTopicsModel()
             .put("ka2.geo_object.name", name)
             .put("dm4.contacts.address", addressValue);
-        if (topicId == -1 || topicId == 0) {
+        if (topicId == NEW_TOPIC_ID) {
             try {
                 log.info("// ---------- CREATing Einrichtung " + name + " ---------------------- // ");
                 // ------------ Assign Geo Object Basics to the topic of getPrivilegedWorkspace() ------------------ //
@@ -382,8 +393,9 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
                 return getUnauthorizedPage();
             }
         }
-        log.info("#### Saved Geo Object Form #### " + geoObject.getId());
+        log.info("Saved Geo Object Input " + geoObject);
         viewData("name", geoObject.getSimpleValue().toString());
+        viewData("message", "Danke, der <a href=\"/website/geo/"+geoObject.getId()+"\" title=\"Anzeigen\">Datensatz</a> wurde aktualisiert.");
         viewData("coordinates", coordinatePair);
         return getSimpleMessagePage();
     }
@@ -417,12 +429,12 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
     @Produces(MediaType.TEXT_HTML)
     @Path("/geo/edit/{topicId}")
     public Viewable getGeoObjectEditPage(@PathParam("topicId") long topicId) {
-        // ### Handle the case if user cannot edit anymore (just see) directly after confirmation.
         Topic geoObject = dm4.getTopic(topicId);
         if (!isAuthenticated()) return getUnauthorizedPage();
         Topic username = getUsernameTopic();
+        boolean isEditable = isGeoObjectEditable(geoObject, username);
         if (isGeoObjectTopic(geoObject)) {
-            if (isAssignedUsername(geoObject, username)) {
+            if (isEditable) {
                 EinrichtungPageModel einrichtung = assembleGeneralEinrichtungsInfo(geoObject);
                 einrichtung.setAssignedUsername(username.getSimpleValue().toString());
                 viewData("geoobject", einrichtung);
@@ -430,14 +442,10 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
                 viewData("zielgruppen", facets.getFacets(geoObject, ZIELGRUPPE_FACET));
                 viewData("angebote", facets.getFacets(geoObject, ANGEBOT_FACET));
             } else {
-                viewData("message", "Sie haben aktuell noch nicht die n&ouml;tigen Berechtigungen "
-                    + "um diesen Einrichtungsdatensatz zu bearbeiten.");
-                return getWebsiteGeoDetailsPage(geoObject.getId());
+                viewData("message", "Sie haben aktuell nicht die nötigen Berechtigungen "
+                    + "um diesen Datensatz in Kiezatlas 2 zu bearbeiten.");
+                return getWebsiteGeoObjectPage(geoObject.getId());
             }
-        } else if (isKiezatlas1GeoObject(geoObject)) {
-            viewData("message", "Dieser Einrichtungsdatensatz wird aktuell noch in Kiezatlas 1 gepflegt, "
-                + "Sie k&ouml;nnen diesen daher nicht &uuml;ber diese Benutzeroberfl&auml;che aktualisieren.");
-            return getWebsiteGeoDetailsPage(geoObject.getId());
         } else {
             return getNotFoundPage("Eine Einrichtung mit dieser ID ist uns nicht bekannt.");
         }
@@ -445,7 +453,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
         prepareGeneralPageData("edit");
         // this makes sure we keep all (potentially new) child topics in the same workspace its parent is while editing
         viewData("workspace", getAssignedWorkspace(geoObject));
-        viewData("editable", isGeoObjectEditable(geoObject, username));
+        viewData("editable", isEditable);
         return view("edit");
     }
 
@@ -469,7 +477,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
                 return getUnauthorizedPage("Sie haben aktuell nicht die Berechtigung diesen Datensatz zu sehen");
             }
         }
-        return (geoObject != null) ? getWebsiteGeoDetailsPage(geoObject.getId()) : getNotFoundPage();
+        return (geoObject != null) ? getWebsiteGeoObjectPage(geoObject.getId()) : getNotFoundPage();
     }
 
     /**
@@ -560,7 +568,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
             viewData("message", "Eine Einrichtung mit dieser ID ist uns nicht bekannt.");
             return getNotFoundPage();
         }
-        return getWebsiteGeoDetailsPage(geoObject.getId());
+        return getWebsiteGeoObjectPage(geoObject.getId());
     }
 
     /**
@@ -974,14 +982,15 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
         return view("ka-index");
     }
 
-    private Viewable getWebsiteGeoDetailsPage(@PathParam("topicId") long topicId) {
+    private Viewable getWebsiteGeoObjectPage(@PathParam("topicId") long topicId) {
         // ### redirect if user has no READ permission on this topic
         Topic username = getUsernameTopic();
         Topic geoObject = dm4.getTopic(topicId);
         if (!isGeoObjectTopic(geoObject)) return getNotFoundPage();
         // Assemble Generic Einrichtungs Infos
         EinrichtungPageModel einrichtung = assembleGeneralEinrichtungsInfo(geoObject);
-        // ### Yet Missing: Träger, Bezirksregion, Bezirk, Administrator Infos und Stichworte
+        // ### Yet Missing: Träger und Stichworte
+        // Eventually show: Bezirk, Bezirksregion and Sonstiges (Administrator Infos)
         viewData("geoobject", einrichtung);
         // Assemble Category Assignments for Einrichtung;
         viewData("zielgruppen", facets.getFacets(geoObject, ZIELGRUPPE_FACET));
@@ -1067,7 +1076,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
     /** -------------------- Permission, Workspace and Membership Related Helpers ----------------------- **/
 
     private boolean hasWorkspaceAssignment(DeepaMehtaObject object) {
-        return (dm4.getAccessControl().getAssignedWorkspaceId(object.getId()) > -1);
+        return (dm4.getAccessControl().getAssignedWorkspaceId(object.getId()) > NEW_TOPIC_ID);
     }
 
     private boolean isAssignedToConfirmationWorkspace(DeepaMehtaObject object) {
@@ -1099,7 +1108,9 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
         }
         if (username != null) {
             Topic workspace = getPrivilegedWorkspace();
-            return (accesscl.isMember(username, workspace.getId()) || accesscl.getWorkspaceOwner(workspace.getId()).equals(username));
+            boolean eligible = (accesscl.isMember(username, workspace.getId()) || accesscl.getWorkspaceOwner(workspace.getId()).equals(username));
+            log.info("Permissions Check, isConfirmationWorkspaceMember=" + eligible);
+            return eligible;
         } else {
             return false;
         }
@@ -1129,15 +1140,18 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
     }
 
     private boolean isGeoObjectEditable(Topic geoObject, Topic username) {
-        if (isAssignedUsername(geoObject, username) && isKiezatlas1GeoObject(geoObject)) {
+        if (isAssignedUsername(geoObject, username) && !isKiezatlas1GeoObject(geoObject)) {
+            log.info("Edit Permission GRANTED for user=" + username + " - Assigned to Geo Object");
             return true;
-        } else if (isConfirmationWorkspaceMember(username) && isKiezatlas1GeoObject(geoObject)) {
+        } else if (isConfirmationWorkspaceMember(username) && !isKiezatlas1GeoObject(geoObject)) {
+            log.info("Edit Permission GRANTED for user=" + username + " - Confirmation Workspace Member");
             return true;
         }
+        log.info("Edit Permission DENIED for user=" + username + " - Not Assigned to Geo Object");
         return false;
     }
 
-    /** ### Actually check the workspace's SharingMode **/
+    /** ### FIXME: Actually check the workspace's SharingMode **/
     private boolean isGeoObjectPublic(Topic geoObject) {
         Topic workspace = workspaces.getAssignedWorkspace(geoObject.getId());
         return (workspace.getUri().equals(WorkspacesService.DEEPAMEHTA_WORKSPACE_URI));
@@ -1172,16 +1186,23 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
 
     private HashMap<String, String[]> loadAllWebsiteAliases() {
         HashMap<String, String[]> aliases = new HashMap();
-        List<Topic> websiteAliases = dm4.getTopicsByType("ka2.website.web_alias");
-        for (Topic alias : websiteAliases) {
-            Topic websiteParent = alias.getRelatedTopic("dm4.core.composition", "dm4.core.child",
-                "dm4.core.parent", "ka2.website");
-            String pageName = (websiteParent == null) ? "Stadtplan" : websiteParent.getSimpleValue().toString();
-            String templateName = "citymap"; // ### Thymeleaf Template File Name for all Kiezatlas Website topics
-            String[] templateValue = { templateName, pageName };
-            aliases.put(alias.getSimpleValue().toString(), templateValue);
+        try {
+            List<Topic> websiteAliases = dm4.getTopicsByType("ka2.website.web_alias");
+            for (Topic alias : websiteAliases) {
+                Topic websiteParent = alias.getRelatedTopic("dm4.core.composition", "dm4.core.child",
+                    "dm4.core.parent", "ka2.website");
+                String pageName = (websiteParent == null) ? "Stadtplan" : websiteParent.getSimpleValue().toString();
+                String templateName = "citymap"; // ### Thymeleaf Template File Name for all Kiezatlas Website topics
+                String[] templateValue = { templateName, pageName };
+                aliases.put(alias.getSimpleValue().toString(), templateValue);
+            }
+            log.info("Fetched all ("+aliases.size()+") kiezatlas website aliases");
+        } catch (Exception re) {
+            log.warning("The migration7 of Kiezatlas Website Module Web Alias "
+                    + "has probably not yet finished installation, therefore the "
+                    + "topic type Web Alias is not yet known. "
+                    + "Skipping loading of all citymap web alias; Cause message: " + re.getCause().getMessage());
         }
-        log.info("Fetched all ("+aliases.size()+") kiezatlas website aliases");
         return aliases;
     }
 
@@ -1488,9 +1509,11 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
     }
 
     private void writeBezirksFacet(Topic geoObject, long bezirksTopicId) {
-        if (bezirksTopicId > -1) {
+        if (bezirksTopicId > NEW_TOPIC_ID) {
             facets.updateFacet(geoObject.getId(), WebsiteService.BEZIRK_FACET,
                 mf.newFacetValueModel(WebsiteService.BEZIRK).putRef(bezirksTopicId));
+        } else {
+            throw new RuntimeException("Writing bezirks facet failed because of invalid bezirks topic id=" + bezirksTopicId);
         }
     }
 
@@ -1624,7 +1647,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
         signup.sendUserMailboxNotification(recipients, subject, "\nLiebe/r Kiez-Administrator_in,\n\n"
             + "es gibt einen neuen Einrichtungsdatensatz von "+username.getSimpleValue().toString()+", bitte schaue mal ob Du diesen nicht gleich freischalten kannst.\n\n"
             + "Name des neuen Eintrags: \"" + geoObject.getSimpleValue().toString() + "\"\n"
-            + "Der Link zur Freischaltung: "+SignupPlugin.DM4_HOST_URL+"geoobject/" + geoObject.getId() + " bzw. zum Login ist:\n"
+            + "Der Link zur Freischaltung: "+SignupPlugin.DM4_HOST_URL+"website/geo/" + geoObject.getId() + " bzw. zum Login ist:\n"
             + SignupPlugin.DM4_HOST_URL + "sign-up/login\n\nOk, das war's schon.\n\nDanke + Ciao!");
     }
 
@@ -1902,15 +1925,6 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
 
 
     /** -----------------------  Other Utility Resources (Geo Coding and Reverse Geo Coding) ----------------------- */
-
-    private long mapGoogleDistrictNameToKiezatlasBezirksTopic(String googleDistrict) {
-        List<Topic> districts = getAvailableDistrictTopics();
-        for (Topic district : districts) {
-            if (district.getSimpleValue().toString().equals(googleDistrict)) return district.getId();
-            if (googleDistrict.contains(district.getSimpleValue().toString())) return district.getId();
-        }
-        return -1;
-    }
 
     private String geoCodeAddressInput(String addressValue) {
         String query = addressValue;

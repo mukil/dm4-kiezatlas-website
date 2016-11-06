@@ -60,7 +60,6 @@
                     <div class="ui search">
                         <div class="ui icon input">
                             <input class="prompt" type="text" placeholder="Suche nach Einrichtungen" />
-                            <i class="search icon"></i>
                         </div>
                         <button class="circular ui icon button basic small">
                             <i class="icon search"></i>
@@ -73,7 +72,7 @@
                     <ul class="geoobjects" th:if="${geoobjects}">
                         <li th:each="item : ${geoobjects}" th:id="${item.id}">
                             <span style="font-weight: bold;" th:text="${item.simpleValue}">Einrichtung</span><br/>
-                            <a th:href="'/website/edit/' + ${site.id} + '/facets/' + ${item.id}">Facetten bearbeiten</a>,
+                            <!-- a th:href="'/website/edit/' + ${site.id} + '/facets/' + ${item.id}">Facetten bearbeiten</a -->,
                             <a href="#remove" th:onclick="'sites.remove_assignment(' + ${item.id} + ', '+${site.id}+')'">Aus dem Stadtplan entfernen</a>
                         </li>
                     </ul>
@@ -87,6 +86,22 @@
         </div>
 
         <div class="footer" th:utext="${footerText}"></div>
+        
+        <!-- Piwik -->
+        <script type="text/javascript">
+        var pkBaseURL = "//stats.infokitchen.net/";
+        document.write(unescape("%3Cscript src='" + pkBaseURL + "piwik.js' type='text/javascript'%3E%3C/script%3E"));
+        </script><script type="text/javascript">
+        try {
+        var piwikTracker = Piwik.getTracker(pkBaseURL + "piwik.php", 2);
+        piwikTracker.trackPageView();
+        piwikTracker.enableLinkTracking();
+        } catch( err ) {}
+        </script>
+        <noscript>
+            <img th:src="@{https://stats.infokitchen.net/piwik.php(idsite=2,rec=1,action_name='Kiezatlas+2+List')}" style="border:0" alt="" />
+        </noscript>
+        <!-- End Piwik Tracking Code -->
 
     </body>
 </html>

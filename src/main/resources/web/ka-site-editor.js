@@ -14,24 +14,23 @@ var sites = {
         restc.load_websites(function(sites) {
             for (var s in sites) {
                 var site = sites[s]
-                console.log("Loaded Site", site)
                 var webAlias = site.childs['ka2.website.web_alias']
                 if (webAlias) {
                     webAlias = site.childs['ka2.website.web_alias'].value
                 }
-                var $html = $("<li><h3>"+ site.value + ", Web Alias <span class=\"webalias\">/"+webAlias+"</span></h3>"
-                    + "<button class=\"ui button basic small\" onclick=\"sites.go_to_site_edit("+site.id+")\">Bearbeiten</button>"
-                    + "<button class=\"ui button basic small\" onclick=\"sites.go_to_site('"+webAlias+"')\" title=\""+site.value+" aufrufen\">Aufrufen</a>"
-                    + "</li>")
-                $('.listing .sites').append($html)
+                if (webAlias.indexOf("familienportal") === -1) {
+                    var $html = $("<li><h3>"+ site.value + ", Web Alias <span class=\"webalias\">/"+webAlias+"</span></h3>"
+                        + "<button class=\"ui button basic small\" onclick=\"sites.go_to_site_edit("+site.id+")\">Bearbeiten</button>"
+                        + "<button class=\"ui button basic small\" onclick=\"sites.go_to_site('"+webAlias+"')\" title=\""+site.value+" aufrufen\">Stadtplan aufrufen</a>"
+                        + "</li>")
+                    $('.listing .sites').append($html)
+                }
             }
         })
     },
     init_site_editor: function() {
         // set ka_site_id cookie
         siteId = $('.editor .site').attr("id")
-        console.log("Initializing single site editor, Set ka2_site_id cookie", siteId)
-        js.set_cookie("ka2_site_id", siteId)
         // Register two handlers for search input
         $('.sites .ui.search input').keyup(function(e) {
             if (e.target.value.length >= 3 && e.keyCode === 13) {
@@ -113,7 +112,7 @@ var sites = {
             var assocDefType = facetTopicType.assoc_defs[0].type_uri
             var assocDefCardinality = facetTopicType.assoc_defs[0].child_cardinality_uri
             var $input = $('#' + sites.transform_element_selector(facetTopicType.uri))
-            var manyValues = ($input.val() instanceof Array)
+            // var manyValues = ($input.val() instanceof Array)
             // ### calculate value references
             if ($input.val() === "Bitte auswählen" || $input.val() == null) break;
             // if (facetTypeUri === "ka2.bezirk" || facetTypeUri === "ka2.criteria.thema") break;

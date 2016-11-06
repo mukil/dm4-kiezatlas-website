@@ -189,6 +189,7 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
         restc.load_website_info(pageAlias, function(response) {
             // console.log("Load Kiezatlas Website ", pageAlias, response)
             _self.setSiteId(response.id)
+            _self.update_document_title(response.value)
             $('.citymap-title').text(response.value)
             $('.welcome .title').text(response.value)
             $('.welcome .slogan').text('')
