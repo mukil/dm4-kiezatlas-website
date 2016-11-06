@@ -136,6 +136,37 @@
                 }, $("body"))
             }
 
+            function search_for_duplicates() {
+                if ($('#geo-id').val() === "-1") { // Attempt to create a new geo object
+                    var nameInput = $('#geoname').val()
+                    console.log("Attempt to create a new geo object named", nameInput)
+                    if (nameInput.length < 3) return;
+                    // var streetInput = $('#streetnr').val()
+                    var $area = $('#duplicates')
+                    if (!$area.hasOwnProperty("length")) {
+                        $area = $('<div class="warning" id="duplicates">')
+                        $area.insertBefore('form.infos')
+                    }
+                    console.log("Duplicates Area", $area)
+                    // TODO: render loading indicator
+                    $.getJSON('/website/search/duplicates?geoobject=' + nameInput, function(results) {
+                        if (results && results.length > 0) {
+                            $area.html("Im Kiezatlas gibt es bereits einige Orte unter diesem Namen:<br/>")
+                            for (var e in results) {
+                                var html = '<a href="/website/geo/'+results[e].id+'" title="Öffnet diesen Datensatz '
+                                    + 'in einem neuen Fenster" target="_blank">'+ results[e].name + '</a>'
+                                if (e < results.length - 1) html+= ", "
+                                $area.append(html)
+                            }
+                            $area.append("<br/>Sind Sie sich sicher das Sie einen neuen Ort anlegen m&ouml;chten?")
+                        }
+                        console.log("Duplicates search for geo objects", results)
+                    })
+                } else {
+                    console.log("Editing an existing geo object..")
+                }
+            }
+
             /**
              * GUIToolkit Helper Methods copied from dm4-webclient module
              * @param   uploadResource    the file repository path (a string) to upload the selected file to. Must begin with "/".
@@ -203,14 +234,15 @@
             <div id="map"></div>
             <div th:if="${!#strings.isEmpty(warning)}" th:utext="${warning}" class="warning message"></div>
             <form class="infos" action="/website/geo/save" method="POST">
-                <input th:if="${!#strings.isEmpty(geoobject.id)}" type="hidden" name="id" th:value='${geoobject.id}'/>
+                <input th:if="${!#strings.isEmpty(geoobject.id)}" type="hidden" id="geo-id" name="id" th:value='${geoobject.id}'/>
 
                 <div class="info-area">
 
                     <div class="left-side">
                         <!-- Essential Einrichtungs Informationen -->
                         <label for="name">Name</label>
-                        <input type="text" required="true" minlength="3" name="name" th:value='${geoobject.name}'/>
+                        <input id="geoname" type="text" required="true" minlength="3" onblur="search_for_duplicates()"
+                               name="name" th:value='${geoobject.name}'/>
                         <label for="strasse">Stra&szlig;enname</label>
                         <input type="text" id="streetnr" name="strasse" th:value='${geoobject.strasse}'/>
                         <label for="plz">Postleitzahl, Bezirk</label>

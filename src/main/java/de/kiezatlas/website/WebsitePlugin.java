@@ -327,12 +327,12 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
         if (district == NEW_TOPIC_ID) {
             log.warning("Saving new geo object prohibited - NO DISTRICT Given");
             viewData("warning", INVALID_DISTRICT_SELECTION);
-            return (topicId == -1 || topicId == 0) ? getGeoObjectEditPage() : getGeoObjectEditPage(topicId);
+            return (topicId == NEW_TOPIC_ID) ? getGeoObjectEditPage() : getGeoObjectEditPage(topicId);
         }
         if (plz.equals("0") || plz.isEmpty() || plz.length() < 5) {
             log.warning("Saving new geo object prohibited - NO Postleitzahl Given");
             viewData("warning", INVALID_ZIPCODE_INPUT);
-            return (topicId == -1 || topicId == 0) ? getGeoObjectEditPage() : getGeoObjectEditPage(topicId);
+            return (topicId == NEW_TOPIC_ID) ? getGeoObjectEditPage() : getGeoObjectEditPage(topicId);
         }
         // Handle Geo Coordinates of Geo Object
         if (latitude == -1000 || longitude == -1000) {
@@ -371,6 +371,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
                 // Assign Geo Object to Confirmation WS (at last, otherwise we could not write its facets)
                 initiallyAssignGeoObjecToWorkspace(geoObject, getPrivilegedWorkspace());
                 // Note: If notification fails, confirmation fails too
+                // ### Devel setup FIXME:
                 sendKiezAdministrationNotice("Neuer Einrichtungsdatensatz im Kiezatlas", geoObject, username);
                 viewData("message", "Vielen Dank, Sie haben erfolgreich einen neuen Ort in den Kiezatlas eingetragen. "
                     + "Die Kiez-AdministratorInnen wurden benachrichtigt und wir werden Ihren Eintrag so schnell wie m&ouml;glich freischalten.");
@@ -410,7 +411,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
         if (!isAuthenticated()) return getUnauthorizedPage();
         EinrichtungPageModel geoObject = new EinrichtungPageModel();
         geoObject.setCoordinates(new GeoCoordinate(13.4, 52.5));
-        geoObject.setName("Neuer Eintrag");
+        // geoObject.setName("");
         geoObject.setId(-1);
         viewData("geoobject", geoObject);
         viewData("themen", new ArrayList<RelatedTopic>());
@@ -696,6 +697,41 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
     }
 
     /**
+     * Fetches a list of Geo Objects to be displayed in a map by name.
+     * Ditch searchGeoObjectNames in KiezatlasPlugin (used by Famportal-Angular service).
+     * @param referer
+     * @param query
+     */
+    @GET
+    @Path("/search/duplicates")
+    public List<GeoViewModel> searchGeoObjectsByNameAndStreet(@HeaderParam("Referer") String referer,
+                                                              @QueryParam("geoobject") String geoObjectName,
+                                                              @QueryParam("street") String street) {
+        if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
+        try {
+            ArrayList<GeoViewModel> results = new ArrayList<GeoViewModel>();
+            log.log(Level.INFO, "> nameQuery=\"{0}\"", geoObjectName);
+            String queryValue = geoObjectName.toLowerCase().trim();
+            if (queryValue.isEmpty() || queryValue.length() < 3) return results;
+            // Perform search query
+            List<Topic> singleTopics = dm4.searchTopics(queryValue + "*", "ka2.geo_object.name");
+            log.log(Level.INFO, "{0} geo objects found by name", singleTopics.size());
+
+            for (Topic topic : singleTopics) {
+                Topic geoObject = topic.getRelatedTopic("dm4.core.composition",
+                    "dm4.core.child", "dm4.core.parent", "ka2.geo_object");
+                /** if (!street.isEmpty()) {
+                    Topic address = geoObject.getChildTopics().getTopic("dm4.contacts.address");
+                } **/
+                results.add(new GeoViewModel(geoObject, geomaps));
+            }
+            return results;
+        } catch (Exception e) {
+            throw new RuntimeException("Searching geo object topics by name failed", e);
+        }
+    }
+
+    /**
      * Fetches Geo Objects to be displayed in a map by WGS 84 coordinate pair (Longitude, Latitude)
      * and a numerical radius (provide in km).
      * @param coordinates
@@ -703,9 +739,10 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
      */
     @GET
     @Path("/search/{coordinatePair}/{radius}")
-    public List<GeoViewModel> searchGeoObjectsNearBy(@PathParam("coordinatePair") String coordinates,
-            @PathParam("radius") String radius) {
-        // .) ### Authenticate...
+    public List<GeoViewModel> searchGeoObjectsNearBy(@HeaderParam("Referer") String referer,
+                                                     @PathParam("coordinatePair") String coordinates,
+                                                     @PathParam("radius") String radius) {
+        if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
         // 1) Set default search radius for a query
         double r = (radius.isEmpty() || radius.equals("0")) ? 1.0 : Double.parseDouble(radius);
         List<GeoViewModel> results = new ArrayList<GeoViewModel>();
