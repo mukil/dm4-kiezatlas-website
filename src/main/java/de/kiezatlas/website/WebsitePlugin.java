@@ -372,7 +372,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
                 initiallyAssignGeoObjecToWorkspace(geoObject, getPrivilegedWorkspace());
                 // Note: If notification fails, confirmation fails too
                 // ### Devel setup FIXME:
-                // sendKiezAdministrationNotice("Neuer Einrichtungsdatensatz im Kiezatlas", geoObject, username);
+                sendKiezAdministrationNotice("Neuer Einrichtungsdatensatz im Kiezatlas", geoObject, username);
                 viewData("message", "Vielen Dank, Sie haben erfolgreich einen neuen Ort in den Kiezatlas eingetragen. "
                     + "Die Kiez-AdministratorInnen wurden benachrichtigt und wir werden Ihren Eintrag so schnell wie m&ouml;glich freischalten.");
                 log.info("// ---------- Es wurde erfolgreiche eine neue Einrichtung im Kiezatlas ANGELEGT (" + name + ")");
@@ -568,7 +568,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
             viewData("message", "Der Eintrag \"" + geoObject.getSimpleValue() + "\" erfolgreich freigeschaltet.");
             List<String> mailboxes = getAssignedUserMailboxes(geoObject);
             // ### Fixme: Develop setup 
-            // sendConfirmationNotice(mailboxes, geoObject);
+            sendConfirmationNotice(mailboxes, geoObject);
         } else {
             viewData("message", "Eine Einrichtung mit dieser ID ist uns nicht bekannt.");
             return getNotFoundPage();

@@ -86,22 +86,9 @@
         </div>
 
         <div class="footer" th:utext="${footerText}"></div>
-        
+
         <!-- Piwik -->
-        <script type="text/javascript">
-        var pkBaseURL = "//stats.infokitchen.net/";
-        document.write(unescape("%3Cscript src='" + pkBaseURL + "piwik.js' type='text/javascript'%3E%3C/script%3E"));
-        </script><script type="text/javascript">
-        try {
-        var piwikTracker = Piwik.getTracker(pkBaseURL + "piwik.php", 2);
-        piwikTracker.trackPageView();
-        piwikTracker.enableLinkTracking();
-        } catch( err ) {}
-        </script>
-        <noscript>
-            <img th:src="@{https://stats.infokitchen.net/piwik.php(idsite=2,rec=1,action_name='Kiezatlas+2+List')}" style="border:0" alt="" />
-        </noscript>
-        <!-- End Piwik Tracking Code -->
+        <img th:src="@{https://stats.infokitchen.net/piwik.php(idsite=2,rec=1,action_name='Kiezatlas+2+List')}" style="border:0" alt="" />
 
     </body>
 </html>
