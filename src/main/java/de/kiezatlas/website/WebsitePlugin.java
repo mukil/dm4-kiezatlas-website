@@ -323,8 +323,8 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
         Topic geoObject = null;
         Topic username = getUsernameTopic();
         String coordinatePair = "", geoLocation = "";
-        // Input Validation
-        if (district == NEW_TOPIC_ID) {
+        // Server side input validation (would let us loose all user input...)
+        /** if (district == NEW_TOPIC_ID) {
             log.warning("Saving new geo object prohibited - NO DISTRICT Given");
             viewData("warning", INVALID_DISTRICT_SELECTION);
             return (topicId == NEW_TOPIC_ID) ? getGeoObjectEditPage() : getGeoObjectEditPage(topicId);
@@ -333,7 +333,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
             log.warning("Saving new geo object prohibited - NO Postleitzahl Given");
             viewData("warning", INVALID_ZIPCODE_INPUT);
             return (topicId == NEW_TOPIC_ID) ? getGeoObjectEditPage() : getGeoObjectEditPage(topicId);
-        }
+        } **/
         // Handle Geo Coordinates of Geo Object
         if (latitude == -1000 || longitude == -1000) {
             geoLocation = geoCodeAddressInput(URLEncoder.encode(strasse + ", " + plz + " " + city));
@@ -372,7 +372,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
                 initiallyAssignGeoObjecToWorkspace(geoObject, getPrivilegedWorkspace());
                 // Note: If notification fails, confirmation fails too
                 // ### Devel setup FIXME:
-                sendKiezAdministrationNotice("Neuer Einrichtungsdatensatz im Kiezatlas", geoObject, username);
+                // sendKiezAdministrationNotice("Neuer Einrichtungsdatensatz im Kiezatlas", geoObject, username);
                 viewData("message", "Vielen Dank, Sie haben erfolgreich einen neuen Ort in den Kiezatlas eingetragen. "
                     + "Die Kiez-AdministratorInnen wurden benachrichtigt und wir werden Ihren Eintrag so schnell wie m&ouml;glich freischalten.");
                 log.info("// ---------- Es wurde erfolgreiche eine neue Einrichtung im Kiezatlas ANGELEGT (" + name + ")");
@@ -389,6 +389,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
                 geoObject.setChildTopics(geoObjectTopicModel);
                 attachGeoObjectChildTopics(geoObject, ansprechpartner, telefon, fax, email, beschreibung,
                     oeffnungszeiten, website, coordinatePair, district, themen, zielgruppen, angebote);
+                viewData("message", "Danke, der <a href=\"/website/geo/"+geoObject.getId()+"\" title=\"Anzeigen\">Datensatz</a> wurde aktualisiert.");
             } else {
                 viewData("message", "Sie sind aktuell leider nicht berechtigt diesen Datensatz zu bearbeiten.");
                 return getUnauthorizedPage();
@@ -396,7 +397,6 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
         }
         log.info("Saved Geo Object Input " + geoObject);
         viewData("name", geoObject.getSimpleValue().toString());
-        viewData("message", "Danke, der <a href=\"/website/geo/"+geoObject.getId()+"\" title=\"Anzeigen\">Datensatz</a> wurde aktualisiert.");
         viewData("coordinates", coordinatePair);
         return getSimpleMessagePage();
     }
@@ -472,9 +472,12 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
         if (topicId.startsWith("t-")) {
             geoObject = dm4.getTopicByUri("de.kiezatlas.topic." + topicId);
         } else {
-            if (dm4.getAccessControl().hasPermission(accesscl.getUsername(), Operation.READ, Long.parseLong(topicId))) {
+            String username = accesscl.getUsername();
+            boolean readOp = dm4.getAccessControl().hasPermission(accesscl.getUsername(), Operation.READ, Long.parseLong(topicId));
+            if (readOp) {
                 geoObject = dm4.getTopic(Long.parseLong(topicId));
             } else {
+                log.warning("Read permission for " + username + " on topicId=" + topicId + ", allowed=" + readOp);
                 return getUnauthorizedPage("Sie haben aktuell nicht die Berechtigung diesen Datensatz zu sehen");
             }
         }
@@ -564,7 +567,8 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
             moveGeoObjecFacetsToWorkspace(geoObject, getStandardWorkspace());
             viewData("message", "Der Eintrag \"" + geoObject.getSimpleValue() + "\" erfolgreich freigeschaltet.");
             List<String> mailboxes = getAssignedUserMailboxes(geoObject);
-            sendConfirmationNotice(mailboxes, geoObject);
+            // ### Fixme: Develop setup 
+            // sendConfirmationNotice(mailboxes, geoObject);
         } else {
             viewData("message", "Eine Einrichtung mit dieser ID ist uns nicht bekannt.");
             return getNotFoundPage();
@@ -1938,11 +1942,18 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
         workspaces.assignToWorkspace(coordinateTopic.getChildTopics().getTopic("dm4.geomaps.longitude"), workspace.getId());
         workspaces.assignToWorkspace(coordinateTopic.getChildTopics().getTopic("dm4.geomaps.latitude"), workspace.getId());
         workspaces.assignToWorkspace(addressObject, workspace.getId());
-        workspaces.assignToWorkspace(addressChilds.getTopicOrNull("dm4.contacts.street"), workspace.getId());
+        Topic streetNr = addressChilds.getTopicOrNull("dm4.contacts.street");
+        if (streetNr != null) {
+            log.info("Moving street to workspace" + workspace);
+            workspaces.assignToWorkspace(streetNr, workspace.getId());
+        }
         workspaces.assignToWorkspace(addressChilds.getTopic("dm4.contacts.postal_code"), workspace.getId());
         workspaces.assignToWorkspace(addressChilds.getTopic("dm4.contacts.city"), workspace.getId());
         Topic addressCountry = addressChilds.getTopicOrNull("dm4.contacts.country");
-        workspaces.assignToWorkspace(addressCountry, workspace.getId());
+        if (addressCountry != null) {
+            log.info("Moving address to workspace" + workspace);
+            workspaces.assignToWorkspace(addressCountry, workspace.getId());
+        }
         log.info("Basic Geo Object, Address and Coordinate Facet moved to Workspace \"" + workspace.getSimpleValue() + "\"");
     }
 

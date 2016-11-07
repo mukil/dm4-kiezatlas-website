@@ -136,10 +136,31 @@
                 }, $("body"))
             }
 
+            function is_valid_zip_code() {
+                var $plz = $('#postal-code')
+                if ($plz.val().length !== 5) {
+                    if (!$plz.hasClass('invalid')) $plz.addClass("invalid")
+                    $("#save").attr("disabled", true)
+                } else {
+                    $plz.removeClass("invalid")
+                    $("#save").removeAttr("disabled")
+                }
+            }
+
+            function is_valid_district() {
+                var $district = $('#district')
+                if ($district.val() === "-1") {
+                    if (!$district.hasClass('invalid')) $district.addClass("invalid")
+                    $("#save").attr("disabled", true)
+                } else {
+                    $district.removeClass("invalid")
+                    $("#save").removeAttr("disabled")
+                }
+            }
+
             function search_for_duplicates() {
                 if ($('#geo-id').val() === "-1") { // Attempt to create a new geo object
                     var nameInput = $('#geoname').val()
-                    console.log("Attempt to create a new geo object named", nameInput)
                     if (nameInput.length < 3) return;
                     // var streetInput = $('#streetnr').val()
                     var $area = $('#duplicates')
@@ -147,7 +168,6 @@
                         $area = $('<div class="warning" id="duplicates">')
                         $area.insertBefore('form.infos')
                     }
-                    console.log("Duplicates Area", $area)
                     // TODO: render loading indicator
                     $.getJSON('/website/search/duplicates?geoobject=' + nameInput, function(results) {
                         if (results && results.length > 0) {
@@ -165,6 +185,8 @@
                 } else {
                     console.log("Editing an existing geo object..")
                 }
+                is_valid_district()
+                is_valid_zip_code()
             }
 
             /**
@@ -246,8 +268,9 @@
                         <label for="strasse">Stra&szlig;enname</label>
                         <input type="text" id="streetnr" name="strasse" th:value='${geoobject.strasse}'/>
                         <label for="plz">Postleitzahl, Bezirk</label>
-                        <input type="number" required="true" minlength="5" id="postal-code" class="plz" name="plz" th:value='${geoobject.plz}'/>
-                        <select id="district" name="district" required="true">
+                        <input type="number" required="true" minlength="5" id="postal-code" onblur="is_valid_zip_code()"
+                               class="plz" name="plz" th:value='${geoobject.plz}'/>
+                        <select id="district" name="district" required="true" onblur="is_valid_district()">
                             <option value="-1">Bitte Bezirk ausw&auml;hlen</option>
                             <option th:each="district : ${availableDistricts}" th:selected="${#strings.toString(district.simpleValue) eq geoobject.bezirk}" th:value="${district.id}" th:text="${district.simpleValue}"></option>
                         </select>
@@ -321,8 +344,9 @@
                     <a class="imprint" th:href="${geoobject.imprint}">Impressum</a-->
                 </div>
                 <div class="info-area">
-                    <input type="submit" value="Ok"/>
-                    <a class="button" th:href="'/website/geo/' + ${geoobject.id}">Cancel</a>
+                    <input type="submit" id="save" value="Ok"/>
+                    <a class="button" th:if="${geoobject.id} != -1" th:href="'/website/geo/' + ${geoobject.id}">Cancel</a>
+                    <a class="button" th:if="${geoobject.id} == -1" href="/angebote/my">Cancel</a>
                 </div>
             </form>
             <div class="categories">

@@ -123,6 +123,10 @@ html, body {
     color: #8F1414;
 }
 
+.kiezatlas.topic.edit .warning {
+    font-size: 0.8em;
+}
+
 #pages,
 #bottom,
 #filter-container,
@@ -334,6 +338,11 @@ html, body {
 .facet-editor .right.menu .ui.search,
 .sites .right.menu .ui.search {
     display: none;
+}
+
+form .invalid {
+    border-color: #8F1414;
+    border-width: 2px;
 }
 
 .facet-editor form label {
