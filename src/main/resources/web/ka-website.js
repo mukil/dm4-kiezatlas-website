@@ -120,33 +120,40 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
      *  - District Frontpage (District Infos, District Fulltext search)
      **/
     this.render_page = function(name, karteNone) {
-        console.log("Render Page with Map?", karteNone)
+        // 1) Render Bezirks-Gesamtstadtplan
         if (!name) { // get current page alias
-           var locationHash = window.location.hash
-           var subdomain_mitte = (window.location.host.indexOf("mitte.") !== -1 || window.location.hostname.indexOf("mitte.") !== -1) ? true : false
-           var bezirksTopic = undefined
-           if (locationHash && locationHash !== "#karte") {
-               console.log("Render page for anchor/hash ", locationHash)
-                _self.load_district_topics(function() {
-                    bezirksTopic = _self.get_bezirks_topic_by_hash(locationHash)
-                    _self.render_bezirkspage(bezirksTopic)
-                })
-           } else {
-                if (subdomain_mitte) {
-                    console.log("Render page for Subdomain Mitte", subdomain_mitte)
-                   _self.load_district_topics(function(e) {
-                       bezirksTopic = _self.get_bezirks_topic_by_hash("#mitte")
-                       _self.render_bezirkspage(bezirksTopic)
-                   })
-                } else {
-                    console.log("Render Gesamtstadtplan cause of unknown Page Name, Anchor and unspecific Subdomain")
+            var locationHash = window.location.hash
+            var subdomain_mitte = (window.location.host.indexOf("mitte.") !== -1 || window.location.hostname.indexOf("mitte.") !== -1) ? true : false
+            var bezirksTopic = undefined
+            if (locationHash && locationHash !== "#karte") {
+                if (locationHash === "#gesamt") {
                     _self.render_gesamtstadtplan()
+                } else {
+                    _self.load_district_topics(function() {
+                        bezirksTopic = _self.get_bezirks_topic_by_hash(locationHash)
+                        if (bezirksTopic) {
+                            _self.render_bezirkspage(bezirksTopic)
+                        } else {
+                            console.warn("Entschudligung, die Seite "+locationHash+" konnte nicht geladen werden. ")
+                            _self.render_gesamtstadtplan()
+                        }
+                     })
                 }
-           }
-        // 1) page name given
+            } else {
+                 if (subdomain_mitte) {
+                    _self.load_district_topics(function(e) {
+                        bezirksTopic = _self.get_bezirks_topic_by_hash("#mitte")
+                        _self.render_bezirkspage(bezirksTopic)
+                    })
+                 } else {
+                     console.log("Fallback to render Gesamtstadtplan caused by Page Name",
+                     name,"Anchor", locationHash, "andunspecific Subdomain")
+                     _self.render_gesamtstadtplan()
+                 }
+            }
+        // 2) Render Berlin-Gesamtstadtplan
         } else {
-            console.log("Render kiezatlas site named \"" + name + "\"")
-            _self.render_kiezatlas_site(name)
+            _self.render_gesamtstadtplan()
         }
     }
 
