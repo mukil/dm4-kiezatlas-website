@@ -118,6 +118,7 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
     /** Renders either the
      *  - Standard Frontpage (Berlin wide) with Einrichtungen or Angeboten
      *  - District Frontpage (District Infos, District Fulltext search)
+     *  - Kiezatlas Website
      **/
     this.render_page = function(name, karteNone) {
         // 1) Render Bezirks-Gesamtstadtplan
@@ -153,7 +154,13 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
             }
         // 2) Render Berlin-Gesamtstadtplan
         } else {
-            _self.render_gesamtstadtplan()
+            if (name === "gesamt") {
+                console.log("Render Berlin Gesamtstadtplan", name)
+                _self.render_gesamtstadtplan()
+            } else {
+                console.log("Render Kiezatlas Site", name)
+                _self.render_kiezatlas_site(name)
+            }
         }
     }
 
