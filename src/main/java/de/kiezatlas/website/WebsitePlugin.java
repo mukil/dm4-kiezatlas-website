@@ -701,8 +701,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
     }
 
     /**
-     * Fetches a list of Geo Objects to be displayed in a map by name.
-     * Ditch searchGeoObjectNames in KiezatlasPlugin (used by Famportal-Angular service).
+     * Fetches a list of Geo Objects possibly existing for /geo/create form.
      * @param referer
      * @param query
      */
@@ -713,14 +712,16 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
                                                               @QueryParam("street") String street) {
         if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
         try {
+            // strip common prefixes as they irritate our search fo rduplicates leading to to many results
+            String queryValue = geoObjectName.replace("e.V.", "").replace("gGmbh", "").toLowerCase().trim();
             ArrayList<GeoViewModel> results = new ArrayList<GeoViewModel>();
-            log.log(Level.INFO, "> nameQuery=\"{0}\"", geoObjectName);
-            String queryValue = geoObjectName.toLowerCase().trim();
+            log.log(Level.INFO, "> preprocessed nameQuery=\"{0}\"", queryValue + "\" to find duplicates");
             if (queryValue.isEmpty() || queryValue.length() < 3) return results;
-            // Perform search query
+            // Perform search query, do fuzzy name search (with levenstein) and distance 0.5
             List<Topic> singleTopics = dm4.searchTopics(queryValue + "*", "ka2.geo_object.name");
             log.log(Level.INFO, "{0} geo objects found by name", singleTopics.size());
-
+            // TODO: sort resutls albhabetically
+            sortAlphabeticalDescending(singleTopics);
             for (Topic topic : singleTopics) {
                 Topic geoObject = topic.getRelatedTopic("dm4.core.composition",
                     "dm4.core.child", "dm4.core.parent", "ka2.geo_object");
@@ -753,6 +754,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
         // 2) Process spatial search results (=topics of type Geo Coordinate)
         List<Topic> geoObjects = searchGeoObjectsNearby(coordinates, r);
         for (Topic geoTopic : geoObjects) {
+            // TODO:C2.1) ### Filer out ang3bote not current anymore...
             results.add(new GeoViewModel(geoTopic, geomaps, angebote));
         }
         return results;
@@ -799,6 +801,8 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
 
     /**
      * Builds up a list of search results (Geo Objects to be displayed in a map) by text query.
+     * Used by dm4-kiezatlas-famportal (editorial tool and api) as well as on the
+     * dm4-kiezatlas-website frontpage for (berlin wide and contextual, see next method) text search.
      * @param referer
      * @param query
      */
@@ -806,19 +810,18 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
     @Path("/search")
     public List<GeoViewModel> searchGeoObjectsFulltext(@HeaderParam("Referer") String referer,
             @QueryParam("search") String query) {
-        // .) ### Authenticate
+        // ### 0) FIXME: Authenticate request
         if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
-        // TODO: Maybe it is also desirable that we wrap the users query into quotation marks
-        // (to allow users to search for a combination of words)
+        // ### 1) FIXME: lucene query phrase preparation (wildcards per term, wrapping terms into phrase, AND / OR on terms)
         try {
             ArrayList<GeoViewModel> results = new ArrayList<GeoViewModel>();
             if (query.isEmpty()) {
                 log.warning("No search term entered, returning empty resultset");
                 return results;
             }
-            // 1) Fetch unique geo object topics by text query string
+            // 2) Fetch unique geo object topics by text query string
             List<Topic> geoObjects = searchFulltextInGeoObjectChilds(query, true, false);
-            // 2) Process saerch results and create DTS for map display
+            // 3) Process saerch results and create DTS for map display
             log.info("Start building response for " + geoObjects.size() + " OVERALL");
             for (Topic topic : geoObjects) {
                 if (isGeoObjectTopic(topic)) {

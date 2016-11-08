@@ -653,7 +653,7 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
 
     this.load_district_topics = function(callback) {
         restc.load_districts(function(results) {
-            _self.setDistricts(results.sort(_self.value_sort_asc))
+            _self.setDistricts(results.sort(restc.value_sort_asc))
             if (callback) callback()
         })
     }
@@ -983,7 +983,7 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
         var nameA = a.name
         var nameB = b.name
         //
-        if (nameA.toLowerCase() > nameB.toLowerCase()) // sort string descending
+        if (nameA.toLowerCase() > nameB.toLowerCase()) // sort string ascending
           return 1
         if (nameA.toLowerCase() < nameB.toLowerCase())
           return -1

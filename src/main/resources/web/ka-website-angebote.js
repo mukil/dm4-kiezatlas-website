@@ -1,7 +1,7 @@
 
 var angebote = (function($) {
     
-    console.log("Kiezatlas Angebote Script loaded")
+    // console.log("Kiezatlas Website Angebote Util loaded")
     
     var api = {} 
     

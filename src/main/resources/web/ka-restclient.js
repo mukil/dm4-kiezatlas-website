@@ -1,6 +1,6 @@
 //
 var restc = (function($) {
-    console.log("REST Client Module (jQuery based) Loaded")
+    // console.log("REST Client Module (jQuery based) Loaded")
     
     function value_sort_asc(a, b) {
         var nameA = a.value

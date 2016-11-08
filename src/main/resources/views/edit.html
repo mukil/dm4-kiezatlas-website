@@ -164,21 +164,26 @@
                     if (nameInput.length < 3) return;
                     // var streetInput = $('#streetnr').val()
                     var $area = $('#duplicates')
-                    if (!$area.hasOwnProperty("length")) {
-                        $area = $('<div class="warning" id="duplicates">')
-                        $area.insertBefore('form.infos')
-                    }
                     // TODO: render loading indicator
+                    console.log("Searching for duplicates by", nameInput)
                     $.getJSON('/website/search/duplicates?geoobject=' + nameInput, function(results) {
-                        if (results && results.length > 0) {
+                        if (results && results.length > 0 && results.length < 20) {
                             $area.html("Im Kiezatlas gibt es bereits einige Orte unter diesem Namen:<br/>")
                             for (var e in results) {
-                                var html = '<a href="/website/geo/'+results[e].id+'" title="Öffnet diesen Datensatz '
-                                    + 'in einem neuen Fenster" target="_blank">'+ results[e].name + '</a>'
-                                if (e < results.length - 1) html+= ", "
-                                $area.append(html)
+                                var result = results[e]
+                                if (result){
+                                    var html = '<a href="/website/geo/'+result.id+'" title="Öffnet diesen Datensatz '
+                                        + 'in einem neuen Fenster" target="_blank">'+ result.name + '</a>'
+                                    if (e < results.length - 1) html+= ", "
+                                    $area.append(html)
+                                }
                             }
                             $area.append("<br/>Sind Sie sich sicher das Sie einen neuen Ort anlegen m&ouml;chten?")
+                        } else if (results.length === 0) {
+                            $area.empty()
+                        } else if (results.length > 30) {
+                            console.warn("Es gibt zu viele Treffer für den Namen..")
+                            $area.empty()
                         }
                         console.log("Duplicates search for geo objects", results)
                     })
@@ -254,6 +259,7 @@
             </div>
             <!-- -->
             <div id="map"></div>
+            <div class="warning" id="duplicates"></div>
             <div th:if="${!#strings.isEmpty(warning)}" th:utext="${warning}" class="warning message"></div>
             <form class="infos" action="/website/geo/save" method="POST">
                 <input th:if="${!#strings.isEmpty(geoobject.id)}" type="hidden" id="geo-id" name="id" th:value='${geoobject.id}'/>
