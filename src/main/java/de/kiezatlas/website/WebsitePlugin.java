@@ -1683,7 +1683,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
         signup.sendUserMailboxNotification(recipients, "Dein Kiezatlas Eintrag wurde freigeschaltet", "\nLiebe/r KiezAtlas-Nutzer_in,\n\n"
             + "dein Eintrag wurde soeben bestätigt.\n\n"
             + "Name des Eintrags: \"" + geoObject.getSimpleValue().toString() + "\"\n"
-            + "Link: " + SignupPlugin.DM4_HOST_URL+"geoobject/" + geoObject.getId() + "\n\nVielen Dank für deine Mithilfe.\n\nCiao!");
+            + "Link: " + SignupPlugin.DM4_HOST_URL+"website/geo/" + geoObject.getId() + "\n\nVielen Dank für deine Mithilfe.\n\nCiao!");
     }
 
     private void sendKiezAdministrationNotice(String subject, Topic geoObject, Topic username) {
