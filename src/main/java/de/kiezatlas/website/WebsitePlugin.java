@@ -935,7 +935,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
         return new ArrayList(uniqueResults.values());
     }
 
-    /** ---------------------------------------------------------------- Kiezatlas Notification Mechanics ---------- */
+    /** ------------------------------------------------------- Kiezatlas Angebotsinfo Notification Mechanics ---------- */
 
     @Override
     public void angebotsInfoAssigned(Topic angebotsInfo, Topic geoObject, Association assignmentEdge) {
@@ -945,18 +945,19 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
         String eMailAddress = getAnsprechpartnerMailboxValue(contactFacet);
         StringBuilder recipients = new StringBuilder();
         if (eMailAddress != null && !eMailAddress.isEmpty()) {
-            log.info("Angebotsinfo Assignment Notification \"" + eMailAddress + "\" (cushioned=using malte@)");
+            log.info("Angebotsinfo Assignment Notification goes to \"" + eMailAddress + "\"");
             if (signup.isValidEmailAddress(eMailAddress)) {
                 recipients.append(eMailAddress);
                 recipients.append(";");
             } else {
-                log.warning("Einrichtung has AnsprechpartnerIn set but \"" + eMailAddress + "\" is sadly NOT A VALID EMAIL");
+                log.warning("Einrichtung has AnsprechpartnerIn set but \"" + eMailAddress + "\" sadly is NOT A VALID EMAIL");
+                recipients.append(SYSTEM_MAINTENANCE_MAILBOX);
             }
-            recipients.append(collectDistrictAdministrativeRecipients(geoObject));
         } else {
-            log.info("NO ANSPRECHPARTNERIN set for Angebotsinfo Assignment Notification, informing Kiez-Administrators "
+            log.info("NO ANSPRECHPARTNERIN set for Angebotsinfo Assignment Notification, informing Super-Administrators"
                 + "(and " + SYSTEM_MAINTENANCE_MAILBOX + ")");
-            recipients.append(collectDistrictAdministrativeRecipients(geoObject));
+            // recipients.append(collectDistrictAdministrativeRecipients(geoObject));
+            recipients.append(SYSTEM_MAINTENANCE_MAILBOX);
         }
         // Create revision key
         String key = UUID.randomUUID().toString();
@@ -1696,7 +1697,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
     }
 
     private String collectDistrictAdministrativeRecipients(Topic geoObject) {
-        log.info("Collecting Kiez-Administrative Notifications Recipients...");
+        log.info("Collecting Bezirks-Administrative Notification Recipients...");
         Topic bezirksTopic = getRelatedBezirk(geoObject);
         List<String> mailboxes = getAssignedAdministrativeMailboxes(bezirksTopic);
         StringBuilder recipients = new StringBuilder(buildRecipientsString(mailboxes));
@@ -1706,8 +1707,6 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
             log.warning("No additional Kiez-Administrators configured at district "
                 + "\"" + bezirksTopic.getSimpleValue() + "\" to NOTIFY, just System Mailbx");
         }
-        // Include System Maintenance into Kiez-Administrator Recipients
-        recipients.append(SYSTEM_MAINTENANCE_MAILBOX);
         return recipients.toString();
     }
 
