@@ -26,7 +26,7 @@ var leafletMap = (function($, L) {
 
     map.setup = function(elementId, mouseWheelZoom) {
         map.elementId = elementId
-        console.log("Set up Leaflet Map #"+ elementId + ", mouseWheelZoom", mouseWheelZoom)
+        // console.log("Set up Leaflet Map #"+ elementId + ", mouseWheelZoom", mouseWheelZoom)
         map.map = new L.Map(elementId, {
             dragging: true, touchZoom: true, scrollWheelZoom: (!mouseWheelZoom) ? false : mouseWheelZoom, doubleClickZoom: true,
             zoomControl: false, minZoom: 9, maxBounds: mapping.maxBounds,

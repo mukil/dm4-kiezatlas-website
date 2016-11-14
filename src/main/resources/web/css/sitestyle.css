@@ -1653,24 +1653,41 @@ body.sign-up {
     cursor: auto;
 }
 
+.sign-up .label {
+    color: #a9a9a9;
+}
+
+.sign-up .value {
+    margin-bottom: 1em;
+}
+
 .sign-up #message {
     color: rgba(200, 0, 0, 1.0);
     line-height: 1.8em;
 }
 
-.sign-up .logout-page #log-in-view #message {
-    margin-left: 1em;
-}
-
 .sign-up #message-view {
-    padding-left: 2em;
+    padding-left: 0em;
     margin-bottom: 10px;
     color: rgba(39, 99, 140, 1.0);
 }
 
-.ok-page.sign-up #message-view,
-.sign-up #log-in-view #message-view {
-    padding-left: 0em;
+.sign-up.account-page .logout-form {
+    margin-left: 0em;
+    margin-bottom: 0em;
+}
+
+.sign-up.account-page #page-header {
+    margin-top: 5em;
+    margin-bottom: 0em;
+}
+
+.sign-up.account-page .dialog-body {
+    margin-top: 0em;
+}
+
+.sign-up.logout-page #message-view {
+    padding-left: 2em;
 }
 
 .sign-up .password-reset a {

@@ -9,7 +9,8 @@
         <meta itemprop="description" content="Not found"/>
         <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 
-        <link rel="stylesheet" href="/de.kiezatlas.website/css/sitestyle.css"/>
+        <link media="all" th:href="${customSiteCss}" rel="stylesheet" />
+        <link media="all" th:href="${customPageCss}" th:if="${!#strings.isEmpty(customPageCss)}" href="" rel="stylesheet" />
 
     </head>
     <body class="page denied">
@@ -26,10 +27,6 @@
                 <div class="text" itemprop="text" th:utext="${message}"></div>
             </div>
         </article>
-
-        <div id="bottom" class="padding">
-            <a href="/" title="zur Startseite"><img src="/de.kiezatlas.website/images/kiezatlas2-logo.png" width="150" /></a>
-        </div>
 
         <footer>
             <div class="main" th:utext="${footerText}"></div>
