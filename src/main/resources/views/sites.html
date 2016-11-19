@@ -26,7 +26,6 @@
         /*<![CDATA[*/
             $(document).ready(function(e) {
                 var page = /*[[${page}]]*/ undefined
-                console.log("Sites Rendering Page", page)
                 if (page === "site-editor") {
                     sites.init_site_editor()
                 } else if (page === "site-listing") {
@@ -72,7 +71,7 @@
                     <ul class="geoobjects" th:if="${geoobjects}">
                         <li th:each="item : ${geoobjects}" th:id="${item.id}">
                             <span style="font-weight: bold;" th:text="${item.simpleValue}">Einrichtung</span><br/>
-                            <!-- a th:href="'/website/edit/' + ${site.id} + '/facets/' + ${item.id}">Facetten bearbeiten</a -->,
+                            <a th:href="'/website/edit/' + ${site.id} + '/facets/' + ${item.id}">Facetten bearbeiten</a>,
                             <a href="#remove" th:onclick="'sites.remove_assignment(' + ${item.id} + ', '+${site.id}+')'">Aus dem Stadtplan entfernen</a>
                         </li>
                     </ul>

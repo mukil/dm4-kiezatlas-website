@@ -48,7 +48,6 @@ var sites = {
         return typeUri.split(".").join("\\.")
     },
     activate_options: function(typeUri, facetTopicTypeUri, addEmpty, existingMany) {
-        console.log("This? Button", this)
         var facetTypeUriInputFieldSelector = sites.transform_element_selector(facetTopicTypeUri)
         $('#' + facetTypeUriInputFieldSelector).removeAttr("disabled")
         sites.load_facet_value_options(typeUri, facetTopicTypeUri, addEmpty, existingMany)
@@ -110,19 +109,36 @@ var sites = {
             // console.log("Facet Topic Type Def", facetTopicType)
             var facetTypeUri = sites.get_first_child_type_uri(facetTopicType)
             var assocDefType = facetTopicType.assoc_defs[0].type_uri
-            var assocDefCardinality = facetTopicType.assoc_defs[0].child_cardinality_uri
+            // var assocDefCardinality = facetTopicType.assoc_defs[0].child_cardinality_uri
             var $input = $('#' + sites.transform_element_selector(facetTopicType.uri))
             // var manyValues = ($input.val() instanceof Array)
-            // ### calculate value references
-            if ($input.val() === "Bitte auswählen" || $input.val() == null) break;
+            // ### do proper input validation
+            if ($input.val() === "Bitte auswählen" || $input.val() === null) break;
             // if (facetTypeUri === "ka2.bezirk" || facetTypeUri === "ka2.criteria.thema") break;
             if (assocDefType.indexOf("composition_def") !== -1) {
-                tm.childs[facetTypeUri] = $input.val()
-            } else if (assocDefCardinality.indexOf("many") !== -1) {
+                // ### assocDefCardinality.indexOf("many")
+                // check if value has changed, just if, include in our TopicModel
+                if (value_changed($input, facetTypeUri)) {
+                    tm.childs[facetTypeUri] = $input.val()
+                } else {
+                    tm.childs[facetTypeUri] = "ref_id:" + geoobject.childs[facetTypeUri].id
+                }
+                // ### clean up old facet values (garbage collection)
+            } else if (assocDefType.indexOf("aggregation_def") !== -1) {
+                // ### assocDefCardinality.indexOf("single")
                 tm.childs[facetTypeUri] = []
+                // Add new topic references
                 for (var v in $input.val()) {
                     var val = $input.val()[v]
                     tm.childs[facetTypeUri].push("ref_id:" + val)
+                }
+                // Clear old topic references
+                var cachedValueReferences = geoobject.childs[facetTypeUri]
+                for (var valueIdx in cachedValueReferences) {
+                    var aggregatedFacetValue = cachedValueReferences[valueIdx]
+                    if (!selection_contains_topic_id($input, aggregatedFacetValue.id)) {
+                        tm.childs[facetTypeUri].push("del_id:" + aggregatedFacetValue.id)
+                    }
                 }
             } else {
                 tm.childs[facetTypeUri] = "ref_id:" + $input.val()
@@ -132,6 +148,22 @@ var sites = {
         restc.update_facets(geoobject.id, siteId, tm, function(res) {
             sites.handle_response_err(res)
         })
+
+        function value_changed($inputField, facetTypeUri) {
+            var cachedValue = geoobject.childs[facetTypeUri]
+            // Fixme: Test if this check also work for boolean or number values
+            var changed = (cachedValue.value != $inputField.val())
+            return changed
+        }
+
+        function selection_contains_topic_id($inputSelector, topicId) {
+            for (var v in $inputSelector.val()) {
+                var val = $inputSelector.val()[v]
+                console.log("Selected Facet Input Ref", val, "ID", topicId, (val == topicId))
+                if (val == topicId) return true
+            }
+            return false
+        }
     },
     render_facet_form: function(siteId, facetTypeDefs) {
         var $submit = $('<span class="ui button small basic">')
