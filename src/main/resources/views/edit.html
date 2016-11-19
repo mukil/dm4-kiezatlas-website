@@ -5,18 +5,18 @@
         <meta charset="UTF-8"/>
         <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 
-        <link rel="stylesheet" href="/de.kiezatlas.website/vendor/leaflet/leaflet.css"/>
-        <link rel="stylesheet" href="/de.kiezatlas.website/css/sitestyle.css"/>
+        <link type="text/css" rel="stylesheet" href="/de.kiezatlas.website/vendor/dm4-webclient/jquery/css/custom-theme/jquery-ui-1.10.3.custom.min.css"/>
+        <link type="text/css" rel="stylesheet" href="/de.kiezatlas.website/vendor/leaflet/leaflet.css"/>
+        <link type="text/css" rel="stylesheet" href="/de.kiezatlas.website/css/sitestyle.css"/>
 
-        <script src="/de.kiezatlas.website/vendor/jquery/jquery-1.9.1.min.js"></script>
-        <link rel="stylesheet" href="/de.deepamehta.webclient/script/vendor/jquery/css/custom-theme/jquery-ui-1.10.3.custom.min.css" type="text/css"/>
-        <script src="/de.deepamehta.webclient/script/vendor/jquery/jquery-ui-1.10.3.custom.min.js"></script>
-        <script src="/de.deepamehta.webclient/script/vendor/jquery/jquery.ui.touch-punch.min.js"></script>
-        <script type="text/javascript" src="/de.deepamehta.webclient/script/util/gui_toolkit.js"></script>
-        <script src="/de.kiezatlas.website/vendor/leaflet/leaflet.js"></script>
-        <script src="/de.kiezatlas.angebote/vendor/ckeditor/ckeditor.js"></script>
-        <script src="/de.kiezatlas.angebote/vendor/ckeditor/config.js"></script>
-        <script src="/de.kiezatlas.website/ka-restclient.js"></script>
+        <script type="text/javascript" src="/de.kiezatlas.website/vendor/jquery/jquery-1.9.1.min.js"></script>
+        <script type="text/javascript" src="/de.kiezatlas.website/vendor/dm4-webclient/jquery/jquery-ui-1.10.3.custom.min.js"></script>
+        <script type="text/javascript" src="/de.kiezatlas.website/vendor/dm4-webclient/jquery/jquery.ui.touch-punch.min.js"></script>
+        <script type="text/javascript" src="/de.kiezatlas.website/vendor/dm4-webclient/util/gui_toolkit.js"></script>
+        <script type="text/javascript" src="/de.kiezatlas.website/vendor/leaflet/leaflet.js"></script>
+        <script type="text/javascript" src="/de.kiezatlas.angebote/vendor/ckeditor/ckeditor.js"></script>
+        <script type="text/javascript" src="/de.kiezatlas.angebote/vendor/ckeditor/config.js"></script>
+        <script type="text/javascript" src="/de.kiezatlas.website/ka-restclient.js"></script>
         <!-- script src="/de.kiezatlas.website/ka-map.js"></script-->
 
         <script type="text/javascript" th:inline="javascript">
@@ -136,6 +136,17 @@
                 }, $("body"))
             }
 
+            function is_valid_email() {
+                var $email = $('#email-address')
+                if ($email.val().indexOf("@") === -1 || $email.val().indexOf(".") === -1) {
+                    if (!$email.hasClass('invalid')) $email.addClass("invalid")
+                    $("#save").attr("disabled", true)
+                } else {
+                    $email.removeClass("invalid")
+                    $("#save").removeAttr("disabled")
+                }
+            }
+
             function is_valid_zip_code() {
                 var $plz = $('#postal-code')
                 if ($plz.val().length !== 5) {
@@ -192,6 +203,7 @@
                 }
                 is_valid_district()
                 is_valid_zip_code()
+                is_valid_email()
             }
 
             /**
@@ -295,7 +307,8 @@
                         <label for="telefon">Telefon</label>
                         <input type="text" name="telefon" th:value='${geoobject.telefon}'/>
                         <label for="email">Email</label>
-                        <input type="text" name="email" th:value='${geoobject.email}'/>
+                        <input type="text" name="email" onblur="is_valid_email()"
+                               id="email-address" required="true" th:value='${geoobject.email}'/>
                         <label for="fax">Fax</label>
                         <input type="text" name="fax" th:value='${geoobject.fax}'/>
                         <!-- Image File Upload, Träger, LOR Nummer -->

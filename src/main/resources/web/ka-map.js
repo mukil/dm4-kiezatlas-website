@@ -283,9 +283,11 @@ var leafletMap = (function($, L) {
         mapping.circleSearchActive = true
     }
 
-    map.show_anchor = function(custom_anchor) {
+    map.scroll_into_view = function(custom_anchor) {
         if (custom_anchor) { // but maybe alter anchor name
-            window.document.location.href = window.document.location.protocol + '//' + window.document.location.host + "/" + custom_anchor
+            document.getElementById(custom_anchor).scrollIntoView()
+        } else {
+            document.getElementById(map.elementId).scrollIntoView()
         }
     }
 
@@ -293,13 +295,8 @@ var leafletMap = (function($, L) {
 
     map.setItems = function(itemList) {
         items = itemList
-        // console.log("Map Set Items (" + items.length + ")", items)
     }
 
-    map.addItems = function(itemList) {
-        // ###
-    }
-    
     map.getItems = function() {
         return items
     }
@@ -462,7 +459,7 @@ var leafletMap = (function($, L) {
     }
 
     map.on_browser_location_found = function(e) {
-        map.show_anchor()
+        map.scroll_into_view()
         if (!mapping.maxBounds.contains([e.latitude, e.longitude])) {
             handle_locating_error()
         } else {
@@ -471,7 +468,7 @@ var leafletMap = (function($, L) {
     }
 
     map.on_browser_location_error = function(e) {
-        map.show_anchor()
+        map.scroll_into_view()
         handle_locating_error()
     }
 

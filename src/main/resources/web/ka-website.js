@@ -126,7 +126,7 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
             var locationHash = window.location.hash
             var subdomain_mitte = (window.location.host.indexOf("mitte.") !== -1 || window.location.hostname.indexOf("mitte.") !== -1) ? true : false
             var bezirksTopic = undefined
-            if (locationHash && locationHash !== "#karte") {
+            if (locationHash) {
                 if (locationHash === "#gesamt") {
                     _self.render_gesamtstadtplan()
                 } else {
@@ -135,8 +135,8 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
                         if (bezirksTopic) {
                             _self.render_bezirkspage(bezirksTopic)
                         } else {
-                            console.warn("Entschudligung, die Seite "+locationHash+" konnte nicht geladen werden. ")
                             _self.render_gesamtstadtplan()
+                            console.warn("Entschudligung, die Seite "+locationHash+" konnte nicht geladen werden. ")
                         }
                      })
                 }
@@ -147,18 +147,16 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
                         _self.render_bezirkspage(bezirksTopic)
                     })
                  } else {
-                     console.log("Fallback to render Gesamtstadtplan caused by Page Name",
-                     name,"Anchor", locationHash, "andunspecific Subdomain")
-                     _self.render_gesamtstadtplan()
+                    console.log("Fallback to render Gesamtstadtplan caused by Page Name",
+                        name,"Anchor", locationHash, "andunspecific Subdomain")
+                    _self.render_gesamtstadtplan()
                  }
             }
         // 2) Render Berlin-Gesamtstadtplan
         } else {
             if (name === "gesamt") {
-                console.log("Render Berlin Gesamtstadtplan", name)
                 _self.render_gesamtstadtplan()
             } else {
-                console.log("Render Kiezatlas Site", name)
                 _self.render_kiezatlas_site(name)
             }
         }
@@ -235,7 +233,7 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
         if (!leafletMap.is_initialized()) {
             _self.setup_map_area('map', mouseWheelZoom)
         }
-        if (jumpToMap) leafletMap.show_anchor()
+        if (jumpToMap) leafletMap.scroll_into_view()
         if (detectLocation) _self.get_browser_location()
         if (zoomLevel) leafletMap.map.setZoom(zoomLevel)
     }
@@ -336,7 +334,7 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
         $('#site-area').show("flex")
         $('#site-area .content-area').html('<h2>Willkommen</h2>' + bezirk_html + '<br/><a href="'+_self.getSiteInfo().imprint+'">Impressum</a>')
         // ### leafletMap.map.doubleClickZoom.enable();
-        leafletMap.show_anchor(anchor_name)
+        leafletMap.scroll_into_view()
         leafletMap.deactivate_circle_control()
         leafletMap.remove_circle_search_control()
         _self.show_message("Die Volltextsuche liefert ab jetzt nur Ergebnisse aus dem Bezirk <em>"
@@ -398,7 +396,7 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
         $('a.district-control').remove()
         $('a.lock-control').show()
         // leafletMap.map.doubleClickZoom.disable();
-        leafletMap.show_anchor() // ### this updates address bar too
+        leafletMap.scroll_into_view()
     }
 
     this.show_favourite_location = function(object) {
@@ -489,10 +487,10 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
                 leafletMap.setCurrentLocationName('Der erste gefundene Standort liegt au&szlig;erhalb '
                     + 'von Berlin, bitte w&auml;hlen sie eine der Alternativen rechts:')
                 _self.render_current_location_label(true)
-                leafletMap.show_anchor()
+                leafletMap.scroll_into_view()
                 leafletMap.map.setView(leafletMap.getCurrentLocationCoordinate(), mapping.zoomStreetLevel)
             } else {
-                leafletMap.show_anchor()
+                leafletMap.scroll_into_view()
                 leafletMap.setCurrentLocationCoordinate(new L.latLng(item.geometry.location.lat, item.geometry.location.lng))
                 leafletMap.setControlCircleRadiusValue(900) // adapt circle size for this search a bit ###
                 leafletMap.setCurrentLocationName(item['formatted_address'])

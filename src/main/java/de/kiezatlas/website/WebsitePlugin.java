@@ -96,14 +96,14 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
 
     @Inject private WorkspacesService workspaces;
     @Inject private AccessControlService accesscl;
-    @Inject private WebpageService webpages;
     @Inject private GeospatialService geospatial;
-    @Inject private AngebotService angebote;
-    @Inject private SignupPluginService signup;
     @Inject private GeomapsService geomaps;
     @Inject private FacetsService facets;
     @Inject private FilesService files;
     @Inject private KiezatlasService kiezatlas;
+    @Inject private WebpageService webpages;
+    @Inject private AngebotService angebote;
+    @Inject private SignupPluginService signup;
 
     // Application Cache of District Overview Resultsets
     HashMap<Long, List<GeoViewModel>> citymapCache = new HashMap<Long, List<GeoViewModel>>();
@@ -889,6 +889,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
         // ### Authenticate
         // ### Todo: Fetch for ka2.ansprechpartner, traeger name, too
         HashMap<Long, Topic> uniqueResults = new HashMap<Long, Topic>();
+        // Refactor prepareLucenQuery...
         String queryValue = query.trim();
         if (doWildcard) queryValue += "*";
         if (orFuzzy) queryValue += " OR " + query.trim() + "~0.8";
