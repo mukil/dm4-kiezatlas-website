@@ -12,7 +12,7 @@ import java.util.logging.Logger;
 
 
 /**
- * Extend the "Kiezatlas Website" type definition and assign all new types to the proper Worksapce.
+ * Extend the "Kiezatlas Website" type definition and assign all new types to the proper Workspace.
  * @author malted
  */
 public class Migration8 extends Migration {

@@ -1,0 +1,95 @@
+{
+    "topic_types": [
+        {
+            "value":           "Auto Geo Objects",
+            "uri":             "ka2.website.auto_selection",
+            "data_type_uri":   "dm4.core.boolean",
+            "view_config_topics": [
+                {
+                    "type_uri": "dm4.webclient.view_config",
+                    "childs": {
+                        "dm4.webclient.show_in_create_menu": false
+                    }
+                }
+            ]
+        },
+        {
+            "value":           "Enable Geo Objects Cache",
+            "uri":             "ka2.website.use_caching",
+            "data_type_uri":   "dm4.core.number",
+            "view_config_topics": [
+                {
+                    "type_uri": "dm4.webclient.view_config",
+                    "childs": {
+                        "dm4.webclient.show_in_create_menu": false
+                    }
+                }
+            ]
+        },
+        {
+            "value":           "Use Markercluster",
+            "uri":             "ka2.website.use_markercluster",
+            "data_type_uri":   "dm4.core.boolean",
+            "view_config_topics": [
+                {
+                    "type_uri": "dm4.webclient.view_config",
+                    "childs": {
+                        "dm4.webclient.show_in_create_menu": false
+                    }
+                }
+            ]
+        },
+        {
+            "value":           "Icons Stylesheet",
+            "uri":             "ka2.website.icon_stylesheet",
+            "data_type_uri":   "dm4.core.text",
+            "view_config_topics": [
+                {
+                    "type_uri": "dm4.webclient.view_config",
+                    "childs": {
+                        "dm4.webclient.show_in_create_menu": false
+                    }
+                }
+            ]
+        },
+        {
+            "value":           "Enable Location Search",
+            "uri":             "ka2.website.use_location_search",
+            "data_type_uri":   "dm4.core.boolean",
+            "view_config_topics": [
+                {
+                    "type_uri": "dm4.webclient.view_config",
+                    "childs": {
+                        "dm4.webclient.show_in_create_menu": false
+                    }
+                }
+            ]
+        },
+        {
+            "value":           "Ask for Location",
+            "uri":             "ka2.website.ask_for_location",
+            "data_type_uri":   "dm4.core.boolean",
+            "view_config_topics": [
+                {
+                    "type_uri": "dm4.webclient.view_config",
+                    "childs": {
+                        "dm4.webclient.show_in_create_menu": false
+                    }
+                }
+            ]
+        },
+        {
+            "value":           "Enable Fahrinfo Link",
+            "uri":             "ka2.website.use_fahrinfo_link",
+            "data_type_uri":   "dm4.core.boolean",
+            "view_config_topics": [
+                {
+                    "type_uri": "dm4.webclient.view_config",
+                    "childs": {
+                        "dm4.webclient.show_in_create_menu": false
+                    }
+                }
+            ]
+        }
+    ]
+}
