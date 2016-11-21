@@ -106,6 +106,7 @@
             })
         /*]]>*/
         </script>
+        <meta th:replace="fragments/tracker" />
     </head>
     <body class="kiezatlas citymap"><!-- ### change classname to citymap -->
 
@@ -225,9 +226,6 @@
             </div>
 
         </div>
-
-        <!-- Piwik -->
-        <img th:src="@{https://stats.infokitchen.net/piwik.php(idsite=2,rec=1,action_name='Kiezatlas+2+Stadtplan')}" style="border:0" alt="" />
 
     </body>
 </html>
