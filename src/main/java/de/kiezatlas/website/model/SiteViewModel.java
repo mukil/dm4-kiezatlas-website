@@ -1,8 +1,11 @@
 package de.kiezatlas.website.model;
 
 import de.deepamehta.core.JSONEnabled;
+import de.deepamehta.core.RelatedTopic;
 import de.deepamehta.core.Topic;
-import de.kiezatlas.website.model.GeoDetailsViewModel;
+import de.deepamehta.core.util.DeepaMehtaUtils;
+import java.util.ArrayList;
+import java.util.List;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 
@@ -51,6 +54,44 @@ public class SiteViewModel implements JSONEnabled {
         return this.topic.getChildTopics().getStringOrNull("ka2.website.site_rss_feed_url");
     }
 
+    public boolean getSiteMarkerclusterSetting() {
+        return this.topic.getChildTopics().getBooleanOrNull("ka2.website.use_markercluster");
+    }
+
+    public boolean getSiteSelectionSetting() {
+        return this.topic.getChildTopics().getBooleanOrNull("ka2.website.auto_selection");
+    }
+
+    public Long getSiteCachingSetting() {
+        return this.topic.getChildTopics().getLongOrNull("ka2.website.use_caching");
+    }
+
+    public String getSiteIconStylesheet() {
+        return this.topic.getChildTopics().getStringOrNull("ka2.website.icon_stylesheet");
+    }
+
+    public boolean getSiteLocationSearchSetting() {
+        return this.topic.getChildTopics().getBooleanOrNull("ka2.website.use_location_search");
+    }
+
+    public boolean getSiteLocationPromptSetting() {
+        return this.topic.getChildTopics().getBooleanOrNull("ka2.website.ask_for_location");
+    }
+
+    public boolean getSiteFahrinfoLinkSetting() {
+        return this.topic.getChildTopics().getBooleanOrNull("ka2.website.use_fahrinfo_link");
+    }
+
+    public List<JSONObject> getRelatedSiteCriterias() {
+        List<JSONObject> results = new ArrayList<JSONObject>();
+        List<RelatedTopic> criterias = this.topic.getRelatedTopics("ka2.website.site_criteria");
+        log.info("Site has " + criterias.size() + " related "+ criterias);
+        for (Topic criteria : criterias) {
+            results.add(criteria.toJSON());
+        }
+        return results; // DeepaMehtaUtils.toModelList(criterias) throws NPE in jsonEnabled.writeTo
+    }
+
     public JSONObject toJSON() {
         try {
             Topic link = getImprintLink();
@@ -73,6 +114,14 @@ public class SiteViewModel implements JSONEnabled {
             if (logo != null) {
                 this.json.put("logo", "/filerepo/" + logo.getChildTopics().getString("dm4.files.path"));
             }
+            this.json.put("markercluster", getSiteMarkerclusterSetting());
+            this.json.put("generated", getSiteSelectionSetting());
+            this.json.put("cached", getSiteCachingSetting());
+            this.json.put("iconstyle", getSiteIconStylesheet());
+            this.json.put("locationSearch", getSiteLocationSearchSetting());
+            this.json.put("locationPrompt", getSiteLocationPromptSetting());
+            this.json.put("fahrinfoLink", getSiteFahrinfoLinkSetting());
+            this.json.put("criterias", getRelatedSiteCriterias());
             this.json.put("newsfeed", getSiteRSSFeedURL());
             this.json.put("imprint", imprint);
             this.json.put("html", body);

@@ -43,8 +43,8 @@
             $(document).ready(function(e) {
                 // initiates an indexDB (if we're not on the MS IE)
                 var karteNone = ($('#karte').css("display") !== "none")
-                favourites.start_local_db()
-                favourites.list_entries_in_local_db()
+                // favourites.start_local_db()
+                // favourites.list_entries_in_local_db()
                 // render all components of the page requested
                 kiezatlas.render_page(window.location.pathname.substr(1), karteNone)
                 $(window).resize(function() {

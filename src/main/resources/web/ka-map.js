@@ -16,6 +16,7 @@ var mapping = {
     "maxBounds": L.latLngBounds(L.latLng(52.234807, 12.976094), L.latLng(52.843370, 13.958482)),
     "markerGroup": undefined,
     "controlGroup": L.featureGroup(),
+    "useMarkerClusterGroup" : false,
     "districtGroup": L.featureGroup() // Not in use
 }
 
@@ -149,7 +150,18 @@ var leafletMap = (function($, L) {
         // ### clear all pre-existing marker from map
         leafletMap.clear_marker()
         // build up: create new markerGroup
-        mapping.markerGroup = L.featureGroup(list_of_markers)
+        if (mapping.useMarkerClusterGroup) {
+            mapping.markerGroup = L.markerClusterGroup({
+                spiderfyOnMaxZoom: true, spiderfyDistanceMultiplier: 2, showCoverageOnHover: false, maxClusterRadius: 60
+            })
+            mapping.markerGroup.addLayers(list_of_markers)
+            mapping.markerGroup.on('clusterclick', function(e) {
+                console.log("Clusterclick", e)
+                // map.select_geo_object_marker(e.target)
+            })
+        } else {
+            mapping.markerGroup = L.featureGroup(list_of_markers)
+        }
         //
         for (var el in list_of_markers) {
             var geoMarker = list_of_markers[el]

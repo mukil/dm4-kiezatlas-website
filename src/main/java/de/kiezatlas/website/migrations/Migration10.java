@@ -1,5 +1,6 @@
 package de.kiezatlas.website.migrations;
 
+import de.deepamehta.core.AssociationType;
 import de.deepamehta.core.Topic;
 import de.deepamehta.core.TopicType;
 import de.deepamehta.core.service.Inject;
@@ -33,6 +34,7 @@ public class Migration10 extends Migration {
         TopicType siteUsesLocationSearch = dm4.getTopicType("ka2.website.use_location_search");
         TopicType siteDoesLocationPrompt = dm4.getTopicType("ka2.website.ask_for_location");
         TopicType siteUsesFahrinfoLink = dm4.getTopicType("ka2.website.use_fahrinfo_link");
+        AssociationType siteCriterias = dm4.getAssociationType("ka2.website.site_criteria");
         workspaceService.assignTypeToWorkspace(siteAutoSelect, kiezatlas.getId());
         workspaceService.assignTypeToWorkspace(siteUsesCaching, kiezatlas.getId());
         workspaceService.assignTypeToWorkspace(siteUsesMarkercluster, kiezatlas.getId());
@@ -40,6 +42,7 @@ public class Migration10 extends Migration {
         workspaceService.assignTypeToWorkspace(siteUsesLocationSearch, kiezatlas.getId());
         workspaceService.assignTypeToWorkspace(siteDoesLocationPrompt, kiezatlas.getId());
         workspaceService.assignTypeToWorkspace(siteUsesFahrinfoLink, kiezatlas.getId());
+        workspaceService.assignTypeToWorkspace(siteCriterias, kiezatlas.getId());
         // 2) Assign the new child types to the "ka2.website" composite type
         TopicType kaWebsite = dm4.getTopicType("ka2.website");
         kaWebsite.addAssocDef(mf.newAssociationDefinitionModel("dm4.core.composition_def", kaWebsite.getUri(),

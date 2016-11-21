@@ -199,9 +199,36 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
         }
         // Load Site Info
         restc.load_website_info(pageAlias, function(response) {
-            // console.log("Load Kiezatlas Website ", pageAlias, response)
+            console.log("Load Kiezatlas Website ", pageAlias, response)
             _self.setSiteId(response.id)
+            _self.setSiteInfo(response)
             _self.update_document_title(response.value)
+            // check on markercluster
+            if (response.markercluster) {
+                console.log("Do Use Markercluster")
+                var clusterStyle1 = document.createElement("link")
+                    clusterStyle1.setAttribute("href", "/de.kiezatlas.website/vendor/leaflet/markercluster/dist/MarkerCluster.css")
+                    clusterStyle1.setAttribute("rel", "stylesheet")
+                var clusterStyle2 = document.createElement("link")
+                    clusterStyle2.setAttribute("href", "/de.kiezatlas.website/vendor/leaflet/markercluster/dist/MarkerCluster.Default.css")
+                    clusterStyle2.setAttribute("rel", "stylesheet")
+                var clusterScript = document.createElement("script")
+                    clusterScript.setAttribute("src", "/de.kiezatlas.website/vendor/leaflet/markercluster/dist/leaflet.markercluster.js")
+                document.head.appendChild(clusterStyle1)
+                document.head.appendChild(clusterStyle2)
+                document.head.appendChild(clusterScript)
+                mapping.useMarkerClusterGroup = true
+            }
+            if (response.locationPrompt) {
+                console.log("Do Location Prompt")
+            }
+            if (response.locationSearch) {
+                console.log("Enable Location Search")
+            }
+            if (response.fahrinfoLink) {
+                console.log("Render Fahrinfo Link")
+            }
+            // Display Citymap Details
             $('.citymap-title').text(response.value)
             $('.welcome .title').text(response.value)
             $('.welcome .slogan').text('')
@@ -586,10 +613,17 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
         var contact = object.kontakt
         var opening_hours = object.oeffnungszeiten
         var lor_link = _self.get_lor_link(object)
+        var fahrinfoLink = '<a href="https://fahrinfo.bvg.de/Fahrinfo/bin/query.bin/dn?Z=' + object.address_name.toString()
+                + '&REQ0JourneyStopsZA1=2&start=1&pk_campaign=kiezatlas.de">'
+                + '<img src="/de.kiezatlas.website/images/fahrinfo.gif"></a>'
         var angebote_link = ''
         if (object.angebote_count > 0) {
             angebote_link = '<div class="angebote-link">'
                 + '<a class="button" href="/website/geo/' + object.id + '">Aktuelle Angebote anzeigen</a></div>'
+        }
+        if (_self.getSiteInfo() && !_self.getSiteInfo().fahrinfoLink) {
+            fahrinfoLink = ''
+            console.log("Fahrinfo Link Disabled")
         }
         var body_text = ""
         // if (description) body_text += '<p><b>Info</b> ' + description + '</p>'
@@ -620,11 +654,7 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
             + '</p>'
             + angebote_link
             + '<a href="/website/geo/' + object.id + '" title="Zeige Details">mehr Infos</a>'
-            /* + '<a href="http://www.kiezatlas.de/map/'+web_alias+'/p/'+topic_id+'" title="Diesen'
-                + ' Datensatz in seinem ursprünglichen Stadtplan anzeigen">Details im Stadtplan</a>' **/
-            + '<a href="https://fahrinfo.bvg.de/Fahrinfo/bin/query.bin/dn?Z=' + object.address_name.toString()
-                + '&REQ0JourneyStopsZA1=2&start=1&pk_campaign=kiezatlas.de">'
-                + '<img src="/de.kiezatlas.website/images/fahrinfo.gif"></a>'
+            + fahrinfoLink
             + '</div>'
             + lor_link
             + imprint_html

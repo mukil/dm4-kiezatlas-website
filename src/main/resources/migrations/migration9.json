@@ -1,4 +1,20 @@
 {
+    "assoc_types": [
+        {
+            "value":           "Kiezatlas Criteria",
+            "uri":             "ka2.website.site_criteria",
+            "data_type_uri":   "dm4.core.number",
+            "view_config_topics": [
+                {
+                    "type_uri": "dm4.webclient.view_config",
+                    "childs": {
+                        "dm4.webclient.show_in_create_menu": false,
+                         "dm4.webclient.color": "#DA4EE8"
+                    }
+                }
+            ]
+        }
+    ],
     "topic_types": [
         {
             "value":           "Auto Geo Objects",

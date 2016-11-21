@@ -133,7 +133,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
             // Overrides root resource response of the dm4-webpages plugin
             webpages.overrideFrontpageTemplate("ka-index");
             // Register additional root resource names we want to respond to
-            webpages.setFrontpageAliases(loadAllWebsiteAliases()); // ### move to ka2.website postUpdateTopicListener
+            webpages.setFrontpageAliases(loadCitymapWebAliases()); // ### move to ka2.website postUpdateTopicListener
             webpages.reinitTemplateEngine();
         } else if (service instanceof SignupPluginService) {
             log.info("Announcing our Website Bundle as additional template resource at Signup TemplateEngines");
@@ -1230,7 +1230,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
 
     /** ------------------- Kiezatlas Application Model Related Helper Methods -------------------------- **/
 
-    private HashMap<String, String[]> loadAllWebsiteAliases() {
+    private HashMap<String, String[]> loadCitymapWebAliases() {
         HashMap<String, String[]> aliases = new HashMap();
         try {
             List<Topic> websiteAliases = dm4.getTopicsByType("ka2.website.web_alias");
