@@ -55,31 +55,59 @@ public class SiteViewModel implements JSONEnabled {
     }
 
     public boolean getSiteMarkerclusterSetting() {
-        return this.topic.getChildTopics().getBooleanOrNull("ka2.website.use_markercluster");
+        boolean value = false;
+        if (this.topic.getChildTopics().getBooleanOrNull("ka2.website.use_markercluster") != null) {
+            value = this.topic.getChildTopics().getBoolean("ka2.website.use_markercluster");
+        }
+        return value;
     }
 
     public boolean getSiteSelectionSetting() {
-        return this.topic.getChildTopics().getBooleanOrNull("ka2.website.auto_selection");
+        boolean value = false;
+        if (this.topic.getChildTopics().getBooleanOrNull("ka2.website.auto_selection") != null) {
+            value = this.topic.getChildTopics().getBoolean("ka2.website.auto_selection");
+        }
+        return value;
     }
 
     public Long getSiteCachingSetting() {
-        return this.topic.getChildTopics().getLongOrNull("ka2.website.use_caching");
+        Long value = new Long(-1);
+        if (this.topic.getChildTopics().getLongOrNull("ka2.website.use_caching") != null) {
+            value = this.topic.getChildTopics().getLong("ka2.website.use_caching");
+        }
+        return value;
     }
 
     public String getSiteIconStylesheet() {
-        return this.topic.getChildTopics().getStringOrNull("ka2.website.icon_stylesheet");
+        String value = "";
+        if (this.topic.getChildTopics().getStringOrNull("ka2.website.icon_stylesheet") != null) {
+            value = this.topic.getChildTopics().getString("ka2.website.icon_stylesheet");
+        }
+        return value;
     }
 
     public boolean getSiteLocationSearchSetting() {
-        return this.topic.getChildTopics().getBooleanOrNull("ka2.website.use_location_search");
+        boolean value = false;
+        if (this.topic.getChildTopics().getBooleanOrNull("ka2.website.use_location_search") != null) {
+            value = this.topic.getChildTopics().getBoolean("ka2.website.use_location_search");
+        }
+        return value;
     }
 
     public boolean getSiteLocationPromptSetting() {
-        return this.topic.getChildTopics().getBooleanOrNull("ka2.website.ask_for_location");
+        boolean value = false;
+        if (this.topic.getChildTopics().getBooleanOrNull("ka2.website.ask_for_location") != null) {
+            value = this.topic.getChildTopics().getBoolean("ka2.website.ask_for_location");
+        }
+        return value;
     }
 
     public boolean getSiteFahrinfoLinkSetting() {
-        return this.topic.getChildTopics().getBooleanOrNull("ka2.website.use_fahrinfo_link");
+        boolean value = false;
+        if (this.topic.getChildTopics().getBooleanOrNull("ka2.website.ask_for_location") != null) {
+            value = this.topic.getChildTopics().getBoolean("ka2.website.ask_for_location");
+        }
+        return value;
     }
 
     public List<JSONObject> getRelatedSiteCriterias() {
