@@ -27,14 +27,6 @@ module.exports = function(grunt) {
                     ]
                 }
             },
-            jQuery: {
-                files: {
-                    'src/main/resources/web/dist/vendor/jquery-1.9.1-ui-1.9.2.min.js': [
-                        'src/main/resources/web/vendor/jquery/jquery-1.9.1.min.js',
-                        'src/main/resources/web/vendor/jquery/ui/js/jquery-ui-1.9.2.custom.min.js'
-                    ]
-                }
-            },
             leaflet: {
                 files: {
                     'src/main/resources/web/dist/vendor/leaflet-custom-0.7.7.min.js': [
@@ -42,12 +34,24 @@ module.exports = function(grunt) {
                         'src/main/resources/web/vendor/leaflet/L.CircleEditor.js'
                     ]
                 }
+            },
+            dm4vendor: {
+                options: {
+                    separator: ';',
+                },
+                files: {
+                    'src/main/resources/web/dist/vendor/dm4-webclient-utils.js': [
+                        'src/main/resources/web/vendor/dm4-webclient/util/rest_client.js',
+                        'src/main/resources/web/vendor/dm4-webclient/util/js_utils.js'
+                    ]
+                }
             }
         },
         uglify: {
             all: {
                 files: {
-                    'src/main/resources/web/dist/website-frontpage.min.js': ['src/main/resources/web/dist/ka-website-frontpage.js']
+                    'src/main/resources/web/dist/ka-website-frontpage.min.js': ['src/main/resources/web/dist/ka-website-frontpage.js'],
+                    'src/main/resources/web/dist/vendor/dm4-webclient-utils.min.js': ['src/main/resources/web/dist/vendor/dm4-webclient-utils.js']
                 }
             }
         }
@@ -55,7 +59,8 @@ module.exports = function(grunt) {
 
     grunt.loadNpmTasks('grunt-contrib-uglify');
     grunt.loadNpmTasks('grunt-contrib-concat');
-    grunt.registerTask('default', ['concat']);
+
+    grunt.registerTask('default', ['concat', 'uglify']);
 
 };
 

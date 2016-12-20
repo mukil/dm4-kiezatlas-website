@@ -72,10 +72,31 @@ html, body {
     cursor: pointer;
     list-style-type: none;
     text-align: right;
+    padding: 2px .4em;
+}
+
+#places li.ui-menu-item a {
+    text-decoration: none;
+    line-height: 1.5em;
+}
+
+.ui-menu .ui-menu-icon {
+    position: absolute;
+    left: 1em;
 }
 
 #places li.submenu-item {
     position: relative;
+    width: 210px;
+    font-size: 16px;
+}
+
+#places li.ui-menu-item:hover,
+#places li.ui-menu-item:hover a[aria-haspopup="true"],
+#places li.submenu-item:hover a,
+#places li.submenu-item:hover {
+    background-color: #27638C;
+    color: #fff;
 }
 
 #notification {
@@ -792,16 +813,6 @@ a.prev-location.defused:hover {
     border: 1px solid transparent;
 }
 
-.ui-menu .ui-menu-icon {
-    position: absolute;
-    top: 0.45em;
-    left: 0.4em;
-}
-
-#places .ui-state-active {
-    color: #8F1414;
-}
-
 /** #places {
     display: inline-block;
 } **/
@@ -1420,11 +1431,6 @@ span.angebote-btn,
     height: 12px !important;
     margin-left: -6px !important;
     margin-top: -6px !important;
-}
-
-#places li.submenu-item {
-    width: 210px;
-    font-size: 16px;
 }
 
 div.legende {

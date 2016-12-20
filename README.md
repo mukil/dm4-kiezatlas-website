@@ -49,5 +49,18 @@ mvn clean package
 
 Grunt here is used to concat and minify some of the javascript sources as well as our custom selection of semantic-ui css components. Maven compiles the java sources and builds the plugin as an OSGi bundle.
 
+
+Version History
+---------------
+
+**0.5** -- Winter, 2016
+
+* More robust geo object entry form
+* Interface to serve simple, custom made Citymaps
+* City and district wide fulltext search on geo objects
+* Confirmation workflow for new geo objects created by the public
+* ...
+
 Author:<br/>
 Malte Reißig, Copyright 2015-2016
+
