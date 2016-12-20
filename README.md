@@ -35,7 +35,6 @@ To install and setup hot-deployment for this plugin when having just downloaded 
     <properties>
         <dm4.deploy.dir>/home/oscar/deepamehta-4.8.3/bundle-deploy</dm4.deploy.dir>
     </properties>
-
 ```
 
 To build dm4-kiezatlas-website successfully you'll need to build or install its dependencies into your local maven repository. This is due to the fact that we did not have the time to publish these bundles on maven central.
@@ -44,9 +43,11 @@ To do so, check out the following plugins source code from github and run `mvn c
 
 Then, to build and hot-deploy the sources use the following two commands:
 ```
-grunt (concats and minifies some of the javascript sources as well as our custom selection of semantic-ui css components)
-mvn clean package (packages the bundle and deploys it into the `bundle-dev/` folder)
+grunt
+mvn clean package
 ```
+
+Grunt here is used to concat and minify some of the javascript sources as well as our custom selection of semantic-ui css components. Maven compiles the java sources and builds the plugin as an OSGi bundle.
 
 Author:<br/>
 Malte Reißig, Copyright 2015-2016
