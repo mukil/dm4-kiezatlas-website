@@ -11,6 +11,7 @@ It builds on [DeepaMehta 4](https://github.com/jri/deepamehta) (Apache Lucene, N
  * [dm4-kiezatlas-etl](http://github.com/mukil/dm4-kiezatlas-etl) module
  * [dm4-kiezatlas-angebote](http://github.com/mukil/dm4-kiezatlas-angebote) module
  * [dm4-geospatial](http://github.com/mukil/dm4-geospatial) module
+ * [dm4-images](http://github.com/mukil/dm4-images) module
  * [dm4-webpages](http://github.com/mukil/dm4-webpages) module
  * [dm4-sign-up](http://github.com/mukil/dm4-sign-up) module
  * [dm4-thymeleaf](http://github.com/jri/dm4-thymeleaf) module
@@ -37,10 +38,14 @@ To install and setup hot-deployment for this plugin when having just downloaded 
 
 ```
 
-Then, to build and hot-deploy the sources use the following commands:
+To build dm4-kiezatlas-website successfully you'll need to build or install its dependencies into your local maven repository. This is due to the fact that we did not have the time to publish these bundles on maven central.
+
+To do so, check out the following plugins source code from github and run `mvn clean install` in all of them: [dm4-kiezatlas](http://github.com/mukil/dm4-kiezatlas), [dm4-kiezatlas-etl](http://github.com/mukil/dm4-kiezatlas-etl), [dm4-geospatial](http://github.com/mukil/dm4-geospatial), [dm4-thymeleaf](http://github.com/jri/dm4-thymeleaf), [dm4-images](http://github.com/mukil/dm4-images), [dm4-kiezatlas-angebote](http://github.com/mukil/dm4-kiezatlas-angebote), [dm4-webpages](http://github.com/mukil/dm4-webpages) and [dm4-sign-up](http://github.com/mukil/dm4-sign-up).
+
+Then, to build and hot-deploy the sources use the following two commands:
 ```
-grunt
-mvn clean package
+grunt (concats and minifies some of the javascript sources as well as our custom selection of semantic-ui css components)
+mvn clean package (packages the bundle and deploys it into the `bundle-dev/` folder)
 ```
 
 Author:<br/>

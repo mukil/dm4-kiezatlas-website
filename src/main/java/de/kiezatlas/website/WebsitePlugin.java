@@ -951,7 +951,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
                 recipients.append(eMailAddress);
                 recipients.append(";");
             } else {
-                log.warning("Einrichtung has AnsprechpartnerIn set but \"" + eMailAddress + "\" sadly is NOT A VALID EMAIL");
+                log.warning("Einrichtung has AnsprechpartnerIn set but \"" + eMailAddress + "\" is NOT A VALID EMAIL");
                 recipients.append(SYSTEM_MAINTENANCE_MAILBOX);
             }
         } else {
@@ -964,17 +964,18 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
         String key = UUID.randomUUID().toString();
         assignmentEdge.setProperty("revision_key", key, false);
         // Create mail message details
+        String revisionPage = SignupPlugin.DM4_HOST_URL + "angebote/revise/" + key + "/" + assignmentEdge.getId();
         String message = "Falls dieses Angebot nicht an ihrer Einrichtung stattfindet bzw. nicht stattfinden soll, "
-            + "nutzen Sie bitte auf der folgenden Seite die Funktion zur Aufhebung dieser terminlichen Zuordnung:\n"
-            + SignupPlugin.DM4_HOST_URL + "angebote/revise/" + key + "/" + assignmentEdge.getId() ;
+            + "nutzen Sie bitte auf der folgenden Seite die Funktion zur Aufhebung dieser terminlichen Zuordnung:<br/>"
+            + "<a href=\""+revisionPage+"\">Angebotsinfo ansehen und revidieren</a>";
         long startTime = angebote.getAssignmentStartTime(assignmentEdge);
         long endTime = angebote.getAssignmentEndTime(assignmentEdge);
         StringBuilder mailBody = new StringBuilder();
-        mailBody.append("\n" + angebotsInfo.getSimpleValue().toString() + "\n");
+        mailBody.append("<br/>Name des Angebots:<br/>" + angebotsInfo.getSimpleValue().toString() + "<br/><br/>");
         String standardBeschreibung = angebotsInfo.getChildTopics().getStringOrNull(ANGEBOT_BESCHREIBUNG);
-        if (standardBeschreibung != null) mailBody.append("\nAngebotsbeschreibung:\n" + JavaUtils.stripHTML(standardBeschreibung));
-        mailBody.append("\nFür den Zeitraum vom " + df.format(startTime) + " bis zum " + df.format(endTime));
-        mailBody.append("\nEinrichtung: " + geoObject.getSimpleValue().toString() + "\n\n" + message + "\n\n");
+        if (standardBeschreibung != null) mailBody.append("<br/>Angebotsbeschreibung:<br/>" + JavaUtils.stripHTML(standardBeschreibung));
+        mailBody.append("<br/>Für den Zeitraum vom " + df.format(startTime) + " bis zum " + df.format(endTime));
+        mailBody.append("<br/>Einrichtung: " + geoObject.getSimpleValue().toString() + "<br/><br/>" + message + "<br/><br/>");
         mailBody.append("Vielen Dank!");
         // Send notification
         signup.sendUserMailboxNotification(recipients.toString(), "Neue Angebotsinfos ihrer Einrichtung zugewiesen", mailBody.toString());
@@ -1682,19 +1683,24 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
 
     private void sendConfirmationNotice(List<String> mailboxes, Topic geoObject) {
         String recipients = buildRecipientsString(mailboxes);
-        signup.sendUserMailboxNotification(recipients, "Dein Kiezatlas Eintrag wurde freigeschaltet", "\nLiebe/r KiezAtlas-Nutzer_in,\n\n"
-            + "dein Eintrag wurde soeben bestätigt.\n\n"
-            + "Name des Eintrags: \"" + geoObject.getSimpleValue().toString() + "\"\n"
-            + "Link: " + SignupPlugin.DM4_HOST_URL+"website/geo/" + geoObject.getId() + "\n\nVielen Dank für deine Mithilfe.\n\nCiao!");
+        String url = SignupPlugin.DM4_HOST_URL+"website/geo/" + geoObject.getId();
+        signup.sendUserMailboxNotification(recipients, "Dein Kiezatlas Eintrag wurde freigeschaltet",
+                "<br/>Liebe/r KiezAtlas-Nutzer_in,<br/><br/>"
+                + "dein Eintrag wurde soeben best&auml;tigt.<br/><br/>"
+                + "Name des Eintrags: \"" + geoObject.getSimpleValue().toString() + "\"<br/>"
+                + "<a href=\""+url+"\">Link zum Eintrag</a><br/><br/>Vielen Dank f&uuml;r deine Unterst&uuml;tzung<br/><br/>Ciao!");
     }
 
     private void sendKiezAdministrationNotice(String subject, Topic geoObject, Topic username) {
         String recipients = collectDistrictAdministrativeRecipients(geoObject);
-        signup.sendUserMailboxNotification(recipients, subject, "\nLiebe/r Kiez-Administrator_in,\n\n"
-            + "es gibt einen neuen Einrichtungsdatensatz von "+username.getSimpleValue().toString()+", bitte schaue mal ob Du diesen nicht gleich freischalten kannst.\n\n"
-            + "Name des neuen Eintrags: \"" + geoObject.getSimpleValue().toString() + "\"\n"
-            + "Der Link zur Freischaltung: "+SignupPlugin.DM4_HOST_URL+"website/geo/" + geoObject.getId() + " bzw. zum Login ist:\n"
-            + SignupPlugin.DM4_HOST_URL + "sign-up/login\n\nOk, das war's schon.\n\nDanke + Ciao!");
+        String detailsPage = SignupPlugin.DM4_HOST_URL+"website/geo/" + geoObject.getId();
+        String loginPage = SignupPlugin.DM4_HOST_URL + "sign-up/login";
+        signup.sendUserMailboxNotification(recipients, subject, "<br/>Liebe/r Kiez-Administrator_in,<br/><br/>"
+            + "es gibt einen neuen Einrichtungsdatensatz von \""+username.getSimpleValue().toString()+"\"."
+                    + "Bitte schaue mal ob Du diesen nicht gleich freischalten kannst.<br/><br/>"
+            + "Name des neuen Eintrags: \"" + geoObject.getSimpleValue().toString() + "\"<br/>"
+            + "<a href=\""+detailsPage+"\">Link zur Freischaltung</a> bzw. zum <a href=\""+loginPage+"\">Kiezatlas-Login</a><br/>"
+            + "<br/><br/>Ok, das war's schon.<br/><br/>Danke + Ciao!");
     }
 
     private String collectDistrictAdministrativeRecipients(Topic geoObject) {
