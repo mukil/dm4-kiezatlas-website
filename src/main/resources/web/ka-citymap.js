@@ -58,10 +58,11 @@ function doSelectCriteria(critName, criteriaTypeUri) {
         // render list of results in orte section
         for (var c in categories) {
             var cat = categories[c]
-            var $listitem = $("<li id=\"" + cat.id + "\"><span class=\"label\">" + cat.value + "</span></li>")
+            var $listitem = $("<li data-topic-id=\"" + cat.id + "\"><span class=\"label\" data-topic-id=\"" + cat.id + "\">" + cat.value + "</span></li>")
                 $listitem.click(function(e) {
-                    console.log("Selected Category", e.target.text, e.target.id)
-                    doSelectCategory(e.target.text, e.target.id)
+                    var categoryId = e.target.getAttribute("data-topic-id")
+                    console.log("Selected Category", e.target, categoryId)
+                    doSelectCategory(categoryId)
                 })
             $ul.append($listitem)
         }
@@ -69,9 +70,9 @@ function doSelectCriteria(critName, criteriaTypeUri) {
     })
 }
 
-function doSelectCategory(catName, categoryId) {
-    restc.load_geo_objects_by_category(categoryId, function(e) {
-        console.log("Loaded Geo Objects by Category", categoryId)
+function doSelectCategory(categoryId) {
+    restc.load_geo_objects_by_category(kiezatlas.getSiteId(), categoryId, function(results) {
+        console.log("Loaded Geo Objects by Category", categoryId, results)
     })
 }
 

@@ -35,13 +35,12 @@
                 // favourites.list_entries_in_local_db()
                 // render all components of the page requested
                 kiezatlas.render_page(window.location.pathname.substr(1), karteNone)
-
                 register_page_handlers()
                 leafletMap.fit_to_height(65)
                 set_sidebar_height()
-
                 // Activate register cards/tabs menu
                 $('.tabular.menu .item').tab()
+                kiezatlas.load_district_topics()
 
             })
         /*]]>*/

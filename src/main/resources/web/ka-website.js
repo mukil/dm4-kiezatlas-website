@@ -997,7 +997,7 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
         if (bezirk) {
             html += '<a href="' + bezirk.imprint + '" title="Impressum: Bezirksamt ' + bezirk.value + '">Impressum</a></div>'
         } else {
-            console.warn("Missing Bezirks URI", entry)
+            console.warn("Could not fetch Bezirks Topic by URI", bezirk, entry)
             html += '</div>'
         }
         return html

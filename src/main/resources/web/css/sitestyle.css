@@ -386,6 +386,11 @@ form .invalid {
     min-height: 225px;
 }
 
+.facet-editor form label select {
+    padding: .5em;
+    cursor: pointer;
+}
+
 .sites .flex-container .selector {
     margin-top: 1em;
 }
@@ -448,8 +453,8 @@ form .invalid {
     text-decoration: none;
 }
 
-.citymap #sidebar #category-area li .label:hover,
-.citymap #sidebar .criterias ul li a:hover {
+.citymap #sidebar .criterias ul li a:hover,
+#category-area li .label:hover {
     text-decoration: underline;
     cursor: pointer;
     color: #27638C;

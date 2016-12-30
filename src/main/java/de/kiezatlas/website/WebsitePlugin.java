@@ -239,6 +239,34 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
      * @return
      */
     @GET
+    @Path("/{siteId}/geo/{categoryId}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<GeoViewModel> getWebsiteGeoObjectsInCategory(@HeaderParam("Referer") String referer,
+            @PathParam("siteId") long siteId, @PathParam("categoryId") long categoryId) {
+        if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
+        Topic category = dm4.getTopic(categoryId);
+        Topic site = dm4.getTopic(siteId);
+        log.info("Attempting to load a category's geo objects \"" + category.getSimpleValue() + "\" in site " + site.getSimpleValue());
+        // populate new resultset
+        List<GeoViewModel> results = new ArrayList<GeoViewModel>();
+        List<RelatedTopic> geoObjects = kiezatlas.getGeoObjectsBySite(siteId);
+        for (RelatedTopic geoObject : geoObjects) {
+            if (isGeoObjectTopic(geoObject) && isAggregatingChildTopic(geoObject, categoryId)) {
+                results.add(new GeoViewModel(geoObject, geomaps));
+            }
+        }
+        log.info("Loaded " + results.size() + " geo object for category \""
+            + category.getSimpleValue() + "\" in site " + site.getSimpleValue());
+        return results;
+    }
+
+    /**
+     * Loads geo objects for a given kieatlas site web alias.
+     *
+     * @param siteId long   Topic id of Kiezatlas Website Topic
+     * @return
+     */
+    @GET
     @Path("/{siteId}/geo")
     @Produces(MediaType.APPLICATION_JSON)
     public List<GeoViewModel> getWebsiteGeoObjects(@HeaderParam("Referer") String referer, @PathParam("siteId") long siteId) {
@@ -1184,6 +1212,11 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
         // ### Checking for typeuri AND Confirmed flagmay be redundant
         return geoObject != null && geoObject.getTypeUri().equals(KiezatlasService.GEO_OBJECT);
             // && geoObject.getChildTopics().getBoolean(CONFIRMED_TYPE);
+    }
+
+    private boolean isAggregatingChildTopic(Topic geoObject, long topicId) {
+        return (geoObject != null && topicId > 0) && geoObject.getAssociation("dm4.core.aggregation", "dm4.core.parent",
+            "dm4.core.child", topicId) != null;
     }
 
     private boolean isGeoObjectEditable(Topic geoObject, Topic username) {
