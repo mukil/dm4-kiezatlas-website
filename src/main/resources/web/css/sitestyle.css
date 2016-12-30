@@ -432,6 +432,33 @@ form .invalid {
     padding-right: 2em;
 }
 
+.citymap #sidebar .criterias {
+    display: inline-block;
+    position: absolute;
+    right: 3em; top: 8em;
+    text-align: right;
+}
+
+.citymap #sidebar .criterias ul {
+    list-style-type: none;
+    line-height: 1.5em;
+}
+
+.citymap #sidebar .criterias ul li a {
+    text-decoration: none;
+}
+
+.citymap #sidebar #category-area li .label:hover,
+.citymap #sidebar .criterias ul li a:hover {
+    text-decoration: underline;
+    cursor: pointer;
+    color: #27638C;
+}
+
+#category-area li .label {
+    line-height: 1.5em;
+}
+
 .kiezatlas.topic .right.menu .ui.search,
 .sign-up .ui.search,
 .citymap .welcome .ui.search {

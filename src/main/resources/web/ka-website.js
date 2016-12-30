@@ -191,7 +191,7 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
         leafletMap.zoom.setPosition("topleft")
         leafletMap.deactivate_circle_control()
         leafletMap.remove_circle_search_control()
-        // ### introduce new site configuration options with migration
+        // ### introduce new site configuration options (marker radius/size) with migration
         if (pageAlias.indexOf("stadtteil") !== -1) {
             leafletMap.setMarkerRadius(10)
             leafletMap.setMarkerSelectedRadius(15)
@@ -203,21 +203,11 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
             _self.setSiteId(response.id)
             _self.setSiteInfo(response)
             _self.update_document_title(response.value)
+            render_criteria_menu(response.criterias)
             // check on markercluster
             if (response.markercluster) {
                 console.log("Do Use Markercluster")
-                var clusterStyle1 = document.createElement("link")
-                    clusterStyle1.setAttribute("href", "/de.kiezatlas.website/vendor/leaflet/markercluster/dist/MarkerCluster.css")
-                    clusterStyle1.setAttribute("rel", "stylesheet")
-                var clusterStyle2 = document.createElement("link")
-                    clusterStyle2.setAttribute("href", "/de.kiezatlas.website/vendor/leaflet/markercluster/dist/MarkerCluster.Default.css")
-                    clusterStyle2.setAttribute("rel", "stylesheet")
-                var clusterScript = document.createElement("script")
-                    clusterScript.setAttribute("src", "/de.kiezatlas.website/vendor/leaflet/markercluster/dist/leaflet.markercluster.js")
-                document.head.appendChild(clusterStyle1)
-                document.head.appendChild(clusterStyle2)
-                document.head.appendChild(clusterScript)
-                mapping.useMarkerClusterGroup = true
+                _self.load_marker_cluster_scripts()
             }
             if (response.locationPrompt) {
                 console.log("Do Location Prompt")
@@ -229,12 +219,7 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
                 console.log("Render Fahrinfo Link")
             }
             // Display Citymap Details
-            $('.citymap-title').text(response.value)
-            $('.welcome .title').text(response.value)
-            $('.welcome .slogan').text('')
-            $('.welcome .imprint').html('<a href="'+response.imprint+'" target="_blank">Impressum</a>')
-            $('.welcome .logo').attr("src", response.logo).attr("title", "Logo " + response.value)
-            $('#sidebar .content-area').html(response.html)
+            _self.show_website_info(response)
             _self.show_newsfeed_area(response.id, response.newsfeed)
             // Load Geo Objects in Website
             restc.load_website_geoobjects(response.id, function(results) {
@@ -244,6 +229,30 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
                 leafletMap.render_geo_objects(true)
             })
         })
+    }
+
+    this.show_website_info = function(response) {
+        $('.citymap-title').text(response.value)
+        $('.welcome .title').text(response.value)
+        $('.welcome .slogan').text('')
+        $('.welcome .imprint').html('<a href="'+response.imprint+'" target="_blank">Impressum</a>')
+        $('.welcome .logo').attr("src", response.logo).attr("title", "Logo " + response.value)
+        $('#sidebar .content-area').html(response.html)
+    }
+
+    this.load_marker_cluster_scripts = function() {
+        var clusterStyle1 = document.createElement("link")
+            clusterStyle1.setAttribute("href", "/de.kiezatlas.website/vendor/leaflet/markercluster/dist/MarkerCluster.css")
+            clusterStyle1.setAttribute("rel", "stylesheet")
+        var clusterStyle2 = document.createElement("link")
+            clusterStyle2.setAttribute("href", "/de.kiezatlas.website/vendor/leaflet/markercluster/dist/MarkerCluster.Default.css")
+            clusterStyle2.setAttribute("rel", "stylesheet")
+        var clusterScript = document.createElement("script")
+            clusterScript.setAttribute("src", "/de.kiezatlas.website/vendor/leaflet/markercluster/dist/leaflet.markercluster.js")
+        document.head.appendChild(clusterStyle1)
+        document.head.appendChild(clusterStyle2)
+        document.head.appendChild(clusterScript)
+        mapping.useMarkerClusterGroup = true
     }
 
     this.render_mobile_citymap = function() {

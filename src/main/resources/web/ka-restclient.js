@@ -52,6 +52,12 @@ var restc = (function($) {
         })
     }
 
+    restc.load_geo_objects_by_category = function(catId) {
+        $.getJSON('/website/' + siteId + '/geo/' + catId, function(results) {
+            callback(results)
+        })
+    }
+
     restc.load_website_info = function(pageAlias, callback) {
         $.getJSON('/website/info/' + pageAlias, function(results) {
             callback(results)
