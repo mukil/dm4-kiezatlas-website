@@ -101,8 +101,8 @@ var sites = {
     },
     // 
     // A generic TopicModel builder currently with support for creation/update of any
-    // - composite single value topics (not many yet)
-    // - aggregated multi and single value topics
+    // - (primitive/simple) composite "one" value topic (works not for "many" yet)
+    // - (primitive/simple) aggregated "many" and "one" value topics
     // Special logic is comprised of:
     // - compares new values with potentially existing
     // - clears references to old values in case of aggregation
@@ -124,10 +124,10 @@ var sites = {
             // if (facetTypeUri === "ka2.bezirk" || facetTypeUri === "ka2.criteria.thema") break;
 
             // Case 1: Composition Definition
-            if (assocDefType.indexOf("composition_def") !== -1) {
+            if (assocDefType.indexOf("composition_def") !== -1) { // all (onl "one" works)
                 // ### assocDefCardinality.indexOf("many")
-                if (!geoobject.childs[facetTypeUri] && value_changed($input, facetTypeUri)) {
-                    // gather new input or update existing value
+                if (is_cached_child_empty_or_null(facetTypeUri) || existing_value_changed($input, facetTypeUri)) {
+                    // gather new input
                     tm.childs[facetTypeUri] = $input.val()
                 } else { // leave existing value references intact
                     if (geoobject.childs[facetTypeUri]) {
@@ -172,12 +172,20 @@ var sites = {
             }
         }
 
-        function value_changed($inputField, facetTypeUri) {
+        function is_cached_child_empty_or_null(facetTypeUri) {
+            if (!geoobject.childs[facetTypeUri]) {
+                return true
+            } else {
+                return geoobject.childs[facetTypeUri].value === ""
+            }
+            return false
+        }
+
+        // Fixme: Test if this check also work for boolean or number values
+        function existing_value_changed($inputField, facetTypeUri) {
             var cachedValue = geoobject.childs[facetTypeUri]
-            // Fixme: Test if this check also work for boolean or number values
             var changed = false
             if (cachedValue) {
-                console.log("Cached Value Exists", cachedValue)
                 changed = (cachedValue.value != $inputField.val()) // use weak comparison
             }
             return changed
