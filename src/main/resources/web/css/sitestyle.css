@@ -353,7 +353,7 @@ html, body {
 }
 
 .citymap .welcome .title {
-    display: none;
+    display: block;
 }
 
 .kiezatlas.confirm .right.menu .ui.search,
@@ -376,10 +376,6 @@ form .invalid {
 .facet-editor form label .ui.input {
     display: block;
     margin-bottom: .5em;
-}
-
-.facet-editor form label select:disabled {
-    opacity: .6;
 }
 
 .facet-editor form label select[multiple="true"] {
@@ -432,21 +428,34 @@ form .invalid {
 }
 
 .citymap #sidebar .welcome {
-    margin-top: 3em;
+    margin-top: 2em;
     padding-left: 2em;
     padding-right: 2em;
 }
 
-.citymap #sidebar .criterias {
+.citymap #sidebar h3 {
     display: inline-block;
-    position: absolute;
-    right: 3em; top: 8em;
-    text-align: right;
+    margin-bottom: 0em;
+}
+
+.citymap #sidebar .criterias {
+    position: relative;
+    display: inline-block;
+    margin-bottom: 1em;
+    top: -1.5em;
+    left: 1.5em;
 }
 
 .citymap #sidebar .criterias ul {
     list-style-type: none;
     line-height: 1.5em;
+    padding: 0em;
+    margin: 0em;
+}
+
+.citymap #sidebar .criterias li {
+    padding: 0.5em;
+    background-color: #fff;
 }
 
 .citymap #sidebar .criterias ul li a {
@@ -460,29 +469,34 @@ form .invalid {
     color: #27638C;
 }
 
-#category-area li .label {
-    line-height: 1.5em;
+#category-area {
+    margin-top: 1em;
 }
 
-.kiezatlas.topic .right.menu .ui.search,
-.sign-up .ui.search,
-.citymap .welcome .ui.search {
-    display: none;
+#category-area .results {
+    margin-top: .5em;
 }
 
-.citymap #sidebar .welcome .imprint {
-    float: right; margin-top: 3px;
+#category-area .results .status {
+    padding-left: .5em;
+    font-size: .9em;
+    color: #666;
 }
 
-.citymap .ui.tabular.menu {
-    border-bottom: 1px solid #FC3;
-    margin-top: 0em;
-    padding-left: 2em;
-    width: 93%;
+#category-area .title.criteria {
+    padding: 1em;
+    font-weight: bold;
 }
 
-.ui.tabular.menu .item {
+#category-area .title.criteria:hover {
+    text-decoration: underline;
+    color: #0078A8;
     cursor: pointer;
+}
+
+#category-area li .label {
+    color: #002856;
+    line-height: 1.5em;
 }
 
 .citymap #detail-area {
@@ -499,11 +513,23 @@ form .invalid {
 .citymap #sidebar .logo {
     max-height: 200px;
     padding-bottom: 1em;
+    padding-top: 1em;
+}
+
+.citymap #sidebar .imprint {
+    padding-left: 1.5em;
+    padding-bottom: 1em;
 }
 
 /** .citymap #sidebar .news-area h2 {
     display: none;
 } **/
+
+.kiezatlas.topic .right.menu .ui.search,
+.sign-up .ui.search,
+.citymap .welcome .ui.search {
+    display: none;
+}
 
 .citymap #search-area {
     width: 90%;
@@ -1750,7 +1776,16 @@ body.sign-up {
   position: relative; top: -25px; left: 25px;
 } **/
 
+.citymap .ui.tabular.menu {
+    border-bottom: 1px solid #FC3;
+    margin-top: 0em;
+    padding-left: 2em;
+    width: 93%;
+}
 
+.ui.tabular.menu .item {
+    cursor: pointer;
+}
 
 /** --------------------- Media Specific Style Overrides ------------------ **/
 

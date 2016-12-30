@@ -235,7 +235,7 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
         $('.citymap-title').text(response.value)
         $('.welcome .title').text(response.value)
         $('.welcome .slogan').text('')
-        $('.welcome .imprint').html('<a href="'+response.imprint+'" target="_blank">Impressum</a>')
+        $('#sidebar .imprint').html('<a href="'+response.imprint+'" target="_blank">Impressum</a>')
         $('.welcome .logo').attr("src", response.logo).attr("title", "Logo " + response.value)
         $('#sidebar .content-area').html(response.html)
     }

@@ -140,7 +140,6 @@ var sites = {
                 // value topics the dm4 core should take care of this.
             // Case 2: Aggregation Definition
             } else if (assocDefType.indexOf("aggregation_def") !== -1) {
-                console.log("AGGREGATED ("+ assocDefCardinality+") topic reference value to store", $input.val())
                 if (assocDefCardinality.indexOf("many") !== -1) {
                     tm.childs[facetTypeUri] = []
                     // Add new topic references
