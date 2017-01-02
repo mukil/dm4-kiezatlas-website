@@ -548,7 +548,8 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
                                            @PathParam("siteId") long siteId) {
         if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
         Topic geoObject = dm4.getTopic(topicId);
-        if (isGeoObjectTopic(geoObject) && siteId > 0) {
+        Topic website = dm4.getTopic(siteId);
+        if (isGeoObjectTopic(geoObject) && website.getTypeUri().equals("ka2.website")) {
             kiezatlas.enrichWithFacets(geoObject, siteId);
         }
         return geoObject;

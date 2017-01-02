@@ -20,7 +20,6 @@
         <script src="/de.kiezatlas.angebote/dist/vendor/jquery-1.9.1-and-1.12.1-ui-custom.min.js"></script>
         <script src="/de.kiezatlas.website/dist/vendor/leaflet-custom-0.7.7.min.js"></script>
         <script src="/de.kiezatlas.website/dist/ka-website-frontpage.js"></script>
-        <script src="/de.kiezatlas.website/ka-citymap.js"></script>
         <!--script src="/de.kiezatlas.website/dist/ka-website-frontpage.min.js"></script-->
         <script src="/de.kiezatlas.website/css/semantic-ui/2.2/tab.min.js"/>
 
@@ -29,17 +28,13 @@
 
             // App initialization
             $(document).ready(function(e) {
-                // initiates an indexDB (if we're not on the MS IE)
-                var karteNone = ($('#karte').css("display") !== "none") // used in "ka-website.js"
-                // favourites.start_local_db()
-                // favourites.list_entries_in_local_db()
-                // render all components of the page requested
-                kiezatlas.render_page(window.location.pathname.substr(1), karteNone)
-                register_page_handlers()
+                // 1) setup citymap page
+                citymap.init(window.location.pathname.substr(1), ($('#karte').css("display") !== "none"))
+                citymap.register_page_handlers()
+                // 2) update layout
                 leafletMap.fit_to_height(65)
-                set_sidebar_height()
-                // Activate register cards/tabs menu
-                $('.tabular.menu .item').tab()
+                citymap.set_sidebar_height()
+                // 3) used for imprint
                 kiezatlas.load_district_topics()
 
             })

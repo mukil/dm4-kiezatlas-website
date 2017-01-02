@@ -23,7 +23,8 @@ module.exports = function(grunt) {
                         'src/main/resources/web/ka-map.js',
                         'src/main/resources/web/ka-favourites.js',
                         'src/main/resources/web/ka-website-angebote.js',
-                        'src/main/resources/web/ka-website.js'
+                        'src/main/resources/web/ka-website.js',
+                        'src/main/resources/web/ka-citymap.js'
                     ]
                 }
             },
