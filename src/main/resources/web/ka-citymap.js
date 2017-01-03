@@ -4,7 +4,7 @@ var DATA_TOPIC_ID = "data-topic-id"
 function create_list_item(obj) {
     return $('<li class="item" data-topic-id="'+obj.id+'"><h3>' + obj.name
         + ', <span class="anschrift">'+obj.anschrift.replace(" Deutschland", "") +'</span>, '
-        + '<a href="/website/geo/'+obj.id+'">mehr Infos</a></h3></li>')
+        + '<a href="javascript:citymap.show_selected_detail('+obj.id+', true);">mehr Infos</a></h3></li>')
 }
 function hide_loading_indicator() {
     $('.citymap .ui.search button .icon').removeClass("loading").removeClass("circle").removeClass('notched')
@@ -18,10 +18,14 @@ function show_loading_indicator() {
 
 var display_map = false
 
+var facetTypeDefs = undefined
+
 var citymap = {
 
     init: function(siteAlias, no_map) {
         display_map = (!no_map) ? true : false
+        // clear topicmaps cookie as it may effect our client loading facets
+        js.remove_cookie("dm4_topicmap_id")
         // creates leaflet map
         citymap.setup_map_area("map", true)
         // show loading indicator
@@ -39,7 +43,7 @@ var citymap = {
         }
         // Load Site Info
         restc.load_website_info(siteAlias, function(siteTopic) {
-            console.log("Load Kiezatlas Website ", siteAlias, siteTopic)
+            // console.log("Load Kiezatlas Website ", siteAlias, siteTopic)
             kiezatlas.setSiteId(siteTopic.id)
             kiezatlas.setSiteInfo(siteTopic)
             kiezatlas.update_document_title(siteTopic.value)
@@ -67,6 +71,11 @@ var citymap = {
                 kiezatlas.hide_spinning_wheel()
                 leafletMap.setItems(results)
                 leafletMap.render_geo_objects(true)
+            })
+            //
+            restc.load_website_facets(siteTopic.id, function(facetTypes) {
+                // console.log("Loaded Websites Facet Type Definitions", facetTypes)
+                facetTypeDefs = facetTypes
             })
         })
     },
@@ -144,19 +153,72 @@ var citymap = {
         leafletMap.render_circle_search_control()
     },
 
+    render_mobile: function() {
+        // 1) switch to "Orte" tab
+        citymap.clear_and_select_places_tab()
+        // 2) render a plain listing of all items in this amp
+        var places = leafletMap.getItems()
+        for (var p in places) {
+            citymap.render_mobile_details_card(places[p])
+        }
+        $('#detail-area .mobile-load').hide()
+    },
+
+    render_mobile_details_card: function(object) {
+        // _append_ to dom
+        var unconfirmedClass = (object.unconfirmed) ? " unconfirmed" : ""
+        $('#detail-area').append('<div class="entry-card' + unconfirmedClass + '" id="details-'+object.id+'">'
+            + '<h3>'+object.name+'</h3>'
+            + '<div class="details">'
+            + '<p>' + object.anschrift + '<br/>'
+            + '</p>'
+            // + '<a href="/website/geo/' + object.id + '" title="Zeige Details">mehr Infos</a>'
+            + '<a href="javascript:citymap.show_selected_detail(' + object.id + ', false)" title="Zeige Details">mehr Infos</a>'
+            + '<a href="https://fahrinfo.bvg.de/Fahrinfo/bin/query.bin/dn?Z=' + encodeURIComponent(object.anschrift)
+                + '&REQ0JourneyStopsZA1=2&start=1&pk_campaign=kiezatlas.de">'
+                + '<img src="/de.kiezatlas.website/images/fahrinfo.gif"></a>'
+            + '</div>'
+        + '</div>')
+        /** var $item = create_list_item(object)
+        $item.click(function(e) {
+            var itemId = e.target.getAttribute(DATA_TOPIC_ID)
+            if (!itemId) itemId = e.delegateTarget.getAttribute(DATA_TOPIC_ID)
+            citymap.show_selected_detail(object.id, true)
+        })
+        $('#detail-area .results').append($item) **/
+        $('#detail-area .mobile-load').show()
+    },
+
     show_selected_details: function(result_list) {
         var list_geo_object_ids = []
         for (var i in result_list) {
             var geo_object_id = result_list[i].options['geo_object_id']
             list_geo_object_ids.push(geo_object_id)
-            restc.load_facetted_geo_object(geo_object_id, kiezatlas.getSiteId(), function(result) {
-                console.log("Factted Load OK", result)
-            })
-            restc.load_geo_object_detail(geo_object_id, function(result) {
-                citymap.render_selected_detail(result)
-            })
+            citymap.show_selected_detail(geo_object_id, false)
         }
-        // angebote.load_geo_objects_angebote(list_geo_object_ids)
+    },
+
+    clear_and_select_places_tab: function() {
+        $('.tabular.menu .item').tab('change tab', 'first')
+        $('#detail-area .search-option.d').remove()
+        $('#detail-area .entry-card').remove()
+    },
+
+    show_selected_detail: function(geo_object_id, focusOnMap) {
+        // 1) switch to "Orte" tab
+        citymap.clear_and_select_places_tab()
+        // 2) highlight/focus marker on map
+        leafletMap.highlight_geo_object_marker_by_id(geo_object_id, focusOnMap)
+        // 2) load basics
+        restc.load_geo_object_detail(geo_object_id, function(result) {
+            citymap.render_selected_detail(result)
+            // 2.1) load facets
+            restc.load_facetted_geo_object(geo_object_id, kiezatlas.getSiteId(), function(obj) {
+                citymap.render_geo_object_facets(obj)
+            })
+            // 2.2) display angebote in an extra tab
+            // ### TODO: angebote angebote.load_geo_objects_angebote(list_geo_object_ids)
+        })
     },
 
     clear_details_area: function() {
@@ -165,9 +227,9 @@ var citymap = {
     },
 
     render_selected_detail: function(object) {
-        var imprint_html = kiezatlas.get_imprint_html(object)
+        // var imprint_html = kiezatlas.get_imprint_html(object)
         var contact = object.kontakt
-        var opening_hours = object.oeffnungszeiten
+        // var opening_hours = object.oeffnungszeiten
         var lor_link = kiezatlas.get_lor_link(object)
         var fahrinfoLink = '<a href="https://fahrinfo.bvg.de/Fahrinfo/bin/query.bin/dn?Z=' + object.address_name.toString()
                 + '&REQ0JourneyStopsZA1=2&start=1&pk_campaign=kiezatlas.de">'
@@ -179,7 +241,6 @@ var citymap = {
         }
         if (kiezatlas.getSiteInfo() && !kiezatlas.getSiteInfo().fahrinfoLink) {
             fahrinfoLink = ''
-            console.log("Fahrinfo Link Disabled")
         }
         var body_text = ""
         // if (description) body_text += '<p><b>Info</b> ' + description + '</p>'
@@ -197,9 +258,6 @@ var citymap = {
             }
             body_text += '<p><b>Kontakt</b>' + contact_text + '</p>'
         }
-        if (typeof opening_hours !== "undefined"
-            && opening_hours.length > 0) body_text += '<p><b>&Ouml;ffnungszeiten</b>' + opening_hours + '</p>'
-        // _append_ to dom
         var unconfirmedClass = (object.unconfirmed) ? " unconfirmed" : ""
         $('#detail-area').append('<div class="entry-card' + unconfirmedClass + '" id="details-'+object.id+'">'
             + '<h3>'+object.name+'</h3>'
@@ -209,12 +267,95 @@ var citymap = {
                 + '' + body_text + ''
             + '</p>'
             + angebote_link
-            + '<a href="/website/geo/' + object.id + '" title="Zeige Details">mehr Infos</a>'
+            + '<div class="facets"></div>'
+            // + '<a href="/website/geo/' + object.id + '" class="mobile-more" title="Zeige Details">mehr Infos</a>'
             + fahrinfoLink
             + '</div>'
             + lor_link
-            + imprint_html
         + '</div>')
+    },
+
+    render_geo_object_facets: function(geoobject) {
+        if (!facetTypeDefs) {
+            console.warn("Could not load facetTypeDefs", facetTypeDefs)
+            return
+        }
+        var $facetForm = $('#details-' + geoobject.id + ' .facets')
+        for (var fi in facetTypeDefs) {
+            var facetTopicType = facetTypeDefs[fi]
+            // Analyze Type Definition
+            var facetTypeUri = citymap.get_first_child_type_uri(facetTopicType)
+            var assocDefType = facetTopicType.assoc_defs[0].type_uri
+            var assocDefCardinality = facetTopicType.assoc_defs[0].child_cardinality_uri
+            var facetValueTopics = geoobject.childs[facetTypeUri]
+            // console.log("Geo Object Facet", facetValueTopics, facetTypeUri, assocDefType, assocDefCardinality)
+            // Construct Label and Container
+            var facetName = (facetTopicType.value.indexOf(" Facet") != -1) ? facetTopicType.value.replace(" Facet", "") : facetTopicType.value
+            var $facetLabel = $('<div class="facet">' + facetName + '</div>')
+            var $facetLabelDiv = $('<div class="facet-values">')
+            var $facetValue = $('<span class="values">')
+            // Helper to initialize the correct input field options on demand
+            var valuesExist = true
+            // Composition Definition (currently just ONE)
+            if (assocDefType.indexOf("composition_def") !== -1) {
+                if (assocDefCardinality.indexOf("many") !== -1) { // many, demo just the first value
+                    if (facetValueTopics.length > 0) {
+                        $facetValue = $('<span class="composition-def-many values">')
+                        if (facetValueTopics[0]) {
+                            $facetValue.html(facetValueTopics[0].value)
+                        }
+                    } else {
+                        valuesExist = false
+                    }
+                } else {
+                    if (facetValueTopics) {
+                        $facetValue = $('<span class="composition-def-one values">')
+                        // build a hyperlink-hack
+                        if (facetName.indexOf("Link") !== -1 && facetValueTopics.value.indexOf("http") !== -1) {
+                            $facetValue.html("<a target=\"_blank\" href=\""+facetValueTopics.value+"\">"+facetValueTopics.value+"</a>")
+                        } else {
+                            $facetValue.html(facetValueTopics.value)
+                        }
+                    } else {
+                        valuesExist = false
+                    }
+                }
+            // Aggregation_def, selector (ONE or MANY)
+            } else if (assocDefType.indexOf("aggregation_def") !== -1) {
+                if (assocDefCardinality.indexOf("many") !== -1) {
+                    $facetValue = $('<ul class="aggregated-def-many values" id="'+facetTopicType.uri+'">')
+                    for (var fi in facetValueTopics) {
+                        var facetValueOption = facetValueTopics[fi]
+                        var $facetInputOption = $('<li>' + facetValueOption.value + '</li>')
+                        $facetValue.append($facetInputOption)
+                    }
+                    if (facetValueTopics.length === 0) {
+                        valuesExist = false
+                    }
+                } else {
+                    $facetValue = $('<ul class="aggregated-def-one values" id="'+facetTopicType.uri+'">')
+                    if (facetValueTopics) {
+                        $facetValue.append($('<li>' + facetValueTopics.value + '</li>'))
+                    } else {
+                        valuesExist = false
+                    }
+                }
+            }
+            if (valuesExist) {
+                $facetLabelDiv.append($facetValue)
+                $facetLabel.append($facetLabelDiv)
+                $facetForm.append($facetLabel)
+            }
+        }
+    },
+
+    get_first_child_type_uri: function(topicType) {
+        var childType = topicType.assoc_defs[0]
+        if (childType.role_2.role_type_uri === "dm4.core.child_type") {
+            return childType.role_2.topic_uri
+        } else {
+            return childType.role_1.topic_uri
+        }
     },
 
     render_info_area: function(siteTopic) {
@@ -237,14 +378,17 @@ var citymap = {
             $('.tabular.menu .item').tab('change tab', 'third')
             // render list of results in orte section
             var $ul = $('#search-area ul.results')
+            if (geoobjects.length > 0) {
+                $ul.empty()
+            }
             // sorted?
             for (var geoidx in geoobjects) {
                 var obj = geoobjects[geoidx]
                 var $item = create_list_item(obj)
                 $item.click(function(e) {
                     var itemId = e.target.getAttribute(DATA_TOPIC_ID)
-                    if (!itemId) itemId = e.target.parentNode.getAttribute(DATA_TOPIC_ID)
-                    console.log("### Clicked on search result item..", itemId)
+                    if (!itemId) itemId = e.delegateTarget.getAttribute(DATA_TOPIC_ID)
+                    citymap.show_selected_detail(itemId, true)
                 })
                 $ul.append($item)
             }
@@ -252,7 +396,7 @@ var citymap = {
         show_loading_indicator()
     },
 
-    do_select_criteria: function(critName, criteriaId) {
+    select_criteria: function(critName, criteriaId) {
         if ($('.tabular.menu #category-tab').length === 0) {
             $('.tabular.menu').append('<div id="category-tab" class="item" data-tab="fourth">Kategorien</div>')
         }
@@ -260,21 +404,21 @@ var citymap = {
         $('#category-area .title.criteria').attr(DATA_TOPIC_ID, criteriaId)
         $('#category-area .title.criteria').unbind("click")
         $('#category-area .title.criteria').bind("click", function(e) {
-            citymap.do_select_criteria(critName, criteriaId)
+            citymap.select_criteria(critName, criteriaId)
         })
         $('.tabular.menu .item').tab('change tab', 'fourth')
         var $ul = $('#category-area ul.results')
+            $ul.removeClass("cats")
             $ul.empty()
         restc.load_topics_by_type(criteriaId, function(categories) {
-            console.log("Loaded Categories", categories)
-            // render list of results in orte section
+            // console.log("Loaded Categories", categories)
             for (var c in categories) {
                 var cat = categories[c]
                 var $listitem = $("<li id=\"" + cat.id + "\" data-topic-id=\"" + cat.id + "\">"
                         + "<span class=\"label\" data-topic-id=\"" + cat.id + "\">" + cat.value + "</span></li>")
                     $listitem.click(function(e) {
                         var categoryId = e.target.getAttribute(DATA_TOPIC_ID)
-                        citymap.do_select_category(categoryId)
+                        citymap.select_category(categoryId)
                     })
                 $ul.append($listitem)
             }
@@ -282,19 +426,20 @@ var citymap = {
         })
     },
 
-    do_select_category: function(categoryId) {
+    select_category: function(categoryId) {
         restc.load_geo_objects_by_category(kiezatlas.getSiteId(), categoryId, function(results) {
-            console.log("Loaded Geo Objects by Category", categoryId, results)
+            // console.log("Loaded Geo Objects by Category", categoryId, results)
             var $ul = $('#category-area ul.results')
             if (results.length > 0) {
+                $ul.addClass("cats")
                 $ul.empty()
                 for (var r in results) {
                     var geoobject = results[r]
                     var $item = create_list_item(geoobject)
                     $item.click(function(e) {
                         var itemId = e.target.getAttribute(DATA_TOPIC_ID)
-                        if (!itemId) itemId = e.target.parentNode.getAttribute(DATA_TOPIC_ID)
-                        console.log("### Clicked on category list item..", itemId)
+                        if (!itemId) itemId = e.delegateTarget.getAttribute(DATA_TOPIC_ID)
+                        citymap.show_selected_detail(itemId, true)
                     })
                     $ul.append($item)
                 }
@@ -350,7 +495,7 @@ var citymap = {
             var $link = $('<a id="'+crit.uri+'" href="#crit-' + crit.id + '">' + crit.value + '</a>')
                 $link.click(function(e) {
                     console.log("Selected Criteria", e.target.text, e.target.id)
-                    citymap.do_select_criteria(e.target.text, e.target.id)
+                    citymap.select_criteria(e.target.text, e.target.id)
                 })
             $list.append($item.append($link))
         }

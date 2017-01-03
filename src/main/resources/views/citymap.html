@@ -19,6 +19,7 @@
         <script src="/de.kiezatlas.website/vendor/pouchdb/pouchdb-3.6.0.min.js"></script>
         <script src="/de.kiezatlas.angebote/dist/vendor/jquery-1.9.1-and-1.12.1-ui-custom.min.js"></script>
         <script src="/de.kiezatlas.website/dist/vendor/leaflet-custom-0.7.7.min.js"></script>
+        <script src="/de.kiezatlas.website/dist/vendor/dm4-webclient-utils.min.js"></script>
         <script src="/de.kiezatlas.website/dist/ka-website-frontpage.js"></script>
         <!--script src="/de.kiezatlas.website/dist/ka-website-frontpage.min.js"></script-->
         <script src="/de.kiezatlas.website/css/semantic-ui/2.2/tab.min.js"/>
@@ -110,9 +111,8 @@
                     <div class="ui search">
                         <div class="ui icon input">
                             <input class="prompt" type="text" placeholder="Suchanfrage" />
-                            <i class="search icon"></i>
                         </div>
-                        <button class="circular ui icon button basic small">
+                        <button class="circular ui icon button primary small">
                             <i class="icon search"></i>
                         </button>
                     </div>
@@ -133,12 +133,12 @@
                     <!-- Details Area -->
                     <div id="detail-area">
                         <div class="search-option d">
-                            Bitte w&auml;hlen sie einen Markierer auf der <a href="#karte">Karte</a> aus um Details zu einem Ort
-                            zu erfahren.
+                            Bitte w&auml;hlen sie einen Markierer auf der <a href="#karte">Karte</a> um Details zu einem Ort einzublenden.
                         </div>
                         <div class="mobile-load">
                             <div class="ui input">
-                                <button class="ui button show-all basic small" onclick="render_mobile_citymap()">Alle Orte dieses Stadtplans auflisten...</button>
+                                <button class="ui button show-all primary small"
+                                        onclick="citymap.render_mobile()">Zeige alle Orte dieses Stadtplans</button>
                             </div>
                         </div>
                     </div>
@@ -148,6 +148,12 @@
                 <div class="ui bottom attached active tab segment" data-tab="second">
                     <!-- District Info Area -->
                     <div id="site-area">
+                        <div class="mobile-load">
+                            <div class="ui input">
+                                <button class="ui button show-all primary small"
+                                        onclick="citymap.render_mobile()">Zeige alle Orte dieses Stadtplans</button>
+                            </div>
+                        </div>
                         <div class="news-area"></div>
                         <div class="content-area"></div>
                     </div>

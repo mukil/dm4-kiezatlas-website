@@ -89,12 +89,13 @@ var sites = {
     init_facet_editor: function() {
         siteId = $('.editor .site').attr("id")
         objectId = $('.facet-editor .object').attr("id")
-        console.log("Initializing object facet editor...", objectId, "for site", siteId)
         restc.load_facetted_geo_object(objectId, siteId, function(object) {
-            console.log("Loaded Facetted Geo Object", object)
+            // 1) Load object into app
+            // console.log("Loaded Facetted Geo Object", object)
             geoobject = object
+            // 2) Load facets and render them
             restc.load_website_facets(siteId, function(facetTypes) {
-                console.log("Loaded Websites Facet Type Definitions", facetTypes)
+                // console.log("Loaded Websites Facet Type Definitions", facetTypes)
                 sites.render_facet_form(siteId, facetTypes)
             })
         })

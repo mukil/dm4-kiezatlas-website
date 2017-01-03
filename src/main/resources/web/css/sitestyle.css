@@ -406,6 +406,11 @@ form .invalid {
     flex: 0 0 calc(50% - 2em);
 }
 
+.ui.menu .item,
+.citymap .ui.menu .item {
+    padding: .5em 1em;
+}
+
 .citymap #karte {
     flex: 0 0 65%;
     margin-top: 0em;
@@ -436,6 +441,11 @@ form .invalid {
 .citymap #sidebar h3 {
     display: inline-block;
     margin-bottom: 0em;
+}
+
+.citymap #sidebar .news-item h3 {
+    margin-top: 0.5em;
+    margin-bottom: 1.5em;
 }
 
 .citymap #sidebar .criterias {
@@ -470,7 +480,14 @@ form .invalid {
 }
 
 #category-area {
-    margin-top: 1em;
+    margin: 2em;
+    width: 85%;
+}
+
+#category-area .results.cats,
+#search-area .results {
+    list-style-type: none;
+    padding-left: 0em;
 }
 
 #category-area .results {
@@ -483,8 +500,11 @@ form .invalid {
     color: #666;
 }
 
+#category-area .results .item {
+    cursor: pointer;
+}
+
 #category-area .title.criteria {
-    padding: 1em;
     font-weight: bold;
 }
 
@@ -516,12 +536,13 @@ form .invalid {
     padding-top: 1em;
 }
 
+.citymap #detail-area .entry-card .mobile-more,
 .citymap #detail-area .entry-card .imprint {
     display: none;
 }
 
 .citymap #sidebar .imprint {
-    padding-left: 1.5em;
+    padding-left: 2em;
     padding-bottom: 1em;
 }
 
@@ -536,18 +557,21 @@ form .invalid {
 }
 
 .citymap #search-area {
-    width: 90%;
+    width: 85%;
+    margin-left: 1.5em;
 }
 
 .citymap #search-area .results {
-    padding-left: 2em;
+    padding-left: 0em;
 }
 
+.citymap #category-area .results .anschrift,
 .sites .editor .results .anschrift,
 .citymap #search-area .results .anschrift {
     color: #666;
 }
 
+.citymap #category-area .results .anschrift,
 .sites .editor .results .anschrift,
 .citymap #search-area .results a,
 .citymap #search-area .results .anschrift {
@@ -555,7 +579,7 @@ form .invalid {
 }
 
 .citymap #detail-area {
-    width: 90%;
+    width: 85%;
 }
 
 .citymap .mobile-load {
@@ -576,13 +600,27 @@ form .invalid {
     padding: 0em;
 }
 
+.citymap #detail-area .facet {
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.citymap #detail-area .facet .facet-values {
+    font-weight: normal;
+}
+
+.citymap #detail-area .facet .facet-values ul {
+    margin-top: .3em;
+    padding-left: 1.3em;
+}
+
 .citymap #detail-area .entry-card .lor-link {
     bottom: 1em; right: 1em; left: auto;
 }
 
 .citymap #detail-area .search-option.d {
     background-color: #eaeaea;
-    padding: 1em; margin: 2em;
+    padding: 1em;
 }
 
 .citymap #site-area {
@@ -1953,7 +1991,7 @@ body.sign-up {
         top: -20px;
     }
     .citymap .mobile-load {
-        padding: 2em;
+        padding: 1em;
         display: block;
     }
     .citymap #sidebar #detail-area .search-option.d,
@@ -2010,7 +2048,7 @@ body.sign-up {
         padding: 0px;
         margin-top: 0px;
         min-height: 0px;
-        margin-bottom: 4em;
+        margin-bottom: 1em;
     }
     #detail-area h3 {
         display: none;
@@ -2028,6 +2066,18 @@ body.sign-up {
     .citymap #detail-area .entry-card {
         font-size: 1em;
         margin: 1em;
+        width: 90%;
+    }
+    .citymap #detail-area .entry-card .mobile-more {
+        display: inline-block;
+    }
+    .citymap #category-area,
+    .citymap #search-area {
+        margin-left: 1em;
+    }
+    .citymap #sidebar .content-area,
+    .citymap #sidebar .imprint {
+        padding-left: 1em;
     }
     #detail-area .entry-card h3 {
         display: inline-block;

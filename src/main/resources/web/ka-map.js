@@ -222,6 +222,28 @@ var leafletMap = (function($, L) {
         }
     }
 
+    map.highlight_geo_object_marker_by_id = function(topicId, focusOnMap) {
+        mapping.markerGroup.eachLayer(function (el) {
+            var geo_object_id = el.options["geo_object_id"]
+            if (geo_object_id == topicId) {
+                if (!mapping.useMarkerClusterGroup) {
+                    el.setStyle(map.calculate_selected_circle_options())
+                    el.bringToFront()
+                    el.setRadius(mapping.circleMarkerSelectedRadius)
+                }
+                if (focusOnMap) leafletMap.map.setView(el.getLatLng(), mapping.zoomStreetLevel)
+            } else {
+                var geo_object_view_model = {
+                    "address_id": el.options.address_id, "name": el.options.name,
+                    "angebote_count": el.options.angebote_count, "bezirksregion_uri": el.options.bezirksregion_uri,
+                    "uri": el.options.uri, "id": geo_object_id
+                }
+                el.setStyle(map.calculate_default_circle_options(geo_object_view_model))
+                el.setRadius(mapping.circleMarkerRadius)
+            }
+        })
+    }
+
     map.select_geo_object_marker = function(marker) {
         // apply default styles to all the rest
         mapping.markerGroup.eachLayer(function (el) {
