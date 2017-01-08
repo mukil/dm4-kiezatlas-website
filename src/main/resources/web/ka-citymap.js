@@ -1,4 +1,6 @@
 
+/** --- ka-citymap.js --- **/
+
 var DATA_TOPIC_ID = "data-topic-id"
 
 function create_list_item(obj) {
@@ -193,9 +195,9 @@ var citymap = {
     show_selected_details: function(result_list) {
         var list_geo_object_ids = []
         for (var i in result_list) {
-            var geo_object_id = result_list[i].options['geo_object_id']
-            list_geo_object_ids.push(geo_object_id)
-            citymap.show_selected_detail(geo_object_id, false)
+            var marker_id = result_list[i].options['id']
+            list_geo_object_ids.push(marker_id)
+            citymap.show_selected_detail(marker_id, false)
         }
     },
 
@@ -205,16 +207,16 @@ var citymap = {
         $('#detail-area .entry-card').remove()
     },
 
-    show_selected_detail: function(geo_object_id, focusOnMap) {
+    show_selected_detail: function(marker_id, focusOnMap) {
         // 1) switch to "Orte" tab
         citymap.clear_and_select_places_tab()
         // 2) highlight/focus marker on map
-        leafletMap.highlight_geo_object_marker_by_id(geo_object_id, focusOnMap)
+        leafletMap.highlight_geo_object_marker_by_id(marker_id, focusOnMap)
         // 2) load basics
-        restc.load_geo_object_detail(geo_object_id, function(result) {
+        restc.load_geo_object_detail(marker_id, function(result) {
             citymap.render_selected_detail(result)
             // 2.1) load facets
-            restc.load_facetted_geo_object(geo_object_id, kiezatlas.getSiteId(), function(obj) {
+            restc.load_facetted_geo_object(marker_id, kiezatlas.getSiteId(), function(obj) {
                 citymap.render_geo_object_facets(obj)
             })
             // 2.2) display angebote in an extra tab

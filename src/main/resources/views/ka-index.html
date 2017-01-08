@@ -25,8 +25,8 @@
             var $sidebarUi = undefined
             // App initialization
             $(document).ready(function(e) {
-                $sidebarUi = $('.ui.sidebar')
-                // $sidebarUi.sidebar('setting', 'scrollLock', true).sidebar('setting', 'returnScroll', true).sidebar('setting', 'dimPage', false).sidebar('hide')
+                $sidebarUi = $('.ui.sidebar').sidebar('setting', 'dimPage', false)
+                // sidebar('setting', 'scrollLock', false).sidebar('setting', 'returnScroll', false)
                 // initiates an indexDB (if we're not on the MS IE)
                 favourites.start_local_db()
                 favourites.list_entries_in_local_db()

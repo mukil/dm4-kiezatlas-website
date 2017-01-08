@@ -1,4 +1,6 @@
 
+/** --- ka-map.js --- **/
+
 var mapping = {
     "zoomDetailLevel": 15,
     "zoomStreetLevel": 14,

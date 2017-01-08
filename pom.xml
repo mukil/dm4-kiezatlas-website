@@ -7,7 +7,7 @@
     <name>DeepaMehta 4 Kiezatlas - Website</name>
     <groupId>de.kiezatlas</groupId>
     <artifactId>dm48-kiezatlas-website</artifactId>
-    <version>0.5-SNAPSHOT</version>
+    <version>0.6-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <parent>

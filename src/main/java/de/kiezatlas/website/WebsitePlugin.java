@@ -849,7 +849,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
                 return results;
             }
             // 2) Fetch unique geo object topics by text query string
-            List<Topic> geoObjects = searchFulltextInGeoObjectChilds(query, true, false);
+            List<Topic> geoObjects = searchFulltextInGeoObjectChilds(query, false, true, false);
             // 3) Process saerch results and create DTS for map display
             log.info("Start building response for " + geoObjects.size() + " OVERALL");
             for (Topic topic : geoObjects) {
@@ -883,7 +883,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
                 log.warning("No search term entered, returning empty resultset");
                 return results;
             }
-            List<Topic> geoObjects = searchFulltextInGeoObjectChilds(query, true, false);
+            List<Topic> geoObjects = searchFulltextInGeoObjectChilds(query, false, true, false);
             log.info("Start building response for " + geoObjects.size() + " and FILTER by CONTEXT");
             for (Topic geoObject: geoObjects) {
                 // checks for district OR site relation
@@ -909,59 +909,64 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
      *  <li>Beschreibung Facet</li>
      *  <li>Stichworte Facet</li>
      *  <li>Bezirksregion Facet</li>
+     *  <li>Straßenname</li>
      * </ul>
-     * @param queryValue
+     * @param query
      * @return A list of unique topics of type "ka2.geo_object".
      */
     @Override
-    public List<Topic> searchFulltextInGeoObjectChilds(String query, boolean doWildcard, boolean orFuzzy) {
+    public List<Topic> searchFulltextInGeoObjectChilds(String query, boolean doSplitWildcards, boolean doWildcard, boolean doExact) {
         // ### Authenticate
         // ### Todo: Fetch for ka2.ansprechpartner, traeger name, too
         HashMap<Long, Topic> uniqueResults = new HashMap<Long, Topic>();
+        log.info("Geo Object Fulltext Search Input \"" + query + "\"");
         // Refactor prepareLucenQuery...
-        String queryValue = query.trim();
-        if (doWildcard) queryValue += "*";
-        if (orFuzzy) queryValue += " OR " + query.trim() + "~0.8";
-        log.info("Search Fulltext Query \"" + queryValue + "\"");
-        List<Topic> searchResults = dm4.searchTopics(queryValue, "ka2.geo_object.name");
-        List<Topic> descrResults = dm4.searchTopics(queryValue, "ka2.beschreibung");
-        List<Topic> stichworteResults = dm4.searchTopics(queryValue, "ka2.stichworte");
-        List<Topic> bezirksregionResults = dm4.searchTopics(queryValue, "ka2.bezirksregion"); // many
-        List<Topic> streetNameResults = dm4.searchTopics(query, "dm4.contacts.street"); // deeply related
-        log.info("> " + searchResults.size() + ", "+ descrResults.size() +", "+stichworteResults.size() + ", "
-            + bezirksregionResults.size() + ", "  + streetNameResults.size()
-                + " results in five child types for query=\""+queryValue+"\" in FULLTEXT");
-        // merge all types in search into one results set
-        searchResults.addAll(descrResults);
-        searchResults.addAll(stichworteResults);
-        searchResults.addAll(bezirksregionResults);
-        searchResults.addAll(streetNameResults);
-        log.info("Building up unique search resultset of fulltext search...");
-        Iterator<Topic> iterator = searchResults.iterator();
-        while (iterator.hasNext()) {
-            Topic next = iterator.next();
-            if (next.getTypeUri().equals("ka2.bezirksregion")) {
-                List<RelatedTopic> geoObjects = next.getRelatedTopics("dm4.core.aggregation", "dm4.core.child", "dm4.core.parent",
-                    "ka2.geo_object");
-                log.info("Collecting " + geoObjects.size() + " geo objects associated with \"" + next.getSimpleValue().toString() + "\"");
-                for (RelatedTopic geoObject : geoObjects) {
-                    addGeoObjectToResults(uniqueResults, geoObject);
-                }
-            } else if (next.getTypeUri().equals("ka2.geo_object.name") || next.getTypeUri().equals("ka2.stichworte")
-                || next.getTypeUri().equals("ka2.beschreibung")) {
-                addGeoObjectToResults(uniqueResults, getParentGeoObjectTopic(next));
-            } else if (next.getTypeUri().equals("dm4.contacts.street")) {
-                log.info("Collecting all geo objects associated with \"" + next.getSimpleValue().toString() + "\"");
-                List<RelatedTopic> addresses = next.getRelatedTopics("dm4.core.aggregation", "dm4.core.child", "dm4.core.parent",
-                    "dm4.contacts.address");
-                for (RelatedTopic address : addresses) {
-                    Topic geoObject = address.getRelatedTopic("dm4.core.composition", "dm4.core.child", "dm4.core.parent",
+        boolean forceExactQuery = (query.contains("?") || doExact);
+        String queryString = prepareLuceneQueryString(query, doSplitWildcards, doWildcard, forceExactQuery);
+        if (queryString != null) {
+            log.info("Geo Object Fulltext Query string " + queryString + "");
+            List<Topic> searchResults = dm4.searchTopics(queryString, "ka2.geo_object.name");
+            List<Topic> descrResults = dm4.searchTopics(queryString, "ka2.beschreibung");
+            List<Topic> stichworteResults = dm4.searchTopics(queryString, "ka2.stichworte");
+            List<Topic> bezirksregionResults = dm4.searchTopics(queryString, "ka2.bezirksregion"); // many
+            List<Topic> streetNameResults = dm4.searchTopics(query, "dm4.contacts.street"); // deeply related
+            log.info("> " + searchResults.size() + ", "+ descrResults.size() +", "+stichworteResults.size() + ", "
+                + bezirksregionResults.size() + ", "  + streetNameResults.size()
+                    + " results in five child types for query=\""+queryString+"\" in FULLTEXT");
+            // merge all types in search into one results set
+            searchResults.addAll(descrResults);
+            searchResults.addAll(stichworteResults);
+            searchResults.addAll(bezirksregionResults);
+            searchResults.addAll(streetNameResults);
+            log.info("Building up unique resultset including all related matches for a bezirksregion or a street name");
+            Iterator<Topic> iterator = searchResults.iterator();
+            while (iterator.hasNext()) {
+                Topic next = iterator.next();
+                if (next.getTypeUri().equals("ka2.bezirksregion")) {
+                    List<RelatedTopic> geoObjects = next.getRelatedTopics("dm4.core.aggregation", "dm4.core.child", "dm4.core.parent",
                         "ka2.geo_object");
-                    addGeoObjectToResults(uniqueResults, geoObject);
+                    log.fine("Collecting " + geoObjects.size() + " geo objects associated with \"" + next.getSimpleValue().toString() + "\"");
+                    for (RelatedTopic geoObject : geoObjects) {
+                        addGeoObjectToResults(uniqueResults, geoObject);
+                    }
+                } else if (next.getTypeUri().equals("ka2.geo_object.name") || next.getTypeUri().equals("ka2.stichworte")
+                    || next.getTypeUri().equals("ka2.beschreibung")) {
+                    addGeoObjectToResults(uniqueResults, getParentGeoObjectTopic(next));
+                } else if (next.getTypeUri().equals("dm4.contacts.street")) {
+                    log.fine("Collecting all geo objects associated with \"" + next.getSimpleValue().toString() + "\"");
+                    List<RelatedTopic> addresses = next.getRelatedTopics("dm4.core.aggregation", "dm4.core.child", "dm4.core.parent",
+                        "dm4.contacts.address");
+                    for (RelatedTopic address : addresses) {
+                        Topic geoObject = address.getRelatedTopic("dm4.core.composition", "dm4.core.child", "dm4.core.parent",
+                            "ka2.geo_object");
+                        addGeoObjectToResults(uniqueResults, geoObject);
+                    }
                 }
             }
+            log.info("searchResultLength=" + (searchResults.size()) + ", " + "uniqueResultLength=" + uniqueResults.size());
+        } else {
+            log.info("searchFulltextInGeoObjectChilds given queryString is EMPTY - Skipping search");
         }
-        log.info("searchResultLength=" + (searchResults.size()) + ", " + "uniqueResultLength=" + uniqueResults.size());
         return new ArrayList(uniqueResults.values());
     }
 
@@ -1762,6 +1767,41 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
         return recipients;
     }
 
+    /** Find 1:1 copy in dm4-wiezatlas-angebote plugin */
+    private String prepareLuceneQueryString(String userQuery, boolean doSplitWildcards,
+                                            boolean doWildcard, boolean doExact) {
+        if (userQuery.isEmpty()) return null;
+        String queryPhrase = new String();
+        // 1) split query input by whitespace and append a wildcard to each term
+        if (doSplitWildcards) {
+            String[] terms = userQuery.split(" ");
+            int count = 1;
+            for (String term : terms) {
+                if (doWildcard && !term.isEmpty()) {
+                    queryPhrase += term + "* ";
+                } else if (!term.isEmpty()) {
+                    queryPhrase += term;
+                    if (terms.length < count) queryPhrase += " ";
+                }
+                count++;
+            }
+            queryPhrase = queryPhrase.trim();
+        }
+        // 2) trim and append a wildcard to the query input
+        if (doWildcard) {
+            queryPhrase = userQuery.trim() + "*";
+        }
+        // 3) remove (potential "?", introduced as trigger for exact search), quote query input and append fuzzy command
+        if (doExact) {
+            queryPhrase = userQuery.trim().replaceAll("\\?", "");
+            queryPhrase = "\"" + queryPhrase + "\"~0.9";
+        }
+        // 4) if none, return trimmed user query input
+        if (!doSplitWildcards && !doWildcard && !doWildcard) {
+            queryPhrase = userQuery.trim();
+        }
+        return queryPhrase;
+    }
 
 
     /** ----------------- Rest of the Kiezatlas Application Model Related Getter Utilies -------------------------- */

@@ -62,6 +62,6 @@ public interface WebsiteService {
     /**
      * Searching in four child topic types of geo object, returning topics of type "ka2.geo_object".
      */
-    List<Topic> searchFulltextInGeoObjectChilds(String searchTerm, boolean doWildcard, boolean orFuzzy);
+    List<Topic> searchFulltextInGeoObjectChilds(String searchTerm, boolean doSplitWildcards, boolean doWildcard, boolean orFuzzy);
 
 }

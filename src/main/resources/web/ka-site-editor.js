@@ -1,4 +1,5 @@
 /**
+ * ka-site-editor.js
  * Depends on jQuery 1.9.1, DeepaMehta's js_utils.js and ka-restclient.js
  * @type type
  */

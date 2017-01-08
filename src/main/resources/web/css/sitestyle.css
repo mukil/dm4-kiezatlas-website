@@ -31,6 +31,10 @@ html, body {
     background-color: #EAEAEA;
 }
 
+body.pushable > .pusher {
+    background-color: #EAEAEA;
+}
+
 /** ----- Helpers ------ **/
 .visible-ib {
     display: inline-block !important;
@@ -132,7 +136,7 @@ html, body {
 }
 
 #header {
-    margin-top: 1em;
+    padding-top: 3em;
 }
 
 .mobile-logo {
@@ -1099,6 +1103,10 @@ span.einrichtungen-btn:hover,
 span.angebote-btn:hover {
     text-decoration: underline;
     color: #0078A8;
+}
+
+span.bold {
+    font-weight: 700;
 }
 
 /**-------- ##### District Listing ----------------- */

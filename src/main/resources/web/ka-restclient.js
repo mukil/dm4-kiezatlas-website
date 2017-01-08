@@ -1,4 +1,6 @@
-//
+
+/** --- ka-restclient.js --- **/
+
 var restc = (function($) {
     // console.log("REST Client Module (jQuery based) Loaded")
     

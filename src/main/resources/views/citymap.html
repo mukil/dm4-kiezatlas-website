@@ -27,10 +27,10 @@
         <script type="text/javascript" th:inline="javascript">
         /*<![CDATA[*/
 
-            var $sidebarUi = undefineds
+            var $sidebarUi = undefined
             // App initialization
             $(document).ready(function(e) {
-                $sidebarUi = $('.ui.sidebar')
+                $sidebarUi = $('.ui.sidebar').sidebar('setting', 'dimPage', false)
                 // $sidebarUi.sidebar('setting', 'scrollLock', true).sidebar('setting', 'returnScroll', true).sidebar('setting', 'dimPage', false).sidebar('hide')
                 // 1) setup citymap page
                 citymap.init(window.location.pathname.substr(1), ($('#karte').css("display") !== "none"))

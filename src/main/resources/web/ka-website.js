@@ -1,4 +1,7 @@
 
+
+/** --- ka-website.js --- **/
+
 // Register Fulltext Search Handler
 function search_fulltext_geo_objects() {
     var query = kiezatlas.get_fulltext_search_input()
@@ -21,17 +24,17 @@ function handle_fulltext_search_input(event) {
 function do_fulltext_search() {
     var query = kiezatlas.get_top_search_input()
     if (query.length >= 1) {
-        query = encodeURIComponent(query, "UTF-8")
-        console.log("Text Search", query, "Angebotsfilter", kiezatlas.getAngebotsinfoFilter())
-        kiezatlas.hide_sidebar()
-        if (kiezatlas.getAngebotsinfoFilter()) {
-            kiezatlas.do_text_search_angebotsinfos(query)
-        } else {
-            kiezatlas.do_text_search_geo_objects(query)
-        }
         $('#fulltext-search').val(query)
+        query = encodeURIComponent(query, "UTF-8")
+        kiezatlas.hide_sidebar()
+        // ### TODO: Enable fulltext search for angebotsinfos on frontpage, too
+        /** if (kiezatlas.getAngebotsinfoFilter()) {
+            kiezatlas.do_text_search_angebotsinfos(query)
+        } else { **/
+            kiezatlas.do_text_search_geo_objects(query)
+        // }
     }
-    hide_search_options()
+    // hide_search_options()
 }
 
 /** function show_search_options() {
@@ -308,6 +311,8 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
         }
         $('a.lock-control').hide()
         $('a.district-control').hide()
+        $('span.angebote-btn').addClass('bold')
+        $('span.einrichtungen-btn').removeClass('bold')
         leafletMap.deactivate_circle_control()
         leafletMap.remove_circle_search_control()
         //
@@ -322,6 +327,8 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
     this.clear_angebote_page = function() {
         _self.set_anchor("")
         _self.setAngebotsinfoFilter(false)
+        $('span.einrichtungen-btn').addClass('bold')
+        $('span.angebote-btn').removeClass('bold')
         _self.set_fulltext_search_placeholder("Volltextsuche")
         $('a.circle-control').hide()
         $('a.district-control').hide()
@@ -743,6 +750,8 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
         // _self.clear_details_area()
         _self.show_searching_indicator()
         _self.show_spinning_wheel()
+        $('span.einrichtungen-btn').addClass('bold')
+        $('span.angebote-btn').removeClass('bold')
         $.getJSON(queryUrl, function (geo_objects) {
             console.log("> Text based Geo Object Search returned", geo_objects)
             // If search results are not zero
