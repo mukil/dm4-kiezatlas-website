@@ -142,7 +142,7 @@ var leafletMap = (function($, L) {
         if (mapping.markerGroup) {
             mapping.markerGroup.eachLayer(function (marker) {
                 // preventing circle marker duplicates (during merge of result sets)
-                if (!map.exist_marker_in_listing(marker.options.geo_object_id, list_of_markers)) {
+                if (!map.exist_marker_in_listing(marker.options.id, list_of_markers)) {
                     list_of_markers.push(marker)
                 }
             })
@@ -176,19 +176,19 @@ var leafletMap = (function($, L) {
 
     /** Sets up an interactive leaflet circle marker for a "ka2.geo_object" */
     map.create_geo_object_marker = function(geo_object) {
-        if (geo_object.hasOwnProperty("geo_coordinate_lat")
-            && geo_object.hasOwnProperty("geo_coordinate_lon")) {
+        if (geo_object.hasOwnProperty("latitude")
+            && geo_object.hasOwnProperty("longitude")) {
             // 0) pre-process: geo object has geo coordinate
             var result = geo_object
             // 1) pre-processing: do worldwide coordinate check & log
-            if (geo_object.geo_coordinate_lat > 90 || geo_object.geo_coordinate_lon > 180 ||
-                geo_object.geo_coordinate_lat < -90 || geo_object.geo_coordinate_lon < -180 ) {
+            if (geo_object.latitude > 90 || geo_object.longitude > 180 ||
+                geo_object.latitude < -90 || geo_object.longitude < -180 ) {
                 console.warn("Invalid WGS 84 coordinates spotted at", geo_object)
                 return undefined
             }
             // 2) pre-processing: do berlin coordinate check & log
-            if (geo_object.geo_coordinate_lon < 10 || geo_object.geo_coordinate_lat < 45 ||
-                geo_object.geo_coordinate_lon > 15 || geo_object.geo_coordinate_lat > 55) {
+            if (geo_object.longitude < 10 || geo_object.latitude < 45 ||
+                geo_object.longitude > 15 || geo_object.latitude > 55) {
                 console.warn("WGS 84 coordinates do look strange in case of Berlin", geo_object)
                 return undefined
             }
@@ -198,7 +198,7 @@ var leafletMap = (function($, L) {
                 return undefined
             }
             // 4) Create a circle marker
-            var coordinate = L.latLng(result["geo_coordinate_lat"], result["geo_coordinate_lon"])
+            var coordinate = L.latLng(result["latitude"], result["longitude"])
             var circle = L.circleMarker(coordinate, map.calculate_default_circle_options(result))
             circle.setRadius(mapping.circleMarkerRadius)
             circle.on('click', function(e) { map.select_geo_object_marker(e.target) })
@@ -214,8 +214,8 @@ var leafletMap = (function($, L) {
     map.update_geo_object_marker_radius = function() {
         if (mapping.markerGroup) {
             mapping.markerGroup.eachLayer(function (el) {
-                var geo_object_id = el.options["geo_object_id"]
-                if (geo_object_id) {
+                var marker_id = el.options["id"]
+                if (marker_id) {
                     el.setRadius(mapping.circleMarkerRadius)
                 }
             })
@@ -224,8 +224,8 @@ var leafletMap = (function($, L) {
 
     map.highlight_geo_object_marker_by_id = function(topicId, focusOnMap) {
         mapping.markerGroup.eachLayer(function (el) {
-            var geo_object_id = el.options["geo_object_id"]
-            if (geo_object_id == topicId) {
+            var marker_id = el.options["id"]
+            if (marker_id == topicId) {
                 if (!mapping.useMarkerClusterGroup) {
                     el.setStyle(map.calculate_selected_circle_options())
                     el.bringToFront()
@@ -236,7 +236,7 @@ var leafletMap = (function($, L) {
                 var geo_object_view_model = {
                     "address_id": el.options.address_id, "name": el.options.name,
                     "angebote_count": el.options.angebote_count, "bezirksregion_uri": el.options.bezirksregion_uri,
-                    "uri": el.options.uri, "id": geo_object_id
+                    "uri": el.options.uri, "id": marker_id
                 }
                 el.setStyle(map.calculate_default_circle_options(geo_object_view_model))
                 el.setRadius(mapping.circleMarkerRadius)
@@ -247,12 +247,12 @@ var leafletMap = (function($, L) {
     map.select_geo_object_marker = function(marker) {
         // apply default styles to all the rest
         mapping.markerGroup.eachLayer(function (el) {
-            var geo_object_id = el.options["geo_object_id"]
-            if (geo_object_id) {
+            var marker_id = el.options["id"]
+            if (marker_id) {
                 var geo_object_view_model = {
                     "address_id": el.options.address_id, "name": el.options.name,
                     "angebote_count": el.options.angebote_count, "bezirksregion_uri": el.options.bezirksregion_uri,
-                    "uri": el.options.uri, "id": geo_object_id
+                    "uri": el.options.uri, "id": marker_id
                 }
                 el.setStyle(map.calculate_default_circle_options(geo_object_view_model))
                 el.setRadius(mapping.circleMarkerRadius)
@@ -264,7 +264,7 @@ var leafletMap = (function($, L) {
         marker.bringToFront()
         marker.setRadius(mapping.circleMarkerSelectedRadius)
         // gather all items under selection
-        var selected_geo_objects = map.find_all_geo_objects(marker.options['location_id'])
+        var selected_geo_objects = map.find_all_geo_objects(marker.options['address_id'])
         // fire marker selection event
         map.fire_marker_select(selected_geo_objects)
     }
@@ -276,8 +276,8 @@ var leafletMap = (function($, L) {
             weight: (hasAngebote) ? 3 : 2, opacity: (hasAngebote) ? 1 : 0.6, fillColor: (hasAngebote) ? colors.ka_red : colors.bright_grey,
             fillOpacity: (hasAngebote) ? 0.6 : 0.2, lineCap: 'square', dashArray: angeboteDashArray,
             color : (hasAngebote) ? colors.ka_gold : colors.ka_red, title: marker_topic["name"],
-            alt: "Markierung von " + marker_topic["name"], location_id: marker_topic["address_id"], bezirk_uri: marker_topic["bezirk_uri"],
-            geo_object_id: marker_topic["id"], uri: marker_topic["uri"], name: marker_topic["name"],// riseOnHover: true,
+            alt: "Markierung von " + marker_topic["name"], bezirk_uri: marker_topic["bezirk_uri"],
+            uri: marker_topic["uri"], name: marker_topic["name"],// riseOnHover: true,
             bezirksregion_uri: marker_topic["bezirksregion_uri"], z_indexOffset: 1001, uri: marker_topic["uri"],
             angebote_count: marker_topic["angebote_count"], id: marker_topic["id"], address_id: marker_topic["address_id"]
         }
@@ -328,6 +328,7 @@ var leafletMap = (function($, L) {
     // --- Mapping Model Operations
 
     map.setItems = function(itemList) {
+        console.log("Marker Items", itemList)
         items = itemList
     }
 
@@ -411,18 +412,18 @@ var leafletMap = (function($, L) {
         return undefined
     }
 
-    map.find_all_geo_objects = function(coordinate_id) {
+    map.find_all_geo_objects = function(address_id) {
         var results = []
         mapping.markerGroup.eachLayer(function (el) {
-            if (el.options.location_id === coordinate_id) results.push(el)
+            if (el.options.address_id === address_id) results.push(el)
         })
         return results
     }
 
-    map.exist_marker_in_listing = function(geo_object_id, listing) {
+    map.exist_marker_in_listing = function(marker_id, listing) {
         if (listing) {
             for (var i in listing) {
-                if (listing[i].options.geo_object_id === geo_object_id) {
+                if (listing[i].options.id === marker_id) {
                     return true
                 }
             }

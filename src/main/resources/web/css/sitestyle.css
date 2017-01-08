@@ -897,7 +897,7 @@ a {
     font-size: 1em;
 }
 
-.sidebar .ui.vertical.menu .item .menu .active.item {
+.sidebar.ui.vertical.menu .item .menu .active.item {
     font-weight: 400;
 }
 

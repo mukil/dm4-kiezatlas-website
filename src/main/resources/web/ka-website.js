@@ -23,11 +23,13 @@ function do_fulltext_search() {
     if (query.length >= 1) {
         query = encodeURIComponent(query, "UTF-8")
         console.log("Text Search", query, "Angebotsfilter", kiezatlas.getAngebotsinfoFilter())
+        kiezatlas.hide_sidebar()
         if (kiezatlas.getAngebotsinfoFilter()) {
             kiezatlas.do_text_search_angebotsinfos(query)
         } else {
             kiezatlas.do_text_search_geo_objects(query)
         }
+        $('#fulltext-search').val(query)
     }
     hide_search_options()
 }
@@ -254,6 +256,10 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
             var bezirksTopic = _self.get_bezirks_topic_by_hash(click_href)
             _self.render_bezirkspage(bezirksTopic)
         }
+        _self.hide_sidebar()
+    }
+
+    this.hide_sidebar = function() {
         $sidebarUi.sidebar('hide')
     }
 
@@ -284,14 +290,14 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
         }
     }
 
-    /** this.show_angebote_page = function() {
+    this.show_angebote_page = function() {
         _self.set_anchor("angebote")
         _self.setAngebotsinfoFilter(true)
         _self.set_fulltext_search_placeholder("Volltextsuche in Angeboten")
         var $legende = $('div.legende')
         if ($legende.children('a.circle-control').length === 0) {
             $legende.append('<a class="circle-control" href="javascript:kiezatlas.clear_angebote_page()">'
-                + 'Umkreissuche aktivieren</a>')
+                + 'Einrichtungssuche</a>')
         } else {
             $('a.circle-control').show()
         }
@@ -321,7 +327,7 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
         leafletMap.render_circle_search_control(true)
         _self.do_circle_search(undefined, undefined)
         _self.do_reverse_geocode()
-    } **/
+    }
 
     /** ### Refactor method signature... */
     this.show_district_page = function(topic_id) {
@@ -578,15 +584,15 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
     }
 
     this.show_selected_details = function(result_list) {
-        var list_geo_object_ids = []
+        var list_of_marker_ids = []
         for (var i in result_list) {
-            var geo_object_id = result_list[i].options['geo_object_id']
-            list_geo_object_ids.push(geo_object_id)
-            restc.load_geo_object_detail(geo_object_id, function(result) {
+            var marker_id = result_list[i].options['id']
+            list_of_marker_ids.push(marker_id)
+            restc.load_geo_object_detail(marker_id, function(result) {
                 _self.render_selected_details_card(result)
             })
         }
-        angebote.load_geo_objects_angebote(list_geo_object_ids)
+        angebote.load_geo_objects_angebote(list_of_marker_ids)
     }
 
     this.render_selected_details_card = function(object) {

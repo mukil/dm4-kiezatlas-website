@@ -130,8 +130,8 @@ public class GeoViewModel implements JSONEnabled {
                 .put("name", getName())
                 .put("address_id", getAggregatedAddressTopicId())
                 .put("anschrift", getAddressValue())
-                .put("geo_coordinate_lat", getGeoCoordinateLatValue())
-                .put("geo_coordinate_lon", getGeoCoordinateLngValue())
+                .put("latitude", getGeoCoordinateLatValue())
+                .put("longitude", getGeoCoordinateLngValue())
                 .put("bezirk_uri", getBezirkUri())
                 .put("angebote_count", this.angeboteCount);
         } catch (Exception jex) {
