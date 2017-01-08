@@ -33,6 +33,12 @@ var restc = (function($) {
         })
     }
 
+    restc.load_angebotsinfo = function(id, callback) {
+        $.getJSON('/angebote/' + id + "/json", function(result) {
+            callback(result)
+        })
+    }
+
     restc.load_districts = function(callback) {
         $.getJSON('/website/bezirk', function(results) {
             results.sort(value_sort_asc)

@@ -1095,6 +1095,12 @@ span.angebote-btn,
     cursor: pointer;
 }
 
+span.einrichtungen-btn:hover,
+span.angebote-btn:hover {
+    text-decoration: underline;
+    color: #0078A8;
+}
+
 /**-------- ##### District Listing ----------------- */
 .district-area {
     margin-top: 100px;

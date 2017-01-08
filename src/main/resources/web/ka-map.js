@@ -17,7 +17,8 @@ var mapping = {
     "markerGroup": undefined,
     "controlGroup": L.featureGroup(),
     "useMarkerClusterGroup" : false,
-    "districtGroup": L.featureGroup() // Not in use
+    "districtGroup": L.featureGroup(), // Not in use,
+    "fitBoundsPadding": 30
 }
 
 var leafletMap = (function($, L) {
@@ -105,7 +106,7 @@ var leafletMap = (function($, L) {
                 map.fire_circle_edit(new_radius)
             })
             if (fitBounds) {
-                leafletMap.map.fitBounds(mapping.controlGroup.getBounds())
+                leafletMap.map.fitBounds(mapping.controlGroup.getBounds(), { padding: [30, 30] })
                 /** leafletMap.map.setView(
                     mapping.controlGroup.getBounds().getCenter(), mapping.zoomStreetLevel) */
             }
@@ -170,7 +171,7 @@ var leafletMap = (function($, L) {
         leafletMap.map.addLayer(mapping.markerGroup)
         if (set_view_to_bounds && list_of_markers.length > 0) {
             // leafletMap.map.setMaxBounds(mapping.markerGroup.getBounds())
-            leafletMap.map.fitBounds(mapping.markerGroup.getBounds())
+            leafletMap.map.fitBounds(mapping.markerGroup.getBounds(), { padding: [30, 30] } )
         }
     }
 
@@ -234,9 +235,9 @@ var leafletMap = (function($, L) {
                 if (focusOnMap) leafletMap.map.setView(el.getLatLng(), mapping.zoomStreetLevel)
             } else {
                 var geo_object_view_model = {
-                    "address_id": el.options.address_id, "name": el.options.name,
-                    "angebote_count": el.options.angebote_count, "bezirksregion_uri": el.options.bezirksregion_uri,
-                    "uri": el.options.uri, "id": marker_id
+                    "name": el.options.name, "bezirksregion_uri": el.options.bezirksregion_uri, "uri": el.options.uri,
+                    "angebote_count": el.options.angebote_count, "angebots_id": el.options.angebots_id,
+                    "id": marker_id, "address_id": el.options.address_id
                 }
                 el.setStyle(map.calculate_default_circle_options(geo_object_view_model))
                 el.setRadius(mapping.circleMarkerRadius)
@@ -250,9 +251,9 @@ var leafletMap = (function($, L) {
             var marker_id = el.options["id"]
             if (marker_id) {
                 var geo_object_view_model = {
-                    "address_id": el.options.address_id, "name": el.options.name,
-                    "angebote_count": el.options.angebote_count, "bezirksregion_uri": el.options.bezirksregion_uri,
-                    "uri": el.options.uri, "id": marker_id
+                    "name": el.options.name, "bezirksregion_uri": el.options.bezirksregion_uri, "uri": el.options.uri,
+                    "angebote_count": el.options.angebote_count, "angebots_id": el.options.angebots_id,
+                    "id": marker_id, "address_id": el.options.address_id
                 }
                 el.setStyle(map.calculate_default_circle_options(geo_object_view_model))
                 el.setRadius(mapping.circleMarkerRadius)
@@ -263,15 +264,21 @@ var leafletMap = (function($, L) {
         marker.setStyle(map.calculate_selected_circle_options())
         marker.bringToFront()
         marker.setRadius(mapping.circleMarkerSelectedRadius)
-        // gather all items under selection
-        var selected_geo_objects = map.find_all_geo_objects(marker.options['address_id'])
-        // fire marker selection event
-        map.fire_marker_select(selected_geo_objects)
+        if (marker.options.angebots_id) {
+            map.fire_angebot_marker_select(marker)
+        } else {
+            // gather all items under selection
+            var selected_geo_objects = map.find_all_geo_objects(marker.options['address_id'])
+            // fire marker selection event
+            map.fire_geo_marker_select(selected_geo_objects)
+        }
     }
 
+    /** TODO: Visually differentiate between geo object and angebot markers */
     map.calculate_default_circle_options = function(marker_topic) {
         var hasAngebote = (marker_topic["angebote_count"] > 0) ? true : false
         var angeboteDashArray = map.calculate_geo_object_dash_array(marker_topic)
+        var angeboteId = (marker_topic.hasOwnProperty("angebots_id")) ? marker_topic["angebots_id"] : undefined
         return { // ### improve new colors for angebote rendering
             weight: (hasAngebote) ? 3 : 2, opacity: (hasAngebote) ? 1 : 0.6, fillColor: (hasAngebote) ? colors.ka_red : colors.bright_grey,
             fillOpacity: (hasAngebote) ? 0.6 : 0.2, lineCap: 'square', dashArray: angeboteDashArray,
@@ -279,7 +286,8 @@ var leafletMap = (function($, L) {
             alt: "Markierung von " + marker_topic["name"], bezirk_uri: marker_topic["bezirk_uri"],
             uri: marker_topic["uri"], name: marker_topic["name"],// riseOnHover: true,
             bezirksregion_uri: marker_topic["bezirksregion_uri"], z_indexOffset: 1001, uri: marker_topic["uri"],
-            angebote_count: marker_topic["angebote_count"], id: marker_topic["id"], address_id: marker_topic["address_id"]
+            angebote_count: marker_topic["angebote_count"], angebots_id: angeboteId,
+            id: marker_topic["id"], address_id: marker_topic["address_id"]
         }
     }
 
@@ -328,7 +336,6 @@ var leafletMap = (function($, L) {
     // --- Mapping Model Operations
 
     map.setItems = function(itemList) {
-        console.log("Marker Items", itemList)
         items = itemList
     }
 
@@ -450,33 +457,33 @@ var leafletMap = (function($, L) {
         fire_custom_event(domElement, 'drag')
     }
 
-    map.fire_marker_select = function(selection) {
+    map.fire_geo_marker_select = function(selection) {
         var domElement = document.getElementById(map.elementId)
-        // domElement.dispatchEvent(new CustomEvent('marker_select', {"detail": selection }))
         fire_custom_event(domElement, 'marker_select', selection)
+    }
+
+    map.fire_angebot_marker_select = function(selection) {
+        var domElement = document.getElementById(map.elementId)
+        fire_custom_event(domElement, 'angebot_marker_select', selection)
     }
 
     map.fire_marker_mouseover = function(element) {
         var domElement = document.getElementById(map.elementId)
-        // domElement.dispatchEvent(new CustomEvent('marker_mouseover', {"detail": element }))
         fire_custom_event(domElement, 'marker_mouseover', element)
     }
 
     map.fire_marker_mouseout = function(element) {
         var domElement = document.getElementById(map.elementId)
-        // domElement.dispatchEvent(new CustomEvent('marker_mouseout', {"detail": element }))
         fire_custom_event(domElement, 'marker_mouseout', element)
     }
 
     map.fire_circle_edit = function(new_radius) {
         var domElement = document.getElementById(map.elementId)
-        // domElement.dispatchEvent(new CustomEvent('circle_control_edit', {"detail": new_radius} ))
         fire_custom_event(domElement, 'circle_control_edit', new_radius)
     }
 
     map.fire_location_found = function(valueObj) {
         var domElement = document.getElementById(map.elementId)
-        // domElement.dispatchEvent(new CustomEvent('locating_success', {"detail": valueObj} ))
         fire_custom_event(domElement, 'locating_success', valueObj)
     }
 

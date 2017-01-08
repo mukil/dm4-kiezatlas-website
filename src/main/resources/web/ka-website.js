@@ -161,6 +161,10 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
             if (locationHash) {
                 if (locationHash === "#gesamt") {
                     _self.render_gesamtstadtplan()
+                } else if (locationHash === "#angebote") {
+                    _self.load_district_topics(function() {
+                        _self.show_angebote_page()
+                    })
                 } else {
                     _self.load_district_topics(function() {
                         bezirksTopic = _self.get_bezirks_topic_by_hash(locationHash)
@@ -249,6 +253,7 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
         if (click_href.indexOf("/") === 0) {
             click_href = click_href.substr(1)
         }
+        console.log("Fetch Bezirks Topic by href", click_href)
         if (click_href === "#gesamt") {
             _self.clear_district_page()
             _self.render_page("gesamt")
@@ -458,7 +463,11 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
         })
         leafletMap.listen_to('marker_select', function(e) {
             _self.clear_details_area()
-            _self.show_selected_details(e.detail)
+            _self.show_selected_geo_details(e.detail)
+        })
+        leafletMap.listen_to('angebot_marker_select', function(e) {
+            _self.clear_details_area()
+            _self.show_selected_angebot_detail(e.detail)
         })
         leafletMap.listen_to('marker_mouseover', function(e) {
             var geo_objects_under_marker = leafletMap.find_all_geo_objects(e.detail.target.options['location_id'])
@@ -583,16 +592,39 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
         _self.update_document_title(leafletMap.getCurrentLocationName())
     }
 
-    this.show_selected_details = function(result_list) {
+    this.show_selected_geo_details = function(result_list) {
         var list_of_marker_ids = []
         for (var i in result_list) {
-            var marker_id = result_list[i].options['id']
+            var marker_model = result_list[i].options
+            var marker_id = marker_model['id']
             list_of_marker_ids.push(marker_id)
             restc.load_geo_object_detail(marker_id, function(result) {
                 _self.render_selected_details_card(result)
             })
         }
         angebote.load_geo_objects_angebote(list_of_marker_ids)
+    }
+
+    this.show_selected_angebot_detail = function(marker) {
+        var model = marker.options
+        var angebot_id = model['angebots_id']
+        restc.load_angebotsinfo(angebot_id, function(result) {
+            // ### Fetch Location console.log("Display Angebot Details", result)
+            _self.render_selected_angebot_details_card(result)
+        })
+    }
+
+    this.render_selected_angebot_details_card = function(object) {
+        $('#detail-area').append('<div class="entry-card" id="details-'+object.angebots_id+'">'
+            + '<h3>'+object.name+'</h3>'
+            + '<div class="details">'
+                /** + '<p>'
+                    + object.beschreibung+ '<br/>'
+                + '</p>' **/
+                + '<p><b>Kontakt</b> ' + object.kontakt + '</p>'
+                + '<a href="/angebote/' + object.id + '" title="Zeige Details">Details des Angebots</a>'
+            + '</div>'
+        + '</div>')
     }
 
     this.render_selected_details_card = function(object) {
@@ -626,7 +658,7 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
                 && contact.childs['ka2.kontakt.fax'].value.length > 0) {
                 contact_text += 'Fax: ' + contact.childs['ka2.kontakt.fax'].value
             }
-            body_text += '<p><b>Kontakt</b>' + contact_text + '</p>'
+            body_text += '<p><b>Kontakt</b> ' + contact_text + '</p>'
         }
         if (typeof opening_hours !== "undefined"
             && opening_hours.length > 0) body_text += '<p><b>&Ouml;ffnungszeiten</b>' + opening_hours + '</p>'
