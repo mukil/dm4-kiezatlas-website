@@ -12,7 +12,9 @@ module.exports = function(grunt) {
                         'src/main/resources/web/css/semantic-ui/2.2/components/icon.min.css',
                         'src/main/resources/web/css/semantic-ui/2.2/components/input.min.css',
                         'src/main/resources/web/css/semantic-ui/2.2/components/item.min.css',
-                        'src/main/resources/web/css/semantic-ui/2.2/components/menu.min.css'
+                        'src/main/resources/web/css/semantic-ui/2.2/components/menu.min.css',
+                        'src/main/resources/web/css/semantic-ui/2.2/components/sidebar.min.css',
+                        'src/main/resources/web/css/semantic-ui/2.2/components/checkbox.min.css'
                     ]
                 }
             },
@@ -24,7 +26,9 @@ module.exports = function(grunt) {
                         'src/main/resources/web/ka-favourites.js',
                         'src/main/resources/web/ka-website-angebote.js',
                         'src/main/resources/web/ka-website.js',
-                        'src/main/resources/web/ka-citymap.js'
+                        'src/main/resources/web/ka-citymap.js',
+                        'src/main/resources/web/css/semantic-ui/2.2/sidebar.min.js',
+                        'src/main/resources/web/css/semantic-ui/2.2/checkbox.min.js'
                     ]
                 }
             },

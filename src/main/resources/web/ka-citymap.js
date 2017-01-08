@@ -6,6 +6,7 @@ function create_list_item(obj) {
         + ', <span class="anschrift">'+obj.anschrift.replace(" Deutschland", "") +'</span>, '
         + '<a href="javascript:citymap.show_selected_detail('+obj.id+', true);">mehr Infos</a></h3></li>')
 }
+
 function hide_loading_indicator() {
     $('.citymap .ui.search button .icon').removeClass("loading").removeClass("circle").removeClass('notched')
     $('.citymap .ui.search button .icon').addClass("search")

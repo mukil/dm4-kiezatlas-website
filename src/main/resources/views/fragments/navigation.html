@@ -5,18 +5,19 @@
     <div class="ui menu top fixed">
         <h3 class="citymap-title"></h3>
         <div th:class="${is_publisher} ? 'ui container fluid' : 'ui container'">
-            <a href="/">
+            <a href="/" class="home" title="zur Startseite">
                 <img src="/de.kiezatlas.website/images/kiezatlas2-logo.png" height="40" class="mobile-logo" />
             </a>
+            <a class="item open-sidebar" onclick="$sidebarUi.sidebar('toggle');">Men&uuml;</a>
             <a th:if="${authenticated}" href="/angebote/my" class="item angebote">Meine Eintr&auml;ge</a>
             <a th:if="!${#strings.contains(template, 'index')}" href="/" class="item">Startseite</a>
+            <a href="/angebote" class="item all-angebote">Angebote</a>
             <div th:if="${#strings.contains(template, 'index')}" class="ui simple dropdown item">
                 Bezirke <i class="dropdown icon"></i>
                 <div class="menu" id="bezirksauswahl"></div>
             </div>
             <a th:if="${is_site_manager}" href="/website/sites"
                th:class="${#strings.contains(template, 'site')} ? 'active item sites' : 'item sites'">Sites</a>
-            <a href="/angebote" class="item all-angebote">Angebote</a>
             <a class="item star" title="Die aktuelle Kartenposition zu Ihren Standort-Favoriten hinzufügen" alt:="Icon: Favourite this location."
                th:if="${#strings.contains(template, 'ka-index')}"><i class="icon star empty"></i></a>
             <a th:if="!${authenticated}" href="/sign-up/login"
@@ -24,19 +25,17 @@
             <a th:if="${authenticated}" href="/sign-up/login"
                th:class="${#strings.contains(template, 'logout')} ? 'active item logout' : 'item logout'">Logout</a>
             <div class="right menu">
-                <div class="ui search">
-                    <div class="ui icon input">
-                        <input class="prompt" type="text" placeholder="Suchanfrage" />
+                <div class="item search-input" th:if="${#strings.contains(template, 'ka-index') or #strings.contains(template, 'citymap')}">
+                    <div class="ui search small input">
+                        <div class="ui icon input">
+                            <input class="prompt" id="text-search" type="text"
+                                   placeholder="Suchanfrage" onfocus="show_search_options()"/>
+                        </div>
+                        <button id="search-submit" onclick="do_fulltext_search()" class="circular ui icon button basic small">
+                            <i class="icon search"></i>
+                        </button>
                     </div>
-                    <button class="circular ui icon basic button tiny">
-                        <i class="icon search"></i>
-                    </button>
                 </div>
-                <!--div class="item" th:if="${#strings.contains(template, 'ka-index')}">
-                    <div class="ui small input focus">
-                        <input placeholder="Suche" type="text" id="topsearch" disabled="disabled"/>
-                    </div>
-                </div-->
                 <div th:if="${is_publisher}" class="ui simple dropdown item">
                     <i class="setting icon"></i>
                     <i class="dropdown icon"></i>
@@ -56,75 +55,169 @@
 <!--- Standard Vertical Navigation (Experimental) -->
 <div th:fragment="vertical (publisher)">
 
-    <div class="ui vertical menu">
-        <div th:if="${is_publisher}" class="item administration">
-            <div class="header">Administration</div>
+    <div class="menu-header"></div>
+
+    <div class="item general">
+        <div class="menu">
+            <a href="/" class="item" th:class="${#strings.contains(template, 'ka-index')} ? 'active item' : 'item'">Startseite</a>
+            <a href="/angebote" th:class="${#strings.contains(template, 'search')} ? 'active item' : 'item'">Angebotssuche</a>
+        </div>
+    </div>
+
+    <div class="item account">
+        <div class="header">Account</div>
+        <div class="menu" th:if="!${authenticated}">
+            <a href="/sign-up/login" class="item">Login</a>
+            <a href="/sign-up/" class="item">Registrieren</a>
+        </div>
+        <div class="menu" th:if="${authenticated}">
+            <a href="/angebote/my" class="item">Meine Eintr&auml;ge</a>
+            <a href="/sign-up/edit" class="item">Bearbeiten</a>
+            <a href="/sign-up/login" class="item">Logout</a>
+        </div>
+    </div>
+
+    <div th:if="${is_publisher}" class="item administration">
+        <div class="header">Administration</div>
+        <div class="menu">
+            <a href="/website/geo/freischalten/" class="item">Neue Orte freischalten</a>
+            <!--a href="/website/bezirk/edit" class="item">Bezirksseite bearbeiten</a-->
+            <!--a href="/site/administration/" class="item">Listenansicht</a-->
+            <!-- Kiezatlas Membership -->
+            <a href="/website/sites/" class="item">Stadtpl&auml;ne bearbeiten</a>
+        </div>
+    </div>
+
+    <div class="item bezirke">
+        <div class="header">Bezirksseiten</div>
+        <div class="menu">
+            <a href="/#charlottenburg-wilmersdorf" th:class="'item cw'">Charlottenburg-Wilmersdorf</a>
+            <a href="/#lichtenberg" th:class="'item lichtenberg'">Lichtenberg</a>
+            <a href="/#mitte" th:class="'item mitte'">Mitte</a>
+            <a href="/#neuk%C3%B6lln" th:class="'item nk'">Neuk&ouml;lln</a>
+            <a href="/#friedrichshain-kreuzberg" th:class="'item fk'">Friedrichshain-Kreuzberg</a>
+            <a href="/#spandau" th:class="'item spandau'">Spandau</a>
+            <a href="/#steglitz-zehlendorf" th:class="'item spandau'">Steglitz-Zehlendorf</a>
+            <a href="/#tempelhof-sch%C3%B6neberg" th:class="'item spandau'">Tempelhof-Sch&ouml;neberg</a>
+            <a href="/#treptow-k%C3%B6penick" th:class="'item spandau'">Treptow-K&ouml;penick</a>
+        </div>
+    </div>
+    <div class="item atlanten">
+        <div class="header">Stadtpl&auml;ne</div>
+        <div class="menu">
+            <a href="/familienportal-stadtplan" th:class="'item gesamt'">Familie</a>
+            <a href="/vska-stadtteilzentren" th:class="'item gesamt'">Stadtteilzentren</a>
+        </div>
+    </div>
+    <div class="item infos" th:if="${!#lists.isEmpty(menuItems)}">
+        <!--div class="header">Infos</div-->
+        <div class="menu">
+            <span th:each="menuItem : ${menuItems}">
+                <a th:href="${menuItem.href}" th:class="'item'" th:id="${menuItem.id}" th:text="${menuItem.label}">Menu Item</a>
+            </span>
+        </div>
+    </div>
+
+    <p>&nbsp;</p>
+
+</div>
+
+<!--div class="ui vertical accordion">
+    <div class="item">
+        <a class="active title">
+            <i class="dropdown icon"></i>
+            Bezirksstadtpl&auml;ne
+        </a>
+        <div class="content active bezirke">
+            <a href="#charlottenburg-wilmersdorf" th:class="'item cw'">Charlottenburg-Wilmersdorf</a>
+            <a href="#lichtenberg" th:class="'item lichtenberg'">Lichtenberg</a>
+            <a href="#mitte" th:class="'item mitte'">Mitte</a>
+            <a href="#neuk%C3%B6lln" th:class="'item nk'">Neuk&ouml;lln</a>
+            <a href="#friedrichshain-kreuzberg" th:class="'item fk'">Friedrichshain-Kreuzberg</a>
+            <a href="#spandau" th:class="'item spandau'">Spandau</a>
+            <a href="#steglitz-zehlendorf" th:class="'item spandau'">Steglitz-Zehlendorf</a>
+            <a href="#tempelhof-sch%C3%B6neberg" th:class="'item spandau'">Tempelhof-Sch&ouml;neberg</a>
+            <a href="#treptow-k%C3%B6penick" th:class="'item spandau'">Treptow-K&ouml;penick</a>
+        </div>
+    </div>
+    <div class="item">
+        <a class="active title">
+            <i class="dropdown icon"></i>
+            Atlanten
+        </a>
+        <div class="content active">
+            <a href="/vska-stadtteilzentren" th:class="'item gesamt'">Stadtteilzentren</a>
+            <a href="/familienportal-stadtplan" th:class="'item gesamt'">Familienportal</a>
+        </div>
+    </div>
+    <div class="item" th:if="${!#lists.isEmpty(menuItems)}">
+        <a class="active title">
+            <i class="dropdown  icon"></i>
+            Infos
+        </a>
+        <div class="content active">
+            <span th:each="menuItem : ${menuItems}">
+                <a th:href="${menuItem.href}" th:class="'item'" th:id="${menuItem.id}" th:text="${menuItem.label}">Menu Item</a>
+            </span>
+        </div>
+    </div>
+</div-->
+
+<!-- Standard Webpage Links Sitemap like Footer -->
+<div th:fragment="footer-links (publisher)" class="footer-links">
+
+    <div class="provider">
+
+        <div class="block infos">
+            <h3>Infos</h3>
+            <ul class="menu-items" th:if="${!#lists.isEmpty(menuItems)}">
+                <li th:each="menuItem : ${menuItems}">
+                    <a th:href="${menuItem.href}" th:class="'item'" th:id="${menuItem.id}" th:text="${menuItem.label}">Menu Item</a>
+                </li>
+            </ul>
+        </div>
+
+        <div class="block user">
+            <h3>Mein Zugang</h3>
+            <ul class="menu" th:if="!${authenticated}">
+                <li><a href="/sign-up/login" class="item">Login</a></li>
+                <li><a href="/sign-up/" class="item">Registrieren</a></li>
+            </ul>
+            <ul class="menu" th:if="${authenticated}">
+                <li><a href="/angebote/my" class="item">Meine Eintr&auml;ge</a></li>
+                <li><a href="/sign-up/edit" class="item">Bearbeiten</a></li>
+                <li><a href="/sign-up/login" class="item">Logout</a></li>
+            </ul>
+        </div>
+
+        <div th:if="${is_publisher}" class="block administration">
+            <h3>Administration</h3>
             <div class="menu">
                 <a href="/website/geo/freischalten/" class="item">Freischalten</a>
                 <a href="/site/administration/" class="item">Listenansicht</a>
                 <a href="/website/sites/" class="item">Sites</a>
             </div>
         </div>
-        <div th:if="${authenticated}" class="item entries">
-            <div class="header">Meine Eintr&auml;ge</div>
-            <div class="menu">
-                <a href="/angebote/my" class="item">Angebotsinfos</a>
-                <a href="/website/geo/create" class="item">Neue Einrichtung</a>
-            </div>
+
+        <div class="block about">
+            <h3>Kontakt</h3>
+            <p th:utext="${siteAbout}">Configure Website About Info (HTML)</p>
         </div>
-        <div th:if="${authenticated}" class="item account">
-            <div class="header">Mein Account</div>
-            <div class="menu">
-                <a href="/sign-up/edit" class="item">Bearbeiten</a>
-                <a href="/sign-up/login" class="item">Logout</a>
-            </div>
+
+        <div class="block webpages">
+            <h3 th:text="${siteName}">Webpages</h3>
+            <ul class="webpages" th:if="${!#lists.isEmpty(webpages)}">
+                <li th:each="webpage : ${webpages}">
+                    <a th:href="'/' + ${webpage.webAlias}" th:class="'item'" th:id="${webpage.id}" th:text="${webpage.pageTitle}">Menu Item</a>
+                </li>
+            </ul>
         </div>
-        <div th:if="!${authenticated}" class="item account">
-            <div class="header">Anmelden</div>
-            <div class="menu">
-                <a href="/sign-up/login" class="item">Login</a>
-                <a href="/sign-up/" class="item">Registrieren</a>
-            </div>
-        </div>
-        <div class="item general">
-            <div class="menu">
-                <a href="/" class="item">Startseite</a>
-                <!--a href="/#mitte" class="item">Bezirk Mitte</a-->
-                <a href="/angebote" class="item">Aktuelle Angebote</a>
-            </div>
+
+        <div class="powered-by" th:if="${!#strings.isEmpty(siteAbout)}">
+            <p th:utext="${footerText}">
+                Configure Website Footer Text (HTML)
+            </p>
         </div>
     </div>
-
-    <!--div class="ui container">
-        <div class="ui menu vertical left customized">
-            <div class="ui left pointing simple dropdown link item">
-                <i class="dropdown icon"></i>
-                    Administration
-                    <div class="menu">
-                        <a href="/website/geo/confirmation/" class="item">Freischalten</a>
-                        <a href="/site/administration/" class="item">Listenansicht</a>
-                        <a href="/website/geo/site/" class="item">Site-Infos</a>
-                    </div>
-            </div>
-            <div class="ui left pointing simple dropdown link item">
-                <i class="dropdown icon"></i>
-                Meine Eintr&auml;ge
-                <div class="menu">
-                    <a href="/angebote/my" class="item">Angebotsinfos</a>
-                    <a href="/website/geo/create" class="item">Neue Einrichtung</a>
-                </div>
-            </div>
-            <a href="/angebote" class="item">Gesamtstadtplan</a>
-            <div class="ui left pointing simple dropdown link item">
-                <i class="dropdown icon"></i>
-                Bezirke
-                <div class="menu">
-                    <a href="/#mitte" class="item">Mitte</a>
-                </div>
-            </div>
-            <a href="/angebote" class="item">Aktuelle Angebote</a>
-        </div>
-    </div-->
-
 
 </div>

@@ -3,7 +3,7 @@
 function search_fulltext_geo_objects() {
     var query = kiezatlas.get_fulltext_search_input()
     if (query.length >= 1) {
-        query = encodeURIComponent(query + "*", "UTF-8")
+        query = encodeURIComponent(query, "UTF-8")
         if (kiezatlas.getAngebotsinfoFilter()) {
             kiezatlas.do_text_search_angebotsinfos(query)
         } else {
@@ -11,6 +11,36 @@ function search_fulltext_geo_objects() {
         }
     }
 }
+
+function handle_fulltext_search_input(event) {
+    if (event.keyCode === 13) {
+        do_fulltext_search()
+    }
+}
+
+function do_fulltext_search() {
+    var query = kiezatlas.get_top_search_input()
+    if (query.length >= 1) {
+        query = encodeURIComponent(query, "UTF-8")
+        console.log("Text Search", query, "Angebotsfilter", kiezatlas.getAngebotsinfoFilter())
+        if (kiezatlas.getAngebotsinfoFilter()) {
+            kiezatlas.do_text_search_angebotsinfos(query)
+        } else {
+            kiezatlas.do_text_search_geo_objects(query)
+        }
+    }
+    hide_search_options()
+}
+
+/** function show_search_options() {
+    $('#options-menu').show()
+    $('#options-spacer').show("slow")
+}
+
+function hide_search_options() {
+    $('#options-menu').hide()
+    $('#options-spacer').hide("slow")
+} **/
 
 // Register Near-By Text Search Handler
 function search_location_by_text() {
@@ -212,26 +242,29 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
         }
     }
 
-    this.render_district_menu = function(districtValueObject) {
-
-        // Internal helper function
-        function handle_menu_item_click(e) {
-            var click_href = e.target.getAttribute("href")
-            if (click_href === "#gesamt") {
-                _self.clear_district_page()
-                _self.render_page("gesamt")
-            } else {
-                var bezirksTopic = _self.get_bezirks_topic_by_hash(click_href)
-                _self.render_bezirkspage(bezirksTopic)
-            }
+    this.handle_bezirks_item_click = function(e) {
+        var click_href = e.target.getAttribute("href")
+        if (click_href.indexOf("/") === 0) {
+            click_href = click_href.substr(1)
         }
+        if (click_href === "#gesamt") {
+            _self.clear_district_page()
+            _self.render_page("gesamt")
+        } else {
+            var bezirksTopic = _self.get_bezirks_topic_by_hash(click_href)
+            _self.render_bezirkspage(bezirksTopic)
+        }
+        $sidebarUi.sidebar('hide')
+    }
+
+    this.render_district_menu = function(districtValueObject) {
 
         var $bezirk = $('#bezirksauswahl')
             $bezirk.empty()
         var bezirke = _self.getDistricts()
         // Render inactive/active "Gesamtstadtplan" button
         var $gesamt = $('<a href="#gesamt" id="gesamt" class="item gesamt">Gesamtstadtplan</a>')
-            $gesamt.click(handle_menu_item_click)
+            $gesamt.click(_self.handle_bezirks_item_click)
         if (!districtValueObject) $gesamt.addClass("active")
         $bezirk.append($gesamt)
         // ... Bezirke
@@ -245,7 +278,7 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
             if (anchor_name.indexOf("marzahn") !== -1 || anchor_name.indexOf("reinickendorf") !== -1 || anchor_name.indexOf("pankow") !== -1) {
                 $menuitem.addClass("disabled")
             } else {
-                $menuitem.click(handle_menu_item_click)
+                $menuitem.click(_self.handle_bezirks_item_click)
             }
             $bezirk.append($menuitem)
         }
@@ -437,7 +470,7 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
         leafletMap.listen_to('locating_success', function(e) {
             leafletMap.setCurrentLocationCoordinate(new L.latLng(e.detail.latitude, e.detail.longitude))
             leafletMap.activate_circle_control()
-            leafletMap.render_circle_search_control()
+            leafletMap.render_circle_search_control(true)
             // ### _self.setDistrict(undefined)
             _self.do_circle_search(leafletMap.getCurrentLocationCoordinate(), undefined)
             leafletMap.map.fitBounds(leafletMap.getControlCircleBounds())
@@ -670,6 +703,7 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
         var queryUrl = '/website/search/?search='+text
         if (_self.getSiteId())  queryUrl = '/website/search/' + _self.getSiteId() + '/?search=' + text
         // _self.clear_details_area()
+        _self.show_searching_indicator()
         _self.show_spinning_wheel()
         $.getJSON(queryUrl, function (geo_objects) {
             console.log("> Text based Geo Object Search returned", geo_objects)
@@ -680,8 +714,10 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
                 leafletMap.clear_marker()
                 leafletMap.render_geo_objects(true)
                 _self.hide_spinning_wheel()
+                _self.hide_searching_indicator()
             } else {
                 _self.hide_spinning_wheel()
+                _self.hide_searching_indicator()
                 _self.show_message('Keine Treffer f&uuml;r diese Suche')
             }
             if (callback) callback(geo_objects)
@@ -771,7 +807,9 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
         $('#nearby-area .options').toggle()
     }
 
-    this.add_nearby_button_handler = function() {
+    this.add_page_input_handler = function() {
+        $('.sidebar .bezirke .menu a').click(_self.handle_bezirks_item_click)
+        $('#text-search').on("keyup", handle_fulltext_search_input)
         var $option_a = $('.search-option.a')
             $option_a.on('touchend', handle_option_a)
             $option_a.on('click', handle_option_a)
@@ -802,11 +840,16 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
     // --- GUI Manipulation Utility Methods
     
     this.set_fulltext_search_placeholder = function(hint) {
+        // $('#text-search').attr("placeholder", hint)
         $('#fulltext-search').attr("placeholder", hint)
     }
 
     this.get_fulltext_search_input = function() {
         return $('#fulltext-search').val()
+    }
+
+    this.get_top_search_input = function() {
+        return $('#text-search').val()
     }
 
     this.show_marker_name_info = function(objects) {
@@ -845,6 +888,16 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
         } else {
             $('#spinning-wheel').show()
         }
+    }
+
+    this.hide_searching_indicator = function() {
+        $('.ui.search button .icon').removeClass("loading").removeClass("circle").removeClass('notched')
+        $('.ui.search button .icon').addClass("search")
+    }
+
+    this.show_searching_indicator = function() {
+        $('.ui.search button .icon').addClass("loading").addClass("circle").addClass('notched')
+        $('.ui.search button .icon').removeClass("search")
     }
 
     this.hide_spinning_wheel = function(isLocating) {

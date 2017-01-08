@@ -27,8 +27,11 @@
         <script type="text/javascript" th:inline="javascript">
         /*<![CDATA[*/
 
+            var $sidebarUi = undefineds
             // App initialization
             $(document).ready(function(e) {
+                $sidebarUi = $('.ui.sidebar')
+                // $sidebarUi.sidebar('setting', 'scrollLock', true).sidebar('setting', 'returnScroll', true).sidebar('setting', 'dimPage', false).sidebar('hide')
                 // 1) setup citymap page
                 citymap.init(window.location.pathname.substr(1), ($('#karte').css("display") !== "none"))
                 citymap.register_page_handlers()
@@ -47,134 +50,107 @@
 
         <div class="top-menu" th:include="fragments/navigation :: top (publisher=${is_publisher})"></div>
 
-        <div class="flex-container">
+        <div class="ui vertical left menu sidebar" th:include="fragments/navigation :: vertical (publisher=${is_publisher})"></div>
 
-            <div id="karte">
+        <div class="pusher">
 
-                <div id="spinning-wheel">
-                    <img src="/de.kiezatlas.website/images/ajax-loader.gif" />
-                </div>
-                <!-- Leaflet Area -->
-                <div id="map" class="fullsize"></div>
-                <!-- Mobile Listing Area -->
-                <div id="listing" class="fullsize"></div>
+            <div class="flex-container">
 
-                <!-- Favourite locations dialog -->
-                <!--h3 class="location-label">
-                    <span class="text"></span>
-                    <button class="star no-favs">
-                        <img class="fav-icon" title="zu Favoriten hinzufügen" alt="Icon: Favourite this location."
-                             src="/de.kiezatlas.website/images/1441217865_black_5_favorite_star.png"/>
-                    </button>
-                </h3-->
+                <div id="karte">
 
-                <!-- Location detection by text delivers alternatives -->
-                <!--div id="street-alternatives"></div>
-                <ul id="places">
-                    <li class="ui-menu-item ui-corner-all ui-widget-content">
-                        <a href="#">Favoriten</a>
-                        <ul class="entries submenu"></ul>
-                    </li>
-                </ul-->
-
-                <!--- Filter & Map Controls Area -->
-                <!--div class="legende">
-                    <div class="text-search-control">
-                        <form action="javascript:search_fulltext_geo_objects()" id="fulltext-search-form" accept-charset="ISO-8859-15">
-                            <span class="elements einrichtungen-btn">
-                                <img src="/de.kiezatlas.website/images/ka-einrichtung2.png"
-                                    title="Markierer: Einrichtungen"/> Einrichtungen
-                            </span>
-                            <input id="fulltext-search" type="text" placeholder="Volltextsuche" />
-                            <input id="fulltext-do" type="submit" class="btn" value="Suchen" />
-                        </form>
+                    <div id="spinning-wheel">
+                        <img src="/de.kiezatlas.website/images/ajax-loader.gif" />
                     </div>
-                    <a href="javascript:kiezatlas.toggle_circle_search_lock_button()" class="lock-control">Umkreissuche</a>
-                </div-->
+                    <!-- Leaflet Area -->
+                    <div id="map" class="fullsize"></div>
+                    <!-- Mobile Listing Area -->
+                    <div id="listing" class="fullsize"></div>
 
-            </div>
+                </div>
 
-            <div id="sidebar">
+                <div id="sidebar">
 
-                <!-- Citymap Header Area -->
-                <div class="welcome">
+                    <!-- Citymap Header Area -->
+                    <div class="welcome">
 
-                    <h3>
-                        <span class="title"></span>
-                        <span class="small slogan">Hier findest du Infos &uuml;ber sozial-kulturelle Einrichtungen in Berlin und ihre Angebote</span>
-                        <img class="logo" src="/de.kiezatlas.website/images/kiezatlas2-logo.png"/>
-                    </h3>
+                        <h3>
+                            <span class="title"></span>
+                            <span class="small slogan">Hier findest du Infos &uuml;ber sozial-kulturelle Einrichtungen in Berlin und ihre Angebote</span>
+                            <img class="logo" src="/de.kiezatlas.website/images/kiezatlas2-logo.png"/>
+                        </h3>
 
-                    <div class="criterias"></div>
+                        <div class="criterias"></div>
 
-                    <!-- Hidden Search Dialog (visible on small screen devices only) -->
-                    <div class="ui search">
-                        <div class="ui icon input">
-                            <input class="prompt" type="text" placeholder="Suchanfrage" />
+                        <!-- Hidden Search Dialog (visible on small screen devices only) -->
+                        <div class="ui search">
+                            <div class="ui icon input">
+                                <input class="prompt" type="text" placeholder="Suchanfrage" />
+                            </div>
+                            <button class="circular ui icon button primary small">
+                                <i class="icon search"></i>
+                            </button>
                         </div>
-                        <button class="circular ui icon button primary small">
-                            <i class="icon search"></i>
-                        </button>
+
                     </div>
 
-                </div>
+                    <!-- Notification area -->
+                    <div id="notification" onclick="kiezatlas.close_message_window()">
+                        <span class="message">Hi!</span>
+                    </div>
 
-                <!-- Notification area -->
-                <div id="notification" onclick="kiezatlas.close_message_window()">
-                    <span class="message">Hi!</span>
-                </div>
+                    <div class="ui top attached tabular menu">
+                        <div class="item" data-tab="first">Orte</div>
+                        <div class="active item" data-tab="second">Neuigkeiten</div>
+                    </div>
 
-                <div class="ui top attached tabular menu">
-                    <div class="item" data-tab="first">Orte</div>
-                    <div class="active item" data-tab="second">Neuigkeiten</div>
-                </div>
-
-                <div class="ui bottom attached tab segment" data-tab="first">
-                    <!-- Details Area -->
-                    <div id="detail-area">
-                        <div class="search-option d">
-                            Bitte w&auml;hlen sie einen Markierer auf der <a href="#karte">Karte</a> um Details zu einem Ort einzublenden.
-                        </div>
-                        <div class="mobile-load">
-                            <div class="ui input">
-                                <button class="ui button show-all primary small"
-                                        onclick="citymap.render_mobile()">Zeige alle Orte dieses Stadtplans</button>
+                    <div class="ui bottom attached tab segment" data-tab="first">
+                        <!-- Details Area -->
+                        <div id="detail-area">
+                            <div class="search-option d">
+                                Bitte w&auml;hlen sie einen Markierer auf der <a href="#karte">Karte</a> um Details zu einem Ort einzublenden.
+                            </div>
+                            <div class="mobile-load">
+                                <div class="ui input">
+                                    <button class="ui button show-all primary small"
+                                            onclick="citymap.render_mobile()">Zeige alle Orte dieses Stadtplans</button>
+                                </div>
                             </div>
                         </div>
+                        <div class="imprint"></div>
                     </div>
-                    <div class="imprint"></div>
-                </div>
 
-                <div class="ui bottom attached active tab segment" data-tab="second">
-                    <!-- District Info Area -->
-                    <div id="site-area">
-                        <div class="mobile-load">
-                            <div class="ui input">
-                                <button class="ui button show-all primary small"
-                                        onclick="citymap.render_mobile()">Zeige alle Orte dieses Stadtplans</button>
+                    <div class="ui bottom attached active tab segment" data-tab="second">
+                        <!-- District Info Area -->
+                        <div id="site-area">
+                            <div class="mobile-load">
+                                <div class="ui input">
+                                    <button class="ui button show-all primary small"
+                                            onclick="citymap.render_mobile()">Zeige alle Orte dieses Stadtplans</button>
+                                </div>
                             </div>
+                            <div class="news-area"></div>
+                            <div class="content-area"></div>
                         </div>
-                        <div class="news-area"></div>
-                        <div class="content-area"></div>
+                        <div class="imprint"></div>
                     </div>
-                    <div class="imprint"></div>
-                </div>
 
-                <div class="ui bottom attached tab segment" data-tab="third">
-                    <!-- Suchergebnisse Area -->
-                    <div id="search-area">
-                        <ul class="results"></ul>
+                    <div class="ui bottom attached tab segment" data-tab="third">
+                        <!-- Suchergebnisse Area -->
+                        <div id="search-area">
+                            <ul class="results"></ul>
+                        </div>
+                        <div class="imprint"></div>
                     </div>
-                    <div class="imprint"></div>
-                </div>
 
-                <div class="ui bottom attached tab segment" data-tab="fourth">
-                    <!-- Kategorien Listing -->
-                    <div id="category-area">
-                        <span class="title criteria"></span>
-                        <ul class="results"></ul>
+                    <div class="ui bottom attached tab segment" data-tab="fourth">
+                        <!-- Kategorien Listing -->
+                        <div id="category-area">
+                            <span class="title criteria"></span>
+                            <ul class="results"></ul>
+                        </div>
+                        <div class="imprint"></div>
                     </div>
-                    <div class="imprint"></div>
+
                 </div>
 
             </div>

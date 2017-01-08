@@ -136,7 +136,13 @@ html, body {
 }
 
 .mobile-logo {
-    display: none;
+    display: inline-block;
+    padding: 0.5em 1em 0.5em 1em;
+    border-left: 0px solid transparent;
+}
+
+.top-menu .ui.menu.top.fixed {
+    z-index: 3010;
 }
 
 .warning {
@@ -152,16 +158,21 @@ html, body {
 #bottom,
 #filter-container,
 #main-menu,
-#detail-area {
+#detail-area,
+.footer {
     position: relative;
     top: 2em;
+}
+
+.frontpage #bottom {
+    padding-bottom: 2em;
 }
 
 #site-area {
     flex-direction: row;
     display: none; /** set to "flex" by ka-website.js */
     /** font-size: 1.2em; **/
-    margin: 3em auto auto;
+    margin: auto auto;
     padding: 1em;
     /* Permalink - use to edit and share this gradient: http://colorzilla.com/gradient-editor/#ffffff+1,ffffff+100&1+0,0.91+100 */
     border-top: 1px solid #FC3;
@@ -302,6 +313,10 @@ html, body {
     padding: 0em 2em;
 }
 
+.sidebar .menu-header {
+    height: 4.5em;
+}
+
 #karte {
     position: relative;
     padding-bottom: 3px;
@@ -346,6 +361,91 @@ html, body {
 .sites .editor {
     margin: 2em;
     margin-top: 5em;
+}
+
+.footer {
+    position: relative;
+    background-image: url("/de.kiezatlas.website/images/website_pattern_dg.jpg");
+    background-color: rgb(52, 52, 52);
+    color: rgb(169, 169, 169);
+    min-height: 100px;
+}
+
+.footer h4 {
+    font-weight: normal;
+}
+
+.footer .provider,
+.footer .ba {
+    padding: 2em;
+}
+
+.footer .provider {
+    box-shadow: 0px -3px 25px 1px #a9a9a9;
+    -moz-box-shadow: 0px -3px 25px 1px #a9a9a9;
+    -webkit-box-shadow: 0px -3px 25px 1px #a9a9a9;
+    padding-top: .5em;
+    padding-bottom: .5em;
+    text-align: center;
+}
+
+.footer h3 {
+    color: #efefef;
+    margin-bottom: 0.5em;
+}
+
+.footer .block {
+    display: inline-block;
+    margin: 2em;
+    vertical-align: top;
+    text-align: left;
+}
+
+.footer .block ul {
+    list-style-type: none;
+    padding-left: 0em;
+    margin-top: 0em;
+}
+
+.footer .powered-by p,
+.footer .about p,
+.footer .block ul li {
+    line-height: 1.5em;
+}
+
+.footer a {
+    color: rgb(169, 169, 169);
+    text-decoration: none;
+}
+
+.footer .powered-by {
+    max-width: 66%;
+    margin: auto;
+    padding-bottom: 2em;
+}
+
+.footer .powered-by a,
+.footer a:hover {
+    color: #27638C;
+}
+
+.footer .powered-by a {
+    text-decoration: underline;
+}
+
+.footer .logos img {
+    vertical-align: top;
+    margin-right: 2em;
+    margin-top: .5em;
+    border: 1px solid #e9e9e9;
+    text-align: left;
+    /** max-height: 140px;
+    width: auto; **/
+}
+
+.footer .ba {
+    background-color: #fff;
+    color: #343434;
 }
 
 .citymap .citymap-title {
@@ -652,13 +752,45 @@ form .invalid {
     left: -2px;
 }
 
-.frontpage .ui.search {
-    display: none;
-}
-
 .citymap .ui.search {
     display: inline-block;
     top: 10px;
+}
+
+#options-menu {
+    display: none;
+    position: fixed;
+    top: 3.5em;
+    width: 1127px;
+    left: 360px;
+    z-index: 2017;
+}
+
+#options-spacer {
+    height: 150px;
+    display: none;
+    position: relative;
+    max-width: 1127px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.search.options {
+    position: absolute;
+    right: 0em;
+    text-align: right;
+}
+
+.search.options .fields {
+    padding: 1em;
+    text-align: left;
+    border: 1px solid rgba(34,36,38,.15);
+    max-width: 300px;
+    background-color: #fff;
+}
+
+.search.options .fields div.ui {
+    padding-top: 0.2em;
 }
 
 #map.outlined  {
@@ -755,6 +887,18 @@ a {
     color: #002856;
     text-decoration: underline;
     text-decoration-color: #8f1414;
+}
+
+.sidebar .menu a {
+    text-decoration: none;
+}
+
+.ui.vertical.menu .menu .item {
+    font-size: 1em;
+}
+
+.sidebar .ui.vertical.menu .item .menu .active.item {
+    font-weight: 400;
 }
 
 .search-option h1 {
@@ -1044,13 +1188,15 @@ span.angebote-btn,
 /** ------------------- Website Frontpage Orte Display ---------------- */
 
 #detail-area {
-    margin-top: 1em;
+    /** margin-top: 1em; **/
     padding: 1em;
     padding-top: 0px;
     background-color: #EAEAEA;
     display: none;
+    top: 0em;
+    margin-top: 0em;
     /** min-height: 150px; */
-    margin-bottom: 2em
+    /** margin-bottom: 2em **/
 }
 
 #detail-area .entry-card {
@@ -1829,6 +1975,11 @@ body.sign-up {
     cursor: pointer;
 }
 
+.top-menu .right .circular {
+    margin-left: .5em;
+    background-color: #EAEAEA;
+}
+
 /** --------------------- Media Specific Style Overrides ------------------ **/
 
 @media(min-width: 1600px) {
@@ -1876,6 +2027,15 @@ body.sign-up {
     .citymap .ui.tabular.menu {
         width: 98%;
         padding-left: 0.5em;
+    }
+}
+
+@media (max-width: 1024px) {
+    .top-menu .ui.menu .dropdown.item,
+    .top-menu .ui.menu .angebote.item,
+    .top-menu .ui.menu .logout.item,
+    .top-menu .ui.menu .login.item {
+        display: none !important;
     }
 }
 
