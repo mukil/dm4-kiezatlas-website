@@ -284,15 +284,18 @@
                         <label for="name">Name</label>
                         <input id="geoname" type="text" required="true" minlength="3" onblur="search_for_duplicates()"
                                name="name" th:value='${geoobject.name}'/>
+                            <span class="required">*</span>
                         <label for="strasse">Stra&szlig;enname</label>
                         <input type="text" id="streetnr" name="strasse" th:value='${geoobject.strasse}'/>
                         <label for="plz">Postleitzahl, Bezirk</label>
                         <input type="number" required="true" minlength="5" id="postal-code" onblur="is_valid_zip_code()"
                                class="plz" name="plz" th:value='${geoobject.plz}'/>
+                            <span class="required">*</span>
                         <select id="district" name="district" required="true" onblur="is_valid_district()">
                             <option value="-1">Bitte Bezirk ausw&auml;hlen</option>
                             <option th:each="district : ${availableDistricts}" th:selected="${#strings.toString(district.simpleValue) eq geoobject.bezirk}" th:value="${district.id}" th:text="${district.simpleValue}"></option>
                         </select>
+                            <span class="required">*</span>
                         <!--input type="hidden" id="google-district" name="googleDistrictName" value=""/-->
                         <br/>
                         <select id="city" name="city">
@@ -310,6 +313,7 @@
                         <label for="email">Email</label>
                         <input type="text" name="email" onblur="is_valid_email()"
                                id="email-address" required="true" th:value='${geoobject.email}'/>
+                            <span class="required">*</span>
                         <label for="fax">Fax</label>
                         <input type="text" name="fax" th:value='${geoobject.fax}'/>
                         <!-- Image File Upload, Träger, LOR Nummer -->
@@ -364,9 +368,9 @@
                     <a class="imprint" th:href="${geoobject.imprint}">Impressum</a-->
                 </div>
                 <div class="info-area">
-                    <input type="submit" id="save" value="Ok"/>
-                    <a class="button" th:if="${geoobject.id} != -1" th:href="'/website/geo/' + ${geoobject.id}">Cancel</a>
-                    <a class="button" th:if="${geoobject.id} == -1" href="/angebote/my">Cancel</a>
+                    <button type="submit" id="save" class="ui button olive">Ok</button>
+                    <a class="button ui" th:if="${geoobject.id} != -1" th:href="'/website/geo/' + ${geoobject.id}">Cancel</a>
+                    <a class="button ui" th:if="${geoobject.id} == -1" href="/angebote/my">Cancel</a>
                 </div>
             </form>
             <div class="categories">
@@ -384,25 +388,7 @@
 
         <p>&nbsp;</p>
 
-        <!-- Kiezatlas Standard Website section -->
-        <!--div id="pages">
-            <ul>
-                <li><a href="/aktuelles">Aktuelles</a></li>
-                <li><a href="/projektbeschreibung">Projektbeschreibung</a></li>
-                <li><a href="/dies-das">Dies und Das</a></li>
-                <li><a href="/weitere-atlanten">Weitere Atlanten</a></li>
-                <li><a href="http://pax.spinnenwerk.de/~kiezatlas/index.php?id=6">Impressum</a></li>
-                <li><a href="/datenschutzhinweise">Datenschutzhinweise</a></li>
-                <li><a href="/api-documentation">API</a></li>
-                <li><a href="/open-source">Open Source</a></li>
-                <li><a href="/links">Links</a></li>
-            </ul>
-            <p></p>
-        </div-->
-
-        <div id="bottom">
-            <img src="/de.kiezatlas.website/images/kiezatlas2-logo.png" width="150" />
-        </div>
+        <div class="footer" th:include="fragments/navigation :: footer-links (publisher=${is_publisher})"></div>
 
     </body>
 </html>

@@ -14,6 +14,7 @@ module.exports = function(grunt) {
                         'src/main/resources/web/css/semantic-ui/2.2/components/item.min.css',
                         'src/main/resources/web/css/semantic-ui/2.2/components/menu.min.css',
                         'src/main/resources/web/css/semantic-ui/2.2/components/sidebar.min.css',
+                        'src/main/resources/web/css/semantic-ui/2.2/components/button.min.css',
                         'src/main/resources/web/css/semantic-ui/2.2/components/checkbox.min.css'
                     ]
                 }

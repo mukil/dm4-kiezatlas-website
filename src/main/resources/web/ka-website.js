@@ -325,7 +325,7 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
     }
 
     this.clear_angebote_page = function() {
-        _self.set_anchor("")
+        _self.set_anchor("gesamt")
         _self.setAngebotsinfoFilter(false)
         $('span.einrichtungen-btn').addClass('bold')
         $('span.angebote-btn').removeClass('bold')
@@ -629,7 +629,7 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
                     + object.beschreibung+ '<br/>'
                 + '</p>' **/
                 + '<p><b>Kontakt</b> ' + object.kontakt + '</p>'
-                + '<a href="/angebote/' + object.id + '" title="Zeige Details">Details des Angebots</a>'
+                + '<a href="/angebote/' + object.id + '" title="Zeige Details" class="ui button olive">mehr Infos</a>'
             + '</div>'
         + '</div>')
     }
@@ -679,7 +679,7 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
                 + '' + body_text + ''
             + '</p>'
             + angebote_link
-            + '<a href="/website/geo/' + object.id + '" title="Zeige Details">mehr Infos</a>'
+            + '<a href="/website/geo/' + object.id + '" title="Zeige Details" class="ui button olive">mehr Infos</a>'
             + fahrinfoLink
             + '</div>'
             + lor_link
@@ -1029,7 +1029,7 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
     this.get_lor_link = function(entry) {
         if (!entry.hasOwnProperty("lor_id")) return ""
         var html = '<div class="lor-link">'
-            + '<a href="http://sozialraumdaten.kiezatlas.de/seiten/2014/12/?lor=' + entry.lor_id
+            + '<a href="http://sozialraumdaten.kiezatlas.de/seiten/2016/06/?lor=' + entry.lor_id
             + '" title="zur Einwohnerstatistik des Raums (LOR Nr. ' + entry.lor_id +')">Sozialraumdaten</a></div>'
         return html
     }

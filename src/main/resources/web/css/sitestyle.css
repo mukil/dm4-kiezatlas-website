@@ -367,6 +367,8 @@ body.pushable > .pusher {
     margin-top: 5em;
 }
 
+/** Footer Style Copy and Adaptation from dm4-webpages... */
+
 .footer {
     position: relative;
     background-image: url("/de.kiezatlas.website/images/website_pattern_dg.jpg");
@@ -403,6 +405,8 @@ body.pushable > .pusher {
     margin: 2em;
     vertical-align: top;
     text-align: left;
+    max-width: 300px;
+    min-width: 200px;
 }
 
 .footer .block ul {
@@ -1075,10 +1079,6 @@ h1.my-title {
 
 /** ------- ### Kiezatlas Standards? --------- */
 
-.kiezatlas a.button {
-    padding: 4px;
-}
-
 .kiezatlas .info-area a.button {
     margin-left: 10px;
 }
@@ -1420,8 +1420,18 @@ span.bold {
 }
 
 .kiezatlas.topic .infos .bild img {
-    max-width: 100%;
+    max-width: 400px;
     height: auto;
+}
+
+.kiezatlas.topic .infos span.required {
+    font-size: 1.2em;
+    color: #8F1414;
+}
+
+.kiezatlas.topic #geoname,
+.kiezatlas.topic #email-address {
+    display: inline-block;
 }
 
 .kiezatlas.topic .assigned-offers {

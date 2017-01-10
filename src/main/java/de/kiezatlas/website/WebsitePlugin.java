@@ -52,7 +52,9 @@ import de.kiezatlas.website.model.GeoViewModel;
 import de.kiezatlas.website.model.SiteViewModel;
 import de.kiezatlas.website.model.CoordinatesViewModel;
 import de.kiezatlas.website.util.NewsFeedClient;
+import de.mikromedia.webpages.Webpage;
 import de.mikromedia.webpages.WebpageService;
+import de.mikromedia.webpages.Website;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.math.RoundingMode;
@@ -1088,6 +1090,28 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
         return view("detail");
     }
 
+    /**
+     * Prepares the most basic data used across all our Thymeleaf page templates.
+     * @param website
+     */
+    private void prepareWebsiteViewData(Topic website) {
+        if (website != null) {
+            Website site = new Website(website, dm4);
+            viewData("siteName", site.getName());
+            viewData("siteCaption", site.getCaption());
+            viewData("siteAbout", site.getAboutHTML());
+            viewData("siteId", website.getId());
+            viewData("footerText", site.getFooter());
+            viewData("customSiteCss", site.getStylesheetPath());
+            viewData("menuItems", site.getActiveMenuItems());
+            List<Webpage> pages = webpages.getPublishedWebpages(website);
+            // sort webpages on websites frontpage by modification time
+            viewData("webpages", webpages.getWebpagesSortedByTimestamp(pages, true)); // false=creationDate
+        } else {
+            log.warning("Preparing webpage template failed because the website was not given");
+        }
+    }
+
     private Viewable getConfirmationPage(List<EinrichtungPageModel> results) {
         prepareGeneralPageData("confirmation");
         viewData("availableLor", getAvailableLORNumberTopics());
@@ -1149,9 +1173,11 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
         viewData("is_publisher", isPrivileged);
         viewData("is_site_manager", isSiteManager);
         viewData("template", templateName);
+        Topic standardwebsite = webpages.getStandardWebsite();
+        viewData("website", templateName);
+        prepareWebsiteViewData(standardwebsite);
         log.info("Checking Authorization (isPrivileged=" + isPrivileged + ", isSiteManager="+isSiteManager+", isAuthenticated=" + isAuthenticated + ")");
     }
-
 
 
     /** -------------------- Permission, Workspace and Membership Related Helpers ----------------------- **/

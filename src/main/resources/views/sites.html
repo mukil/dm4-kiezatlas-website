@@ -78,11 +78,7 @@
             <div id="dialog-confirm"></div>
         </div>
 
-        <div id="bottom" class="padding">
-            <a href="/" title="zur Startseite"><img src="/de.kiezatlas.website/images/kiezatlas2-logo.png" width="150" /></a>
-        </div>
-
-        <div class="footer" th:utext="${footerText}"></div>
+        <div class="footer" th:include="fragments/navigation :: footer-links (publisher=${is_publisher})"></div>
 
     </body>
 </html>
