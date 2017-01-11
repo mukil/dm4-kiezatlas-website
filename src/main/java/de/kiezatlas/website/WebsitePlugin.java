@@ -35,7 +35,6 @@ import de.deepamehta.plugins.geospatial.GeospatialService;
 import de.deepamehta.thymeleaf.ThymeleafPlugin;
 import de.deepamehta.workspaces.WorkspacesService;
 import de.kiezatlas.KiezatlasService;
-import de.kiezatlas.angebote.AngebotAssignedListener;
 import de.kiezatlas.angebote.AngebotService;
 import static de.kiezatlas.angebote.AngebotService.ANGEBOT_BESCHREIBUNG;
 import de.kiezatlas.angebote.model.AngebotsinfosAssigned;
@@ -79,6 +78,9 @@ import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 import org.deepamehta.plugins.signup.SignupPlugin;
 import org.deepamehta.plugins.signup.service.SignupPluginService;
+import de.kiezatlas.angebote.AssignedAngebotListener;
+import de.kiezatlas.angebote.ContactAnbieterListener;
+import de.kiezatlas.angebote.RemovedAngebotListener;
 
 /**
  * The module bundling the Kiezatlas 2 Website.<br/>
@@ -92,7 +94,9 @@ import org.deepamehta.plugins.signup.service.SignupPluginService;
 @Path("/website")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
-public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, AngebotAssignedListener {
+public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, AssignedAngebotListener,
+                                                                              RemovedAngebotListener,
+                                                                              ContactAnbieterListener {
 
     private final Logger log = Logger.getLogger(getClass().getName());
 
@@ -110,6 +114,10 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
     // Application Cache of District Overview Resultsets
     HashMap<Long, List<GeoViewModel>> citymapCache = new HashMap<Long, List<GeoViewModel>>();
     HashMap<Long, Long> citymapCachedAt = new HashMap<Long, Long>();
+
+    private final String DM4_HOST_URL = System.getProperty("dm4.host.url"); // should come with trailing slash
+    private final String ANGEBOTE_RESOURCE = "angebote/";
+    private final String GEO_OBJECT_RESOURCE = "website/geo/";
 
     // The URIs of KA2 Geo Object topics synchronized (and kept up-to-date in) Kiezatlas 1 have this prefix.
     // The remaining part of the URI is the original KA1 topic id.
@@ -390,7 +398,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
                 geoObject = createGeoObjectWithoutWorkspace(mf.newTopicModel("ka2.geo_object", geoObjectTopicModel),
                     geoObject, ansprechpartner, telefon, fax, email, beschreibung, oeffnungszeiten, website,
                     coordinatePair, district, themen, zielgruppen, angebote);
-                Association assignment = createUserAssignment(geoObject, accesscl.getUsername());
+                Association assignment = createUserAssignment(geoObject);
                 privilegedAssignToWorkspace(assignment, getPrivilegedWorkspace().getId());
                 // Handles Image-File Upload (Seperately)
                 if (fileId != 0) {
@@ -1001,20 +1009,115 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
         assignmentEdge.setProperty("revision_key", key, false);
         // Create mail message details
         String revisionPage = SignupPlugin.DM4_HOST_URL + "angebote/revise/" + key + "/" + assignmentEdge.getId();
-        String message = "Falls dieses Angebot nicht an ihrer Einrichtung stattfindet bzw. nicht stattfinden soll, "
-            + "nutzen Sie bitte auf der folgenden Seite die Funktion zur Aufhebung dieser terminlichen Zuordnung:<br/>"
-            + "<a href=\""+revisionPage+"\">Angebotsinfo ansehen und revidieren</a>";
+        String message = "Falls dieses Angebot nicht an der Einrichtung <a href=\""
+                + DM4_HOST_URL + GEO_OBJECT_RESOURCE + geoObject.getId() + "\">" + geoObject.getSimpleValue().toString()
+                + "</a> stattfindet bzw. nicht stattfinden soll, nutzen Sie bitte auf der folgenden Seite die "
+                + "<a href=\""+revisionPage+"\">Funktion zur Aufhebung dieser terminlichen Zuordnung</a>.<br/>";
         long startTime = angebote.getAssignmentStartTime(assignmentEdge);
         long endTime = angebote.getAssignmentEndTime(assignmentEdge);
         StringBuilder mailBody = new StringBuilder();
-        mailBody.append("<br/>Name des Angebots:<br/>" + angebotsInfo.getSimpleValue().toString() + "<br/><br/>");
+        mailBody.append("<br/><b>" + angebotsInfo.getSimpleValue().toString() + "</b>, "
+                + "<a href=\"" + DM4_HOST_URL + ANGEBOTE_RESOURCE + angebotsInfo.getId() + "\">Link</a><br/>");
         String standardBeschreibung = angebotsInfo.getChildTopics().getStringOrNull(ANGEBOT_BESCHREIBUNG);
-        if (standardBeschreibung != null) mailBody.append("<br/>Angebotsbeschreibung:<br/>" + JavaUtils.stripHTML(standardBeschreibung));
-        mailBody.append("<br/>Für den Zeitraum vom " + df.format(startTime) + " bis zum " + df.format(endTime));
-        mailBody.append("<br/>Einrichtung: " + geoObject.getSimpleValue().toString() + "<br/><br/>" + message + "<br/><br/>");
+        if (standardBeschreibung != null) mailBody.append("<br/><em>" + JavaUtils.stripHTML(standardBeschreibung) + "</em>");
+        mailBody.append("<br/>F&uuml;r den Zeitraum vom <em>" + df.format(startTime) + " bis zum " + df.format(endTime) + "</em>");
+        mailBody.append("<br/><br/>" + message + "<br/><br/>");
         mailBody.append("Vielen Dank!");
         // Send notification
-        signup.sendUserMailboxNotification(recipients.toString(), "Neue Angebotsinfos ihrer Einrichtung zugewiesen", mailBody.toString());
+        signup.sendUserMailboxNotification(recipients.toString(), "Angebotsinfos ihrer Kiezatlas-Einrichtung zugewiesen", mailBody.toString());
+    }
+
+    @Override
+    public void angebotsInfoAssignmentRemoved(Topic angebotsInfo, Topic geoObject, Association assignmentEdge, String username) {
+        log.info("Assignment of Angebot \""+angebotsInfo.getSimpleValue()+"\" removed from "
+                + "Ansprechpartner_in ("+username+") for \"" + geoObject.getSimpleValue() + "\"");
+        try {
+            String angebotsName = angebotsInfo.getSimpleValue().toString();
+            String einrichtungsName = geoObject.getSimpleValue().toString();
+            String subject = "Der Angebotszeitraum für \"" + angebotsName + "\", Ort: " + einrichtungsName + " wurde zurückgezogen";
+            StringBuilder mailBody = new StringBuilder();
+            // From
+            // String fromMailbox = dm4.getAccessControl().getEmailAddress(username);
+            // Recipients
+            StringBuilder recipients = new StringBuilder();
+            Topic creator = angebote.getAngebotsinfoCreator(angebotsInfo);
+            String creatorMailbox = dm4.getAccessControl().getEmailAddress(creator.getSimpleValue().toString());
+            recipients.append(creatorMailbox);
+            // Message Body
+            long startTime = angebote.getAssignmentStartTime(assignmentEdge);
+            long endTime = angebote.getAssignmentEndTime(assignmentEdge);
+            String zusatzInfo = angebote.getAssignmentZusatzinfo(assignmentEdge);
+            String zusatzKontakt = angebote.getAssignmentKontakt(assignmentEdge);
+            String standardBeschreibung = angebotsInfo.getChildTopics().getStringOrNull(ANGEBOT_BESCHREIBUNG);
+            mailBody.append("Hallo " + creator.getSimpleValue().toString() + ",<br/><br/>");
+            mailBody.append("dein \"" + angebotsName + "\" wurde "
+                    + "von unserer/m Ansprechpartner_in f&uuml;r den Ort \"" + einrichtungsName + "\" zur&uuml;ckgezogen.<br/><br/>");
+            mailBody.append("Diese &Auml;nderung betrifft nur den Angebotszeitraum vom <em>"
+                    + df.format(startTime) + " bis zum " + df.format(endTime) + "</em> an diesem Veranstaltungsort.");
+            mailBody.append("<br/>Name des Angebots: " + angebotsName);
+            if (standardBeschreibung != null) {
+                mailBody.append("<br/>Beschreibung: " + JavaUtils.stripHTML(standardBeschreibung));
+            }
+            if (zusatzInfo != null) {
+                mailBody.append("<br/>Zusatzinfo zu diesem Angebotszeitraum war: " + JavaUtils.stripHTML(zusatzInfo));
+            }
+            if (zusatzKontakt != null) {
+                mailBody.append("<br/>Kontaktinfo f&uuml;r diesen Angebotszeitraum war: " + JavaUtils.stripHTML(zusatzKontakt));
+            }
+            mailBody.append("<br/><br/>");
+            mailBody.append("Vielen Dank f&uuml;r Ihr Verst&auml;ndnis und falls noch nicht geschehen, bitte stimmen Sie einen "
+                    + "neuen Angebotszeitraum mit dem Veranstaltungsort im Vorfeld ab.");
+            signup.sendUserMailboxNotification(recipients.toString(), subject, mailBody.toString());
+        } catch (Exception e) {
+            log.warning("Notification could not be sent due to " +  e.getLocalizedMessage() + ", caused by " + e.getCause());
+        }
+    }
+
+    @Override
+    public void contactAngebotsAnbieter(Topic angebotsInfo, Topic geoObject, Association assignmentEdge,
+            String message, String usernameFrom, String usernameTo) {
+        log.info("Contact creator ("+usernameTo+") of \""+angebotsInfo.getSimpleValue()+"\" on behalf of  "
+                + "Ansprechpartner_in ("+usernameFrom+") for \"" + geoObject.getSimpleValue() + "\"");
+        try {
+            String angebotsName = angebotsInfo.getSimpleValue().toString();
+            String einrichtungsName = geoObject.getSimpleValue().toString();
+            String subject = "Rückfrage zur Angebotsinfo \"" + angebotsName + "\", Ort: " + einrichtungsName;
+            // From
+            String fromMailbox = dm4.getAccessControl().getEmailAddress(usernameFrom);
+            StringBuilder mailBody = new StringBuilder();
+            // Recipients
+            StringBuilder recipients = new StringBuilder();
+            Topic creator = angebote.getAngebotsinfoCreator(angebotsInfo);
+            String creatorMailbox = dm4.getAccessControl().getEmailAddress(creator.getSimpleValue().toString());
+            recipients.append(creatorMailbox);
+            // Message Body
+            long startTime = angebote.getAssignmentStartTime(assignmentEdge);
+            long endTime = angebote.getAssignmentEndTime(assignmentEdge);
+            String standardBeschreibung = angebotsInfo.getChildTopics().getStringOrNull(ANGEBOT_BESCHREIBUNG);
+            String zusatzInfo = angebote.getAssignmentZusatzinfo(assignmentEdge);
+            String zusatzKontakt = angebote.getAssignmentKontakt(assignmentEdge);
+            mailBody.append("Hallo " + usernameTo + ",<br/><br/>");
+            String messageValue = JavaUtils.stripHTML(message).replaceAll("\n", "<br/>");
+            mailBody.append(messageValue);
+            mailBody.append("<br/><br/>");
+            mailBody.append("Die Anfrage bezieht sich auf den Angebotszeitraum vom <em>"
+                    + df.format(startTime) + " bis zum " + df.format(endTime) + "</em> ");
+            mailBody.append("und die Angebotsinfos <a href=\"" + DM4_HOST_URL + ANGEBOTE_RESOURCE + angebotsInfo.getId()
+                    + "\">"+angebotsName+"</a>:<br/>");
+            if (standardBeschreibung != null) {
+                mailBody.append("<br/>Beschreibung: " + JavaUtils.stripHTML(standardBeschreibung));
+            }
+            if (zusatzInfo != null) {
+                mailBody.append("<br/>Zusatzinfo zu diesem Angebotszeitraum: " + JavaUtils.stripHTML(zusatzInfo));
+            }
+            if (zusatzKontakt != null) {
+                mailBody.append("<br/>Kontakt f&uuml;r diesen Angebotszeitraum ist: " + JavaUtils.stripHTML(zusatzKontakt));
+            }
+            mailBody.append("<br/><br/>Ihre Antwort schicken Sie bitte an <a href=\"mailto:"+fromMailbox+"\">" + fromMailbox + "</a><br/>");
+            signup.sendUserMailboxNotification(recipients.toString(), subject, mailBody.toString());
+        } catch (Exception e) {
+            log.warning("Anbieter could not be contacted due to " +  e.getLocalizedMessage() + ", caused by " + e.getCause());
+        }
     }
 
     @GET
@@ -1251,15 +1354,17 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
             "dm4.core.child", topicId) != null;
     }
 
+    /** ### TODO: Allow users also to EDIT Kiezatlas 1 Geo Objects **/
     private boolean isGeoObjectEditable(Topic geoObject, Topic username) {
-        if (isAssignedUsername(geoObject, username) && !isKiezatlas1GeoObject(geoObject)) {
-            log.info("Edit Permission GRANTED for user=" + username + " - Assigned to Geo Object");
+        String usernameValue = username.getSimpleValue().toString();
+        if (isUsernameResponsibleForGeoObject(geoObject, usernameValue) && !isKiezatlas1GeoObject(geoObject)) {
+            log.info("Edit Permission GRANTED for user=" + usernameValue + " - Assigned to Geo Object");
             return true;
         } else if (isConfirmationWorkspaceMember(username) && !isKiezatlas1GeoObject(geoObject)) {
-            log.info("Edit Permission GRANTED for user=" + username + " - Confirmation Workspace Member");
+            log.info("Edit Permission GRANTED for user=" + usernameValue + " - Confirmation Workspace Member");
             return true;
         }
-        log.info("Edit Permission DENIED for user=" + username + " - Not Assigned to Geo Object");
+        log.info("Edit Permission DENIED for user=" + usernameValue + " - Not Assigned to Geo Object");
         return false;
     }
 
@@ -1273,11 +1378,11 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
         return (geoObject.getUri().startsWith(KA1_GEO_OBJECT_URI_PREFIX));
     }
 
-    private boolean isAssignedUsername(Topic topic, Topic username) {
+    private boolean isUsernameResponsibleForGeoObject(Topic geoObject, String username) {
         if (username == null) return false;
-        List<RelatedTopic> assignments = getAssignedUsernameTopics(topic);
+        List<RelatedTopic> assignments = getAssignedUsernameTopics(geoObject);
         for (RelatedTopic assignedUsername : assignments) {
-            if (assignedUsername.getSimpleValue().equals(username.getSimpleValue())) return true;
+            if (assignedUsername.getSimpleValue().equals(username)) return true;
         }
         return false;
     }
@@ -1441,9 +1546,9 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
         }
     }
 
-    private Association createUserAssignment(final Topic geoObject, final String username) {
+    private Association createUserAssignment(final Topic geoObject) {
         final Topic usernameTopic = getUsernameTopic();
-        if (!isAssignedUsername(geoObject, usernameTopic)) {
+        if (!isUsernameResponsibleForGeoObject(geoObject, usernameTopic.getSimpleValue().toString())) {
             try {
                 return dm4.getAccessControl().runWithoutWorkspaceAssignment(new Callable<Association>() {
                     @Override
@@ -1452,7 +1557,8 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
                         Association assignment = dm4.createAssociation(mf.newAssociationModel("de.kiezatlas.user_assignment",
                             mf.newTopicRoleModel(geoObject.getId(), "dm4.core.default"),
                             mf.newTopicRoleModel(usernameTopic.getId(), "dm4.core.default")));
-                        log.info("Created User Assignment ("+username+") for Geo Object \"" + geoObject.getSimpleValue() + "\" without Workspace Assignment");
+                        log.info("Created User Assignment ("+usernameTopic.getSimpleValue()+") for Geo Object \""
+                                + geoObject.getSimpleValue() + "\" without Workspace Assignment");
                         return assignment;
                     }
                 });
@@ -1465,7 +1571,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, An
 
     private Association createBildAssignment(final Topic geoObject, final Topic username, final long fileTopicId) {
         final Topic usernameTopic = username;
-        if (isAssignedUsername(geoObject, usernameTopic)) { // check if this is alraedy allowed...
+        if (isUsernameResponsibleForGeoObject(geoObject, usernameTopic.getSimpleValue().toString())) {
             try {
                 return dm4.getAccessControl().runWithoutWorkspaceAssignment(new Callable<Association>() {
                     @Override
