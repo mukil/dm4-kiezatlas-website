@@ -1034,7 +1034,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         try {
             String angebotsName = angebotsInfo.getSimpleValue().toString();
             String einrichtungsName = geoObject.getSimpleValue().toString();
-            String subject = "Der Angebotszeitraum für \"" + angebotsName + "\", Ort: " + einrichtungsName + " wurde zurückgezogen";
+            String subject = "Angebotszeitraum für \"" + angebotsName + "\" am Ort " + einrichtungsName + " entfernt";
             StringBuilder mailBody = new StringBuilder();
             // From
             // String fromMailbox = dm4.getAccessControl().getEmailAddress(username);
@@ -1051,7 +1051,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
             String standardBeschreibung = angebotsInfo.getChildTopics().getStringOrNull(ANGEBOT_BESCHREIBUNG);
             mailBody.append("Hallo " + creator.getSimpleValue().toString() + ",<br/><br/>");
             mailBody.append("dein \"" + angebotsName + "\" wurde "
-                    + "von unserer/m Ansprechpartner_in f&uuml;r den Ort \"" + einrichtungsName + "\" zur&uuml;ckgezogen.<br/><br/>");
+                    + "von unserer/m Ansprechpartner_in f&uuml;r den Ort \"" + einrichtungsName + "\" revidiert.<br/><br/>");
             mailBody.append("Diese &Auml;nderung betrifft nur den Angebotszeitraum vom <em>"
                     + df.format(startTime) + " bis zum " + df.format(endTime) + "</em> an diesem Veranstaltungsort.");
             mailBody.append("<br/>Name des Angebots: " + angebotsName);
@@ -1356,6 +1356,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
 
     /** ### TODO: Allow users also to EDIT Kiezatlas 1 Geo Objects **/
     private boolean isGeoObjectEditable(Topic geoObject, Topic username) {
+        if (username == null) return false;
         String usernameValue = username.getSimpleValue().toString();
         if (isUsernameResponsibleForGeoObject(geoObject, usernameValue) && !isKiezatlas1GeoObject(geoObject)) {
             log.info("Edit Permission GRANTED for user=" + usernameValue + " - Assigned to Geo Object");
