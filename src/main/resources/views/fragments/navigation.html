@@ -195,11 +195,11 @@
 
         <div th:if="${is_publisher}" class="block administration">
             <h3>Administration</h3>
-            <div class="menu">
-                <a href="/website/geo/freischalten/" class="item">Freischalten</a>
-                <a href="/site/administration/" class="item">Listenansicht</a>
-                <a href="/website/sites/" class="item">Sites</a>
-            </div>
+            <ul class="menu">
+                <li th:if="${is_publisher}"><a href="/website/geo/freischalten/" class="item">Freischalten</a></li>
+                <!--a href="/site/administration/" class="item">Listenansicht</a-->
+                <li th:if="${is_site_manager}"><a href="/website/sites/" class="item">Stadtplan Editor</a></li>
+            </ul>
         </div>
 
         <div class="block about">
@@ -209,9 +209,14 @@
 
         <div class="block webpages">
             <h3 th:text="${siteName}">Webpages</h3>
-            <ul class="webpages" th:if="${!#lists.isEmpty(webpages)}">
+            <ul class="webpages" th:if="${!#lists.isEmpty(webpages) and #strings.equals(website, 'standard')}">
                 <li th:each="webpage : ${webpages}">
                     <a th:href="'/' + ${webpage.webAlias}" th:class="'item'" th:id="${webpage.id}" th:text="${webpage.pageTitle}">Menu Item</a>
+                </li>
+            </ul>
+            <ul class="webpages" th:if="${!#lists.isEmpty(webpages) and !#strings.equals(website, 'standard')}">
+                <li th:each="webpage : ${webpages}">
+                    <a th:href="${webpage.webAlias}" th:class="'item'" th:id="${webpage.id}" th:text="${webpage.pageTitle}">Menu Item</a>
                 </li>
             </ul>
         </div>
