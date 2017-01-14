@@ -1381,6 +1381,7 @@ span.bold {
 
 .kiezatlas.topic #detail-area .commands {
     padding: 10px;
+    padding-bottom: 2em;
 }
 
 .kiezatlas.topic .commands .edit {
