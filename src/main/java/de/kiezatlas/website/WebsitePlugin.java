@@ -1097,7 +1097,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
             String zusatzInfo = angebote.getAssignmentZusatzinfo(assignmentEdge);
             String zusatzKontakt = angebote.getAssignmentKontakt(assignmentEdge);
             mailBody.append("Hallo " + usernameTo + ",<br/><br/>");
-            String messageValue = JavaUtils.stripHTML(message).replaceAll("\n", "<br/>");
+            String messageValue = JavaUtils.stripHTML(message).replaceAll("\\n", "<br/>");
             mailBody.append(messageValue);
             mailBody.append("<br/><br/>");
             mailBody.append("Die Anfrage bezieht sich auf den Angebotszeitraum vom <em>"
@@ -1113,7 +1113,8 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
             if (zusatzKontakt != null) {
                 mailBody.append("<br/>Kontakt f&uuml;r diesen Angebotszeitraum ist: " + JavaUtils.stripHTML(zusatzKontakt));
             }
-            mailBody.append("<br/><br/>Ihre Antwort schicken Sie bitte an <a href=\"mailto:"+fromMailbox+"\">" + fromMailbox + "</a><br/>");
+            // Keep sender private
+            // mailBody.append("<br/><br/>Ihre Antwort schicken Sie bitte an <a href=\"mailto:"+fromMailbox+"\">" + fromMailbox + "</a><br/>");
             signup.sendUserMailboxNotification(recipients.toString(), subject, mailBody.toString());
         } catch (Exception e) {
             log.warning("Anbieter could not be contacted due to " +  e.getLocalizedMessage() + ", caused by " + e.getCause());
@@ -1383,7 +1384,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         if (username == null) return false;
         List<RelatedTopic> assignments = getAssignedUsernameTopics(geoObject);
         for (RelatedTopic assignedUsername : assignments) {
-            if (assignedUsername.getSimpleValue().equals(username)) return true;
+            if (assignedUsername.getSimpleValue().toString().equals(username)) return true;
         }
         return false;
     }
@@ -2146,6 +2147,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         log.info("Basic Geo Object, Address and Coordinate Facet now assigned to Workspace \"" + workspace.getSimpleValue() + "\"");
     }
 
+    /** ### FIXME: Move user_assignment edge to new workspace too! */
     private void moveGeoObjecToWorkspace(Topic geoObject, Topic workspace) {
         ChildTopics geoObjectChilds = geoObject.loadChildTopics().getChildTopics();
         Topic addressObject = geoObjectChilds.getTopic("dm4.contacts.address");
