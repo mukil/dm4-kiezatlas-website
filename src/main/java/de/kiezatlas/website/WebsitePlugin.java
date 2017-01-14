@@ -1277,7 +1277,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         viewData("is_site_manager", isSiteManager);
         viewData("template", templateName);
         Topic standardwebsite = webpages.getStandardWebsite();
-        viewData("website", templateName);
+        viewData("website", "standard");
         prepareWebsiteViewData(standardwebsite);
         log.info("Checking Authorization (isPrivileged=" + isPrivileged + ", isSiteManager="+isSiteManager+", isAuthenticated=" + isAuthenticated + ")");
     }
