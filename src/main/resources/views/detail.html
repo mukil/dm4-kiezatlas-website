@@ -56,9 +56,10 @@
         <div id="detail-area" th:class="${angebotsinfos} ? 'angebotsinfos'">
             <div class="commands">
                 <p th:if="${!#strings.isEmpty(message)}" th:text="${message}"></p>
-                <a class="button edit" th:if="${authenticated} and ${editable}" th:href="'/website/geo/edit/' + ${geoobject.id}">Edit</a>
-                <a class="button publish" th:if="${is_publisher} and ${!is_published}" th:href="'/website/geo/confirm/' + ${geoobject.id}">Freischalten</a>
+                <a class="ui button olive edit" th:if="${authenticated} and ${editable}" th:href="'/website/geo/edit/' + ${geoobject.id}">Edit</a>
+                <a class="ui button olive button publish" th:if="${is_publisher} and ${!is_published}" th:href="'/website/geo/confirm/' + ${geoobject.id}">Freischalten</a>
             </div>
+            <br/>
             <div id="map"></div>
             <div class="info-area">
                 <div id="angebote" th:if="${angebotsinfos}">
