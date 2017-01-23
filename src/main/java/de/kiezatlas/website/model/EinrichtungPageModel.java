@@ -1,12 +1,15 @@
 package de.kiezatlas.website.model;
 
 import de.deepamehta.core.JSONEnabled;
+import de.deepamehta.core.RelatedTopic;
 import de.deepamehta.core.Topic;
 import de.deepamehta.geomaps.model.GeoCoordinate;
 import java.text.DateFormat;
+import java.util.List;
 import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 
@@ -206,6 +209,14 @@ public class EinrichtungPageModel implements JSONEnabled {
     public void setAssignedUsername(String username) {
         try {
             json.put("username", username);
+        } catch (JSONException ex) {
+            log.log(Level.SEVERE, null, ex);
+        }
+    }
+
+    public void setComments(List<RelatedTopic> comments) {
+        try {
+            json.put("comments", comments);
         } catch (JSONException ex) {
             log.log(Level.SEVERE, null, ex);
         }
@@ -430,6 +441,15 @@ public class EinrichtungPageModel implements JSONEnabled {
         } catch (JSONException ex) {
             log.log(Level.FINE, "Einrichtung has no Username (Id: " + getId() + ")", ex);
             return "";
+        }
+    }
+
+    public JSONArray getComments() {
+        try {
+            return json.getJSONArray("comments");
+        } catch (JSONException ex) {
+            log.log(Level.SEVERE, null, ex);
+            return new JSONArray();
         }
     }
 

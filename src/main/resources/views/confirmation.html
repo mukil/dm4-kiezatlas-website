@@ -8,83 +8,72 @@
         <link rel="stylesheet" href="/de.kiezatlas/style/kiezatlas.css"/>
         <link rel="stylesheet" href="/de.kiezatlas.website/css/sitestyle.css"/>
 
+        <script src="/de.kiezatlas.website/dist/vendor/jquery-1.9.1.min.js"></script>
+        <script src="/de.kiezatlas.website/css/semantic-ui/2.2/sidebar.min.js"></script>
+
         <script type="text/javascript" th:inline="javascript">
         /*<![CDATA[*/
+            var $sidebarUi = undefined
             // App initialization
-            window.onload = function() {
-                console.log("hello admin")
+            $(document).ready(function(e) {
+                $sidebarUi = $('.ui.sidebar').sidebar('setting', 'dimPage', false)
+                console.log("hello publisher")
+            })
+
+            function refresh_confirmation_list() {
+                var selection = document.getElementById("districts")
+                console.log("Should reload confirmation list with district filter...", selection)
             }
         /*]]>*/
         </script>
+        <meta th:replace="fragments/tracker" />
     </head>
     <body class="kiezatlas confirm">
 
         <div class="top-menu" th:include="fragments/navigation :: top (publisher=${is_publisher})"></div>
 
-        <div id="header">
-            <p th:if="${is_publisher}">Hier findest Du eine Auflistung neu eingetragener Einrichtungsdatens&auml;tze zum freischalten.</p>
-            <p th:if="${not is_publisher}"><b>Sorry!</b><br/>Sie haben aktuell nicht die n&ouml;tigen Berechtigungen um neue Einrichtungen im Kiezatlas freizuschalten.</p>
-        </div>
+        <div class="ui vertical left menu sidebar" th:include="fragments/navigation :: vertical (publisher=${is_publisher})"></div>
 
-        <!-- Details Area -->
-        <div th:if="${is_publisher}">
-            <div class="commands">
-                <!-- a href="#confirm">Eintrag best&auml;tigen</a-->
-                <!--a href="#zuordnen">Website zuordnen</a-->
+        <div class="pusher">
+
+            <div id="header">
+                <p th:if="${is_publisher}">Hier findest Du eine Auflistung neu eingetragener Einrichtungsdatens&auml;tze zum freischalten.</p>
+                <p th:if="${not is_publisher}"><b>Sorry!</b><br/>Sie haben aktuell nicht die n&ouml;tigen Berechtigungen um neue Einrichtungen im Kiezatlas freizuschalten.</p>
             </div>
-            <div id="listing">
-                <ul class="soziale-einrichtungen">
-                    <li th:each="geoobject : ${geoobjects}">
-                        <div class="list-item">
-                            <h3 th:text="${geoobject.name}"></h3>
-                            <p>
-                                Eingepflegt von <span th:text="${geoobject.assignedUsername}"></span> am <span th:text="${geoobject.lastModified}"></span>
-                            </p>
-                            <!--select>
-                                <option th:each="site : ${websites}" th:text="${site.simpleValue}" th:value="${site.id}"></option>
-                            </select-->
-                            <a class="read-more" th:href="'/website/geo/' + ${geoobject.id}">Link zum Eintrag</a>
-                        </div>
-                    </li>
-                </ul>
+
+            <!-- Details Area -->
+            <div th:if="${is_publisher}">
+                <div class="commands">
+                    <!-- a href="#confirm">Eintrag best&auml;tigen</a-->
+                    <!--a href="#zuordnen">Website zuordnen</a-->
+                    <select id="districts" onchange="refresh_confirmation_list()">
+                        <option th:each="district: ${userDistricts}" value="${district.id}" th:text="${district.simpleValue}">
+                        </option>
+                    </select>
+                </div>
+                <div id="listing">
+                    <ul class="soziale-einrichtungen">
+                        <li th:each="geoobject : ${geoobjects}">
+                            <div class="list-item">
+                                <h3 th:text="${geoobject.name}"></h3>
+                                <p>
+                                    Eingepflegt von <span th:text="${geoobject.assignedUsername}"></span> am <span th:text="${geoobject.lastModified}"></span>
+                                </p>
+                                <!--select>
+                                    <option th:each="site : ${websites}" th:text="${site.simpleValue}" th:value="${site.id}"></option>
+                                </select-->
+                                <a class="read-more" th:href="'/website/geo/' + ${geoobject.id}">Link zum Eintrag</a>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
             </div>
+
         </div>
 
-        <!-- Kiezatlas Standard Website section -->
-        <div id="pages">
-            <ul>
-                <li><a href="/aktuelles">Aktuelles</a></li>
-                <li><a href="/projektbeschreibung">Projektbeschreibung</a></li>
-                <li><a href="/dies-das">Dies und Das</a></li>
-                <li><a href="/weitere-atlanten">Weitere Atlanten</a></li>
-                <li><a href="http://pax.spinnenwerk.de/~kiezatlas/index.php?id=6">Impressum</a></li>
-                <li><a href="/datenschutzhinweise">Datenschutzhinweise</a></li>
-                <li><a href="/api-documentation">API</a></li>
-                <li><a href="/open-source">Open Source</a></li>
-                <li><a href="/links">Links</a></li>
-            </ul>
-            <p></p>
-        </div>
+        <p>&nbsp;</p>
 
-        <div id="bottom">
-            <img src="/de.kiezatlas.website/images/kiezatlas2-logo.png" width="150" />
-        </div>
-
-        <!-- Piwik
-        <script type="text/javascript">
-        var pkBaseURL = "//stats.infokitchen.net/";
-        document.write(unescape("%3Cscript src='" + pkBaseURL + "piwik.js' type='text/javascript'%3E%3C/script%3E"));
-        </script><script type="text/javascript">
-        try {
-        var piwikTracker = Piwik.getTracker(pkBaseURL + "piwik.php", 2);
-        piwikTracker.trackPageView();
-        piwikTracker.enableLinkTracking();
-        } catch( err ) {}
-        </script>
-        <noscript>
-            <img th:src="@{https://stats.infokitchen.net/piwik.php(idsite=2,rec=1,action_name='Kiezatlas+2+Info')}" style="border:0" alt="" />
-        </noscript>
-        End Piwik Tracking Code -->
+        <div class="footer" th:include="fragments/navigation :: footer-links (publisher=false)"></div>
 
     </body>
 </html>

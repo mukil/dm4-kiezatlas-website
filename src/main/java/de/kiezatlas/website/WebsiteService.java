@@ -61,7 +61,28 @@ public interface WebsiteService {
 
     /**
      * Searching in four child topic types of geo object, returning topics of type "ka2.geo_object".
+     * @param searchTerm    User given phrase with one or many search term/s
+     * @param doSplitWildcards  flag to append a wildcard to each search term
+     * @param doWildcard    flag to append a wildcard to the given phrase
+     * @param doExact   flag to encode the search phrase in quotations
+     * @return 
      */
-    List<Topic> searchFulltextInGeoObjectChilds(String searchTerm, boolean doSplitWildcards, boolean doWildcard, boolean orFuzzy);
+    List<Topic> searchFulltextInGeoObjectChilds(String searchTerm, boolean doSplitWildcards,
+            boolean doWildcard, boolean doExact);
+
+    /**
+     * 
+     * @param topicId An ID of a Kiezatlas 1 (id starts with "t-") oder Kiezatlas 2 (id is a long) topic.
+     * @return 
+     */
+    Topic getGeoObjectById(String topicId);
+
+    /**
+     * 
+     * @param topicId   An ID of a Kiezatlas 1 (id starts with "t-") oder Kiezatlas 2 (id is a long) topic.
+     * @param siteId    An ID of a Kiezatlas Website Topic with facets.
+     * @return 
+     */
+    Topic getFacettedGeoObjectTopic(String topicId, long siteId);
 
 }

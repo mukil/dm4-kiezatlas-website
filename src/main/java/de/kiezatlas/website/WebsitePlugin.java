@@ -81,6 +81,7 @@ import org.deepamehta.plugins.signup.service.SignupPluginService;
 import de.kiezatlas.angebote.AssignedAngebotListener;
 import de.kiezatlas.angebote.ContactAnbieterListener;
 import de.kiezatlas.angebote.RemovedAngebotListener;
+import de.kiezatlas.comments.CommentsService;
 
 /**
  * The module bundling the Kiezatlas 2 Website.<br/>
@@ -109,6 +110,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     @Inject private KiezatlasService kiezatlas;
     @Inject private WebpageService webpages;
     @Inject private AngebotService angebote;
+    @Inject private CommentsService comments;
     @Inject private SignupPluginService signup;
 
     // Application Cache of District Overview Resultsets
@@ -506,19 +508,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     @Path("/geo/{topicId}")
     @Produces(MediaType.TEXT_HTML)
     public Viewable getGeoObjectDetailsPage(@PathParam("topicId") String topicId) {
-        Topic geoObject = null;
-        if (topicId.startsWith("t-")) {
-            geoObject = dm4.getTopicByUri("de.kiezatlas.topic." + topicId);
-        } else {
-            String username = accesscl.getUsername();
-            boolean readOp = dm4.getAccessControl().hasPermission(accesscl.getUsername(), Operation.READ, Long.parseLong(topicId));
-            if (readOp) {
-                geoObject = dm4.getTopic(Long.parseLong(topicId));
-            } else {
-                log.warning("Read permission for " + username + " on topicId=" + topicId + ", allowed=" + readOp);
-                return getUnauthorizedPage("Sie haben aktuell nicht die Berechtigung diesen Datensatz zu sehen");
-            }
-        }
+        Topic geoObject = getGeoObjectById(topicId);
         return (geoObject != null) ? getWebsiteGeoObjectPage(geoObject.getId()) : getNotFoundPage();
     }
 
@@ -544,20 +534,49 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         return geoDetailsView;
     }
 
+    @Override
+    public Topic getGeoObjectById(String topicId) {
+        Topic geoObject = null;
+        try {
+            if (topicId.startsWith("t-")) {
+                geoObject = dm4.getTopicByUri("de.kiezatlas.topic." + topicId);
+            } else {
+                String username = accesscl.getUsername();
+                boolean readOp = dm4.getAccessControl().hasPermission(accesscl.getUsername(),
+                        Operation.READ, Long.parseLong(topicId));
+                if (readOp) {
+                    geoObject = dm4.getTopic(Long.parseLong(topicId));
+                } else {
+                    log.warning("Read permission for " + username + " on topicId=" + topicId + ", allowed=" + readOp);
+                }
+            }
+        } catch(RuntimeException e) {
+            log.severe("Website module could not load geo object by id=" + topicId + ", " + e.getLocalizedMessage());
+        }
+        return geoObject;
+    }
+
     /**
      * Fetches topic Kiezatlas Geo Object topic in context of a given site.
      *
      * @param referer
      * @param topicId
+     * @param siteId
      * @return A GeoObject DetailsView as DTO to presend details about a place.
      */
     @GET
     @Path("/geo/{topicId}/facetted/{siteId}")
     @Produces(MediaType.APPLICATION_JSON)
-    public Topic getFacettedGeoObjectTopic(@HeaderParam("Referer") String referer, @PathParam("topicId") long topicId,
+    public Topic getFacettedGeoObjectTopic(@HeaderParam("Referer") String referer, @PathParam("topicId") String topicId,
                                            @PathParam("siteId") long siteId) {
         if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
-        Topic geoObject = dm4.getTopic(topicId);
+        Topic geoObject = getFacettedGeoObjectTopic(topicId, siteId);
+        return geoObject;
+    }
+
+    @Override
+    public Topic getFacettedGeoObjectTopic(String topicId, long siteId) {
+        Topic geoObject = getGeoObjectById(topicId);
         Topic website = dm4.getTopic(siteId);
         if (isGeoObjectTopic(geoObject) && website.getTypeUri().equals("ka2.website")) {
             kiezatlas.enrichWithFacets(geoObject, siteId);
@@ -1218,6 +1237,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
 
     private Viewable getConfirmationPage(List<EinrichtungPageModel> results) {
         prepareGeneralPageData("confirmation");
+        viewData("userDistricts", getUserDistrictTopics());
         viewData("availableLor", getAvailableLORNumberTopics());
         viewData("workspace", getStandardWorkspace());
         viewData("geoobjects", results);
@@ -1496,6 +1516,10 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
             Topic website = facets.getFacet(geoObject, WEBSITE_FACET);
             if (website != null) einrichtung.setWebpage(website.getSimpleValue().toString());
             einrichtung.setId(geoObject.getId());
+            // Comments
+            if (comments == null) log.warning("CommentsService is NULL");
+            List<RelatedTopic> commentTopics = comments.getComments(geoObject.getId());
+            if (commentTopics != null) einrichtung.setComments(commentTopics);
         } catch (Exception ex) {
             throw new RuntimeException("Could not assemble EinrichtungsInfo", ex);
         }
@@ -2082,6 +2106,16 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         List<Topic> results = topics;
         sortAlphabeticalDescending(results);
         return results;
+    }
+
+    private List<RelatedTopic> getUserDistrictTopics() {
+        Topic username = accesscl.getUsernameTopic();
+        if (username != null) {
+            List<RelatedTopic> topics = username.getRelatedTopics("dm4.core.assocation", null, null, BEZIRK);
+            log.info("Loaded related " + topics.size() + " bezirks topic");
+            return topics;
+        }
+        return null;
     }
 
     private List<? extends Topic> sortAlphabeticalDescending(List<? extends Topic> topics) {

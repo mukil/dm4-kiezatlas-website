@@ -39,16 +39,6 @@
                         </button>
                     </div>
                 </div>
-                <div th:if="${is_publisher}" class="ui simple dropdown item">
-                    <i class="setting icon"></i>
-                    <i class="dropdown icon"></i>
-                    <div class="menu">
-                        <a th:class="${#strings.contains(template, 'confirmation')} ? 'active item' : 'item'"
-                           href="/website/geo/freischalten/">Freischalten</a>
-                        <!-- a href="/site/administration/" class="item">Listenansicht</a-->
-                        <!--a href="/website/sites/" class="item">Sites</a-->
-                    </div>
-                </div>
             </div>
         </div>
     </div>

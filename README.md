@@ -1,6 +1,6 @@
 
-Kiezatlas Website
-#################
+DeepaMehta 4 Kiezatlas - Website
+================================
 
 This DeepaMehta 4 Plugin is the software module for ship- and development of the rewritten website to be hosted at www.kiezatlas.de. 
 
@@ -10,6 +10,7 @@ It builds on [DeepaMehta 4](https://github.com/jri/deepamehta) (Apache Lucene, N
  * [dm4-kiezatlas](http://github.com/mukil/dm4-kiezatlas) module
  * [dm4-kiezatlas-etl](http://github.com/mukil/dm4-kiezatlas-etl) module
  * [dm4-kiezatlas-angebote](http://github.com/mukil/dm4-kiezatlas-angebote) module
+ * [dm4-kiezatlas-comments](http://github.com/mukil/dm4-kiezatlas-comments) module
  * [dm4-geospatial](http://github.com/mukil/dm4-geospatial) module
  * [dm4-images](http://github.com/mukil/dm4-images) module
  * [dm4-webpages](http://github.com/mukil/dm4-webpages) module
@@ -49,6 +50,10 @@ mvn clean package
 
 Grunt here is used to concat and minify some of the javascript sources as well as our custom selection of semantic-ui css components. Maven compiles the java sources and builds the plugin as an OSGi bundle.
 
+License
+-------
+
+Thise source code is licensed under the GNU GPL 3.0. It comes with no warranty.
 
 Version History
 ---------------

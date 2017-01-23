@@ -10,12 +10,13 @@
 
         <script src="/de.kiezatlas.website/dist/vendor/jquery-1.9.1.min.js"></script>
         <script src="/de.kiezatlas.website/vendor/leaflet/leaflet.js"></script>
-        <script src="/de.kiezatlas.website/dist/vendor/dm4-webclient-utils.min.js"></script>
+        <script src="/de.kiezatlas.website/css/semantic-ui/2.2/sidebar.min.js"></script>
 
         <script type="text/javascript" th:inline="javascript">
         /*<![CDATA[*/
             // App initialization
-            window.onload = function() {
+            $(document).ready(function(e) {
+                $sidebarUi = $('.ui.sidebar').sidebar('setting', 'dimPage', false)
                 var latitude = /*[[${geoobject.latitude}]]*/ undefined;
                 var longitude = /*[[${geoobject.longitude}]]*/ undefined;
                 var lCoordinate = L.latLng(latitude, longitude)
@@ -29,7 +30,7 @@
                 L.circleMarker(lCoordinate, {
                     weight: 3, opacity: 0.6, fillColor: "#a9a9a9", fillOpacity: 0.2, color: "#8f1414",
                 }).addTo(map)
-            }
+            })
 
             function logout() {
                 restc.logout()
@@ -43,94 +44,99 @@
 
         <div class="top-menu" th:include="fragments/navigation :: top (publisher=${is_publisher})"></div>
 
-        <div id="header">
-            <div class="welcome">
-            </div>
-        </div>
+        <div class="ui vertical left menu sidebar" th:include="fragments/navigation :: vertical (publisher=${is_publisher})"></div>
 
-        <!-- ### Stellen Sie bitte vor Neueintraung '
-            + '&uuml;ber eine Umkreis- oder Volltextsuche im <a href="/" target="_blank">Gesamtstadtplan</a> sicher das wir diesen Ort wirklich '
-        + 'noch nicht im Kiezatlas eingetragen haben.<br/><br/>Vielen Dank f&uuml;r Ihre Mithilfe! -->
+        <div class="pusher">
 
-        <!-- Details Area -->
-        <div id="detail-area" th:class="${angebotsinfos} ? 'angebotsinfos'">
-            <div class="commands">
-                <p th:if="${!#strings.isEmpty(message)}" th:text="${message}"></p>
-                <a class="ui button olive edit" th:if="${authenticated} and ${editable}" th:href="'/website/geo/edit/' + ${geoobject.id}">Edit</a>
-                <a class="ui button olive button publish" th:if="${is_publisher} and ${!is_published}" th:href="'/website/geo/confirm/' + ${geoobject.id}">Freischalten</a>
+            <div id="header">
+                <div class="welcome">
+                </div>
             </div>
-            <div id="map"></div>
-            <div class="info-area">
-                <div id="angebote" th:if="${angebotsinfos}">
-                    <!--h3 class="label">Aktuelle Angebote dieser Einrichtung</h3-->
-                    <div class="assigned-offers" th:each="angebotsinfo : ${angebotsinfos}">
-                        <h3 th:text="${angebotsinfo.angebotsName}">Name des Angebots</h3>
-                        <!--div th:utext="${angebotsinfo.description}"></div-->
-                        <div th:if="${!#strings.isEmpty(angebotsinfo.additionalInfo)}"><span th:utext="${angebotsinfo.additionalInfo}"></span></div>
-                        <div th:if="${!#strings.isEmpty(angebotsinfo.additionalContact)}"><span th:text="${angebotsinfo.additionalContact}"></span></div>
-                        <p>
-                            <span class="italic" th:text="${angebotsinfo.startDate} + ' &ndash; ' + ${angebotsinfo.endDate}">,</span>
-                            <a class="read-more" th:href="'/angebote/' + ${angebotsinfo.angebotsId}">weitere Infos</a>
+
+            <!-- ### Stellen Sie bitte vor Neueintraung '
+                + '&uuml;ber eine Umkreis- oder Volltextsuche im <a href="/" target="_blank">Gesamtstadtplan</a> sicher das wir diesen Ort wirklich '
+            + 'noch nicht im Kiezatlas eingetragen haben.<br/><br/>Vielen Dank f&uuml;r Ihre Mithilfe! -->
+
+            <!-- Details Area -->
+            <div id="detail-area" th:class="${angebotsinfos} ? 'angebotsinfos'">
+                <div class="commands">
+                    <p th:if="${!#strings.isEmpty(message)}" th:text="${message}"></p>
+                    <a class="ui button olive edit" th:if="${authenticated} and ${editable}" th:href="'/website/geo/edit/' + ${geoobject.id}">Edit</a>
+                    <a class="ui button olive button publish" th:if="${is_publisher} and ${!is_published}" th:href="'/website/geo/confirm/' + ${geoobject.id}">Freischalten</a>
+                </div>
+                <div id="map"></div>
+                <div class="info-area">
+                    <div id="angebote" th:if="${angebotsinfos}">
+                        <!--h3 class="label">Aktuelle Angebote dieser Einrichtung</h3-->
+                        <div class="assigned-offers" th:each="angebotsinfo : ${angebotsinfos}">
+                            <h3 th:text="${angebotsinfo.angebotsName}">Name des Angebots</h3>
+                            <!--div th:utext="${angebotsinfo.description}"></div-->
+                            <div th:if="${!#strings.isEmpty(angebotsinfo.additionalInfo)}"><span th:utext="${angebotsinfo.additionalInfo}"></span></div>
+                            <div th:if="${!#strings.isEmpty(angebotsinfo.additionalContact)}"><span th:text="${angebotsinfo.additionalContact}"></span></div>
+                            <p>
+                                <span class="italic" th:text="${angebotsinfo.startDate} + ' &ndash; ' + ${angebotsinfo.endDate}">,</span>
+                                <a class="read-more" th:href="'/angebote/' + ${angebotsinfo.angebotsId}">weitere Infos</a>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="infos">
+                        <h3 th:text='${geoobject.name}'>Name</h3>
+                        <a class="fahrinfo-link"
+                           th:href="@{https://fahrinfo.bvg.de/Fahrinfo/bin/query.bin/dn(Z=${geoobject.address},REQ0JourneyStopsZA1=2,start=1,pk_campaign='kiezatlas.de')}">
+                            <img src="/de.kiezatlas.website/images/fahrinfo.gif"/>
+                        </a>
+                        <p class="anschrift" th:if="${!#strings.isEmpty(geoobject.address)}">
+                            <span th:utext='${geoobject.address}'>Anschrift</span>
                         </p>
+                        <p class="bild" th:if="${!#strings.isEmpty(geoobject.imageUrl)}">
+                            <img th:src='${geoobject.imageUrl}' alt="Abbildung, Foto der Einrichtung" />
+                        </p>
+                        <p class="ansprechpartner" th:if="${!#strings.isEmpty(geoobject.ansprechpartner)}">
+                            <label>AnsprechpartnerIn</label>
+                            <span th:utext='${geoobject.ansprechpartner}'>Ansprechpartner</span>
+                        </p>
+                        <p class="email" th:if="${!#strings.isEmpty(geoobject.email)}">
+                            <label>Email</label>
+                            <span th:utext='${geoobject.email}'>Email</span>
+                        </p>
+                        <p class="telefon" th:if="${!#strings.isEmpty(geoobject.telefon)}">
+                            <label>Telefon</label>
+                            <span th:utext='${geoobject.telefon}'>Telefon</span>
+                        </p>
+                        <p class="fax" th:if="${!#strings.isEmpty(geoobject.fax)}">
+                            <label>Fax</label>
+                            <span th:utext='${geoobject.fax}'>Fax</span>
+                        </p>
+                        <div class="opening" th:if="${!#strings.isEmpty(geoobject.oeffnungszeiten)}">
+                            <label>&Ouml;ffnungszeiten</label>
+                            <span th:utext='${geoobject.oeffnungszeiten}'>&Ouml;ffnungszeiten</span>
+                        </div>
+                        <p class="stichworte" th:if="${!#strings.isEmpty(geoobject.stichworte)}">
+                            <label>Stichworte</label>
+                            <span th:utext='${geoobject.stichworte}'>Stichworte</span>
+                        </p>
+                        <div class="beschreibung" th:if="${!#strings.isEmpty(geoobject.beschreibung)}">
+                            <label>Beschreibung</label>
+                            <span th:utext='${geoobject.beschreibung}'>Beschreibung</span>
+                        </div>
+                        <p class="website" th:if="${!#strings.isEmpty(geoobject.webpage)}">
+                            <label>Website</label>
+                            <a th:href="${geoobject.webpage}" th:text="${geoobject.webpage}">Website</a>
+                        </p>
+                        <p class="sozialraumdaten" th:if="${!#strings.isEmpty(geoobject.lor)}"><a th:href="@{http://sozialraumdaten.kiezatlas.de/seiten/2014/12/(lor=${geoobject.lor})}">Sozialraumdaten</a></p>
+                        <a class="imprint" th:href="${geoobject.imprint}">Impressum</a>
                     </div>
                 </div>
-                <div class="infos">
-                    <h3 th:text='${geoobject.name}'>Name</h3>
-                    <a class="fahrinfo-link"
-                       th:href="@{https://fahrinfo.bvg.de/Fahrinfo/bin/query.bin/dn(Z=${geoobject.address},REQ0JourneyStopsZA1=2,start=1,pk_campaign='kiezatlas.de')}">
-                        <img src="/de.kiezatlas.website/images/fahrinfo.gif"/>
-                    </a>
-                    <p class="anschrift" th:if="${!#strings.isEmpty(geoobject.address)}">
-                        <span th:utext='${geoobject.address}'>Anschrift</span>
-                    </p>
-                    <p class="bild" th:if="${!#strings.isEmpty(geoobject.imageUrl)}">
-                        <img th:src='${geoobject.imageUrl}' alt="Abbildung, Foto der Einrichtung" />
-                    </p>
-                    <p class="ansprechpartner" th:if="${!#strings.isEmpty(geoobject.ansprechpartner)}">
-                        <label>AnsprechpartnerIn</label>
-                        <span th:utext='${geoobject.ansprechpartner}'>Ansprechpartner</span>
-                    </p>
-                    <p class="email" th:if="${!#strings.isEmpty(geoobject.email)}">
-                        <label>Email</label>
-                        <span th:utext='${geoobject.email}'>Email</span>
-                    </p>
-                    <p class="telefon" th:if="${!#strings.isEmpty(geoobject.telefon)}">
-                        <label>Telefon</label>
-                        <span th:utext='${geoobject.telefon}'>Telefon</span>
-                    </p>
-                    <p class="fax" th:if="${!#strings.isEmpty(geoobject.fax)}">
-                        <label>Fax</label>
-                        <span th:utext='${geoobject.fax}'>Fax</span>
-                    </p>
-                    <div class="opening" th:if="${!#strings.isEmpty(geoobject.oeffnungszeiten)}">
-                        <label>&Ouml;ffnungszeiten</label>
-                        <span th:utext='${geoobject.oeffnungszeiten}'>&Ouml;ffnungszeiten</span>
+                <div class="categories">
+                    <div class="related-topics" th:each="audience : ${zielgruppen}">
+                        <span class="thema" th:text='${audience.simpleValue}'>Name der Zielgruppe</span>
                     </div>
-                    <p class="stichworte" th:if="${!#strings.isEmpty(geoobject.stichworte)}">
-                        <label>Stichworte</label>
-                        <span th:utext='${geoobject.stichworte}'>Stichworte</span>
-                    </p>
-                    <div class="beschreibung" th:if="${!#strings.isEmpty(geoobject.beschreibung)}">
-                        <label>Beschreibung</label>
-                        <span th:utext='${geoobject.beschreibung}'>Beschreibung</span>
+                    <div class="related-topics" th:each="service : ${angebote}">
+                        <span class="angebot" th:text='${service.simpleValue}'>Name der Angebote</span>
                     </div>
-                    <p class="website" th:if="${!#strings.isEmpty(geoobject.webpage)}">
-                        <label>Website</label>
-                        <a th:href="${geoobject.webpage}" th:text="${geoobject.webpage}">Website</a>
-                    </p>
-                    <p class="sozialraumdaten" th:if="${!#strings.isEmpty(geoobject.lor)}"><a th:href="@{http://sozialraumdaten.kiezatlas.de/seiten/2014/12/(lor=${geoobject.lor})}">Sozialraumdaten</a></p>
-                    <a class="imprint" th:href="${geoobject.imprint}">Impressum</a>
-                </div>
-            </div>
-            <div class="categories">
-                <div class="related-topics" th:each="audience : ${zielgruppen}">
-                    <span class="thema" th:text='${audience.simpleValue}'>Name der Zielgruppe</span>
-                </div>
-                <div class="related-topics" th:each="service : ${angebote}">
-                    <span class="angebot" th:text='${service.simpleValue}'>Name der Angebote</span>
-                </div>
-                <div class="related-topics" th:each="topic : ${themen}">
-                    <span class="zielgruppe" th:text='${topic.simpleValue}'>Name des Themas</span>
+                    <div class="related-topics" th:each="topic : ${themen}">
+                        <span class="zielgruppe" th:text='${topic.simpleValue}'>Name des Themas</span>
+                    </div>
                 </div>
             </div>
         </div>
