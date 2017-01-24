@@ -22,7 +22,11 @@
 
             function refresh_confirmation_list() {
                 var selection = document.getElementById("districts")
-                console.log("Should reload confirmation list with district filter...", selection)
+                if (selection) {
+                    console.log("Should reload confirmation list with district filter...", selection, selection)
+                    var districtId = document.getElementById("districts").value
+                    window.document.location.href = "/website/geo/freischalten/" + districtId
+                }
             }
         /*]]>*/
         </script>
@@ -46,10 +50,13 @@
                 <div class="commands">
                     <!-- a href="#confirm">Eintrag best&auml;tigen</a-->
                     <!--a href="#zuordnen">Website zuordnen</a-->
-                    <select id="districts" onchange="refresh_confirmation_list()">
-                        <option th:each="district: ${userDistricts}" value="${district.id}" th:text="${district.simpleValue}">
-                        </option>
-                    </select>
+                    <form>
+                        <select id="districts" onchange="refresh_confirmation_list()">
+                            <option th:each="district: ${userDistricts}" th:selected="${districtId == district.id} ? true : false"
+                                    th:value="${district.id}" th:text="${district.simpleValue}">
+                            </option>
+                        </select>
+                    </form>
                 </div>
                 <div id="listing">
                     <ul class="soziale-einrichtungen">

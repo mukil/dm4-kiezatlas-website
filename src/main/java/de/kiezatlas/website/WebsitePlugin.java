@@ -584,26 +584,71 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         return geoObject;
     }
 
-    /** Responds with a Viewable, the administrative confirmation page of the Kiezatlas Website.  */
+    /** Responds with a Viewable, the administrative confirmation page of the Kiezatlas Website.
+     * @return  */
     @GET
     @Path("/geo/freischalten")
     @Produces(MediaType.TEXT_HTML)
     public Viewable getAdministrativeConfirmationPage() {
+        List<RelatedTopic> usersDistricts = getUserDistrictTopics();
+        if (usersDistricts.size() > 0) {
+            Topic initDistrict = usersDistricts.get(0);
+            // unconfirmed geo objects
+            List<EinrichtungPageModel> results = getUnconfirmedEinrichtungenByDistrict(initDistrict);
+            return getConfirmationPage(results);
+            // ResultList<RelatedTopic> availableWebsites = dm4.getTopics("ka2.website", 0);
+            // viewData("websites", availableWebsites);
+        }
+        viewData("name", "Neueintragungen freischalten");
+        viewData("message", "Ihr Account scheint noch nicht als Kiez-Administrator_in eingerichtet zu sein. "
+            + "Wenden Sie sich bitte an die Administrator_innen.");
+        return getSimpleMessagePage();
+    }
+
+    /** Responds with a Viewable, the administrative confirmation page of the Kiezatlas Website.
+     * @return  */
+    @GET
+    @Path("/geo/freischalten/{districtId}")
+    @Produces(MediaType.TEXT_HTML)
+    public Viewable getAdministrativeConfirmationPage(@PathParam("districtId") long districtId) {
+        Topic district = dm4.getTopic(districtId);
+        List<RelatedTopic> usersDistricts = getUserDistrictTopics();
+        for (RelatedTopic userDistrict : usersDistricts) {
+            if (userDistrict.getId() == districtId) {
+                List<EinrichtungPageModel> results = getUnconfirmedEinrichtungenByDistrict(district);
+                viewData("districtId", districtId);
+                return getConfirmationPage(results);
+            }
+        }
+        viewData("name", "Neueintragungen freischalten");
+        viewData("message", "Ihr Account scheint f&uuml;r diesne Bezirk nicht als Kiez-Administrator_in eingerichtet zu sein. "
+            + "Wenden Sie sich bitte an die Administrator_innen.");
+        return getSimpleMessagePage();
+    }
+
+    private List<RelatedTopic> getUnconfirmedGeoObjects() {
         Topic confirmationWs = getPrivilegedWorkspace();
-        if (confirmationWs == null) return getUnauthorizedPage();
-        List<RelatedTopic> unconfirmedGeoObjects = confirmationWs.getRelatedTopics("dm4.core.aggregation", "dm4.core.child",
-            "dm4.core.parent", KiezatlasService.GEO_OBJECT);
-        // ResultList<RelatedTopic> availableWebsites = dm4.getTopics("ka2.website", 0);
-        // viewData("websites", availableWebsites);
-        List<RelatedTopic> sortedGeoObjects = unconfirmedGeoObjects;
+        return confirmationWs.getRelatedTopics("dm4.core.aggregation",
+                "dm4.core.child","dm4.core.parent", KiezatlasService.GEO_OBJECT);
+    }
+
+    private List<EinrichtungPageModel> getUnconfirmedEinrichtungenByDistrict(Topic district) {
         List<EinrichtungPageModel> results = new ArrayList();
+        List<RelatedTopic> unconfirmedGeoObjects = getUnconfirmedGeoObjects();
+        List<RelatedTopic> sortedGeoObjects = unconfirmedGeoObjects;
         sortByModificationDateDescending(sortedGeoObjects);
         for (RelatedTopic geoObject : sortedGeoObjects) {
             EinrichtungPageModel einrichtung = assembleGeneralEinrichtungsInfo(geoObject);
             einrichtung.setAssignedUsername(getFirstUsernameAssigned(geoObject));
-            results.add(einrichtung);
+            if (einrichtung.getBezirkId() == district.getId()) {
+                log.info("Including unconfirmed geo object - In district " + einrichtung.getBezirk());
+                results.add(einrichtung);
+            } else {
+                log.info("Exlcuded unconfirmed geo object - not in district "
+                    + einrichtung.getBezirk() + " ID:" + einrichtung.getBezirkId());
+            }
         }
-        return getConfirmationPage(results);
+        return results;
     }
 
     /**
@@ -1245,7 +1290,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     }
 
     private Viewable getSimpleMessagePage() {
-        prepareGeneralPageData("message");
+        prepareGeneralPageData("page");
         return view("message");
     }
 
@@ -1260,6 +1305,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     private Viewable getNotFoundPage(String message, String backLinkUrl) {
         if (message != null) viewData("message", message);
         if (backLinkUrl != null) viewData("originated", backLinkUrl);
+        prepareGeneralPageData("page");
         return view("404");
     }
 
@@ -1272,6 +1318,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     }
 
     private Viewable getUnauthorizedPage(String message, String backLinkUrl) {
+        prepareGeneralPageData("page");
         if (message != null) viewData("message", message);
         if (backLinkUrl != null) viewData("originated", backLinkUrl);
         return view("401");
@@ -2111,7 +2158,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     private List<RelatedTopic> getUserDistrictTopics() {
         Topic username = accesscl.getUsernameTopic();
         if (username != null) {
-            List<RelatedTopic> topics = username.getRelatedTopics("dm4.core.assocation", null, null, BEZIRK);
+            List<RelatedTopic> topics = username.getRelatedTopics("dm4.core.association", null, null, BEZIRK);
             log.info("Loaded related " + topics.size() + " bezirks topic");
             return topics;
         }
