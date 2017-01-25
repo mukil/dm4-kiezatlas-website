@@ -5,11 +5,13 @@
         <meta charset="UTF-8"/>
         <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 
-        <link rel="stylesheet" href="/de.kiezatlas/style/kiezatlas.css"/>
         <link rel="stylesheet" href="/de.kiezatlas.website/css/sitestyle.css"/>
+        <link rel="stylesheet" href="/de.kiezatlas.website/css/semantic-ui/2.2/components/search.min.css"/>
+        <link rel="stylesheet" href="/de.kiezatlas.website/css/semantic-ui/2.2/components/tab.min.css"/>
 
         <script src="/de.kiezatlas.website/dist/vendor/jquery-1.9.1.min.js"></script>
         <script src="/de.kiezatlas.website/css/semantic-ui/2.2/sidebar.min.js"></script>
+        <script src="/de.kiezatlas.website/css/semantic-ui/2.2/tab.min.js"></script>
 
         <script type="text/javascript" th:inline="javascript">
         /*<![CDATA[*/
@@ -18,6 +20,7 @@
             $(document).ready(function(e) {
                 $sidebarUi = $('.ui.sidebar').sidebar('setting', 'dimPage', false)
                 console.log("hello publisher")
+                $('.tabular.menu .item').tab("change tab", "first")
             })
 
             function refresh_confirmation_list() {
@@ -46,34 +49,60 @@
             </div>
 
             <!-- Details Area -->
-            <div th:if="${is_publisher}">
-                <div class="commands">
-                    <!-- a href="#confirm">Eintrag best&auml;tigen</a-->
-                    <!--a href="#zuordnen">Website zuordnen</a-->
-                    <form>
-                        <select id="districts" onchange="refresh_confirmation_list()">
-                            <option th:each="district: ${userDistricts}" th:selected="${districtId == district.id} ? true : false"
-                                    th:value="${district.id}" th:text="${district.simpleValue}">
-                            </option>
-                        </select>
-                    </form>
+            <div th:if="${is_publisher}" class="ui container">
+                <div class="ui top attached tabular menu">
+                    <div class="active item" data-tab="first">Freischaltung</div>
+                    <div class="item" data-tab="second">Hinweise</div>
                 </div>
-                <div id="listing">
-                    <ul class="soziale-einrichtungen">
-                        <li th:each="geoobject : ${geoobjects}">
-                            <div class="list-item">
-                                <h3 th:text="${geoobject.name}"></h3>
-                                <p>
-                                    Eingepflegt von <span th:text="${geoobject.assignedUsername}"></span> am <span th:text="${geoobject.lastModified}"></span>
-                                </p>
-                                <!--select>
-                                    <option th:each="site : ${websites}" th:text="${site.simpleValue}" th:value="${site.id}"></option>
-                                </select-->
-                                <a class="read-more" th:href="'/website/geo/' + ${geoobject.id}">Link zum Eintrag</a>
-                            </div>
-                        </li>
-                    </ul>
+                <div class="ui bottom attached tab segment" data-tab="first">
+                    <div class="commands">
+                        <!-- a href="#confirm">Eintrag best&auml;tigen</a-->
+                        <!--a href="#zuordnen">Website zuordnen</a-->
+                        <form>
+                            <select id="districts" onchange="refresh_confirmation_list()">
+                                <option th:each="district: ${userDistricts}" th:selected="${districtId == district.id} ? true : false"
+                                        th:value="${district.id}" th:text="${district.simpleValue}">
+                                </option>
+                            </select>
+                        </form>
+                    </div>
+                    <div id="listing">
+                        <ul class="soziale-einrichtungen">
+                            <li th:each="geoobject : ${geoobjects}">
+                                <div class="list-item">
+                                    <h3 th:text="${geoobject.name}"></h3>
+                                    <p>
+                                        Eingepflegt von <span th:text="${geoobject.assignedUsername}"></span> am <span th:text="${geoobject.lastModified}"></span>
+                                    </p>
+                                    <!--select>
+                                        <option th:each="site : ${websites}" th:text="${site.simpleValue}" th:value="${site.id}"></option>
+                                    </select-->
+                                    <a class="read-more" th:href="'/website/geo/' + ${geoobject.id}">Link zum Eintrag</a>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
+
+                <div class="ui bottom attached active tab segment" data-tab="second">
+                    <div id="comment-listing">
+                        <ul class="soziale-einrichtungen">
+                            <li th:each="geoobject : ${geoobjects}">
+                                <div class="list-item">
+                                    <h3 th:text="${geoobject.name}"></h3>
+                                    <p>
+                                        Eingepflegt von <span th:text="${geoobject.assignedUsername}"></span> am <span th:text="${geoobject.lastModified}"></span>
+                                    </p>
+                                    <!--select>
+                                        <option th:each="site : ${websites}" th:text="${site.simpleValue}" th:value="${site.id}"></option>
+                                    </select-->
+                                    <a class="read-more" th:href="'/website/geo/' + ${geoobject.id}">Link zum Eintrag</a>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
             </div>
 
         </div>
