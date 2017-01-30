@@ -698,6 +698,7 @@ form .invalid {
     display: none;
 }
 
+#listing .sites li,
 .citymap #detail-area .entry-card {
     width: 100%; max-width: 100%;
     background-color: #fff;
@@ -1288,6 +1289,11 @@ span.bold {
     margin-top: 5px;
 }
 
+.confirm form {
+    display: inline-block;
+    padding-left: 2px;
+}
+
 #fulltext-do {
     cursor: pointer;
 }
@@ -1394,6 +1400,24 @@ span.bold {
 
 .kiezatlas.topic .commands .publish {
     float: right;
+}
+
+.confirm .commands {
+    margin-left: 1.5em;
+}
+
+.kiezatlas.confirm .comment {
+    margin-left: 5px;
+    margin-top: -5px;
+    z-index: -1;
+}
+
+.confirm .comment,
+.kiezatlas.topic .comment {
+    display: inline-block;
+    background-color: #fff;
+    padding: 1em;
+    margin-top: 0em;
 }
 
 .kiezatlas.topic #map {

@@ -73,11 +73,12 @@
     <div th:if="${is_publisher}" class="item administration">
         <div class="header">Administration</div>
         <div class="menu">
-            <a href="/website/geo/freischalten/" class="item">Neue Orte freischalten</a>
+            <a href="/website/geo/freischalten" class="item">Neue Orte freischalten</a>
             <!--a href="/website/bezirk/edit" class="item">Bezirksseite bearbeiten</a-->
+            <a href="/website/geo/hinweise" class="item">Kommentare einsehen</a>
             <!--a href="/site/administration/" class="item">Listenansicht</a-->
             <!-- Kiezatlas Membership -->
-            <a href="/website/sites/" class="item">Stadtpl&auml;ne bearbeiten</a>
+            <a th:if="${is_site_manager}" href="/website/sites/" class="item">Stadtpl&auml;ne bearbeiten</a>
         </div>
     </div>
 
@@ -191,7 +192,8 @@
             <div class="content">
                 <h3>Administration</h3>
                 <ul class="menu">
-                    <li th:if="${is_publisher}"><a href="/website/geo/freischalten/" class="item">Freischalten</a></li>
+                    <li th:if="${is_publisher}"><a href="/website/geo/freischalten/" class="item">Neue Orte freischalte</a></li>
+                    <li th:if="${is_publisher}"><a href="/website/geo/hinweise" class="item">Kommentare einsehen</a></li>
                     <!--a href="/site/administration/" class="item">Listenansicht</a-->
                     <li th:if="${is_site_manager}"><a href="/website/sites/" class="item">Stadtplan Editor</a></li>
                 </ul>

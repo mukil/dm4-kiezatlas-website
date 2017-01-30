@@ -31,7 +31,7 @@
                 var selection = document.getElementById("districts")
                 if (selection) {
                     var districtId = document.getElementById("districts").value
-                    window.document.location.href = "/website/geo/freischalten/" + districtId
+                    window.document.location.href = "/website/geo/hinweise/" + districtId
                 }
             }
         /*]]>*/
@@ -48,15 +48,15 @@
 
             <div id="header">
                 <p>&nbsp;</p>
-                <h3 th:if="${is_publisher}">Einrichtungsdatens&auml;tze freischalten</h3>
+                <h3 th:if="${is_publisher}">Kommentare an Einrichtungsdatens&auml;tzen</h3>
                 <p th:if="${not is_publisher}"><b>Sorry!</b><br/>Sie haben aktuell nicht die n&ouml;tigen Berechtigungen um neue Einrichtungen im Kiezatlas freizuschalten.</p>
             </div>
 
             <!-- Details Area -->
             <div th:if="${is_publisher}" class="ui container">
-                <div class="commands">
-                    <a class="button basic ui active green" href="/website/geo/freischalten">Neue Orte</a>
-                    <a class="button basic ui" href="/website/geo/hinweise">Hinweise</a>
+                 <div class="commands">
+                    <a class="button basic ui" href="/website/geo/freischalten">Neue Orte</a>
+                    <a class="button basic green ui active" href="/website/geo/hinweise">Hinweise</a>
                     <!--div class="item" data-tab="third">Newsbereich</div-->
                     <form>
                         <label>im Bezirk</label>
@@ -80,10 +80,13 @@
                                 </select-->
                                 <a class="read-more" th:href="'/website/geo/' + ${geoobject.id}">Link zum Eintrag</a>
                             </div>
+                            <p class="comment" th:each="comment : ${geoobject.comments}">
+                                <span class="contact" th:if="${comment.contact}" th:text="${comment.contact} + ':'"></span>
+                                <span class="message" th:text="${comment.message}"></span>
+                            </p>
                         </li>
                     </ul>
                 </div>
-
             </div>
 
         </div>

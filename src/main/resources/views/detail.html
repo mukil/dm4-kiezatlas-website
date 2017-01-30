@@ -65,6 +65,10 @@
                     <a class="ui button olive edit" th:if="${authenticated} and ${editable}" th:href="'/website/geo/edit/' + ${geoobject.id}">Edit</a>
                     <a class="ui button olive button publish" th:if="${is_publisher} and ${!is_published}" th:href="'/website/geo/confirm/' + ${geoobject.id}">Freischalten</a>
                 </div>
+                <p class="comment" th:each="comment : ${geoobject.comments}">
+                    <span class="message" th:text="${comment.message}"></span>
+                    <span class="contact" th:if="${comment.contact}" th:text="'(' + ${comment.contact} + ')'"></span>
+                </p>
                 <div id="map"></div>
                 <div class="info-area">
                     <div id="angebote" th:if="${angebotsinfos}">

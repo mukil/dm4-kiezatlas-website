@@ -3,8 +3,10 @@ package de.kiezatlas.website.model;
 import de.deepamehta.core.JSONEnabled;
 import de.deepamehta.core.RelatedTopic;
 import de.deepamehta.core.Topic;
+import de.deepamehta.core.util.DeepaMehtaUtils;
 import de.deepamehta.geomaps.model.GeoCoordinate;
 import java.text.DateFormat;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.logging.Level;
@@ -214,9 +216,9 @@ public class EinrichtungPageModel implements JSONEnabled {
         }
     }
 
-    public void setComments(List<RelatedTopic> comments) {
+    public void setComments(List<CommentModel> comments) {
         try {
-            json.put("comments", comments);
+            json.put("comments", DeepaMehtaUtils.toJSONArray(comments));
         } catch (JSONException ex) {
             log.log(Level.SEVERE, null, ex);
         }
@@ -444,12 +446,19 @@ public class EinrichtungPageModel implements JSONEnabled {
         }
     }
 
-    public JSONArray getComments() {
+    public List<CommentModel> getComments() {
+        List<CommentModel> results = new ArrayList<CommentModel>();
         try {
-            return json.getJSONArray("comments");
+            JSONArray comments = json.getJSONArray("comments");
+            for (int i = 0; i < comments.length(); i++) {
+                JSONObject obj = comments.getJSONObject(i);
+                CommentModel comment = new CommentModel(obj.getString("message"), obj.getString("contact"));
+                results.add(comment);
+            }
+            return results;
         } catch (JSONException ex) {
             log.log(Level.SEVERE, null, ex);
-            return new JSONArray();
+            return results;
         }
     }
 

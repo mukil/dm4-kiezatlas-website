@@ -20,7 +20,7 @@ var sites = {
                     webAlias = site.childs['ka2.website.web_alias'].value
                 }
                 if (webAlias.indexOf("familienportal") === -1) {
-                    var $html = $("<li><h3>"+ site.value + ", Web Alias <span class=\"webalias\">/"+webAlias+"</span></h3>"
+                    var $html = $("<li class=\"concrete-assignment\"><h3>"+ site.value + ", Web Alias <span class=\"webalias\">/"+webAlias+"</span></h3>"
                         + "<button class=\"ui button basic small\" onclick=\"sites.go_to_site_edit("+site.id+")\">Bearbeiten</button>"
                         + "<button class=\"ui button basic small\" onclick=\"sites.go_to_site('"+webAlias+"')\" title=\""+site.value+" aufrufen\">Stadtplan aufrufen</a>"
                         + "</li>")
