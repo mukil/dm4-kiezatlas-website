@@ -457,7 +457,7 @@ public class EinrichtungPageModel implements JSONEnabled {
             }
             return results;
         } catch (JSONException ex) {
-            log.log(Level.SEVERE, null, ex);
+            // log.info("Displaying an Einrichtung without any comments...");
             return results;
         }
     }
