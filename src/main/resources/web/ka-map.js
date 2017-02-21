@@ -2,25 +2,24 @@
 /** --- ka-map.js --- **/
 
 var mapping = {
-    "zoomDetailLevel": 15,
-    "zoomStreetLevel": 14,
-    "zoomKiezLevel": 13,
-    "zoomDistrictLevel" : 12,
-    "zoomCityLevel": 11,
-    "fixedMarkerRadius": false,
-    "circleMarkerRadius": 5,
-    "circleMarkerSelectedRadius": 12,
-    "circleSearchRadius": 750,
-    "circleSearchControl": undefined,
-    "circleSearchActive": true,
-    "circleSearchLocked": true,
-    "currentLocation": { name: "Tucholskystraße, 10117 Berlin", coordinate: new L.latLng(52.524256, 13.392192) },
-    "maxBounds": L.latLngBounds(L.latLng(52.234807, 12.976094), L.latLng(52.843370, 13.958482)),
-    "markerGroup": undefined,
-    "controlGroup": L.featureGroup(),
-    "useMarkerClusterGroup" : false,
-    "districtGroup": L.featureGroup(), // Not in use,
-    "fitBoundsPadding": 30
+    "zoom_detail": 15,
+    "zoom_street": 14,
+    "zoom_kiez": 13,
+    "zoom_district" : 12,
+    "zoom_city": 11,
+    "marker_radius_fixed": false,
+    "marker_radius": 5,
+    "marker_radius_selected": 15, // max
+    "circle_search_radius": 750,
+    "circle_search_control": undefined,
+    "circle_query": true,
+    "circle_locked": true,
+    "current_location": { name: "Tucholskystraße, 10117 Berlin", coordinate: new L.latLng(52.524256, 13.392192) },
+    "max_bounds": L.latLngBounds(L.latLng(52.234807, 12.976094), L.latLng(52.843370, 13.958482)),
+    "marker_group": undefined,
+    "control_group": L.featureGroup(),
+    "do_cluster_marker" : false,
+    "fit_bounds_padding": 30
 }
 
 var leafletMap = (function($, L) {
@@ -33,7 +32,7 @@ var leafletMap = (function($, L) {
         // console.log("Set up Leaflet Map #"+ elementId + ", mouseWheelZoom", mouseWheelZoom)
         map.map = new L.Map(elementId, {
             dragging: true, touchZoom: true, scrollWheelZoom: (!mouseWheelZoom) ? false : mouseWheelZoom, doubleClickZoom: true,
-            zoomControl: false, minZoom: 9, maxBounds: mapping.maxBounds,
+            zoomControl: false, minZoom: 9, max_bounds: mapping.max_bounds,
         })
         map.zoom = L.control.zoom({ position: "topright" })
         map.zoom.addTo(map.map)
@@ -48,26 +47,26 @@ var leafletMap = (function($, L) {
         map.map.on('dragend', map.on_map_drag_end)
         map.map.on('drag', map.on_map_drag)
         //
-        mapping.controlGroup.addTo(leafletMap.map)
-        map.map.setView(map.getCurrentLocationCoordinate(), mapping.zoomKiezLevel)
+        mapping.control_group.addTo(map.map)
+        map.map.setView(map.get_current_location_coords(), mapping.zoom_kiez)
         //
         map.map.on('zoomend', function(e) {
-            if (mapping.fixedMarkerRadius) return;
+            if (mapping.marker_radius_fixed) return;
             if (map.map.getZoom() <= 12) {
-                mapping.circleMarkerRadius = 3
-                mapping.circleMarkerSelectedRadius = 5
+                mapping.marker_radius = 3
+                mapping.marker_radius_selected = 7
             } else if (map.map.getZoom() === 13) {
-                mapping.circleMarkerRadius = 5
-                mapping.circleMarkerSelectedRadius = 7
+                mapping.marker_radius = 5
+                mapping.marker_radius_selected = 9
             } else if (map.map.getZoom() === 14) {
-                mapping.circleMarkerRadius = 7
-                mapping.circleMarkerSelectedRadius = 9
+                mapping.marker_radius = 7
+                mapping.marker_radius_selected = 11
             } else if (map.map.getZoom() === 15) {
-                mapping.circleMarkerRadius = 8
-                mapping.circleMarkerSelectedRadius = 10
+                mapping.marker_radius = 8
+                mapping.marker_radius_selected = 13
             } else if (map.map.getZoom() >= 16) {
-                mapping.circleMarkerRadius = 10
-                mapping.circleMarkerSelectedRadius = 12
+                mapping.marker_radius = 10
+                mapping.marker_radius_selected = 15
             }
             map.update_geo_object_marker_radius()
         })
@@ -80,45 +79,47 @@ var leafletMap = (function($, L) {
         map.map.invalidateSize()
     }
 
+    map.set_zoom = function(obj) {
+        map.map.setZoom(obj)
+    }
+
     map.clear_marker = function() {
         // TODO revise this (returns straight for e.g. init via districts page)
-        if (!mapping.markerGroup) return;
+        if (!mapping.marker_group) return;
         // clear complete marker group, e.g. for fulltext_search
-        mapping.markerGroup.eachLayer(function (marker){
-            leafletMap.map.removeLayer(marker)
+        mapping.marker_group.eachLayer(function (marker){
+            map.map.removeLayer(marker)
         })
-        map.map.removeLayer(mapping.markerGroup)
-        mapping.markerGroup = undefined
+        map.map.removeLayer(mapping.marker_group)
+        mapping.marker_group = undefined
     }
 
     map.render_circle_search_control = function(fitBounds) {
-        if (mapping.circleSearchControl) {
-            mapping.controlGroup.removeLayer(mapping.circleSearchControl)
+        if (mapping.circle_search_control) {
+            mapping.control_group.removeLayer(mapping.circle_search_control)
         }
-        if (mapping.circleSearchActive) {
-            mapping.circleSearchControl = new L.CircleEditor(
-                map.getCurrentLocationCoordinate(), mapping.circleSearchRadius, {
+        if (map.is_circle_query_active()) {
+            mapping.circle_search_control = new L.CircleEditor(
+                map.get_current_location_coords(), mapping.circle_search_radius, {
                 color: colors.ka_gold, weight: 3, opacity: .4, extendedIconClass: "extend-icon-medium",
                 className: "leaflet-search-control", clickable: false, zIndexOffset: 101, fillColor: colors.ka_gold
             })
-            mapping.controlGroup.addLayer(mapping.circleSearchControl)
-            mapping.circleSearchControl.on('edit', function(event) {
+            mapping.control_group.addLayer(mapping.circle_search_control)
+            mapping.circle_search_control.on('edit', function(event) {
                 var new_radius = event.target._mRadius
-                map.setCurrentLocationCoordinate(event.target._latlng)
+                map.set_current_location_coords(event.target._latlng)
                 map.fire_circle_edit(new_radius)
             })
             if (fitBounds) {
-                leafletMap.map.fitBounds(mapping.controlGroup.getBounds(), { padding: [30, 30] })
-                /** leafletMap.map.setView(
-                    mapping.controlGroup.getBounds().getCenter(), mapping.zoomStreetLevel) */
+                map.map.fitBounds(mapping.control_group.getBounds(), { padding: [30, 30] })
             }
-            if (mapping.circleSearchLocked) $('.leaflet-editing-icon').hide()
+            if (map.is_circle_control_fixed()) $('.leaflet-editing-icon').hide()
         }
     }
 
     map.remove_circle_search_control = function() {
-        if (mapping.circleSearchControl) {
-            mapping.controlGroup.removeLayer(mapping.circleSearchControl)
+        if (mapping.circle_search_control) {
+            mapping.control_group.removeLayer(mapping.circle_search_control)
         }
     }
     
@@ -126,7 +127,7 @@ var leafletMap = (function($, L) {
         // Note: Here we decide to not render any duplicates
         var list_of_markers = []
         // pre-process results
-        var elements = map.getItems()
+        var elements = map.get_items()
         for (var el in elements) {
             var geo_object = elements[el]
             if (geo_object === "null" || !geo_object) {
@@ -142,8 +143,8 @@ var leafletMap = (function($, L) {
             }
         }
         // merge: maintain also all previously added markers
-        if (mapping.markerGroup) {
-            mapping.markerGroup.eachLayer(function (marker) {
+        if (mapping.marker_group) {
+            mapping.marker_group.eachLayer(function (marker) {
                 // preventing circle marker duplicates (during merge of result sets)
                 if (!map.exist_marker_in_listing(marker.options.id, list_of_markers)) {
                     list_of_markers.push(marker)
@@ -151,29 +152,28 @@ var leafletMap = (function($, L) {
             })
         }
         // ### clear all pre-existing marker from map
-        leafletMap.clear_marker()
-        // build up: create new markerGroup
-        if (mapping.useMarkerClusterGroup) {
-            mapping.markerGroup = L.markerClusterGroup({
+        map.clear_marker()
+        // build up: create new marker_group
+        if (mapping.do_cluster_marker) {
+            mapping.marker_group = L.markerClusterGroup({
                 spiderfyOnMaxZoom: true, spiderfyDistanceMultiplier: 2, showCoverageOnHover: false, maxClusterRadius: 60
             })
-            mapping.markerGroup.addLayers(list_of_markers)
-            mapping.markerGroup.on('clusterclick', function(e) {
+            mapping.marker_group.addLayers(list_of_markers)
+            mapping.marker_group.on('clusterclick', function(e) {
                 console.log("Clusterclick", e)
                 // map.select_geo_object_marker(e.target)
             })
         } else {
-            mapping.markerGroup = L.featureGroup(list_of_markers)
+            mapping.marker_group = L.featureGroup(list_of_markers)
         }
         //
         for (var el in list_of_markers) {
             var geoMarker = list_of_markers[el]
-             mapping.markerGroup.addLayer(geoMarker)
+             mapping.marker_group.addLayer(geoMarker)
         }
-        leafletMap.map.addLayer(mapping.markerGroup)
+        map.map.addLayer(mapping.marker_group)
         if (set_view_to_bounds && list_of_markers.length > 0) {
-            // leafletMap.map.setMaxBounds(mapping.markerGroup.getBounds())
-            leafletMap.map.fitBounds(mapping.markerGroup.getBounds(), { padding: [30, 30] } )
+            map.map.fitBounds(mapping.marker_group.getBounds(), { padding: [30, 30] } )
         }
     }
 
@@ -203,7 +203,7 @@ var leafletMap = (function($, L) {
             // 4) Create a circle marker
             var coordinate = L.latLng(result["latitude"], result["longitude"])
             var circle = L.circleMarker(coordinate, map.calculate_default_circle_options(result))
-            circle.setRadius(mapping.circleMarkerRadius)
+            circle.setRadius(mapping.marker_radius)
             circle.on('click', function(e) { map.select_geo_object_marker(e.target) })
             circle.on('mouseover', function(e) { map.fire_marker_mouseover(e) })
             circle.on('mouseout', function(e) { map.fire_marker_mouseout(e) })
@@ -215,26 +215,26 @@ var leafletMap = (function($, L) {
     }
 
     map.update_geo_object_marker_radius = function() {
-        if (mapping.markerGroup) {
-            mapping.markerGroup.eachLayer(function (el) {
+        if (mapping.marker_group) {
+            mapping.marker_group.eachLayer(function (el) {
                 var marker_id = el.options["id"]
                 if (marker_id) {
-                    el.setRadius(mapping.circleMarkerRadius)
+                    el.setRadius(mapping.marker_radius)
                 }
             })
         }
     }
 
     map.highlight_geo_object_marker_by_id = function(topicId, focusOnMap) {
-        mapping.markerGroup.eachLayer(function (el) {
+        mapping.marker_group.eachLayer(function (el) {
             var marker_id = el.options["id"]
             if (marker_id == topicId) {
-                if (!mapping.useMarkerClusterGroup) {
+                if (!mapping.do_cluster_marker) {
                     el.setStyle(map.calculate_selected_circle_options())
                     el.bringToFront()
-                    el.setRadius(mapping.circleMarkerSelectedRadius)
+                    el.setRadius(mapping.marker_radius_selected)
                 }
-                if (focusOnMap) leafletMap.map.setView(el.getLatLng(), mapping.zoomStreetLevel)
+                if (focusOnMap) map.map.setView(el.getLatLng(), mapping.zoom_street)
             } else {
                 var geo_object_view_model = {
                     "name": el.options.name, "bezirksregion_uri": el.options.bezirksregion_uri, "uri": el.options.uri,
@@ -242,14 +242,14 @@ var leafletMap = (function($, L) {
                     "id": marker_id, "address_id": el.options.address_id
                 }
                 el.setStyle(map.calculate_default_circle_options(geo_object_view_model))
-                el.setRadius(mapping.circleMarkerRadius)
+                el.setRadius(mapping.marker_radius)
             }
         })
     }
 
     map.select_geo_object_marker = function(marker) {
         // apply default styles to all the rest
-        mapping.markerGroup.eachLayer(function (el) {
+        mapping.marker_group.eachLayer(function (el) {
             var marker_id = el.options["id"]
             if (marker_id) {
                 var geo_object_view_model = {
@@ -258,14 +258,14 @@ var leafletMap = (function($, L) {
                     "id": marker_id, "address_id": el.options.address_id
                 }
                 el.setStyle(map.calculate_default_circle_options(geo_object_view_model))
-                el.setRadius(mapping.circleMarkerRadius)
+                el.setRadius(mapping.marker_radius)
             }
             dummyObject = el.options
         })
         // highlight selected marker
         marker.setStyle(map.calculate_selected_circle_options())
         marker.bringToFront()
-        marker.setRadius(mapping.circleMarkerSelectedRadius)
+        marker.setRadius(mapping.marker_radius_selected)
         if (marker.options.angebots_id) {
             map.fire_angebot_marker_select(marker)
         } else {
@@ -320,11 +320,23 @@ var leafletMap = (function($, L) {
     }
 
     map.deactivate_circle_control = function() {
-        mapping.circleSearchActive = false
+        mapping.circle_query = false
     }
 
     map.activate_circle_control = function() {
-        mapping.circleSearchActive = true
+        mapping.circle_query = true
+    }
+
+    map.set_circle_control_fixed = function(val) {
+        return mapping.circle_locked = val
+    }
+
+    map.is_circle_control_fixed = function() {
+        return mapping.circle_locked
+    }
+
+    map.is_circle_query_active = function() {
+        return mapping.circle_query
     }
 
     map.scroll_into_view = function(custom_anchor) {
@@ -337,79 +349,87 @@ var leafletMap = (function($, L) {
 
     // --- Mapping Model Operations
 
-    map.setItems = function(itemList) {
+    map.set_items = function(itemList) {
         items = itemList
     }
 
-    map.getItems = function() {
+    map.get_items = function() {
         return items
     }
 
-    map.getControlCircleRadius = function() {
-        if (mapping.circleSearchControl) {
-            return mapping.circleSearchControl.getRadius()
+    map.get_circle_control_radius = function() {
+        if (mapping.circle_search_control) {
+            return mapping.circle_search_control.getRadius()
         }
-        return mapping.circleSearchRadius
+        return mapping.circle_search_radius
     }
 
-    map.getControlCircleBounds = function() {
-        return mapping.circleSearchControl.getBounds()
-    }
-
-    map.setControlCircleRadiusValue = function(meterVal) {
-        if (mapping.circleSearchRadius) {
-            mapping.circleSearchRadius = meterVal
+    map.set_circle_control_radius = function(meterVal) {
+        if (mapping.circle_search_radius) {
+            mapping.circle_search_radius = meterVal
         } else {
             console.warn("Circle Search Control is curerntly INACTIVE")
         }
     }
 
-    map.getCurrentLocation = function() {
-        return mapping.currentLocation
+    map.get_circle_control_bounds = function() {
+        return mapping.circle_search_control.getBounds()
     }
 
-    map.getCurrentLocationName = function() {
-        return mapping.currentLocation.name
+    map.get_map_center = function() {
+        return map.map.getCenter()
     }
 
-    map.getCurrentLocationCoordinate = function() {
-        return mapping.currentLocation.coordinate
+    map.set_map_fit_bounds = function(boundingBox) {
+        return map.map.fitBounds(boundingBox)
     }
 
-    map.getCurrentLocationLatitude = function() {
-        return mapping.currentLocation.coordinate.lat
+    map.get_current_location = function() {
+        return mapping.current_location
     }
 
-    map.getCurrentLocationLongitude = function() {
-        return mapping.currentLocation.coordinate.lng
+    map.get_current_location_name = function() {
+        return mapping.current_location.name
     }
 
-    map.setCurrentLocation = function(obj) {
-        mapping.currentLocation = obj
+    map.get_current_location_coords = function() {
+        return mapping.current_location.coordinate
     }
 
-    map.setMarkerRadius = function(val) {
-        mapping.circleMarkerRadius = val
+    map.get_current_location_lat = function() {
+        return mapping.current_location.coordinate.lat
     }
 
-    map.setFixedMarkerRadius = function(val) {
-        mapping.fixedMarkerRadius = val
+    map.get_current_location_lng = function() {
+        return mapping.current_location.coordinate.lng
     }
 
-    map.setMarkerSelectedRadius = function(val) {
-        mapping.circleMarkerSelectedRadius = val
+    map.set_current_location = function(obj) {
+        mapping.current_location = obj
     }
 
-    map.setCurrentLocationName = function(name) {
-        mapping.currentLocation.name = name
+    map.set_marker_radius = function(val) {
+        mapping.marker_radius = val
     }
 
-    map.setCurrentLocationCoordinate = function(coordinate) {
-        mapping.currentLocation.coordinate = coordinate
+    map.set_marker_fixed_radius = function(val) {
+        mapping.marker_radius_fixed = val
     }
 
-    map.getItemById = function(id) {
-        var elements = map.getItems()
+    map.set_marker_selected_radius = function(val) {
+        mapping.marker_radius_selected = val
+    }
+
+    map.set_current_location_name = function(name) {
+        mapping.current_location.name = name
+    }
+
+    map.set_current_location_coords = function(coordinate) {
+        mapping.current_location.coordinate = coordinate
+    }
+
+    map.get_item_by_id = function(id) {
+        var elements = map.get_items()
         for (var el in elements) {
             var object = elements[el]
             if (object) {
@@ -423,7 +443,7 @@ var leafletMap = (function($, L) {
 
     map.find_all_geo_objects = function(address_id) {
         var results = []
-        mapping.markerGroup.eachLayer(function (el) {
+        mapping.marker_group.eachLayer(function (el) {
             if (el.options.address_id === address_id) results.push(el)
         })
         return results
@@ -504,7 +524,7 @@ var leafletMap = (function($, L) {
 
     map.on_browser_location_found = function(e) {
         map.scroll_into_view()
-        if (!mapping.maxBounds.contains([e.latitude, e.longitude])) {
+        if (!mapping.max_bounds.contains([e.latitude, e.longitude])) {
             handle_locating_error()
         } else {
             map.fire_location_found({"latitude":e.latitude, "longitude": e.longitude})
@@ -517,11 +537,11 @@ var leafletMap = (function($, L) {
     }
 
     function handle_locating_error() {
-        map.setCurrentLocationName('Ihr Standort liegt au&szlig;erhalb von Berlin, '
+        map.set_current_location_name('Ihr Standort liegt au&szlig;erhalb von Berlin, '
             + 'bitte nutzen sie die Umkreissuche oder '
             + '<a href="javascript:kiezatlas.focus_location_input_field()" '+ '>die Texteingabe</a>.')
-        map.map.setView(map.getCurrentLocationCoordinate())
-        map.map.setZoom(mapping.zoomKiezLevel)
+        map.map.setView(map.get_current_location_coords())
+        map.map.setZoom(mapping.zoom_kiez)
         map.fire_location_error('Ihr Standort ist a&uszlig;erhalb von Berlin.')
     }
 

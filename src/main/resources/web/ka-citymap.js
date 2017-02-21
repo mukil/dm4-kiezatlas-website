@@ -40,15 +40,15 @@ var citymap = {
         // Init our map container
         // ### introduce new site configuration options (marker radius/size) with migration
         if (siteAlias.indexOf("stadtteil") !== -1) {
-            leafletMap.setMarkerRadius(10)
-            leafletMap.setMarkerSelectedRadius(15)
-            leafletMap.setFixedMarkerRadius(true)
+            leafletMap.set_marker_radius(10)
+            leafletMap.set_marker_selected_radius(15)
+            leafletMap.set_marker_fixed_radius(true)
         }
         // Load Site Info
         restc.load_website_info(siteAlias, function(siteTopic) {
             // console.log("Load Kiezatlas Website ", siteAlias, siteTopic)
-            kiezatlas.setSiteId(siteTopic.id)
-            kiezatlas.setSiteInfo(siteTopic)
+            kiezatlas.set_site_id(siteTopic.id)
+            kiezatlas.set_site_info(siteTopic)
             kiezatlas.update_document_title(siteTopic.value)
             citymap.render_criteria_menu(siteTopic.criterias)
             // check on markercluster
@@ -72,7 +72,7 @@ var citymap = {
             restc.load_website_geoobjects(siteTopic.id, function(results) {
                 // leafletMap.clear_marker()
                 kiezatlas.hide_spinning_wheel()
-                leafletMap.setItems(results)
+                leafletMap.set_items(results)
                 leafletMap.render_geo_objects(true)
             })
             //
@@ -102,24 +102,22 @@ var citymap = {
         leafletMap.setup(domId, mouseWheelZoom)
         // 
         leafletMap.listen_to('drag', function(e) {
-            if (mapping.circleSearchLocked && !kiezatlas.getFulltextSearchMode()) {
-                leafletMap.setCurrentLocationCoordinate(leafletMap.map.getCenter())
-                leafletMap.setControlCircleRadiusValue(leafletMap.getControlCircleRadius())
+            if (leafletMap.is_circle_control_fixed() && kiezatlas.is_map_query_control()) {
+                leafletMap.set_current_location_coords(leafletMap.get_map_center())
+                leafletMap.set_circle_control_radius(leafletMap.get_circle_control_radius())
                 leafletMap.render_circle_search_control(false)
             }
         })
         leafletMap.listen_to('drag_end', function(e) {
-            console.log("Mapping searchActive", mapping.circleSearchActive, "circleLocked", mapping.circleSearchLocked,
-                "fulltextMode", kiezatlas.getFulltextSearchMode())
             if (e.detail >= 8) {
-                if (mapping.circleSearchActive && mapping.circleSearchLocked && !kiezatlas.getFulltextSearchMode()) {
+                if (leafletMap.is_circle_query_active() && leafletMap.is_circle_control_fixed() && kiezatlas.is_map_query_control()) {
                     kiezatlas.do_circle_search(undefined, undefined)
                     kiezatlas.do_reverse_geocode()
                 }
             }
         })
         leafletMap.listen_to('marker_select', function(e) {
-            // Note: citymap sepcifics to load facetted geo object details
+            // Note: ka-citymap.js only exists because it (here) introduces specifics to load _facetted_ geo object details 
             citymap.clear_details_area()
             citymap.show_selected_details(e.detail)
         })
@@ -133,16 +131,15 @@ var citymap = {
         leafletMap.listen_to('circle_control_edit', function(e) {
             // ### on small screens (here, after dragging) our current center should be the mapcenter (fitBounds..)
             // ### TODO: dont query if given location and given radius "equals" our latest "query settings"
-            kiezatlas.do_circle_search(leafletMap.getCurrentLocationCoordinate(), e.detail)
+            kiezatlas.do_circle_search(leafletMap.get_current_location_coords(), e.detail)
             kiezatlas.do_reverse_geocode()
         })
         leafletMap.listen_to('locating_success', function(e) {
-            leafletMap.setCurrentLocationCoordinate(new L.latLng(e.detail.latitude, e.detail.longitude))
+            leafletMap.set_current_location_coords(new L.latLng(e.detail.latitude, e.detail.longitude))
             leafletMap.activate_circle_control()
             leafletMap.render_circle_search_control()
-            // ### _self.setDistrict(undefined)
-            kiezatlas.do_circle_search(leafletMap.getCurrentLocationCoordinate(), undefined)
-            leafletMap.map.fitBounds(leafletMap.getControlCircleBounds())
+            kiezatlas.do_circle_search(leafletMap.get_current_location_coords(), undefined)
+            leafletMap.set_map_fit_bounds(leafletMap.get_circle_control_bounds())
             kiezatlas.do_reverse_geocode()
         })
         leafletMap.listen_to('locating_error', function(e) {
@@ -160,7 +157,7 @@ var citymap = {
         // 1) switch to "Orte" tab
         citymap.clear_and_select_places_tab()
         // 2) render a plain listing of all items in this amp
-        var places = leafletMap.getItems()
+        var places = leafletMap.get_items()
         for (var p in places) {
             citymap.render_mobile_details_card(places[p])
         }
@@ -216,7 +213,7 @@ var citymap = {
         restc.load_geo_object_detail(marker_id, function(result) {
             citymap.render_selected_detail(result)
             // 2.1) load facets
-            restc.load_facetted_geo_object(marker_id, kiezatlas.getSiteId(), function(obj) {
+            restc.load_facetted_geo_object(marker_id, kiezatlas.get_site_id(), function(obj) {
                 citymap.render_geo_object_facets(obj)
             })
             // 2.2) display angebote in an extra tab
@@ -242,7 +239,7 @@ var citymap = {
             angebote_link = '<div class="angebote-link">'
                 + '<a class="button" href="/website/geo/' + object.id + '">Aktuelle Angebote anzeigen</a></div>'
         }
-        if (kiezatlas.getSiteInfo() && !kiezatlas.getSiteInfo().fahrinfoLink) {
+        if (kiezatlas.get_site_info() && !kiezatlas.get_site_info().fahrinfoLink) {
             fahrinfoLink = ''
         }
         var body_text = ""
@@ -430,7 +427,7 @@ var citymap = {
     },
 
     select_category: function(categoryId) {
-        restc.load_geo_objects_by_category(kiezatlas.getSiteId(), categoryId, function(results) {
+        restc.load_geo_objects_by_category(kiezatlas.get_site_id(), categoryId, function(results) {
             // console.log("Loaded Geo Objects by Category", categoryId, results)
             var $ul = $('#category-area ul.results')
             if (results.length > 0) {
