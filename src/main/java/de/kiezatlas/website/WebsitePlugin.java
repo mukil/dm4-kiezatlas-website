@@ -35,6 +35,9 @@ import de.deepamehta.plugins.geospatial.GeospatialService;
 import de.deepamehta.thymeleaf.ThymeleafPlugin;
 import de.deepamehta.workspaces.WorkspacesService;
 import de.kiezatlas.KiezatlasService;
+import static de.kiezatlas.KiezatlasService.BEZIRKSREGION_FACET;
+import static de.kiezatlas.KiezatlasService.IMAGE_FACET;
+import static de.kiezatlas.KiezatlasService.IMAGE_PATH;
 import de.kiezatlas.angebote.AngebotService;
 import static de.kiezatlas.angebote.AngebotService.ANGEBOT_BESCHREIBUNG;
 import de.kiezatlas.angebote.model.AngebotsinfosAssigned;
@@ -91,7 +94,7 @@ import de.kiezatlas.website.model.CommentModel;
  * <a href="http://github.com/mukil/dm4-kiezatlas-website">Source Code</a>
  *
  * @author Malte Reißig (<a href="mailto:malte@mikromedia.de">Contact</a>)
- * @version 0.5-SNAPSHOT
+ * @version 0.6-SNAPSHOT
  */
 @Path("/website")
 @Consumes(MediaType.APPLICATION_JSON)
@@ -122,15 +125,12 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     private final String ANGEBOTE_RESOURCE = "angebote/";
     private final String GEO_OBJECT_RESOURCE = "website/geo/";
 
-    // The URIs of KA2 Geo Object topics synchronized (and kept up-to-date in) Kiezatlas 1 have this prefix.
-    // The remaining part of the URI is the original KA1 topic id.
-    private static final String KA1_GEO_OBJECT_URI_PREFIX = "de.kiezatlas.topic.";
     private DateFormat df = DateFormat.getDateInstance(DateFormat.LONG, Locale.GERMANY);
     private static final String SYSTEM_MAINTENANCE_MAILBOX = "support@kiezatlas.de";
 
     // Geo Object Form Input Validation Utilities
     private static final long NEW_TOPIC_ID = -1;
-    private static final String INVALID_ZIPCODE_INPUT = "Bitte geben Sie eine f&uuml;nfstellige Postleitzahl f&uuml;r diese Einrichtung an.";
+    // private static final String INVALID_ZIPCODE_INPUT = "Bitte geben Sie eine f&uuml;nfstellige Postleitzahl f&uuml;r diese Einrichtung an.";
     private static final String INVALID_DISTRICT_SELECTION = "Bitte w&auml;hlen Sie den Stadtbezirk f&uuml;r diese Einrichtung aus.";
 
     @Override
@@ -1061,6 +1061,22 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         return new ArrayList(uniqueResults.values());
     }
 
+    @Override
+    public void updateImageFileFacet(Topic geoObject, String imageFilePath) {
+        facets.updateFacet(geoObject, IMAGE_FACET,
+            mf.newFacetValueModel(IMAGE_PATH).put(imageFilePath));
+    }
+
+    @Override
+    public Topic getImageFileFacetByGeoObject(Topic geoObject) {
+        return facets.getFacet(geoObject, IMAGE_FACET);
+    }
+
+    @Override
+    public Topic getFacettedBezirksregionChildTopic(Topic facettedTopic) {
+        return facets.getFacet(facettedTopic, BEZIRKSREGION_FACET);
+    }
+
     /** ------------------------------------------------------- Kiezatlas Angebotsinfo Notification Mechanics ---------- */
 
     @Override
@@ -1634,7 +1650,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
             // Last Modified
             einrichtung.setLastModified((Long) dm4.getProperty(geoObject.getId(), "dm4.time.modified"));
             // Image Path
-            Topic imagePath = kiezatlas.getImageFileFacetByGeoObject(geoObject);
+            Topic imagePath = getImageFileFacetByGeoObject(geoObject);
             if (imagePath != null) einrichtung.setImageUrl(imagePath.getSimpleValue().toString());
             // Öffnungszeiten Facet
             Topic offnung = facets.getFacet(geoObject, OEFFNUNGSZEITEN_FACET);
@@ -1663,7 +1679,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         return einrichtung;
     }
 
-    /** ----------------------------- Create and Update Geo Object Implementation ----------------------- */
+    /** ----------------------------- Private Create and Update Geo Object Methdos ----------------------- */
 
     private List<CommentModel> assembleCommentModels(List<RelatedTopic> comments) {
         List<CommentModel> results = new ArrayList<CommentModel>();
