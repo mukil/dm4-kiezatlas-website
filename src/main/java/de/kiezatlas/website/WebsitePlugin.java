@@ -942,7 +942,6 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
             // 2) Fetch unique geo object topics by text query string
             List<Topic> geoObjects = searchFulltextInGeoObjectChilds(query, false, true, false);
             // 3) Process saerch results and create DTS for map display
-            log.info("Start building response for " + geoObjects.size() + " OVERALL");
             for (Topic topic : geoObjects) {
                 if (isGeoObjectTopic(topic)) {
                     results.add(new GeoViewModel(topic, geomaps, angebote));
@@ -1007,29 +1006,28 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
      */
     @Override
     public List<Topic> searchFulltextInGeoObjectChilds(String query, boolean doSplitWildcards, boolean doWildcard, boolean doExact) {
-        // ### Authenticate
         // ### Todo: Fetch for ka2.ansprechpartner, traeger name, too
         HashMap<Long, Topic> uniqueResults = new HashMap<Long, Topic>();
-        log.info("Geo Object Fulltext Search Input \"" + query + "\"");
         // Refactor prepareLucenQuery...
         boolean forceExactQuery = (query.contains("?") || doExact);
+        log.info("Geo Object Fulltext Search Input \"" + query + "\", doSplitWildcards: "
+            + doSplitWildcards + ", doWildcard: " + doWildcard + ", doExact: " + forceExactQuery);
         String queryString = prepareLuceneQueryString(query, doSplitWildcards, doWildcard, forceExactQuery);
         if (queryString != null) {
-            log.info("Geo Object Fulltext Query string " + queryString + "");
+            log.info("Geo Object Fulltext Query Phrase \"" + queryString + "\"");
             List<Topic> searchResults = dm4.searchTopics(queryString, "ka2.geo_object.name");
             List<Topic> descrResults = dm4.searchTopics(queryString, "ka2.beschreibung");
             List<Topic> stichworteResults = dm4.searchTopics(queryString, "ka2.stichworte");
             List<Topic> bezirksregionResults = dm4.searchTopics(queryString, "ka2.bezirksregion"); // many
-            List<Topic> streetNameResults = dm4.searchTopics(query, "dm4.contacts.street"); // deeply related
-            log.info("> " + searchResults.size() + ", "+ descrResults.size() +", "+stichworteResults.size() + ", "
-                + bezirksregionResults.size() + ", "  + streetNameResults.size()
-                    + " results in five child types for query=\""+queryString+"\" in FULLTEXT");
+            List<Topic> streetNameResults = dm4.searchTopics(query, "dm4.contacts.street"); // deeply related  **/
+            log.info("> Matched " + searchResults.size() + " (Einrichtungsnamen), "+ descrResults.size() +" (Beschreibungen), "+stichworteResults.size() + " (Stichwörtern) , "
+                + bezirksregionResults.size() + " (Bezirskregionen), "  + streetNameResults.size()
+                    + " (Straßennamen) results for query=\""+queryString+"\"");
             // merge all types in search into one results set
             searchResults.addAll(descrResults);
             searchResults.addAll(stichworteResults);
             searchResults.addAll(bezirksregionResults);
             searchResults.addAll(streetNameResults);
-            log.info("Building up unique resultset including all related matches for a bezirksregion or a street name");
             Iterator<Topic> iterator = searchResults.iterator();
             while (iterator.hasNext()) {
                 Topic next = iterator.next();
@@ -2185,9 +2183,13 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         List<RelatedTopic> usernames = bezirksTopic.getRelatedTopics("dm4.core.association", "dm4.core.default",
             "dm4.core.default", "dm4.accesscontrol.username");
         for (RelatedTopic username : usernames) {
-            String emailAddress = dm4.getAccessControl().getEmailAddress(username.getSimpleValue().toString());
-            if (emailAddress != null && !emailAddress.isEmpty()) {
-                mailboxes.add(emailAddress);
+            try {
+                String emailAddress = dm4.getAccessControl().getEmailAddress(username.getSimpleValue().toString());
+                if (emailAddress != null && !emailAddress.isEmpty()) {
+                    mailboxes.add(emailAddress);
+                }
+            } catch (RuntimeException re) {
+                log.warning("No Email Address assigned to username " + username);
             }
         }
         return mailboxes;

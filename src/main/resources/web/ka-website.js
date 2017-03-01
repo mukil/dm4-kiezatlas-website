@@ -214,6 +214,7 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
         if (bezirksTopic) {
             _self.set_site_info(bezirksTopic)
             _self.set_site_id(bezirksTopic.id)
+            _self.load_marker_cluster_scripts()
             _self.render_map(false, undefined, false, false) // detectLocation=false
             // sets district filter
             _self.show_district_page(_self.get_site_info().id)
@@ -338,7 +339,6 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
         $('a.circle-control').hide()
         $('a.district-control').hide()
         $('a.lock-control').show()
-        leafletMap.clear_marker()
         leafletMap.activate_circle_control()
         leafletMap.set_current_location_coords(leafletMap.get_map_center())
         leafletMap.render_circle_search_control(true)
@@ -410,7 +410,7 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
         $('#site-area').hide()
         _self.set_mapcontrol_mode_query()
         _self.clear_district_filter()
-        leafletMap.clear_marker()
+        mapping.do_cluster_marker = false
         leafletMap.activate_circle_control()
         leafletMap.set_current_location_coords(leafletMap.get_map_center())
         leafletMap.render_circle_search_control(false) // fitBounds=false
@@ -1021,7 +1021,8 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
         var bezirk = _self.get_bezirks_topic(entry.bezirk_uri)
         var html = '<div class="imprint">'
         if (bezirk) {
-            html += '<a href="' + bezirk.imprint + '" title="Impressum: Bezirksamt ' + bezirk.value + '">Impressum</a></div>'
+            html += '<a href="' + bezirk.imprint + '" target="_blank" '
+                + 'title="Impressum: Bezirksamt ' + bezirk.value + '">Impressum</a></div>'
         } else {
             console.warn("Could not fetch Bezirks Topic by URI", bezirk, entry)
             html += '</div>'
