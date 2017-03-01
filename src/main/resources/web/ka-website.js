@@ -859,7 +859,7 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
 
     this.add_page_input_handler = function() {
         $('.sidebar .bezirke .menu a').click(_self.handle_bezirks_item_click)
-        $('#text-search').on("keyup", handle_fulltext_search_input)
+        // $('#text-search').on("keyup", handle_fulltext_search_input)
         var $option_a = $('.search-option.a')
             $option_a.on('touchend', handle_option_a)
             $option_a.on('click', handle_option_a)

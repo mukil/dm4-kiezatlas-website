@@ -468,6 +468,18 @@ body.pushable > .pusher {
     display: block;
 }
 
+.right.menu .category.search .results a {
+    text-decoration: none;
+}
+
+.right.menu .category.search .results a.action {
+    font-weight: 400;
+}
+
+.right.menu .ui.category.search .results .category .result {
+    margin-left: 130px;
+}
+
 .kiezatlas.confirm .right.menu .ui.search,
 .facet-editor .right.menu .ui.search,
 .sites .right.menu .ui.search {
@@ -662,7 +674,10 @@ form .invalid {
     display: none;
 } **/
 
-.kiezatlas.topic .right.menu .ui.search,
+.kiezatlas.topic .right.menu .ui.category.search .results a.action {
+    display: none;
+}
+
 .sign-up .ui.search,
 .citymap .welcome .ui.search {
     display: none;

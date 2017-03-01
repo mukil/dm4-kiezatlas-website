@@ -7,10 +7,14 @@
 
         <link rel="stylesheet" href="/de.kiezatlas.website/vendor/leaflet/leaflet.css"/>
         <link rel="stylesheet" href="/de.kiezatlas.website/css/sitestyle.css"/>
+        <link rel="stylesheet" href="/de.kiezatlas.website/css/semantic-ui/2.2/components/button.min.css"/>
+        <link rel="stylesheet" href="/de.kiezatlas.website/css/semantic-ui/2.2/components/search.min.css"/>
 
-        <script src="/de.kiezatlas.website/dist/vendor/jquery-1.9.1.min.js"></script>
+        <script src="/de.kiezatlas.angebote/dist/vendor/jquery-1.9.1-and-1.12.1-ui-custom.min.js"></script>
         <script src="/de.kiezatlas.website/vendor/leaflet/leaflet.js"></script>
         <script src="/de.kiezatlas.website/css/semantic-ui/2.2/sidebar.min.js"></script>
+        <script src="/de.kiezatlas.website/css/semantic-ui/2.2/api.min.js"></script>
+        <script src="/de.kiezatlas.website/css/semantic-ui/2.2/search.min.js"></script>
 
         <script type="text/javascript" th:inline="javascript">
         /*<![CDATA[*/
@@ -18,6 +22,18 @@
             // App initialization
             $(document).ready(function(e) {
                 $sidebarUi = $('.ui.sidebar').sidebar('setting', 'dimPage', false)
+                $searchUi = $('.right.menu .ui.search').search({
+                    apiSettings: {
+                        url: '/website/search/autocomplete?query={query}'
+                    },
+                    fields: {
+                        results : 'results',
+                        title   : 'name',
+                        url     : 'link'
+                    },
+                    minCharacters : 3,
+                    type: 'category'
+                })
                 var latitude = /*[[${geoobject.latitude}]]*/ undefined;
                 var longitude = /*[[${geoobject.longitude}]]*/ undefined;
                 var lCoordinate = L.latLng(latitude, longitude)
@@ -37,6 +53,11 @@
                 restc.logout()
                 window.document.location.reload()
             }
+
+            function do_fulltext_search() { // to be implemented
+                console.log("Do fulltext search on detail window...")
+            }
+
         /*]]>*/
         </script>
         <meta th:replace="fragments/tracker" />

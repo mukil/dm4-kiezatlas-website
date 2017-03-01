@@ -84,6 +84,8 @@ import de.kiezatlas.angebote.ContactAnbieterListener;
 import de.kiezatlas.angebote.RemovedAngebotListener;
 import de.kiezatlas.comments.CommentsService;
 import de.kiezatlas.website.model.CommentModel;
+import de.kiezatlas.website.model.ResultList;
+import de.kiezatlas.website.model.SearchResult;
 
 /**
  * The module bundling the Kiezatlas 2 Website.<br/>
@@ -119,17 +121,17 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     HashMap<Long, List<GeoViewModel>> citymapCache = new HashMap<Long, List<GeoViewModel>>();
     HashMap<Long, Long> citymapCachedAt = new HashMap<Long, Long>();
 
-    private final String DM4_HOST_URL = System.getProperty("dm4.host.url"); // should come with trailing slash
-    private final String ANGEBOTE_RESOURCE = "angebote/";
-    private final String GEO_OBJECT_RESOURCE = "website/geo/";
+    public static final String DM4_HOST_URL = System.getProperty("dm4.host.url"); // should come with trailing slash
+    public static final String ANGEBOTE_RESOURCE = "angebote/";
+    public static final String GEO_OBJECT_RESOURCE = "website/geo/";
 
-    private DateFormat df = DateFormat.getDateInstance(DateFormat.LONG, Locale.GERMANY);
-    private static final String SYSTEM_MAINTENANCE_MAILBOX = "support@kiezatlas.de";
+    public static DateFormat df = DateFormat.getDateInstance(DateFormat.LONG, Locale.GERMANY);
+    public static final String SYSTEM_MAINTENANCE_MAILBOX = "support@kiezatlas.de";
 
     // Geo Object Form Input Validation Utilities
-    private static final long NEW_TOPIC_ID = -1;
+    public static final long NEW_TOPIC_ID = -1;
     // private static final String INVALID_ZIPCODE_INPUT = "Bitte geben Sie eine f&uuml;nfstellige Postleitzahl f&uuml;r diese Einrichtung an.";
-    private static final String INVALID_DISTRICT_SELECTION = "Bitte w&auml;hlen Sie den Stadtbezirk f&uuml;r diese Einrichtung aus.";
+    public static final String INVALID_DISTRICT_SELECTION = "Bitte w&auml;hlen Sie den Stadtbezirk f&uuml;r diese Einrichtung aus.";
 
     @Override
     public void init() {
@@ -923,6 +925,56 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         } catch (Exception e) {
             throw new RuntimeException("Searching street coordinate values by name failed", e);
         }
+    }
+
+    /**
+     * Fetches a combined list of Geo Objects and Angebote to be displayed in two-tier dropdown menu.
+     * @param referer
+     * @param query
+     */
+    @GET
+    @Path("/search/autocomplete")
+    public ResultList autoCompleteSearchGeoObjectByName(@HeaderParam("Referer") String referer, @QueryParam("query") String query) {
+        if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
+        ResultList results = new ResultList();
+        try {
+            String queryValue = query.trim();
+            if (queryValue.isEmpty()) {
+                log.warning("No search term entered, returning empty resultset");
+                return results;
+            }
+            // prepare query phrase
+            queryValue = "*" + queryValue + "*";
+            log.log(Level.INFO, "> autoCompleteQuery=\"{0}\"", queryValue);
+            List<Topic> singleTopics = dm4.searchTopics(queryValue, "ka2.geo_object.name");
+            log.log(Level.INFO, "{0} geo topics found", singleTopics.size());
+            int max = 7;
+            int count = 0;
+            for (Topic topic : singleTopics) {
+                Topic geoObject = topic.getRelatedTopic("dm4.core.composition",
+                    "dm4.core.child", "dm4.core.parent", "ka2.geo_object");
+                if (geoObject != null) {
+                    results.putGeoObject(new SearchResult(geoObject));
+                    count++;
+                }
+                if (count == max) break;
+            }
+            count = 0;
+            List<Topic> angeboteTopics = dm4.searchTopics(queryValue, "ka2.angebot.name");
+            log.log(Level.INFO, "{0} angebote topics found", angeboteTopics.size());
+            for (Topic topic : angeboteTopics) {
+                Topic angebot = topic.getRelatedTopic("dm4.core.composition",
+                    "dm4.core.child", "dm4.core.parent", "ka2.angebot");
+                if (angebot != null) {
+                    results.putAngebot(new SearchResult(angebot));
+                    count++;
+                }
+                if (count == max) break;
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Searching geo object for auto completion failed", e);
+        }
+        return results;
     }
 
     /**

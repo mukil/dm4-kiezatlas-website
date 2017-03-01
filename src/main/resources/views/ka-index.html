@@ -25,7 +25,21 @@
             var $sidebarUi = undefined
             // App initialization
             $(document).ready(function(e) {
+                // setup toggled sidebar
                 $sidebarUi = $('.ui.sidebar').sidebar('setting', 'dimPage', false)
+                // setup quick search menu
+                $searchUi = $('.right.menu .ui.search').search({
+                    apiSettings: {
+                        url: '/website/search/autocomplete?query={query}'
+                    },
+                    fields: {
+                        results : 'results',
+                        title   : 'name',
+                        url     : 'link'
+                    },
+                    minCharacters : 3,
+                    type: 'category'
+                })
                 // sidebar('setting', 'scrollLock', false).sidebar('setting', 'returnScroll', false)
                 // initiates an indexDB (if we're not on the MS IE)
                 favourites.start_local_db()
