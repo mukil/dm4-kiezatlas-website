@@ -21,7 +21,6 @@ public class GeoDetailsViewModel implements JSONEnabled {
 
     // Einrichtung
     GeoViewModel geoObjectView = null;
-    long geoCoordinateTopicId = -1;
     // Related Categories
     List<RelatedTopic> relatedTopics = null;
     List<RelatedTopic> relatedAudiences = null;
@@ -31,6 +30,7 @@ public class GeoDetailsViewModel implements JSONEnabled {
     Topic contact = null;
     Topic opening_hours = null;
     Topic lor_nr = null;
+    String lor_nr_val = null;
     boolean isUnconfirmed = false;
 
     Logger log = Logger.getLogger(GeoDetailsViewModel.class.getName());
@@ -53,10 +53,25 @@ public class GeoDetailsViewModel implements JSONEnabled {
             "dm4.core.child", "ka2.oeffnungszeiten");
         this.lor_nr = geoObject.getRelatedTopic("dm4.core.aggregation", "dm4.core.parent",
             "dm4.core.child", "ka2.lor_nummer");
+        if (this.lor_nr != null) {
+            this.lor_nr_val = this.lor_nr.getSimpleValue().toString();
+        }
+    }
+
+    public GeoViewModel getGeoViewModel() {
+        return geoObjectView;
+    }
+
+    public boolean hasLorNumber() {
+        return (this.lor_nr_val != null);
     }
 
     public void setUnconfirmed() {
         isUnconfirmed = true;
+    }
+
+    public void setLorValue(String val) {
+        this.lor_nr_val = val;
     }
 
     public JSONObject toJSON() {
@@ -86,8 +101,8 @@ public class GeoDetailsViewModel implements JSONEnabled {
             if (opening_hours != null) {
                 object.put("oeffnungszeiten", opening_hours.getSimpleValue());
             }
-            if (lor_nr != null) {
-                object.put("lor_id", lor_nr.getSimpleValue());
+            if (lor_nr_val != null) {
+                object.put("lor_id", lor_nr_val);
             }
             object.put("unconfirmed", isUnconfirmed);
             return object;

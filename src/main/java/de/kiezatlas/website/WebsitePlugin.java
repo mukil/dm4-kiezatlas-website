@@ -35,8 +35,6 @@ import de.deepamehta.plugins.geospatial.GeospatialService;
 import de.deepamehta.thymeleaf.ThymeleafPlugin;
 import de.deepamehta.workspaces.WorkspacesService;
 import de.kiezatlas.KiezatlasService;
-import static de.kiezatlas.KiezatlasService.BEZIRKSREGION_FACET;
-import static de.kiezatlas.KiezatlasService.IMAGE_FACET;
 import static de.kiezatlas.KiezatlasService.IMAGE_PATH;
 import de.kiezatlas.angebote.AngebotService;
 import static de.kiezatlas.angebote.AngebotService.ANGEBOT_BESCHREIBUNG;
@@ -525,6 +523,14 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         GeoDetailsViewModel geoDetailsView = null;
         if (isGeoObjectTopic(geoObject)) {
             geoDetailsView = new GeoDetailsViewModel(dm4.getTopic(topicId), geomaps, angebote);
+            if (!geoDetailsView.hasLorNumber()) { // Use geospatial shapefile layer to supplement for non-existing lor-id facet
+                GeoViewModel geoView = geoDetailsView.getGeoViewModel();
+                String lor = geospatial.getGeometryFeatureNameByCoordinate(geoView.getGeoCoordinateLatValue()
+                    + ", " + geoView.getGeoCoordinateLngValue());
+                if (lor != null) { // Strip "Flaeche .." (lor-berlin Shapefile specific)
+                    geoDetailsView.setLorValue(cleanUpShapefileFeatureNameAttribute(lor));
+                }
+            }
             if (isAssignedToConfirmationWorkspace(geoObject)) geoDetailsView.setUnconfirmed();
         }
         return geoDetailsView;
@@ -1019,15 +1025,15 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
             List<Topic> descrResults = dm4.searchTopics(queryString, "ka2.beschreibung");
             List<Topic> stichworteResults = dm4.searchTopics(queryString, "ka2.stichworte");
             List<Topic> bezirksregionResults = dm4.searchTopics(queryString, "ka2.bezirksregion"); // many
-            List<Topic> streetNameResults = dm4.searchTopics(query, "dm4.contacts.street"); // deeply related  **/
+            // List<Topic> streetNameResults = dm4.searchTopics(query, "dm4.contacts.street"); // deeply related  **/
             log.info("> Matched " + searchResults.size() + " (Einrichtungsnamen), "+ descrResults.size() +" (Beschreibungen), "+stichworteResults.size() + " (Stichwörtern) , "
-                + bezirksregionResults.size() + " (Bezirskregionen), "  + streetNameResults.size()
-                    + " (Straßennamen) results for query=\""+queryString+"\"");
+                + bezirksregionResults.size() + " (Bezirksregionen) "); /**  + streetNameResults.size()
+                    + " (Straßennamen) results for query=\""+queryString+"\""); **/
             // merge all types in search into one results set
             searchResults.addAll(descrResults);
             searchResults.addAll(stichworteResults);
             searchResults.addAll(bezirksregionResults);
-            searchResults.addAll(streetNameResults);
+            // searchResults.addAll(streetNameResults);
             Iterator<Topic> iterator = searchResults.iterator();
             while (iterator.hasNext()) {
                 Topic next = iterator.next();
@@ -1660,8 +1666,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
             Topic stichworte = facets.getFacet(geoObject, STICHWORTE_FACET);
             if (stichworte != null) einrichtung.setStichworte(stichworte.getSimpleValue().toString());
             // LOR Nummer Facet
-            Topic lor = facets.getFacet(geoObject, LOR_FACET);
-            if (lor != null) einrichtung.setLORId(lor.getSimpleValue().toString());
+            setLORNumber(geoObject, geoCoordinate, einrichtung);
             // Website Facet
             Topic website = facets.getFacet(geoObject, WEBSITE_FACET);
             if (website != null) einrichtung.setWebpage(website.getSimpleValue().toString());
@@ -1678,6 +1683,21 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     }
 
     /** ----------------------------- Private Create and Update Geo Object Methdos ----------------------- */
+
+    private void setLORNumber(Topic geoObject, GeoCoordinate geoCoordinate, EinrichtungPageModel einrichtung) {
+        // try new way of getting LOR number
+        String lor = geospatial.getGeometryFeatureNameByCoordinate(geoCoordinate.lat + ", " + geoCoordinate.lon);
+        if (lor != null) {
+            einrichtung.setLORId(cleanUpShapefileFeatureNameAttribute(lor));
+        } else { // old school way
+            Topic lorTopic = facets.getFacet(geoObject, LOR_FACET);
+            einrichtung.setLORId(lorTopic.getSimpleValue().toString());
+        }
+    }
+
+    private String cleanUpShapefileFeatureNameAttribute(String value) {
+        return value.replaceAll("Flaeche ", "");
+    }
 
     private List<CommentModel> assembleCommentModels(List<RelatedTopic> comments) {
         List<CommentModel> results = new ArrayList<CommentModel>();

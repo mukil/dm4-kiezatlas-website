@@ -72,7 +72,7 @@
         <dependency>
             <groupId>de.deepamehta</groupId>
             <artifactId>dm48-geospatial</artifactId>
-            <version>0.3</version>
+            <version>0.3.1-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>de.deepamehta</groupId>
