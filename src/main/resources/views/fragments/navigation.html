@@ -27,9 +27,9 @@
             <a th:if="${authenticated}" href="/sign-up/login"
                th:class="${#strings.contains(template, 'logout')} ? 'active item logout' : 'item logout'">Logout</a>
             <div class="right menu">
-                <div class="item search-input" th:if="${#strings.contains(template, 'ka-index') or #strings.contains(template, 'citymap')}">
+                <div class="item search-input" th:if="${#strings.contains(template, 'ka-index') or #strings.contains(template, 'citymap') or #strings.contains(template, 'detail')}">
                     <!--  or #strings.contains(template, 'page')} -->
-                    <div class="ui search small input">
+                    <div class="ui category search small input">
                         <div class="ui icon input">
                             <input class="prompt" id="text-search" type="text"
                                    placeholder="Suchanfrage"/> <!-- onfocus="show_search_options()" -->
@@ -37,6 +37,7 @@
                         <button id="search-submit" onclick="do_fulltext_search()" class="circular ui icon button basic small">
                             <i class="icon search"></i>
                         </button>
+                        <div class="results"></div>
                     </div>
                 </div>
             </div>
