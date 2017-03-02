@@ -950,10 +950,10 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
             int max = 7;
             int count = 0;
             for (Topic topic : singleTopics) {
-                Topic geoObject = topic.getRelatedTopic("dm4.core.composition",
-                    "dm4.core.child", "dm4.core.parent", "ka2.geo_object");
+                Topic geoObject = getParentGeoObjectTopic(topic);
                 if (geoObject != null) {
-                    results.putGeoObject(new SearchResult(geoObject));
+                    Topic bezirk = getRelatedBezirk(geoObject);
+                    results.putGeoObject(new SearchResult(geoObject, bezirk.getSimpleValue().toString()));
                     count++;
                 }
                 if (count == max) break;

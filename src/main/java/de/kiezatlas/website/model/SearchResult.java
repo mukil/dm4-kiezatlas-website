@@ -34,6 +34,20 @@ public class SearchResult implements JSONEnabled {
         }
     }
 
+    public SearchResult(Topic topic, String bezirk) {
+        try {
+            result.put("name", topic.getSimpleValue());
+            if (topic.getTypeUri().equals(KiezatlasService.GEO_OBJECT)) {
+                result.put("link", "/" + WebsitePlugin.GEO_OBJECT_RESOURCE + topic.getId());
+                result.put("zusatz", bezirk); //  String strassehnr,
+            } else if (topic.getTypeUri().equals(AngebotService.ANGEBOT)) {
+                result.put("link", "/" + WebsitePlugin.ANGEBOTE_RESOURCE + topic.getId());
+            }
+        } catch (JSONException ex) {
+            throw new RuntimeException("Constructing a SearchResult failed", ex);
+        }
+    }
+
     @Override
     public JSONObject toJSON() {
         return result;

@@ -24,11 +24,20 @@
                 $sidebarUi = $('.ui.sidebar').sidebar('setting', 'dimPage', false)
                 $searchUi = $('.right.menu .ui.search').search({
                     apiSettings: {
-                        url: '/website/search/autocomplete?query={query}'
+                        url: '/website/search/autocomplete?query={query}',
+                        onRequest: function() {
+                            $('.right.menu .ui.category.search').addClass("loading")
+                            $('.right.menu .ui.category.search .icon.my').show()
+                        },
+                        onResponse: function() {
+                            $('.right.menu .ui.category.search .icon.my').hide()
+                            $('.right.menu .ui.category.search').removeClass("loading")
+                        }
                     },
                     fields: {
                         results : 'results',
                         title   : 'name',
+                        description: 'zusatz',
                         url     : 'link'
                     },
                     minCharacters : 3,

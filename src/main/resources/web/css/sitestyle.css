@@ -678,6 +678,12 @@ form .invalid {
     display: none;
 }
 
+.kiezatlas .right.menu .ui.category.search .my.search.icon {
+    display: none;
+    position: absolute;
+    top: 11px; left: 210px;
+}
+
 .sign-up .ui.search,
 .citymap .welcome .ui.search {
     display: none;

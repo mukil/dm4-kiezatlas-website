@@ -29,7 +29,7 @@ public class ResultList implements JSONEnabled {
             results.put("cat1", einrichtungen);
             results.put("cat2", angebote);
             list.put("results", results);
-            list.put("action", new JSONObject().put("url", "javascript:do_fulltext_search()").put("text", "im Volltextmodus suchen"));
+            list.put("action", new JSONObject().put("url", "javascript:do_fulltext_search()").put("text", "Volltextsuche starten"));
         } catch (JSONException ex) {
             throw new RuntimeException("Constructing a ResultList failed", ex);
         }
