@@ -35,7 +35,6 @@ import de.deepamehta.plugins.geospatial.GeospatialService;
 import de.deepamehta.thymeleaf.ThymeleafPlugin;
 import de.deepamehta.workspaces.WorkspacesService;
 import de.kiezatlas.KiezatlasService;
-import static de.kiezatlas.KiezatlasService.IMAGE_PATH;
 import de.kiezatlas.angebote.AngebotService;
 import static de.kiezatlas.angebote.AngebotService.ANGEBOT_BESCHREIBUNG;
 import de.kiezatlas.angebote.model.AngebotsinfosAssigned;
@@ -519,7 +518,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     @Path("/geo/{topicId}")
     @Produces(MediaType.APPLICATION_JSON)
     public GeoDetailsViewModel getGeoObjectDetails(@HeaderParam("Referer") String referer,
-                                                    @PathParam("topicId") long topicId) {
+                                                   @PathParam("topicId") long topicId) {
         if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
         Topic geoObject = dm4.getTopic(topicId);
         GeoDetailsViewModel geoDetailsView = null;

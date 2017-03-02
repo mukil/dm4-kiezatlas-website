@@ -56,6 +56,7 @@ public interface WebsiteService {
 
     static final String WEBSITE_FACET = "ka2.website.facet";
     static final String IMAGE_FACET = "ka2.bild.facet";
+    static final String IMAGE_PATH = "ka2.bild.pfad";
 
     static final String POSTAL_CODE_DUMMY_VALUE = "0";
 
