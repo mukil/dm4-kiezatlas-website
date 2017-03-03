@@ -51,11 +51,12 @@
                     weight: 3, opacity: 0.6, fillColor: "#a9a9a9", fillOpacity: 0.2, color: "#8f1414", clickable: true
                 })
                 circleMarker.addTo(map)
-                circleMarker.on('click', function(e) {
+                /** circleMarker.on('click', function(e) {
                     do_manual_placement()
-                })
+                }) **/
                 CKEDITOR.inline('beschreibung')
                 CKEDITOR.inline('oeffnungszeiten')
+                do_manual_placement()
             }
 
             function do_geocode() {
@@ -347,7 +348,7 @@
                         <br/>
                         <span class="label">Geo Koordinate dieses Ortes</span><br/>
                         <a class="button reset" onclick="do_geocode()">Neu Ermitteln</a>
-                        <a class="button" onclick="do_manual_placement()">Manuell platzieren</a>
+                        <!--a class="button" onclick="do_manual_placement()">Manuell platzieren</a-->
                         <a class="button" onclick="reset_coordinates()">Zur&uuml;cksetzen</a>
                         <a class="button" onclick="clear_coordinates()">L&ouml;schen</a>
                         <br/><br/>

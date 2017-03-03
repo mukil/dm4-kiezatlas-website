@@ -25,6 +25,7 @@ import de.deepamehta.core.service.Transactional;
 import de.deepamehta.accesscontrol.AccessControlService;
 import de.deepamehta.core.model.facets.FacetValueModel;
 import de.deepamehta.core.service.accesscontrol.Operation;
+import de.deepamehta.core.storage.spi.DeepaMehtaTransaction;
 import de.deepamehta.core.util.DeepaMehtaUtils;
 import de.deepamehta.core.util.JavaUtils;
 import de.deepamehta.facets.FacetsService;
@@ -85,6 +86,7 @@ import de.kiezatlas.comments.CommentsService;
 import de.kiezatlas.website.model.CommentModel;
 import de.kiezatlas.website.model.ResultList;
 import de.kiezatlas.website.model.SearchResult;
+import java.net.URI;
 
 /**
  * The module bundling the Kiezatlas 2 Website.<br/>
@@ -123,6 +125,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     public static final String DM4_HOST_URL = System.getProperty("dm4.host.url"); // should come with trailing slash
     public static final String ANGEBOTE_RESOURCE = "angebote/";
     public static final String GEO_OBJECT_RESOURCE = "website/geo/";
+    public static final String MY_ENTRIES_RESOURCE = "angebote/my";
 
     public static DateFormat df = DateFormat.getDateInstance(DateFormat.LONG, Locale.GERMANY);
     public static final String SYSTEM_MAINTENANCE_MAILBOX = "support@kiezatlas.de";
@@ -535,6 +538,31 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
             if (isAssignedToConfirmationWorkspace(geoObject)) geoDetailsView.setUnconfirmed();
         }
         return geoDetailsView;
+    }
+
+    @GET
+    @Path("/geo/delete/{topicId}")
+    @Produces(MediaType.TEXT_HTML)
+    public Viewable deleteGeoObject(@PathParam("topicId") String topicId) {
+        // Check Authorization
+        Topic geoObject = getGeoObjectById(topicId);
+        String name = geoObject.getSimpleValue().toString();
+        if (geoObject != null && isGeoObjectEditable(geoObject, accesscl.getUsernameTopic())) {
+            log.info("DELETING Geo Object " + geoObject);
+            if (deleteCompleteGeoObject(geoObject)) {
+                viewData("message", "Der Kiezatlas Ort wurde erfolgreich gelöscht.");
+                log.info("Topic \"" + name + "\", id=" + topicId
+                    + " deleted successfully by \"" + accesscl.getUsername() + "\"");
+                return getSimpleMessagePage();
+            } else {
+                viewData("message", "Der Datensatz konnte nicht gelöscht werden, da ein Fehler aufgetreten ist.");
+                return getGeoObjectDetailsPage("" + topicId);
+            }
+        } else {
+            log.info("Geo Object could not be loaded by topicId=\"" + topicId + "\"");
+        }
+        viewData("message", "Der Datensatz konnte nicht gelöscht werden, da Sie dazu nicht die nötigen Berechtigungen haben.");
+        return getGeoObjectDetailsPage("" + topicId);
     }
 
     @Override
@@ -1334,7 +1362,8 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
             List<RelatedTopic> geoObjects = comment.getRelatedTopics("ka2.comment.assignment");
             if (geoObjects.size() > 0) {
                 for (RelatedTopic geoObject : geoObjects) {
-                    results.add(assembleGeneralEinrichtungsInfo(geoObject));
+                    EinrichtungPageModel einrichtung = assembleGeneralEinrichtungsInfo(geoObject);
+                    if (!results.contains(einrichtung)) results.add(einrichtung);
                 }
             } else {
                 log.info("Comment: " + comment.toString() + ", relatedTopics: " + comment
@@ -1782,6 +1811,35 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
             });
         } catch (Exception e) {
             throw new RuntimeException("Creating User Assignment to Geo Object FAILED", e);
+        }
+    }
+
+    private boolean deleteCompleteGeoObject(Topic geoObject) {
+        if (!geoObject.getTypeUri().equals(KiezatlasService.GEO_OBJECT)) return false;
+        // Start Transaction
+        DeepaMehtaTransaction tx = dm4.beginTx();
+        try {
+            // Kontakt, Bild
+            Topic contactFacet = getFacettedContactChildTopic(geoObject);
+            Topic imageFacet = getImageFileFacetByGeoObject(geoObject);
+            if (contactFacet != null) contactFacet.delete();
+            if (imageFacet != null) imageFacet.delete();
+            // Beschreibung, Öffnungszeit, Website
+            Topic description = facets.getFacet(geoObject, BESCHREIBUNG_FACET);
+            Topic oeffnungszeit = facets.getFacet(geoObject, OEFFNUNGSZEITEN_FACET);
+            Topic website = facets.getFacet(geoObject, WEBSITE_FACET);
+            //
+            if (description != null) description.delete();
+            if (oeffnungszeit != null) oeffnungszeit.delete();
+            if (website != null) website.delete();
+            geoObject.delete();
+            return true;
+        } catch (RuntimeException re) {
+            tx.failure();
+            log.severe("Could not delete geo object ("+geoObject+"), RuntimeException Message: " + re.getMessage());
+            return false;
+        } finally {
+            tx.finish();
         }
     }
 
