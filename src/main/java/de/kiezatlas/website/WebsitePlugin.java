@@ -625,7 +625,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         List<RelatedTopic> usersDistricts = getUserDistrictTopics();
         if (usersDistricts != null && usersDistricts.size() > 0) {
             long districtId = usersDistricts.get(0).getId();
-            List<EinrichtungPageModel> results = getCommentsByDistrict(districtId);
+            List<EinrichtungPageModel> results = getCommentedGeoObjectsByDistrict(districtId);
             viewData("districtId", districtId);
             return getCommentsPage(results);
         }
@@ -640,7 +640,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     @Produces(MediaType.TEXT_HTML)
     public Viewable getAdministrativeCommentsPage(@PathParam("districtId") long districtId) {
         if (isDistrictMember(districtId)) {
-            List<EinrichtungPageModel> results = getCommentsByDistrict(districtId);
+            List<EinrichtungPageModel> results = getCommentedGeoObjectsByDistrict(districtId);
             viewData("districtId", districtId);
             return getCommentsPage(results);
         }
@@ -650,7 +650,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         return getSimpleMessagePage();
     }
 
-    private List<EinrichtungPageModel> getCommentsByDistrict(long districtId) {
+    private List<EinrichtungPageModel> getCommentedGeoObjectsByDistrict(long districtId) {
         List<EinrichtungPageModel> results = new ArrayList<EinrichtungPageModel>();
         List<EinrichtungPageModel> all = getCommentedGeoObjects();
         for (EinrichtungPageModel ein : all) {
@@ -1363,7 +1363,9 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
             if (geoObjects.size() > 0) {
                 for (RelatedTopic geoObject : geoObjects) {
                     EinrichtungPageModel einrichtung = assembleGeneralEinrichtungsInfo(geoObject);
-                    if (!results.contains(einrichtung)) results.add(einrichtung);
+                    if (!results.contains(einrichtung)) {
+                        results.add(einrichtung);
+                    }
                 }
             } else {
                 log.info("Comment: " + comment.toString() + ", relatedTopics: " + comment
