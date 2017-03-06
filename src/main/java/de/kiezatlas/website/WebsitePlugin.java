@@ -639,7 +639,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     @Path("/geo/hinweise/{districtId}")
     @Produces(MediaType.TEXT_HTML)
     public Viewable getAdministrativeCommentsPage(@PathParam("districtId") long districtId) {
-        if (isDistrictMember(districtId)) {
+        if (isAssociatedDistrictMember(districtId)) {
             List<EinrichtungPageModel> results = getCommentedGeoObjectsByDistrict(districtId);
             viewData("districtId", districtId);
             return getCommentsPage(results);
@@ -831,22 +831,20 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
      */
     @GET
     @Path("/search/by_name")
-    public List<GeoViewModel> searchGeoObjectsByName(@HeaderParam("Referer") String referer,
-            @QueryParam("query") String query) {
+    public List<GeoViewModel> searchGeoObjectsByExactName(@HeaderParam("Referer") String referer,
+                                                          @QueryParam("query") String query) {
         if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
         try {
             log.log(Level.INFO, "> nameQuery=\"{0}\"", query);
             String queryValue = query.trim();
             ArrayList<GeoViewModel> results = new ArrayList<GeoViewModel>();
-            if (queryValue.isEmpty()) {
-                log.warning("No search term entered, returning empty resultset");
-                return results;
-            }
-            List<Topic> singleTopics = dm4.searchTopics(queryValue, "ka2.geo_object.name");
+            if (query.isEmpty()) return results;
+            // DO Search for //EXACT// in Name ONLY (if "Not Empty" AND "Without ASTERISK")
+            String queryPhrase = prepareLuceneQueryString(queryValue, false, false, true, false);
+            List<Topic> singleTopics = dm4.searchTopics(queryPhrase, "ka2.geo_object.name");
             log.log(Level.INFO, "{0} name topics found", singleTopics.size());
             for (Topic topic : singleTopics) {
-                Topic geoObject = topic.getRelatedTopic("dm4.core.composition",
-                    "dm4.core.child", "dm4.core.parent", "ka2.geo_object");
+                Topic geoObject = getParentGeoObjectTopic(topic);
                 results.add(new GeoViewModel(geoObject, geomaps, angebote));
             }
             return results;
@@ -858,13 +856,12 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     /**
      * Fetches a list of Geo Objects possibly existing for /geo/create form.
      * @param referer
-     * @param query
+     * @param geoObjectName
      */
     @GET
     @Path("/search/duplicates")
-    public List<GeoViewModel> searchGeoObjectsByNameAndStreet(@HeaderParam("Referer") String referer,
-                                                              @QueryParam("geoobject") String geoObjectName,
-                                                              @QueryParam("street") String street) {
+    public List<GeoViewModel> searchGeoObjectsByLooseName(@HeaderParam("Referer") String referer,
+                                                          @QueryParam("geoobject") String geoObjectName) {
         if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
         try {
             // strip common prefixes as they irritate our search fo rduplicates leading to to many results
@@ -872,23 +869,196 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
             ArrayList<GeoViewModel> results = new ArrayList<GeoViewModel>();
             log.log(Level.INFO, "> preprocessed nameQuery=\"{0}\"", queryValue + "\" to find duplicates");
             if (queryValue.isEmpty() || queryValue.length() < 3) return results;
-            // Perform search query, do fuzzy name search (with levenstein) and distance 0.5
-            List<Topic> singleTopics = dm4.searchTopics(queryValue + "*", "ka2.geo_object.name");
+            // DO Search IF "AT LEAST 3 Chars" BUT WITH "ASTERISK AT THE END" in NAME ONLY
+            String queryPhrase = prepareLuceneQueryString(queryValue, false, true, false, false);
+            List<Topic> singleTopics = dm4.searchTopics(queryPhrase, "ka2.geo_object.name");
             log.log(Level.INFO, "{0} geo objects found by name", singleTopics.size());
             // TODO: sort resutls albhabetically
             sortAlphabeticalDescending(singleTopics);
             for (Topic topic : singleTopics) {
-                Topic geoObject = topic.getRelatedTopic("dm4.core.composition",
-                    "dm4.core.child", "dm4.core.parent", "ka2.geo_object");
-                /** if (!street.isEmpty()) {
-                    Topic address = geoObject.getChildTopics().getTopic("dm4.contacts.address");
-                } **/
+                Topic geoObject = getParentGeoObjectTopic(topic);
                 results.add(new GeoViewModel(geoObject, geomaps));
             }
             return results;
         } catch (Exception e) {
             throw new RuntimeException("Searching geo object topics by name failed", e);
         }
+    }
+
+    /**
+     * Fetches a combined list of Geo Objects and Angebote to be displayed in two-tier dropdown menu.
+     * @param referer
+     * @param query
+     */
+    @GET
+    @Path("/search/autocomplete")
+    public ResultList autoCompleteFrontpageQuickSearchByName(@HeaderParam("Referer") String referer, @QueryParam("query") String query) {
+        if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
+        ResultList results = new ResultList();
+        try {
+            String queryValue = query.trim();
+            if (query.isEmpty()) return results;
+            // DO Search for "Not Empty" AND "WITH ASTERISK ON BOTH SIDES" in NAME ONLY
+            queryValue = prepareLuceneQueryString(query, false, true, false, true);
+            log.log(Level.INFO, "> autoCompleteQuery=\"{0}\"", queryValue);
+            List<Topic> singleTopics = dm4.searchTopics(queryValue, "ka2.geo_object.name");
+            log.log(Level.INFO, "{0} geo topics found", singleTopics.size());
+            int max = 7;
+            int count = 0;
+            for (Topic topic : singleTopics) {
+                Topic geoObject = getParentGeoObjectTopic(topic);
+                if (geoObject != null) {
+                    Topic bezirk = getRelatedBezirk(geoObject);
+                    results.putGeoObject(new SearchResult(geoObject, bezirk.getSimpleValue().toString()));
+                    count++;
+                }
+                if (count == max) break;
+            }
+            // Do Search for Angebote here too // Fixme: Move to dm4-kiezat-angebote plugin
+            count = 0;
+            List<Topic> angeboteTopics = dm4.searchTopics(queryValue, "ka2.angebot.name");
+            log.log(Level.INFO, "{0} angebote topics found", angeboteTopics.size());
+            for (Topic topic : angeboteTopics) {
+                Topic angebot = topic.getRelatedTopic("dm4.core.composition",
+                    "dm4.core.child", "dm4.core.parent", "ka2.angebot");
+                if (angebot != null) {
+                    results.putAngebot(new SearchResult(angebot));
+                    count++;
+                }
+                if (count == max) break;
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Searching geo object for auto completion failed", e);
+        }
+        return results;
+    }
+
+    /**
+     * Builds up a list of search results (Geo Objects to be displayed in a map) by text query.
+     * @param referer
+     * @param query
+     */
+    @GET
+    @Path("/search")
+    public List<GeoViewModel> searchGeoObjectsFulltext(@HeaderParam("Referer") String referer,
+            @QueryParam("search") String query) {
+        if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
+        try {
+            ArrayList<GeoViewModel> results = new ArrayList<GeoViewModel>();
+            if (query.isEmpty()) return results;
+            // 2) Fetch unique geo object topics by text query string (leading AND ending ASTERISK)
+            List<Topic> geoObjects = searchFulltextInGeoObjectChilds(query, false, true, false, true);
+            // 3) Process saerch results and create DTS for map display
+            for (Topic topic : geoObjects) {
+                if (isGeoObjectTopic(topic)) {
+                    results.add(new GeoViewModel(topic, geomaps, angebote));
+                }
+            }
+            log.info("Build up response " + results.size() + " geo objects across all districts");
+            return results;
+        } catch (Exception e) {
+            throw new RuntimeException("Searching geo object topics failed", e);
+        }
+    }
+
+    /**
+     * Builds up a list of search results (Geo Objects to be displayed in a map) by district
+     * topic id and text query.
+     * @param referer
+     * @param contextId
+     * @param query
+     */
+    @GET
+    @Path("/search/{contextId}")
+    @Transactional
+    public List<GeoViewModel> searchGeoObjectsFulltextInContext(@HeaderParam("Referer") String referer,
+            @PathParam("contextId") long contextId, @QueryParam("search") String query) {
+        if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
+        try {
+            ArrayList<GeoViewModel> results = new ArrayList<GeoViewModel>();
+            if (query.isEmpty()) return results;
+            // DO fulltext saerch with simple ASTERISK at the END
+            List<Topic> geoObjects = searchFulltextInGeoObjectChilds(query, false, true, false, true);
+            log.info("Start building response for " + geoObjects.size() + " and FILTER by CONTEXT");
+            for (Topic geoObject: geoObjects) {
+                // checks for district OR site relation
+                if (hasRelatedTopicAssociatedAsChild(geoObject, contextId)) {
+                    if (isGeoObjectTopic(geoObject)) {
+                        results.add(new GeoViewModel(geoObject, geomaps, angebote));
+                    }
+                }
+            }
+            log.info("Build up response " + results.size() + " geo objects in context=\""+contextId+"\"");
+            return results;
+        } catch (Exception e) {
+            throw new RuntimeException("Searching geo object topics failed", e);
+        }
+    }
+
+    /*** ------------------------- Website Fulltext Search Method ----------------------------- **/
+
+    /**
+     * Fires searchTopic()-calls to find Geo Object topics by their:
+     * <ul>
+     *  <li>Geo Object Name</li>
+     *  <li>Beschreibung Facet</li>
+     *  <li>Stichworte Facet</li>
+     *  <li>Bezirksregion Facet</li>
+     *  <li>Straßenname</li>
+     * </ul>
+     * @param query
+     * @return A list of unique topics of type "ka2.geo_object".
+     */
+    @Override
+    public List<Topic> searchFulltextInGeoObjectChilds(String query, boolean doSplitWildcards, boolean appendWildcard,
+                                                       boolean doExact, boolean leadingWildcard) {
+        // ### Todo: Fetch for ka2.ansprechpartner, traeger name, too
+        HashMap<Long, Topic> uniqueResults = new HashMap<Long, Topic>();
+        // Refactor prepareLucenQuery...
+        boolean forceExactQuery = (query.contains("?") || doExact);
+        String queryString = prepareLuceneQueryString(query, doSplitWildcards, appendWildcard, forceExactQuery, leadingWildcard);
+        if (queryString != null) {
+            List<Topic> searchResults = dm4.searchTopics(queryString, "ka2.geo_object.name");
+            List<Topic> descrResults = dm4.searchTopics(queryString, "ka2.beschreibung");
+            List<Topic> stichworteResults = dm4.searchTopics(queryString, "ka2.stichworte");
+            List<Topic> bezirksregionResults = dm4.searchTopics(queryString, "ka2.bezirksregion"); // many
+            // List<Topic> streetNameResults = dm4.searchTopics(query, "dm4.contacts.street"); // deeply related  **/
+            log.info("> Matched " + searchResults.size() + " (Einrichtungsnamen), "+ descrResults.size() +" (Beschreibungen), "+stichworteResults.size() + " (Stichwörtern) , "
+                + bezirksregionResults.size() + " (Bezirksregionen) "); /**  + streetNameResults.size()
+                    + " (Straßennamen) results for query=\""+queryString+"\""); **/
+            // merge all types in search into one results set
+            searchResults.addAll(descrResults);
+            searchResults.addAll(stichworteResults);
+            searchResults.addAll(bezirksregionResults);
+            // searchResults.addAll(streetNameResults);
+            Iterator<Topic> iterator = searchResults.iterator();
+            while (iterator.hasNext()) {
+                Topic next = iterator.next();
+                if (next.getTypeUri().equals("ka2.bezirksregion")) {
+                    List<RelatedTopic> geoObjects = next.getRelatedTopics("dm4.core.aggregation", "dm4.core.child", "dm4.core.parent",
+                        "ka2.geo_object");
+                    log.fine("Collecting " + geoObjects.size() + " geo objects associated with \"" + next.getSimpleValue().toString() + "\"");
+                    for (RelatedTopic geoObject : geoObjects) {
+                        addGeoObjectToResults(uniqueResults, geoObject);
+                    }
+                } else if (next.getTypeUri().equals("ka2.geo_object.name") || next.getTypeUri().equals("ka2.stichworte")
+                    || next.getTypeUri().equals("ka2.beschreibung")) {
+                    addGeoObjectToResults(uniqueResults, getParentGeoObjectTopic(next));
+                } else if (next.getTypeUri().equals("dm4.contacts.street")) {
+                    log.fine("Collecting all geo objects associated with \"" + next.getSimpleValue().toString() + "\"");
+                    List<RelatedTopic> addresses = next.getRelatedTopics("dm4.core.aggregation", "dm4.core.child", "dm4.core.parent",
+                        "dm4.contacts.address");
+                    for (RelatedTopic address : addresses) {
+                        Topic geoObject = getParentGeoObjectTopic(address);
+                        addGeoObjectToResults(uniqueResults, geoObject);
+                    }
+                }
+            }
+            log.info("searchResultLength=" + (searchResults.size()) + ", " + "uniqueResultLength=" + uniqueResults.size());
+        } else {
+            log.info("searchFulltextInGeoObjectChilds given queryString is EMPTY - Skipping search");
+        }
+        return new ArrayList(uniqueResults.values());
     }
 
     /**
@@ -927,237 +1097,17 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
             @QueryParam("query") String query) {
         if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
         try {
+            String queryValue = prepareLuceneQueryString(query, false, false, false, false);
             log.info("Street Coordinates Query=\""+query+"\"");
-            String queryValue = query.trim();
             List<CoordinatesViewModel> results = new ArrayList<CoordinatesViewModel>();
             if (queryValue.isEmpty()) return results;
-            /** List<Topic> singleTopics = dm4.searchTopics(queryValue, "dm4.contacts.street");
-            for (Topic streetname : singleTopics) {
-                List<RelatedTopic> addresses = streetname.getRelatedTopics("dm4.core.aggregation",
-                    "dm4.core.child", "dm4.core.parent", "dm4.contacts.address");
-                for (RelatedTopic address : addresses) {
-                    GeoCoordinate coordinates = geomaps.getGeoCoordinate(address);
-                    if (coordinates != null) {
-                        StreetCoordinates resultItem = new StreetCoordinates();
-                        resultItem.setName(streetname.getSimpleValue().toString());
-                        resultItem.setCoordinates(coordinates);
-                        results.add(resultItem);
-                    }
-                }
-            }
-            log.info("Fetched " + results.size() + " internal street coordinate values"); **/
+            // getKiezatlasStreetCoordinates();
             List<CoordinatesViewModel> googleResults = getGoogleStreetCoordinates(query + ", Berlin, Germany");
             log.info("Fetched " + googleResults.size() + " google street coordinate values");
             return googleResults;
         } catch (Exception e) {
             throw new RuntimeException("Searching street coordinate values by name failed", e);
         }
-    }
-
-    /**
-     * Fetches a combined list of Geo Objects and Angebote to be displayed in two-tier dropdown menu.
-     * @param referer
-     * @param query
-     */
-    @GET
-    @Path("/search/autocomplete")
-    public ResultList autoCompleteSearchGeoObjectByName(@HeaderParam("Referer") String referer, @QueryParam("query") String query) {
-        if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
-        ResultList results = new ResultList();
-        try {
-            String queryValue = query.trim();
-            if (queryValue.isEmpty()) {
-                log.warning("No search term entered, returning empty resultset");
-                return results;
-            }
-            // prepare query phrase
-            queryValue = "*" + queryValue + "*";
-            log.log(Level.INFO, "> autoCompleteQuery=\"{0}\"", queryValue);
-            List<Topic> singleTopics = dm4.searchTopics(queryValue, "ka2.geo_object.name");
-            log.log(Level.INFO, "{0} geo topics found", singleTopics.size());
-            int max = 7;
-            int count = 0;
-            for (Topic topic : singleTopics) {
-                Topic geoObject = getParentGeoObjectTopic(topic);
-                if (geoObject != null) {
-                    Topic bezirk = getRelatedBezirk(geoObject);
-                    results.putGeoObject(new SearchResult(geoObject, bezirk.getSimpleValue().toString()));
-                    count++;
-                }
-                if (count == max) break;
-            }
-            count = 0;
-            List<Topic> angeboteTopics = dm4.searchTopics(queryValue, "ka2.angebot.name");
-            log.log(Level.INFO, "{0} angebote topics found", angeboteTopics.size());
-            for (Topic topic : angeboteTopics) {
-                Topic angebot = topic.getRelatedTopic("dm4.core.composition",
-                    "dm4.core.child", "dm4.core.parent", "ka2.angebot");
-                if (angebot != null) {
-                    results.putAngebot(new SearchResult(angebot));
-                    count++;
-                }
-                if (count == max) break;
-            }
-        } catch (Exception e) {
-            throw new RuntimeException("Searching geo object for auto completion failed", e);
-        }
-        return results;
-    }
-
-    /**
-     * Builds up a list of search results (Geo Objects to be displayed in a map) by text query.
-     * Used by dm4-kiezatlas-famportal (editorial tool and api) as well as on the
-     * dm4-kiezatlas-website frontpage for (berlin wide and contextual, see next method) text search.
-     * @param referer
-     * @param query
-     */
-    @GET
-    @Path("/search")
-    public List<GeoViewModel> searchGeoObjectsFulltext(@HeaderParam("Referer") String referer,
-            @QueryParam("search") String query) {
-        // ### 0) FIXME: Authenticate request
-        if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
-        // ### 1) FIXME: lucene query phrase preparation (wildcards per term, wrapping terms into phrase, AND / OR on terms)
-        try {
-            ArrayList<GeoViewModel> results = new ArrayList<GeoViewModel>();
-            if (query.isEmpty()) {
-                log.warning("No search term entered, returning empty resultset");
-                return results;
-            }
-            // 2) Fetch unique geo object topics by text query string
-            List<Topic> geoObjects = searchFulltextInGeoObjectChilds(query, false, true, false);
-            // 3) Process saerch results and create DTS for map display
-            for (Topic topic : geoObjects) {
-                if (isGeoObjectTopic(topic)) {
-                    results.add(new GeoViewModel(topic, geomaps, angebote));
-                }
-            }
-            log.info("Build up response " + results.size() + " geo objects across all districts");
-            return results;
-        } catch (Exception e) {
-            throw new RuntimeException("Searching geo object topics failed", e);
-        }
-    }
-
-    /**
-     * Builds up a list of search results (Geo Objects to be displayed in a map) by district
-     * topic id and text query.
-     * @param referer
-     * @param contextId
-     * @param query
-     */
-    @GET
-    @Path("/search/{contextId}")
-    @Transactional
-    public List<GeoViewModel> searchGeoObjectsFulltextInContext(@HeaderParam("Referer") String referer,
-            @PathParam("contextId") long contextId, @QueryParam("search") String query) {
-        if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
-        try {
-            ArrayList<GeoViewModel> results = new ArrayList<GeoViewModel>();
-            if (query.isEmpty()) {
-                log.warning("No search term entered, returning empty resultset");
-                return results;
-            }
-            List<Topic> geoObjects = searchFulltextInGeoObjectChilds(query, false, true, false);
-            log.info("Start building response for " + geoObjects.size() + " and FILTER by CONTEXT");
-            for (Topic geoObject: geoObjects) {
-                // checks for district OR site relation
-                if (hasRelatedTopicAssociatedAsChild(geoObject, contextId)) {
-                    if (isGeoObjectTopic(geoObject)) {
-                        results.add(new GeoViewModel(geoObject, geomaps, angebote));
-                    }
-                }
-            }
-            log.info("Build up response " + results.size() + " geo objects in context=\""+contextId+"\"");
-            return results;
-        } catch (Exception e) {
-            throw new RuntimeException("Searching geo object topics failed", e);
-        }
-    }
-
-    /*** ------------------------- Website Fulltext Search Method ----------------------------- **/
-
-    /**
-     * Fires searchTopic()-calls to find Geo Object topics by their:
-     * <ul>
-     *  <li>Geo Object Name</li>
-     *  <li>Beschreibung Facet</li>
-     *  <li>Stichworte Facet</li>
-     *  <li>Bezirksregion Facet</li>
-     *  <li>Straßenname</li>
-     * </ul>
-     * @param query
-     * @return A list of unique topics of type "ka2.geo_object".
-     */
-    @Override
-    public List<Topic> searchFulltextInGeoObjectChilds(String query, boolean doSplitWildcards, boolean doWildcard, boolean doExact) {
-        // ### Todo: Fetch for ka2.ansprechpartner, traeger name, too
-        HashMap<Long, Topic> uniqueResults = new HashMap<Long, Topic>();
-        // Refactor prepareLucenQuery...
-        boolean forceExactQuery = (query.contains("?") || doExact);
-        log.info("Geo Object Fulltext Search Input \"" + query + "\", doSplitWildcards: "
-            + doSplitWildcards + ", doWildcard: " + doWildcard + ", doExact: " + forceExactQuery);
-        String queryString = prepareLuceneQueryString(query, doSplitWildcards, doWildcard, forceExactQuery);
-        if (queryString != null) {
-            log.info("Geo Object Fulltext Query Phrase \"" + queryString + "\"");
-            List<Topic> searchResults = dm4.searchTopics(queryString, "ka2.geo_object.name");
-            List<Topic> descrResults = dm4.searchTopics(queryString, "ka2.beschreibung");
-            List<Topic> stichworteResults = dm4.searchTopics(queryString, "ka2.stichworte");
-            List<Topic> bezirksregionResults = dm4.searchTopics(queryString, "ka2.bezirksregion"); // many
-            // List<Topic> streetNameResults = dm4.searchTopics(query, "dm4.contacts.street"); // deeply related  **/
-            log.info("> Matched " + searchResults.size() + " (Einrichtungsnamen), "+ descrResults.size() +" (Beschreibungen), "+stichworteResults.size() + " (Stichwörtern) , "
-                + bezirksregionResults.size() + " (Bezirksregionen) "); /**  + streetNameResults.size()
-                    + " (Straßennamen) results for query=\""+queryString+"\""); **/
-            // merge all types in search into one results set
-            searchResults.addAll(descrResults);
-            searchResults.addAll(stichworteResults);
-            searchResults.addAll(bezirksregionResults);
-            // searchResults.addAll(streetNameResults);
-            Iterator<Topic> iterator = searchResults.iterator();
-            while (iterator.hasNext()) {
-                Topic next = iterator.next();
-                if (next.getTypeUri().equals("ka2.bezirksregion")) {
-                    List<RelatedTopic> geoObjects = next.getRelatedTopics("dm4.core.aggregation", "dm4.core.child", "dm4.core.parent",
-                        "ka2.geo_object");
-                    log.fine("Collecting " + geoObjects.size() + " geo objects associated with \"" + next.getSimpleValue().toString() + "\"");
-                    for (RelatedTopic geoObject : geoObjects) {
-                        addGeoObjectToResults(uniqueResults, geoObject);
-                    }
-                } else if (next.getTypeUri().equals("ka2.geo_object.name") || next.getTypeUri().equals("ka2.stichworte")
-                    || next.getTypeUri().equals("ka2.beschreibung")) {
-                    addGeoObjectToResults(uniqueResults, getParentGeoObjectTopic(next));
-                } else if (next.getTypeUri().equals("dm4.contacts.street")) {
-                    log.fine("Collecting all geo objects associated with \"" + next.getSimpleValue().toString() + "\"");
-                    List<RelatedTopic> addresses = next.getRelatedTopics("dm4.core.aggregation", "dm4.core.child", "dm4.core.parent",
-                        "dm4.contacts.address");
-                    for (RelatedTopic address : addresses) {
-                        Topic geoObject = address.getRelatedTopic("dm4.core.composition", "dm4.core.child", "dm4.core.parent",
-                            "ka2.geo_object");
-                        addGeoObjectToResults(uniqueResults, geoObject);
-                    }
-                }
-            }
-            log.info("searchResultLength=" + (searchResults.size()) + ", " + "uniqueResultLength=" + uniqueResults.size());
-        } else {
-            log.info("searchFulltextInGeoObjectChilds given queryString is EMPTY - Skipping search");
-        }
-        return new ArrayList(uniqueResults.values());
-    }
-
-    @Override
-    public void updateImageFileFacet(Topic geoObject, String imageFilePath) {
-        facets.updateFacet(geoObject, IMAGE_FACET,
-            mf.newFacetValueModel(IMAGE_PATH).put(imageFilePath));
-    }
-
-    @Override
-    public Topic getImageFileFacetByGeoObject(Topic geoObject) {
-        return facets.getFacet(geoObject, IMAGE_FACET);
-    }
-
-    @Override
-    public Topic getFacettedBezirksregionChildTopic(Topic facettedTopic) {
-        return facets.getFacet(facettedTopic, BEZIRKSREGION_FACET);
     }
 
     /** ------------------------------------------------------- Kiezatlas Angebotsinfo Notification Mechanics ---------- */
@@ -1543,7 +1493,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         }
     }
 
-    private boolean isDistrictMember(long districtId) {
+    private boolean isAssociatedDistrictMember(long districtId) {
         List<RelatedTopic> districts = getUserDistrictTopics();
         for (RelatedTopic district : districts) {
             if (district.getId() == districtId) {
@@ -1613,7 +1563,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         }
         if (isConfirmationWorkspaceMember(username)) {
             Topic district = getDistrict(geoObject);
-            if (isDistrictMember(district.getId())) {
+            if (isAssociatedDistrictMember(district.getId())) {
                 log.info("Edit Permission GRANTED for user=" + usernameValue + " - Confirmation Workspace Member");
                 return true;
             } else {
@@ -1660,6 +1610,26 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     }
 
     /** ------------------- Kiezatlas Application Model Related Helper Methods -------------------------- **/
+
+    private List<CoordinatesViewModel> getKiezatlasStreetCoordinates(String queryPhrase) {
+        List<CoordinatesViewModel> results = new ArrayList<CoordinatesViewModel>();
+        List<Topic> singleTopics = dm4.searchTopics(queryPhrase, "dm4.contacts.street");
+        for (Topic streetname : singleTopics) {
+            List<RelatedTopic> addresses = streetname.getRelatedTopics("dm4.core.aggregation",
+                "dm4.core.child", "dm4.core.parent", "dm4.contacts.address");
+            for (RelatedTopic address : addresses) {
+                GeoCoordinate coordinates = geomaps.getGeoCoordinate(address);
+                if (coordinates != null) {
+                    CoordinatesViewModel resultItem = new CoordinatesViewModel();
+                    resultItem.setName(streetname.getSimpleValue().toString());
+                    resultItem.setCoordinates(coordinates);
+                    results.add(resultItem);
+                }
+            }
+        }
+        log.info("Fetched " + results.size() + " internal street coordinate values");
+        return results;
+    }
 
     private HashMap<String, String[]> loadCitymapWebAliases() {
         HashMap<String, String[]> aliases = new HashMap();
@@ -1937,6 +1907,19 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     }
 
     /** ------------------- Model and Facet Model Helper Methods ------------------------ **/
+
+    private void updateImageFileFacet(Topic geoObject, String imageFilePath) {
+        facets.updateFacet(geoObject, IMAGE_FACET,
+            mf.newFacetValueModel(IMAGE_PATH).put(imageFilePath));
+    }
+
+    private Topic getImageFileFacetByGeoObject(Topic geoObject) {
+        return facets.getFacet(geoObject, IMAGE_FACET);
+    }
+
+    private Topic getFacettedBezirksregionChildTopic(Topic facettedTopic) {
+        return facets.getFacet(facettedTopic, BEZIRKSREGION_FACET);
+    }
 
     private void updateSimpleCompositeFacet(Topic geoObject, String facetTypeUri, String childTypeUri, String value) {
         Topic oldFacetTopic = facets.getFacet(geoObject.getId(), facetTypeUri);
@@ -2223,9 +2206,9 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         return recipients;
     }
 
-    /** Find 1:1 copy in dm4-wiezatlas-angebote plugin */
+    /** Find 1:1 copy in dm4-kiezatlas-angebote plugin */
     private String prepareLuceneQueryString(String userQuery, boolean doSplitWildcards,
-                                            boolean doWildcard, boolean doExact) {
+                                            boolean appendWildcard, boolean doExact, boolean leadingWildcard) {
         if (userQuery.isEmpty()) return null;
         String queryPhrase = new String();
         // 1) split query input by whitespace and append a wildcard to each term
@@ -2233,7 +2216,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
             String[] terms = userQuery.split(" ");
             int count = 1;
             for (String term : terms) {
-                if (doWildcard && !term.isEmpty()) {
+                if (appendWildcard && !term.isEmpty()) {
                     queryPhrase += term + "* ";
                 } else if (!term.isEmpty()) {
                     queryPhrase += term;
@@ -2242,20 +2225,24 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
                 count++;
             }
             queryPhrase = queryPhrase.trim();
-        }
-        // 2) trim and append a wildcard to the query input
-        if (doWildcard) {
-            queryPhrase = userQuery.trim() + "*";
-        }
-        // 3) remove (potential "?", introduced as trigger for exact search), quote query input and append fuzzy command
-        if (doExact) {
+        } else if (doExact) {
+            // 3) remove (potential "?", introduced as trigger for exact search), quote query input and append fuzzy command
             queryPhrase = userQuery.trim().replaceAll("\\?", "");
             queryPhrase = "\"" + queryPhrase + "\"~0.9";
-        }
-        // 4) if none, return trimmed user query input
-        if (!doSplitWildcards && !doWildcard && !doWildcard) {
+        } else if (appendWildcard && !doSplitWildcards) {
+            // 2) trim and append a wildcard to the query input
+            queryPhrase = userQuery.trim() + "*";
+        } else if (leadingWildcard && !doSplitWildcards) {
+            queryPhrase = "*" + userQuery.trim();
+        } else if (appendWildcard && leadingWildcard && !doSplitWildcards) {
+            queryPhrase = "*" + userQuery.trim() + "*";
+        } else if (!doSplitWildcards && !appendWildcard && !appendWildcard && !leadingWildcard) {
+            // 4) if none, return trimmed user query input
             queryPhrase = userQuery.trim();
         }
+        log.info("Prepared Query Phrase \""+userQuery+"\" => \""+queryPhrase+"\" (doSplitWildcards: "
+            + doSplitWildcards + ", appendWildcard: " + appendWildcard + ", leadingWildcard: "
+            + leadingWildcard +", doExact: " + doExact + ")");
         return queryPhrase;
     }
 

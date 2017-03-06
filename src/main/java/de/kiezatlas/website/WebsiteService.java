@@ -68,12 +68,13 @@ public interface WebsiteService {
      * Searching in four child topic types of geo object, returning topics of type "ka2.geo_object".
      * @param searchTerm    User given phrase with one or many search term/s
      * @param doSplitWildcards  flag to append a wildcard to each search term
-     * @param doWildcard    flag to append a wildcard to the given phrase
+     * @param appendWildcard    flag to append a wildcard to the given phrase
      * @param doExact   flag to encode the search phrase in quotations
+     * @param leadingWildcard    prefix a wildcard to the given phrase
      * @return 
      */
     List<Topic> searchFulltextInGeoObjectChilds(String searchTerm, boolean doSplitWildcards,
-            boolean doWildcard, boolean doExact);
+            boolean appendWildcard, boolean doExact, boolean leadingWildcard);
 
     /**
      * 
@@ -89,29 +90,5 @@ public interface WebsiteService {
      * @return 
      */
     Topic getFacettedGeoObjectTopic(String topicId, long siteId);
-
-    /**
-     * Loads a "ka2.bild.facet" related to the given Geo Object.
-     *
-     * @param facettedTopic
-     * @return A topic containin the images filepath or <code>null</code> if no "Bild" facet is related to the Geo Object.
-     */
-    Topic getImageFileFacetByGeoObject(Topic facettedTopic);
-
-    /**
-     * Writes a filepath value into the "ka2.bild.facet" related facet for the given Geo Object.
-     *
-     * @param geoObject Topic   A Geo Object topic.
-     * @param imageFilePath String  The filepath relative to the respective filerepo.
-     */
-    void updateImageFileFacet(Topic geoObject, String imageFilePath);
-
-    /**
-     * Loads the topic representing the "ka2.bezirksregion" the Geo Object is assigned to.
-     *
-     * @param facettedTopic
-     * @return A topic representing the bezirksregion or <code>null</code> if no "ka2.bezirksregion" facet is related to the Geo Object.
-     */
-    Topic getFacettedBezirksregionChildTopic(Topic facettedTopic);
 
 }
