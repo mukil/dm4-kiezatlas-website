@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title th:text="'Edit - ' + ${geoobject.name} + ' - Kiezatlas'"></title>
+        <title th:text="'Edit ' + ${geoobject.name} + ' - Kiezatlas'"></title>
         <meta charset="UTF-8"/>
         <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 
@@ -59,6 +59,12 @@
                 do_manual_placement()
             }
 
+            function do_reverse_geocode() {
+                restc.do_reverse_geocode(leafletMap, undefined, function(result) {
+                    console.log("Reverse Geocoded Address Component", result)
+                })
+            }
+
             function do_geocode() {
                 var streetNr = document.getElementById('streetnr').value
                 var zipCode = document.getElementById('postal-code').value
@@ -78,11 +84,13 @@
                     try {
                         var postalCode = parse_google_response("postal_code", response.results[0])
                         var districtName = parse_google_response("sublocality_level_1", response.results[0])
+                        // var streetNr = parse_google_response("sublocality_level_1", response.results[0])
+                        // var cityName = parse_google_response("sublocality_level_1", response.results[0])
                         document.getElementById("latitude-val").value = response.results[0].geometry.location.lat
                         document.getElementById("longitude-val").value = response.results[0].geometry.location.lng
                         do_manual_placement()
                         $('#google-district').val(districtName)
-                        console.log("Geo Coded Resonse included", postalCode, "Set Google District: ", districtName)
+                        console.log("Geo Coded Response", response.results[0],"PLZ", postalCode, "Bezirk", districtName)
                     } catch (e) {
                         alert("Die Koordinaten konnten leider nicht automatisch ermittelt werden. Bitte versuchen Sie es mittels "
                             + "manueller Positionierung des Markierers und unter Anpassung des Kartenausschnitts.")
@@ -101,8 +109,8 @@
             }
 
             function clear_coordinates() {
-                document.getElementById('latitude-val').value = "-1000"
-                document.getElementById('longitude-val').value = "-1000"
+                document.getElementById('latitude-val').value = "52.5"
+                document.getElementById('longitude-val').value = "13.4"
             }
 
             function reset_coordinates() {
@@ -120,6 +128,7 @@
                 var newLong = document.getElementById('longitude-val').value
                 draggableMarker.setLatLng(L.latLng(newLat, newLong))
                 map.panTo(draggableMarker.getLatLng())
+                is_default_coordinate_pair()
             }
 
             function do_manual_placement() {
@@ -176,8 +185,20 @@
                 }
             }
 
+            function is_default_coordinate_pair() {
+                var $lat = $('#latitude-val')
+                var $lon = $('#longitude-val')
+                if($lat.val() === "52.5" && $lon.val() === "13.4") {
+                    $("#save").attr("disabled", true)
+                    if (!$lat.hasClass('invalid')) $lat.addClass("invalid")
+                    if (!$lon.hasClass('invalid')) $lon.addClass("invalid")
+                    return true
+                }
+                return false
+            }
+
             function submit_form() {
-                if (!is_valid_district() || !is_valid_email() || !is_valid_zip_code()) {
+                if (!is_valid_district() || !is_valid_email() || !is_valid_zip_code() || is_default_coordinate_pair()) {
                     console.warn("Form could not be submitted cause of missing input")
                 } else {
                     $("#geoobject-form").submit()
@@ -190,8 +211,6 @@
                     if (nameInput.length < 3) return;
                     // var streetInput = $('#streetnr').val()
                     var $area = $('#duplicates')
-                    // TODO: render loading indicator
-                    console.log("Searching for duplicates by", nameInput)
                     $.getJSON('/website/search/duplicates?geoobject=' + nameInput, function(results) {
                         if (results && results.length > 0 && results.length < 20) {
                             $area.html("Im Kiezatlas gibt es bereits einige Orte unter diesem Namen:<br/>")
@@ -219,6 +238,7 @@
                 is_valid_district()
                 is_valid_zip_code()
                 is_valid_email()
+                is_default_coordinate_pair()
             }
 
             /**
@@ -281,6 +301,8 @@
 
         <!-- Details Area -->
         <div id="detail-area">
+            <h2 th:if="${geoobject.id eq -1}">Neuen Standort eintragen</h2>
+            <h2 th:if="${geoobject.id gt -1}">Standort bearbeiten</h2>
             <div class="commands">
                 <span th:if="${!#strings.isEmpty(message)}" th:utext="${message}" class="message"></span>
                 <!--a th:if="${editable} and ${authenticated}" th:href="'/website/geo/' + ${geoobject.id}">Cancel</a-->
@@ -314,7 +336,7 @@
                             <option value="-1">Bitte Bezirk ausw&auml;hlen</option>
                             <option th:each="district : ${availableDistricts}" th:selected="${#strings.toString(district.simpleValue) eq geoobject.bezirk}" th:value="${district.id}" th:text="${district.simpleValue}"></option>
                         </select>
-                            <span class="required">*</span>
+                        <span class="required">*</span>
                         <!--input type="hidden" id="google-district" name="googleDistrictName" value=""/-->
                         <br/>
                         <select id="city" name="city">
@@ -342,12 +364,13 @@
 
                     <div class="right-side">
                         <!-- Geo Coordinate Settings -->
-                        <label for="lat">Breitengrad (Latitude) &ndash; L&auml;ngengrad (Longitude)</label>
+                        <span class="label">Standortangabe (Geo Koordinate, Breiten- und L&auml;ngengrad)</span><span class="required">*</span><br/>
                         <input class="coordinates" onchange="do_manual_placement()" id="latitude-val" type="number" step="any" name="lat" th:value='${geoobject.latitude}'/>
                         <input class="coordinates" onchange="do_manual_placement()" id="longitude-val" type="number" step="any" name="lon" th:value='${geoobject.longitude}'/>
                         <br/>
-                        <span class="label">Geo Koordinate dieses Ortes</span><br/>
-                        <a class="button reset" onclick="do_geocode()">Neu Ermitteln</a>
+                        <label for="lat">Angabe m&ouml;glich durch <b>klicken &amp; ziehen des Markers</b> in der Karte oder
+                            &uuml;ber die Angabe der Adresse und die Funktion <b>Koordinate ermitteln</b>.</label>
+                        <a class="button reset" onclick="do_geocode()">Koordinate ermitteln (anhand der Adresse)</a>
                         <!--a class="button" onclick="do_manual_placement()">Manuell platzieren</a-->
                         <a class="button" onclick="reset_coordinates()">Zur&uuml;cksetzen</a>
                         <a class="button" onclick="clear_coordinates()">L&ouml;schen</a>
@@ -365,22 +388,24 @@
                         <input type="text" name="website" th:value='${geoobject.webpage}'/>
 
                         <!-- Geo Object Category Relations: Zielgruppe und Thema -->
-                        <label for="zielgruppen">Zielgruppe</label>
-                        <select id="zielgruppen" name="zielgruppen" multiple="true">
-                            <option th:each="category : ${availableZielgruppen}"
-                                    th:selected="${zielgruppen.contains(category)}"
-                                    th:value="${category.id}" th:text="${category.simpleValue}"></option>
-                        </select>
-                        <label for="thema">Thema</label>
-                        <select id="thema" name="themen" multiple="true">
-                            <option th:each="category : ${availableThemen}"
-                                    th:selected="${themen.contains(category)}"
-                                    th:value="${category.id}" th:text="${category.simpleValue}"></option>
-                        </select>
-                        <label for="angebote-crit">Angebot</label>
-                        <select id="angebote-crit" name="angebote" multiple="true">
-                            <option th:each="thema : ${availableAngebote}" th:value="${thema.id}" th:text="${thema.simpleValue}"></option>
-                        </select>
+                        <div th:if="${!simple}">
+                            <label for="zielgruppen">Zielgruppe</label>
+                            <select id="zielgruppen" name="zielgruppen" multiple="true">
+                                <option th:each="category : ${availableZielgruppen}"
+                                        th:selected="${zielgruppen.contains(category)}"
+                                        th:value="${category.id}" th:text="${category.simpleValue}"></option>
+                            </select>
+                            <label for="thema">Thema</label>
+                            <select id="thema" name="themen" multiple="true">
+                                <option th:each="category : ${availableThemen}"
+                                        th:selected="${themen.contains(category)}"
+                                        th:value="${category.id}" th:text="${category.simpleValue}"></option>
+                            </select>
+                            <label for="angebote-crit">Angebot</label>
+                            <select id="angebote-crit" name="angebote" multiple="true">
+                                <option th:each="thema : ${availableAngebote}" th:value="${thema.id}" th:text="${thema.simpleValue}"></option>
+                            </select>
+                        </div>
                     </div>
                     <!--
                     <p class="sozialraumdaten" th:if="${!#strings.isEmpty(geoobject.lor)}"><a th:href="@{http://sozialraumdaten.kiezatlas.de/seiten/2014/12/(lor=${geoobject.lor})}">Sozialraumdaten</a></p>
@@ -392,15 +417,17 @@
                     <a class="button ui" th:if="${geoobject.id} == -1" href="/angebote/my">Cancel</a>
                 </div>
             </form>
-            <div class="categories">
-                <div class="related-topics" th:each="audience : ${zielgruppen}">
-                    <span class="thema" th:text='${audience.simpleValue}'>Name der Zielgruppe</span>
-                </div>
-                <div class="related-topics" th:each="service : ${angebote}">
-                    <span class="angebot" th:text='${service.simpleValue}'>Name der Angebote</span>
-                </div>
-                <div class="related-topics" th:each="topic : ${themen}">
-                    <span class="zielgruppe" th:text='${topic.simpleValue}'>Name des Themas</span>
+            <div th:if="${!simple}">
+                <div class="categories">
+                    <div class="related-topics" th:each="audience : ${zielgruppen}">
+                        <span class="thema" th:text='${audience.simpleValue}'>Name der Zielgruppe</span>
+                    </div>
+                    <div class="related-topics" th:each="service : ${angebote}">
+                        <span class="angebot" th:text='${service.simpleValue}'>Name der Angebote</span>
+                    </div>
+                    <div class="related-topics" th:each="topic : ${themen}">
+                        <span class="zielgruppe" th:text='${topic.simpleValue}'>Name des Themas</span>
+                    </div>
                 </div>
             </div>
         </div>

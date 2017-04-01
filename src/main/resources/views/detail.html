@@ -7,10 +7,12 @@
 
         <link rel="stylesheet" href="/de.kiezatlas.website/vendor/leaflet/leaflet.css"/>
         <link rel="stylesheet" href="/de.kiezatlas.website/css/sitestyle.css"/>
+        <link rel="stylesheet" href="/de.kiezatlas.angebote/dist/vendor/jquery-ui-1.12.1-kiezatlas.min.css"/>
         <link rel="stylesheet" href="/de.kiezatlas.website/css/semantic-ui/2.2/components/button.min.css"/>
         <link rel="stylesheet" href="/de.kiezatlas.website/css/semantic-ui/2.2/components/search.min.css"/>
 
         <script src="/de.kiezatlas.angebote/dist/vendor/jquery-1.9.1-and-1.12.1-ui-custom.min.js"></script>
+        <script src="/de.kiezatlas.website/dist/vendor/dm4-webclient-utils.min.js"></script>
         <script src="/de.kiezatlas.website/vendor/leaflet/leaflet.js"></script>
         <script src="/de.kiezatlas.website/css/semantic-ui/2.2/sidebar.min.js"></script>
         <script src="/de.kiezatlas.website/css/semantic-ui/2.2/api.min.js"></script>
@@ -58,6 +60,22 @@
                 }).addTo(map)
             })
 
+            function delete_geo_object(id) {
+                console.log("Delete Geo Object", id)
+                $("#dialog-confirm").dialog({
+                    resizable: false, height: "auto", width: 340, modal: true,
+                    title: "Kiezatlas Standort löschen", buttons: {
+                        "Ja, löschen": function() {
+                            $( this ).dialog( "close" );
+                            window.document.location.href = "/website/geo/delete/" + id
+                        },
+                        "Nein": function() {
+                            $( this ).dialog( "close" );
+                        }
+                    }
+                })
+            }
+
             function logout() {
                 restc.logout()
                 window.document.location.reload()
@@ -92,7 +110,7 @@
                 <div class="commands">
                     <p th:if="${!#strings.isEmpty(message)}" th:text="${message}"></p>
                     <a class="ui button olive edit" th:if="${authenticated} and ${editable}" th:href="'/website/geo/edit/' + ${geoobject.id}">Bearbeiten</a>
-                    <a class="ui button red delete" th:if="${authenticated} and ${editable}" th:href="'/website/geo/delete/' + ${geoobject.id}">L&ouml;schen</a>
+                    <a class="ui button red delete" th:if="${authenticated} and ${editable}" th:href="'javascript:delete_geo_object(' + ${geoobject.id} + ')'">L&ouml;schen</a><!-- th:href="'/website/geo/delete/' + ${geoobject.id}"-->
                     <a class="ui button olive button publish" th:if="${is_publisher} and ${!is_published}" th:href="'/website/geo/confirm/' + ${geoobject.id}">Freischalten</a>
                 </div>
                 <p class="comment" th:each="comment : ${geoobject.comments}">
@@ -156,7 +174,8 @@
                         </div>
                         <p class="website" th:if="${!#strings.isEmpty(geoobject.webpage)}">
                             <label>Website</label>
-                            <a th:href="${geoobject.webpage}" th:text="${geoobject.webpage}">Website</a>
+                            <a target="_blank" th:if="!${geoobject.webpage.contains('http')}" th:href="'http://' + ${geoobject.webpage}" th:text="${geoobject.webpage}">Website</a>
+                            <a target="_blank" th:if="${geoobject.webpage.contains('http')}" th:href="${geoobject.webpage}" th:text="${geoobject.webpage}">Website</a>
                         </p>
                         <p class="sozialraumdaten" th:if="${!#strings.isEmpty(geoobject.lor)}"><a th:href="@{http://sozialraumdaten.kiezatlas.de/seiten/2014/12/(lor=${geoobject.lor})}">Sozialraumdaten</a></p>
                         <a class="imprint" th:href="${geoobject.imprint}">Impressum</a>
@@ -175,6 +194,8 @@
                 </div>
             </div>
         </div>
+
+        <div id="dialog-confirm" title="Eintrag löschen?">Willst du diesen Standort wirklich aus dem Kiezatlas entfernen?</div>
 
         <p>&nbsp;</p>
 

@@ -372,7 +372,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
             // ### Server side validation will let user loose all user input...
             log.warning("Saving new geo object prohibited - NO DISTRICT Given");
             viewData("warning", INVALID_DISTRICT_SELECTION);
-            return (topicId == NEW_TOPIC_ID) ? getGeoObjectEditPage() : getGeoObjectEditPage(topicId);
+            return (topicId == NEW_TOPIC_ID) ? getGeoObjectCreatePage() : getGeoObjectEditPage(topicId);
         }
         // Handle Geo Coordinates of Geo Object
         if (latitude == -1000 || longitude == -1000) {
@@ -444,8 +444,20 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
      */
     @GET
     @Produces(MediaType.TEXT_HTML)
+    @Path("/geo/create/simple")
+    public Viewable getGeoObjectCreateSimplePage() {
+        if (!isAuthenticated()) return getUnauthorizedPage();
+        viewData("simple", true);
+        return getGeoObjectCreatePage();
+    }
+
+    /**
+     * Builds up a form for introducing a NEW Kiezatlas Einrichtung (Geo Object).
+     */
+    @GET
+    @Produces(MediaType.TEXT_HTML)
     @Path("/geo/create")
-    public Viewable getGeoObjectEditPage() {
+    public Viewable getGeoObjectCreatePage() {
         if (!isAuthenticated()) return getUnauthorizedPage();
         EinrichtungPageModel geoObject = new EinrichtungPageModel();
         geoObject.setCoordinates(new GeoCoordinate(13.4, 52.5));
@@ -553,6 +565,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
                 viewData("message", "Der Kiezatlas Ort wurde erfolgreich gelöscht.");
                 log.info("Topic \"" + name + "\", id=" + topicId
                     + " deleted successfully by \"" + accesscl.getUsername() + "\"");
+                log.info("DELETED: " + dm4.getTopic(Long.parseLong(topicId)));
                 return getSimpleMessagePage();
             } else {
                 viewData("message", "Der Datensatz konnte nicht gelöscht werden, da ein Fehler aufgetreten ist.");
@@ -824,8 +837,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     }
 
     /**
-     * Fetches a list of Geo Objects to be displayed in a map by name.
-     * Ditch searchGeoObjectNames in KiezatlasPlugin (used by Famportal-Angular service).
+     * Fetches a list of Geo Objects for assignment used in Angebotszeitraum editor.
      * @param referer
      * @param query
      */
@@ -838,7 +850,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
             log.log(Level.INFO, "> nameQuery=\"{0}\"", query);
             String queryValue = query.trim();
             ArrayList<GeoViewModel> results = new ArrayList<GeoViewModel>();
-            if (query.isEmpty()) return results;
+            if (isInvalidSearchQuery(queryValue)) return results;
             // DO Search for //EXACT// in Name ONLY (if "Not Empty" AND "Without ASTERISK")
             String queryPhrase = prepareLuceneQueryString(queryValue, false, false, true, false);
             List<Topic> singleTopics = dm4.searchTopics(queryPhrase, "ka2.geo_object.name");
@@ -868,7 +880,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
             String queryValue = geoObjectName.replace("e.V.", "").replace("gGmbh", "").toLowerCase().trim();
             ArrayList<GeoViewModel> results = new ArrayList<GeoViewModel>();
             log.log(Level.INFO, "> preprocessed nameQuery=\"{0}\"", queryValue + "\" to find duplicates");
-            if (queryValue.isEmpty() || queryValue.length() < 3) return results;
+            if (isInvalidSearchQuery(queryValue)) return results;
             // DO Search IF "AT LEAST 3 Chars" BUT WITH "ASTERISK AT THE END" in NAME ONLY
             String queryPhrase = prepareLuceneQueryString(queryValue, false, true, false, false);
             List<Topic> singleTopics = dm4.searchTopics(queryPhrase, "ka2.geo_object.name");
@@ -892,24 +904,28 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
      */
     @GET
     @Path("/search/autocomplete")
-    public ResultList autoCompleteFrontpageQuickSearchByName(@HeaderParam("Referer") String referer, @QueryParam("query") String query) {
+    public ResultList autoCompleteFrontpageQuickSearchByName(@HeaderParam("Referer") String referer,
+                                                             @QueryParam("query") String query) {
         if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
         ResultList results = new ResultList();
         try {
             String queryValue = query.trim();
-            if (query.isEmpty()) return results;
+            if (isInvalidSearchQuery(queryValue)) return results;
             // DO Search for "Not Empty" AND "WITH ASTERISK ON BOTH SIDES" in NAME ONLY
             queryValue = prepareLuceneQueryString(query, false, true, false, true);
             log.log(Level.INFO, "> autoCompleteQuery=\"{0}\"", queryValue);
             List<Topic> singleTopics = dm4.searchTopics(queryValue, "ka2.geo_object.name");
-            log.log(Level.INFO, "{0} geo topics found", singleTopics.size());
             int max = 7;
             int count = 0;
             for (Topic topic : singleTopics) {
                 Topic geoObject = getParentGeoObjectTopic(topic);
                 if (geoObject != null) {
                     Topic bezirk = getRelatedBezirk(geoObject);
-                    results.putGeoObject(new SearchResult(geoObject, bezirk.getSimpleValue().toString()));
+                    Topic street = getRelatedAddressStreetName(geoObject);
+                    String zusatzInfo = "";
+                    if (street != null) zusatzInfo += street.getSimpleValue();
+                    if (bezirk != null) zusatzInfo += ", " + bezirk.getSimpleValue().toString();
+                    results.putGeoObject(new SearchResult(geoObject, zusatzInfo));
                     count++;
                 }
                 if (count == max) break;
@@ -917,7 +933,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
             // Do Search for Angebote here too // Fixme: Move to dm4-kiezat-angebote plugin
             count = 0;
             List<Topic> angeboteTopics = dm4.searchTopics(queryValue, "ka2.angebot.name");
-            log.log(Level.INFO, "{0} angebote topics found", angeboteTopics.size());
+            log.log(Level.INFO, "{0} geo topics found, {1} angebote topics found", new Object[]{singleTopics.size(), angeboteTopics.size()});
             for (Topic topic : angeboteTopics) {
                 Topic angebot = topic.getRelatedTopic("dm4.core.composition",
                     "dm4.core.child", "dm4.core.parent", "ka2.angebot");
@@ -941,13 +957,14 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     @GET
     @Path("/search")
     public List<GeoViewModel> searchGeoObjectsFulltext(@HeaderParam("Referer") String referer,
-            @QueryParam("search") String query) {
+                                                       @QueryParam("search") String query) {
         if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
         try {
+            String queryValue = query.trim();
             ArrayList<GeoViewModel> results = new ArrayList<GeoViewModel>();
-            if (query.isEmpty()) return results;
+            if (isInvalidSearchQuery(queryValue)) return results;
             // 2) Fetch unique geo object topics by text query string (leading AND ending ASTERISK)
-            List<Topic> geoObjects = searchFulltextInGeoObjectChilds(query, false, true, false, true);
+            List<Topic> geoObjects = searchFulltextInGeoObjectChilds(queryValue, false, true, false, true);
             // 3) Process saerch results and create DTS for map display
             for (Topic topic : geoObjects) {
                 if (isGeoObjectTopic(topic)) {
@@ -976,9 +993,10 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
         try {
             ArrayList<GeoViewModel> results = new ArrayList<GeoViewModel>();
-            if (query.isEmpty()) return results;
+            String queryValue = query.trim();
+            if (isInvalidSearchQuery(queryValue)) return results;
             // DO fulltext saerch with simple ASTERISK at the END
-            List<Topic> geoObjects = searchFulltextInGeoObjectChilds(query, false, true, false, true);
+            List<Topic> geoObjects = searchFulltextInGeoObjectChilds(queryValue, false, true, false, true);
             log.info("Start building response for " + geoObjects.size() + " and FILTER by CONTEXT");
             for (Topic geoObject: geoObjects) {
                 // checks for district OR site relation
@@ -1046,8 +1064,8 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
                     addGeoObjectToResults(uniqueResults, getParentGeoObjectTopic(next));
                 } else if (next.getTypeUri().equals("dm4.contacts.street")) {
                     log.fine("Collecting all geo objects associated with \"" + next.getSimpleValue().toString() + "\"");
-                    List<RelatedTopic> addresses = next.getRelatedTopics("dm4.core.aggregation", "dm4.core.child", "dm4.core.parent",
-                        "dm4.contacts.address");
+                    List<RelatedTopic> addresses = next.getRelatedTopics("dm4.core.aggregation",
+                        "dm4.core.child", "dm4.core.parent", "dm4.contacts.address");
                     for (RelatedTopic address : addresses) {
                         Topic geoObject = getParentGeoObjectTopic(address);
                         addGeoObjectToResults(uniqueResults, geoObject);
@@ -1090,17 +1108,16 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
      * TODO: Just deliver UNIQUE Streets (by NAME and NR)
      * @param referer
      * @param query
-     */
     @GET
     @Path("/search/coordinates")
     public List<CoordinatesViewModel> searchStreetCoordinatesByName(@HeaderParam("Referer") String referer,
-            @QueryParam("query") String query) {
+                                                                    @QueryParam("query") String query) {
         if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
         try {
-            String queryValue = prepareLuceneQueryString(query, false, false, false, false);
-            log.info("Street Coordinates Query=\""+query+"\"");
+            // String queryValue = prepareLuceneQueryString(query, false, false, false, false);
+            // log.info("Street Coordinates Query=\""+queryValue+"\"");
             List<CoordinatesViewModel> results = new ArrayList<CoordinatesViewModel>();
-            if (queryValue.isEmpty()) return results;
+            // if (isInvalidSearchQuery(queryValue)) return results;
             // getKiezatlasStreetCoordinates();
             List<CoordinatesViewModel> googleResults = getGoogleStreetCoordinates(query + ", Berlin, Germany");
             log.info("Fetched " + googleResults.size() + " google street coordinate values");
@@ -1108,7 +1125,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         } catch (Exception e) {
             throw new RuntimeException("Searching street coordinate values by name failed", e);
         }
-    }
+    } */
 
     /** ------------------------------------------------------- Kiezatlas Angebotsinfo Notification Mechanics ---------- */
 
@@ -1535,7 +1552,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
 
     private boolean isValidReferer(String ref) {
         if (ref == null) return false;
-        if (ref.contains(".kiezatlas.de/") || ref.contains("localhost")) {
+        if (ref.contains(".kiezatlas.de/") || ref.contains("localhost:8080")) {
             return true;
         } else {
             return false;
@@ -1804,7 +1821,8 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
             if (description != null) description.delete();
             if (oeffnungszeit != null) oeffnungszeit.delete();
             if (website != null) website.delete();
-            geoObject.delete();
+            // geoObject.delete(); fires NO aclexception (and does not delete topics if one occurs)
+            dm4.deleteTopic(geoObject.getId()); // fires acl exception if user has no write permission
             return true;
         } catch (RuntimeException re) {
             tx.failure();
@@ -2209,7 +2227,6 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     /** Find 1:1 copy in dm4-kiezatlas-angebote plugin */
     private String prepareLuceneQueryString(String userQuery, boolean doSplitWildcards,
                                             boolean appendWildcard, boolean doExact, boolean leadingWildcard) {
-        if (userQuery.isEmpty()) return null;
         String queryPhrase = new String();
         // 1) split query input by whitespace and append a wildcard to each term
         if (doSplitWildcards) {
@@ -2291,8 +2308,14 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
 
     private Topic getRelatedBezirk(Topic geoObject) {
         Topic bezirk = geoObject.getRelatedTopic("dm4.core.aggregation", "dm4.core.parent", "dm4.core.child", "ka2.bezirk");
-        if (bezirk == null) log.warning("Geo Object is NOT related to a specific BEZIRK " + geoObject);
+        if (bezirk == null) log.warning("Geo Object ("+geoObject+") is NOT related to a specific BEZIRK");
         return bezirk;
+    }
+
+    private Topic getRelatedAddressStreetName(Topic geoObject) {
+        Topic address = geoObject.getChildTopics().getTopicOrNull("dm4.contacts.address");
+        if (address == null) log.warning("Geo Object ("+geoObject+") has no related ADDRESS topic");
+        return address.getChildTopics().getTopicOrNull("dm4.contacts.street");
     }
 
     private List<String> getAssignedAdministrativeMailboxes(Topic bezirksTopic) {
@@ -2594,6 +2617,10 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
             throw new RuntimeException(ex);
         }
         return result;
+    }
+
+    private boolean isInvalidSearchQuery(String query) {
+        return (query.isEmpty() || query.equals("*") || query.length() < 3);
     }
 
 }

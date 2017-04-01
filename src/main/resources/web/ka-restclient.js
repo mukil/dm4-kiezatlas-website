@@ -29,6 +29,45 @@ var restc = (function($) {
         })
     }
 
+    restc.do_reverse_geocode = function(leafletMap, _self, callback) {
+        $.getJSON('/website/reverse-geocode/' + leafletMap.get_current_location_lat()
+                + ',' + leafletMap.get_current_location_lng(), function (geo_names) {
+            if (_self) _self.hide_spinning_wheel(true)
+            if (geo_names.results.length > 0) {
+                var first_result = geo_names.results[0]
+                var components = first_result.address_components
+                var object = { coordinates : "" + leafletMap.get_current_location_lat() + "," + leafletMap.get_current_location_lng() }
+                for (var i in components) {
+                    var el = components[i]
+                    if (el.types[0] === "route") {
+                        if (typeof el.long_name !== "undefined") object.street = el.long_name
+                    } else if (el.types[0] === "sublocality_level_1") {
+                        if (typeof el.long_name !== "undefined" && el.long_name) object.district = el.long_name.replace("Bezirk ", "")
+                    } else if (el.types[0] === "street_number" ) {
+                        if (typeof el.long_name !== "undefined" && el.long_name) object.street_nr = el.long_name
+                    } else if (el.types[0] === "locality") {
+                        if (typeof el.long_name !== "undefined" && el.long_name) object.city = el.long_name
+                    } else if (el.types[0] === "postal_code") {
+                        if (typeof el.long_name !== "undefined" && el.long_name) object.postal_code= el.long_name
+                    }
+                }
+                // console.log("Reverse Geo Code, Street: " + o.street + " Hausnr: " + o.street_nr + " City: " + o.city + " PLZ: " + o.postal_code)
+                var location_name  = object.street + " "
+                // Append street nr to street name
+                if (object.street_nr) location_name += object.street_nr + ", "
+                // Append name of District OR (if unknown) City
+                if (object.district) {
+                    location_name += " " + object.district
+                } else if (object.city) {
+                    location_name += " " + object.city
+                }
+                leafletMap.set_current_location_name(location_name)
+                if (_self) _self.render_current_location_label()
+                if (callback) callback(object)
+            }
+        })
+    }
+
     restc.load_current_angebotsinfos = function(callback) {
         $.getJSON('/angebote/locations', function(results) {
             callback(results)

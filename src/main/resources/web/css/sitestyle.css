@@ -361,7 +361,7 @@ body.pushable > .pusher {
     margin-bottom: .5em;
 }
 
-.facet-editor,
+.kiezatlas.facet-editor .facet-editor,
 .sites .editor {
     margin: 2em;
     margin-top: 5em;
@@ -903,6 +903,7 @@ form .invalid {
 
 /** ----------- Basic Font Styles & Colors ---------*/
 
+.edit .detail-area h2,
 #marker-name b,
 h3 {
     color: #002856;
@@ -1413,17 +1414,15 @@ span.bold {
 .kiezatlas.topic #detail-area .commands {
     padding: 10px;
     padding-bottom: 3em;
+    text-align: center;
 }
 
-.kiezatlas.topic .commands .edit {
-    float: left;
+.kiezatlas.topic #detail-area .commands a.ui.button {
+    margin-left: 1em;
+    margin-right: 1em;
 }
 
-.kiezatlas.topic .commands .publish {
-    float: right;
-}
-
-.confirm .commands {
+.confirm .commands a {
     margin-left: 1.5em;
 }
 
@@ -1793,6 +1792,9 @@ div.link-area {
     margin: auto;
 }
 
+#dialog-confirm {
+    display: none;
+}
 
 /** --------------------------------------- Overrides for Sign-up Dialog --- */
 

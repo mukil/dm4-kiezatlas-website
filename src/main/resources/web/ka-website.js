@@ -793,41 +793,7 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
     }
 
     this.do_reverse_geocode = function(e) {
-        $.getJSON('/website/reverse-geocode/' + leafletMap.get_current_location_lat()
-                + ',' + leafletMap.get_current_location_lng(), function (geo_names) {
-            _self.hide_spinning_wheel(true)
-            if (geo_names.results.length > 0) {
-                var first_result = geo_names.results[0]
-                var components = first_result.address_components
-                var o = { coordinates : "" + leafletMap.get_current_location_lat() + "," + leafletMap.get_current_location_lng() }
-                for (var i in components) {
-                    var el = components[i]
-                    if (el.types[0] === "route") {
-                        if (typeof el.long_name !== "undefined") o.street = el.long_name
-                    } else if (el.types[0] === "sublocality_level_1") {
-                        if (typeof el.long_name !== "undefined" && el.long_name) o.district = el.long_name.replace("Bezirk ", "")
-                    } else if (el.types[0] === "street_number" ) {
-                        if (typeof el.long_name !== "undefined" && el.long_name) o.street_nr = el.long_name
-                    } else if (el.types[0] === "locality") {
-                        if (typeof el.long_name !== "undefined" && el.long_name) o.city = el.long_name
-                    } else if (el.types[0] === "postal_code") {
-                        if (typeof el.long_name !== "undefined" && el.long_name) o.postal_code= el.long_name
-                    }
-                }
-                // console.log("Reverse Geo Code, Street: " + o.street + " Hausnr: " + o.street_nr + " City: " + o.city + " PLZ: " + o.postal_code)
-                var location_name  = o.street + " "
-                // Append street nr to street name
-                if (o.street_nr) location_name += o.street_nr + ", "
-                // Append name of District OR (if unknown) City
-                if (o.district) {
-                    location_name += " " + o.district
-                } else if (o.city) {
-                    location_name += " " + o.city
-                }
-                leafletMap.set_current_location_name(location_name)
-                _self.render_current_location_label()
-            }
-        })
+        restc.do_reverse_geocode(leafletMap, _self)
     }
 
     // --- Simple HTML click handler

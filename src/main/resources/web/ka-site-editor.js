@@ -258,7 +258,7 @@ var sites = {
             $facetLabelDiv.append($facetInput)
             if (assocDefType.indexOf("aggregation_def") !== -1) {
                 var $button = $('<span class="ui button basic small" '
-                    + 'onclick="sites.activate_options(\'' + facetTypeUri + '\', \''+facetTopicType.uri+'\', ' + addEmptyOption + ', '+existingMany+')">').text("Bearbeiten")
+                    + 'onclick="sites.activate_options(\'' + facetTypeUri + '\', \''+facetTopicType.uri+'\', ' + addEmptyOption + ', '+existingMany+')">').text("Facette bearbeiten")
                 $facetLabelDiv.append($button)
             }
             $facetLabel.append($facetLabelDiv)
