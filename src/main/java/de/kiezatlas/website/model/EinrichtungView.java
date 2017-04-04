@@ -17,12 +17,12 @@ import org.codehaus.jettison.json.JSONObject;
 /**
  * A data model wrapper for a "basic geo object" (Bezirk-style) with getters for use in Thymeleaf.
  */
-public class EinrichtungPageModel implements JSONEnabled {
+public class EinrichtungView implements JSONEnabled {
     
-    Logger log = Logger.getLogger(GeoDetailsViewModel.class.getName());
+    Logger log = Logger.getLogger(GeoDetailView.class.getName());
     public JSONObject json = null;
 
-    public EinrichtungPageModel() {
+    public EinrichtungView() {
         json = new JSONObject();
     }
 
@@ -181,15 +181,6 @@ public class EinrichtungPageModel implements JSONEnabled {
         }
     }
 
-    public void setLastModified(long timestamp) {
-        try {
-            json.put("last_modified", timestamp);
-            json.put("last_modified_string", DateFormat.getDateInstance(DateFormat.LONG, Locale.GERMANY).format(timestamp));
-        } catch (JSONException ex) {
-            log.log(Level.SEVERE, null, ex);
-        }
-    }
-
     public void setCoordinates(GeoCoordinate coordinate) {
         try {
             json.put("latitude", coordinate.lat);
@@ -215,11 +206,73 @@ public class EinrichtungPageModel implements JSONEnabled {
         }
     }
 
-    public void setComments(List<CommentModel> comments) {
+    public void setComments(List<CommentView> comments) {
         try {
             json.put("comments", DeepaMehtaUtils.toJSONArray(comments));
         } catch (JSONException ex) {
             log.log(Level.SEVERE, null, ex);
+        }
+    }
+
+    public void setDistanceInMeter(String meter) {
+        try {
+            json.put("distance", meter);
+        } catch (Exception e) {
+            log.log(Level.SEVERE, null, e);
+        }
+    }
+
+    public void addClassName(String className) {
+        try {
+            if (json.has("class")) {
+                json.put("class", json.get("class") + " " + className);
+            } else {
+                json.put("class", className);
+            }
+        } catch (Exception e) {
+            log.log(Level.SEVERE, null, e);
+        }
+    }
+
+    public void setContact(String kontaktValue) {
+        try {
+            json.put("contact", kontaktValue);
+        } catch (JSONException ex) {
+            log.log(Level.SEVERE, null, ex);
+        }
+    }
+
+    public void setCreated(long timestamp) {
+        try {
+            json.put("created", timestamp);
+            json.put("created_string", DateFormat.getDateInstance(DateFormat.LONG, Locale.GERMANY).format(timestamp));
+        } catch (Exception e) {
+            log.log(Level.SEVERE, null, e);
+        }
+    }
+
+    public void setCreator(String creatorUsername) {
+        try {
+            json.put("creator", creatorUsername);
+        } catch (Exception e) {
+            log.log(Level.SEVERE, null, e);
+        }
+    }
+
+    public void setLastModified(long timestamp) {
+        try {
+            json.put("last_modified", timestamp);
+            json.put("last_modified_string", DateFormat.getDateInstance(DateFormat.LONG, Locale.GERMANY).format(timestamp));
+        } catch (JSONException ex) {
+            log.log(Level.SEVERE, null, ex);
+        }
+    }
+
+    public void setUri(String uri) {
+        try {
+            json.put("uri", uri);
+        } catch (Exception e) {
+            log.log(Level.SEVERE, null, e);
         }
     }
 
@@ -427,9 +480,62 @@ public class EinrichtungPageModel implements JSONEnabled {
         return -1;
     }
 
+    public String getUri() {
+        try {
+            return json.getString("uri");
+        } catch (JSONException ex) {
+            log.log(Level.SEVERE, null, ex);
+        }
+        return "";
+    }
+
     public String getLastModified() {
         try {
             return json.getString("last_modified_string");
+        } catch (JSONException ex) {
+            log.log(Level.SEVERE, null, ex);
+        }
+        return "";
+    }
+
+    public String getCreated() {
+        try {
+            return json.getString("created_string");
+        } catch (JSONException ex) {
+            log.log(Level.SEVERE, null, ex);
+        }
+        return "";
+    }
+
+    public String getContact() {
+        try {
+            return json.getString("contact");
+        } catch (JSONException ex) {
+            log.log(Level.SEVERE, null, ex);
+        }
+        return "";
+    }
+
+    public String getDistanceInMeter() {
+        try {
+            return json.getString("distance");
+        } catch (JSONException ex) {
+            log.log(Level.SEVERE, null, ex);
+        }
+        return "";
+    }
+
+    public String getClassName() {
+        try {
+            return json.getString("class");
+        } catch (JSONException ex) {
+            return "";
+        }
+    }
+
+    public String getCreator() {
+        try {
+            return json.getString("creator");
         } catch (JSONException ex) {
             log.log(Level.SEVERE, null, ex);
         }
@@ -445,13 +551,13 @@ public class EinrichtungPageModel implements JSONEnabled {
         }
     }
 
-    public List<CommentModel> getComments() {
-        List<CommentModel> results = new ArrayList<CommentModel>();
+    public List<CommentView> getComments() {
+        List<CommentView> results = new ArrayList<CommentView>();
         try {
             JSONArray comments = json.getJSONArray("comments");
             for (int i = 0; i < comments.length(); i++) {
                 JSONObject obj = comments.getJSONObject(i);
-                CommentModel comment = new CommentModel(obj.getString("message"), obj.getString("contact"));
+                CommentView comment = new CommentView(obj.getString("message"), obj.getString("contact"));
                 results.add(comment);
             }
             return results;
@@ -466,8 +572,8 @@ public class EinrichtungPageModel implements JSONEnabled {
     @Override
     public boolean equals(Object obj) {
         boolean equal = false;
-        if (obj instanceof EinrichtungPageModel) {
-            equal = (this.getId() == ((EinrichtungPageModel) obj).getId());
+        if (obj instanceof EinrichtungView) {
+            equal = (this.getId() == ((EinrichtungView) obj).getId());
         }
         return equal;
     }

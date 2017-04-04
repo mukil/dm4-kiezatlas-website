@@ -27,22 +27,24 @@
                 // $('.ui.dropdown').dropdown();
             })
 
-            function refresh_confirmation_list() {
+            function refresh_comment_list() {
                 var selection = document.getElementById("districts")
                 if (selection) {
+                    console.log("Navigating to district comment list...")
                     var districtId = document.getElementById("districts").value
-                    window.document.location.href = "/website/geo/hinweise/" + districtId
+                    window.document.location.href = "/website/list/hinweise/" + districtId
                 }
             }
         /*]]>*/
         </script>
         <meta th:replace="fragments/tracker" />
     </head>
-    <body class="kiezatlas confirm">
+    <body class="kiezatlas comments">
 
         <div class="top-menu" th:include="fragments/navigation :: top (publisher=${is_publisher})"></div>
 
-        <div class="ui vertical left menu sidebar" th:include="fragments/navigation :: vertical (publisher=${is_publisher})"></div>
+        <div class="ui vertical left menu sidebar"
+             th:include="fragments/navigation :: vertical (publisher=${is_publisher})"></div>
 
         <div class="pusher">
 
@@ -54,13 +56,15 @@
 
             <!-- Details Area -->
             <div th:if="${is_publisher}" class="ui container">
-                 <div class="commands">
-                    <a class="button basic ui" href="/website/geo/freischalten">Neue Orte</a>
-                    <a class="button basic green ui active" href="/website/geo/hinweise">Hinweise</a>
+                <div class="commands">
+                    <h3>Alle</h3>
+                    <a class="button ui" href="/website/list">Orte</a>
+                    <a class="button ui" href="/website/list/freischalten">Neueintragungen</a>
+                    <a class="button ui green active" href="/website/list/hinweise">Bearbeitungshinweise</a>
                     <!--div class="item" data-tab="third">Newsbereich</div-->
                     <form>
                         <label>im Bezirk</label>
-                        <select id="districts" class="ui dropdown" onchange="refresh_confirmation_list()">
+                        <select id="districts" class="ui dropdown" onchange="refresh_comment_list()">
                             <option th:each="district: ${userDistricts}" th:selected="${districtId == district.id} ? true : false"
                                     th:value="${district.id}" th:text="${district.simpleValue}">
                             </option>

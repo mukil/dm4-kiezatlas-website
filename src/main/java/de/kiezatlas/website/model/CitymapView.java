@@ -3,7 +3,6 @@ package de.kiezatlas.website.model;
 import de.deepamehta.core.JSONEnabled;
 import de.deepamehta.core.RelatedTopic;
 import de.deepamehta.core.Topic;
-import de.deepamehta.core.util.DeepaMehtaUtils;
 import java.util.ArrayList;
 import java.util.List;
 import org.codehaus.jettison.json.JSONException;
@@ -16,14 +15,14 @@ import java.util.logging.Logger;
  *
  * @author Malte Reißig (<a href="mailto:malte@mikromedia.de">Contact</a>)
  */
-public class SiteViewModel implements JSONEnabled {
+public class CitymapView implements JSONEnabled {
 
-    Logger log = Logger.getLogger(GeoDetailsViewModel.class.getName());
+    Logger log = Logger.getLogger(GeoDetailView.class.getName());
 
     private Topic topic;
     private JSONObject json = new JSONObject();
 
-    public SiteViewModel(Topic site) {
+    public CitymapView(Topic site) {
         this.topic = site;
         this.topic.loadChildTopics();
     }

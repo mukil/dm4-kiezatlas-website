@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Kiezatlas 2 Listenansicht</title>
+
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+        <link rel="stylesheet" href="/de.kiezatlas.angebote/dist/vendor/jquery-ui-1.12.1-kiezatlas.min.css"/>
+        <link rel="stylesheet" href="/de.kiezatlas.website/css/sitestyle.css"/>
+        <link rel="stylesheet" href="/de.kiezatlas/style/kiezatlas.css"/>
+
+        <script src="/de.kiezatlas.angebote/dist/vendor/jquery-1.9.1-and-1.12.1-ui-custom.min.js"></script>
+        <script src="/de.kiezatlas.website/dist/vendor/dm4-webclient-utils.min.js"></script>
+        <script src="/de.kiezatlas.website/ka-restclient.js"></script>
+        <!--script src="/de.kiezatlas.website/ka-list.js"></script-->
+
+        <script type="text/javascript">
+
+            // SAP List initialization
+            $(document).ready(function(e) {
+                // render user menu
+                restc.is_logged_in(function(response) {
+                    /** list.render_page(response) **/
+                    console.log("User is logged in?", response)
+                })
+            })
+            
+            function refresh_list_filter() {
+                var selection = document.getElementById("districts")
+                if (selection) {
+                    var districtId = document.getElementById("districts").value
+                    window.document.location.href = "/website/list/" + districtId
+                }
+            }
+
+        </script>
+        <meta th:replace="fragments/tracker" />
+    </head>
+    <body class="kiezatlas list">
+        
+        <div class="top-menu" th:include="fragments/navigation :: top (publisher=${is_publisher})"></div>
+
+        <div class="ui vertical left menu sidebar" th:include="fragments/navigation :: vertical (publisher=${is_publisher})"></div>
+
+        <div class="pusher">
+
+            <div id="header">
+                <p>&nbsp;</p>
+                <h3>&nbsp;</h3>
+                <p th:if="${not is_publisher}"><b>Sorry!</b><br/>Sie haben aktuell nicht die n&ouml;tigen Berechtigungen um alle Einrichtungen im Kiezatlas einzusehen.</p>
+            </div>
+
+            <div class="ui container">
+                <div class="commands">
+                    <h3>Alle</h3>
+                    <a class="button ui green active" href="/website/list">Orte</a>
+                    <a class="button ui" href="/website/list/freischalten">Neueintragungen</a>
+                    <a class="button ui" href="/website/list/hinweise">Bearbeitungshinweise</a>
+                    <!--div class="item" data-tab="third">Newsbereich</div-->
+                    <form>
+                        <label>im Bezirk</label>
+                        <select id="districts" class="ui dropdown" onchange="refresh_list_filter()">
+                            <option th:each="district: ${userDistricts}"
+                                    th:selected="${districtId == district.id} ? true : false"
+                                    th:value="${district.id}" th:text="${district.simpleValue}">
+                            </option>
+                        </select>
+                    </form>
+                </div>
+            </div>
+
+            <div id="listing" class="ui container">
+                <ul class="soziale-einrichtungen">
+                    <li th:each="geoobject : ${geoobjects}">
+                        <div th:class="'list-item ' + ${geoobject.className}">
+                            <h3 th:text="${geoobject.name}"></h3>
+                            <p class="meta">
+                                Eingepflegt von <span class="value" th:text="${geoobject.creator}"></span>
+                                am <span class="value" th:text="${geoobject.created}"></span>,
+                                Zuletzt bearbeitet <span class="value" th:text="${geoobject.lastModified}"></span>
+                            </p>
+                            <!--select>
+                                <option th:each="site : ${websites}" th:text="${site.simpleValue}" th:value="${site.id}"></option>
+                            </select-->
+                            <a class="read-more" th:href="'/website/geo/' + ${geoobject.id}">Link zum Eintrag</a>
+                        </div>
+                        <p class="comment" th:each="comment : ${geoobject.comments}">
+                            <span class="contact" th:if="${comment.contact}" th:text="${comment.contact} + ':'"></span>
+                            <span class="message" th:text="${comment.message}"></span>
+                        </p>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Notification area -->
+            <div id="notification" onclick="javascript:kiezatlas.close_message_window()">
+                <span class="message">Hi!</span>
+                <!-- a href="javascript:kiezatlas.close_message_window()">(x)</a-->
+            </div>
+
+        </div>
+
+        <p>&nbsp;</p>
+
+        <div class="footer" th:include="fragments/navigation :: footer-links (publisher=false)"></div>
+
+    </body>
+</html>
+

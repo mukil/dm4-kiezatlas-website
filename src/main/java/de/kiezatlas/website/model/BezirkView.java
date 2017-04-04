@@ -15,14 +15,14 @@ import java.util.logging.Logger;
  *
  * @author Malte Reißig (<a href="mailto:malte@mikromedia.de">Contact</a>)
  */
-public class BezirkViewModel implements JSONEnabled {
+public class BezirkView implements JSONEnabled {
 
-    Logger log = Logger.getLogger(GeoDetailsViewModel.class.getName());
+    Logger log = Logger.getLogger(GeoDetailView.class.getName());
 
     private Topic topic;
     private JSONObject json = new JSONObject();
 
-    public BezirkViewModel(Topic bezirk) {
+    public BezirkView(Topic bezirk) {
         this.topic = bezirk;
     }
 

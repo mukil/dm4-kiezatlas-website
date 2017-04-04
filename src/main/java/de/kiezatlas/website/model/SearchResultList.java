@@ -11,12 +11,12 @@ import org.codehaus.jettison.json.JSONObject;
  *
  * @author malted
  */
-public class ResultList implements JSONEnabled {
+public class SearchResultList implements JSONEnabled {
 
     JSONObject list;
     String status = "OK";
 
-    public ResultList() {
+    public SearchResultList() {
         try {
             this.list = new JSONObject();
             JSONObject results = new JSONObject();
@@ -50,7 +50,7 @@ public class ResultList implements JSONEnabled {
         try {
             list.put("status", this.status);
         } catch (JSONException ex) {
-            Logger.getLogger(ResultList.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(SearchResultList.class.getName()).log(Level.SEVERE, null, ex);
         }
         return list;
     }

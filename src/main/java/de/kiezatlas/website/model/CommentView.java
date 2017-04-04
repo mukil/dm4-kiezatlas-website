@@ -15,12 +15,12 @@ import org.codehaus.jettison.json.JSONObject;
  *
  * @author malted
  */
-public class CommentModel implements JSONEnabled {
+public class CommentView implements JSONEnabled {
 
     String message;
     String contact;
 
-    public CommentModel(String message, String contact) {
+    public CommentView(String message, String contact) {
         this.message = message;
         this.contact = contact;
     }
@@ -48,7 +48,7 @@ public class CommentModel implements JSONEnabled {
                 .put("message", this.message)
                 .put("contact", this.contact);
         } catch (JSONException ex) {
-            Logger.getLogger(CommentModel.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(CommentView.class.getName()).log(Level.SEVERE, null, ex);
         }
         return null;
     }

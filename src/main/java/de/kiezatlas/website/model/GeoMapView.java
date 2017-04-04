@@ -15,7 +15,7 @@ import org.codehaus.jettison.json.JSONObject;
  *
  * @author Malte Reißig (<a href="mailto:malte@mikromedia.de">Contact</a>)
  */
-public class GeoViewModel implements JSONEnabled {
+public class GeoMapView implements JSONEnabled {
 
     // Einrichtung
     Topic geoObject = null;
@@ -28,14 +28,14 @@ public class GeoViewModel implements JSONEnabled {
     // Angebote
     int angeboteCount = 0;
 
-    Logger log = Logger.getLogger(GeoViewModel.class.getName());
+    Logger log = Logger.getLogger(GeoMapView.class.getName());
 
-    public GeoViewModel(Topic geoObject, GeomapsService geomaps) {
+    public GeoMapView(Topic geoObject, GeomapsService geomaps) {
         this.geoObject = geoObject;
         getGeoCoordinate(geomaps);
     }
 
-    public GeoViewModel(Topic geoObject, GeomapsService geomaps, AngebotService angebote) {
+    public GeoMapView(Topic geoObject, GeomapsService geomaps, AngebotService angebote) {
         this.geoObject = geoObject;
         getGeoCoordinate(geomaps);
         this.angeboteCount = angebote.getAngeboteTopicsByGeoObject(geoObject).size();

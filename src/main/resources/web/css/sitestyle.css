@@ -272,6 +272,7 @@ body.pushable > .pusher {
     text-decoration-color: #8f1414;
 }
 
+#navigation .comments,
 #navigation .confirm,
 #navigation .account,
 #navigation .logout {
@@ -1311,6 +1312,8 @@ span.bold {
     margin-top: 5px;
 }
 
+.list form,
+.comments form,
 .confirm form {
     display: inline-block;
     padding-left: 2px;
@@ -1422,16 +1425,19 @@ span.bold {
     margin-right: 1em;
 }
 
-.confirm .commands a {
-    margin-left: 1.5em;
-}
-
+.kiezatlas.comments .comment,
 .kiezatlas.confirm .comment {
     margin-left: 5px;
     margin-top: -5px;
     z-index: -1;
 }
 
+.kiezatlas .commands h3 {
+    display: inline-block;
+    margin-right: .5em;
+}
+
+.comments .comment,
 .confirm .comment,
 .kiezatlas.topic .comment {
     display: inline-block;
@@ -1794,6 +1800,86 @@ div.link-area {
 
 #dialog-confirm {
     display: none;
+}
+
+/** Kiezatlas Administrative Listing **/
+
+#listing {
+    position: relative;
+    top: 30px;
+    padding-bottom: 30px;
+}
+
+.soziale-einrichtungen {
+    max-width: 70%;
+    padding-left: 15px;
+}
+
+ul.soziale-einrichtungen li {
+    list-style-type: none;
+}
+
+.soziale-einrichtungen a .list-item {
+    text-decoration: none;
+}
+
+.soziale-einrichtungen .list-item {
+    background: #fff;
+    padding: 15px;
+    border: 1px solid #002856;
+    margin: 5px;
+}
+
+.soziale-einrichtung a .list-item {
+    cursor: pointer;
+}
+
+.soziale-einrichtungen .list-item h3,
+.soziale-einrichtungen .list-item p {
+    margin-top: 0px;
+    margin-bottom: 0px;
+}
+
+.soziale-einrichtungen p.meta {
+    color: #a9a9a9;
+    font-style: italic;
+}
+
+
+.soziale-einrichtungen .value {
+    color: #000;
+    /** font-style: normal; **/
+}
+
+.soziale-einrichtungen .label {
+    color: #a9a9a9;
+}
+
+.soziale-einrichtungen .list-item:hover {
+    box-shadow: 2px 2px 2px 0px #a9a9a9;
+}
+.soziale-einrichtungen .list-item.selected {
+    box-shadow: 3px 3px 2px 0px #a9a9a9;
+}
+
+.soziale-einrichtungen .list-item.no-email {
+    background-color: #ef9713;
+}
+
+.soziale-einrichtungen .list-item.no-coordinates,
+.soziale-einrichtungen .list-item.no-email.no-coordinates,
+.soziale-einrichtungen .list-item.no-bezirksregion.no-coordinates,
+.soziale-einrichtungen .list-item.no-email.no-bezirksregion.no-coordinates {
+    background-color: #f00 !important;
+}
+
+.soziale-einrichtungen .list-item.no-bezirksregion,
+.soziale-einrichtungen .list-item.no-email.no-bezirksregion {
+    background-color: #eaef13;
+}
+
+.soziale-einrichtungen .list-item.no-email .label {
+    color: #fff;
 }
 
 /** --------------------------------------- Overrides for Sign-up Dialog --- */
@@ -2386,6 +2472,7 @@ body.sign-up {
     #map {
         height: 350px;
     }
+    .comments #header,
     .confirm #header {
         display: block;
     }

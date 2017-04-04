@@ -30,8 +30,9 @@
             function refresh_confirmation_list() {
                 var selection = document.getElementById("districts")
                 if (selection) {
+                    console.log("Navigating to district confirmation list...")
                     var districtId = document.getElementById("districts").value
-                    window.document.location.href = "/website/geo/freischalten/" + districtId
+                    window.document.location.href = "/website/list/freischalten/" + districtId
                 }
             }
         /*]]>*/
@@ -42,7 +43,8 @@
 
         <div class="top-menu" th:include="fragments/navigation :: top (publisher=${is_publisher})"></div>
 
-        <div class="ui vertical left menu sidebar" th:include="fragments/navigation :: vertical (publisher=${is_publisher})"></div>
+        <div class="ui vertical left menu sidebar"
+             th:include="fragments/navigation :: vertical (publisher=${is_publisher})"></div>
 
         <div class="pusher">
 
@@ -55,8 +57,10 @@
             <!-- Details Area -->
             <div th:if="${is_publisher}" class="ui container">
                 <div class="commands">
-                    <a class="button basic ui active green" href="/website/geo/freischalten">Neue Orte</a>
-                    <a class="button basic ui" href="/website/geo/hinweise">Hinweise</a>
+                    <h3>Alle</h3>
+                    <a class="button ui" href="/website/list">Orte</a>
+                    <a class="button ui green active" href="/website/list/freischalten">Neueintragungen</a>
+                    <a class="button ui" href="/website/list/hinweise">Bearbeitungshinweise</a>
                     <!--div class="item" data-tab="third">Newsbereich</div-->
                     <form>
                         <label>im Bezirk</label>

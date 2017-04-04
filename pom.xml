@@ -63,6 +63,11 @@
             <artifactId>deepamehta-geomaps</artifactId>
             <version>4.8.3</version>
         </dependency>
+        <dependency>
+            <groupId>de.deepamehta</groupId>
+            <artifactId>deepamehta-time</artifactId>
+            <version>4.8.3</version>
+        </dependency>
         <!-- Integrated Third Party Plugins-->
         <dependency>
             <groupId>de.deepamehta</groupId>

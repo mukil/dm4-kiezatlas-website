@@ -93,7 +93,8 @@
 
         <div class="top-menu" th:include="fragments/navigation :: top (publisher=${is_publisher})"></div>
 
-        <div class="ui vertical left menu sidebar" th:include="fragments/navigation :: vertical (publisher=${is_publisher})"></div>
+        <div class="ui vertical left menu sidebar"
+             th:include="fragments/navigation :: vertical (publisher=${is_publisher})"></div>
 
         <div class="pusher">
 
@@ -110,7 +111,8 @@
                 <div class="commands">
                     <p th:if="${!#strings.isEmpty(message)}" th:text="${message}"></p>
                     <a class="ui button olive edit" th:if="${authenticated} and ${editable}" th:href="'/website/geo/edit/' + ${geoobject.id}">Bearbeiten</a>
-                    <a class="ui button red delete" th:if="${authenticated} and ${editable}" th:href="'javascript:delete_geo_object(' + ${geoobject.id} + ')'">L&ouml;schen</a><!-- th:href="'/website/geo/delete/' + ${geoobject.id}"-->
+                    <a class="ui button red delete" th:if="${authenticated} and ${editable}" th:href="'javascript:delete_geo_object(' + ${geoobject.id} + ')'">L&ouml;schen</a>
+                    <!-- th:href="'/website/geo/delete/' + ${geoobject.id}"-->
                     <a class="ui button olive button publish" th:if="${is_publisher} and ${!is_published}" th:href="'/website/geo/confirm/' + ${geoobject.id}">Freischalten</a>
                 </div>
                 <p class="comment" th:each="comment : ${geoobject.comments}">

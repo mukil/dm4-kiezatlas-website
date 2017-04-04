@@ -6,7 +6,7 @@ import java.util.logging.Logger;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 
-public class CoordinatesViewModel implements JSONEnabled {
+public class CoordinatesView implements JSONEnabled {
 
     private final Logger log = Logger.getLogger(getClass().getName());
     
