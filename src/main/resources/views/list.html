@@ -13,7 +13,7 @@
         <script src="/de.kiezatlas.angebote/dist/vendor/jquery-1.9.1-and-1.12.1-ui-custom.min.js"></script>
         <script src="/de.kiezatlas.website/dist/vendor/dm4-webclient-utils.min.js"></script>
         <script src="/de.kiezatlas.website/ka-restclient.js"></script>
-        <!--script src="/de.kiezatlas.website/ka-list.js"></script-->
+        <script src="/de.kiezatlas.website/ka-admin.js"></script>
 
         <script type="text/javascript">
 
@@ -53,8 +53,9 @@
 
             <div class="ui container">
                 <div class="commands">
-                    <h3>Alle</h3>
-                    <a class="button ui green active" href="/website/list">Orte</a>
+                    <h3>&nbsp;</h3>
+                    <a class="button ui green active" href="/website/list">Alle Orte</a>
+                    <a th:if="${is_district_admin}" class="button ui" href="/website/list/bezirksregionen">Ansprechpartner_innen</a>
                     <a class="button ui" href="/website/list/freischalten">Neueintragungen</a>
                     <a class="button ui" href="/website/list/hinweise">Bearbeitungshinweise</a>
                     <!--div class="item" data-tab="third">Newsbereich</div-->
@@ -71,6 +72,7 @@
             </div>
 
             <div id="listing" class="ui container">
+                <p class="status">Sortierung der <span th:text="$#arrays.length(geoobjects)}" class="count"></span> Eintr&auml;ge: Zuletzt bearbeitete zuerst</p>
                 <ul class="soziale-einrichtungen">
                     <li th:each="geoobject : ${geoobjects}">
                         <div th:class="'list-item ' + ${geoobject.className}">

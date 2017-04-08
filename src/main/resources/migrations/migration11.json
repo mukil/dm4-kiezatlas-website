@@ -1,0 +1,108 @@
+{
+    "topic_types": [
+        {
+            "value":            "LOR ID",
+            "uri":              "ka2.util.lor_id",
+            "data_type_uri":    "dm4.core.text",
+            "view_config_topics": [
+                {
+                    "type_uri": "dm4.webclient.view_config",
+                    "childs": {
+                        "dm4.webclient.input_field_rows": 1,
+                        "dm4.webclient.show_in_create_menu": true
+                    }
+                }
+            ]
+        },
+        {
+            "value":            "LOR Name",
+            "uri":              "ka2.util.lor_name",
+            "data_type_uri":    "dm4.core.text",
+            "view_config_topics": [
+                {
+                    "type_uri": "dm4.webclient.view_config",
+                    "childs": {
+                        "dm4.webclient.input_field_rows": 1,
+                        "dm4.webclient.show_in_create_menu": true
+                    }
+                }
+            ]
+        },
+        {
+            "value":            "Bezirk Name",
+            "uri":              "ka2.util.bezirk_name",
+            "data_type_uri":    "dm4.core.text",
+            "view_config_topics": [
+                {
+                    "type_uri": "dm4.webclient.view_config",
+                    "childs": {
+                        "dm4.webclient.input_field_rows": 1,
+                        "dm4.webclient.show_in_create_menu": true
+                    }
+                }
+            ]
+        },
+        {
+            "value":            "Bezirksregion Name",
+            "uri":              "ka2.util.bezirksregion_name",
+            "data_type_uri":    "dm4.core.text",
+            "view_config_topics": [
+                {
+                    "type_uri": "dm4.webclient.view_config",
+                    "childs": {
+                        "dm4.webclient.input_field_rows": 1,
+                        "dm4.webclient.show_in_create_menu": true
+                    }
+                }
+            ]
+        },
+        {
+            "value":           "LOR Utility",
+            "uri":             "ka2.util.lor",
+            "data_type_uri":   "dm4.core.composite",
+            "assoc_defs": [
+                {
+                    "child_type_uri":        "ka2.util.lor_id",
+                    "child_cardinality_uri": "dm4.core.one",
+                    "assoc_type_uri":        "dm4.core.composition_def"
+                },
+                {
+                    "child_type_uri":        "ka2.util.lor_name",
+                    "child_cardinality_uri": "dm4.core.one",
+                    "assoc_type_uri":        "dm4.core.composition_def"
+                },
+                {
+                    "child_type_uri":        "ka2.util.bezirksregion_name",
+                    "child_cardinality_uri": "dm4.core.one",
+                    "assoc_type_uri":        "dm4.core.composition_def"
+                },
+                {
+                    "child_type_uri":        "ka2.util.bezirk_name",
+                    "child_cardinality_uri": "dm4.core.one",
+                    "assoc_type_uri":        "dm4.core.composition_def"
+                }
+            ],
+            "view_config_topics": [
+                {
+                    "type_uri": "dm4.webclient.view_config",
+                    "childs": {
+                        "dm4.webclient.show_in_create_menu": false
+                    }
+                }
+            ]
+        },
+        {
+            "value":           "Circle Marker Radius (px)",
+            "uri":             "ka2.website.marker_radius",
+            "data_type_uri":   "dm4.core.number",
+            "view_config_topics": [
+                {
+                    "type_uri": "dm4.webclient.view_config",
+                    "childs": {
+                        "dm4.webclient.show_in_create_menu": false
+                    }
+                }
+            ]
+        }
+    ]
+}

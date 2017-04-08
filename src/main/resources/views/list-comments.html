@@ -27,19 +27,19 @@
                 // $('.ui.dropdown').dropdown();
             })
 
-            function refresh_confirmation_list() {
+            function refresh_comment_list() {
                 var selection = document.getElementById("districts")
                 if (selection) {
-                    console.log("Navigating to district confirmation list...")
+                    console.log("Navigating to district comment list...")
                     var districtId = document.getElementById("districts").value
-                    window.document.location.href = "/website/list/freischalten/" + districtId
+                    window.document.location.href = "/website/list/hinweise/" + districtId
                 }
             }
         /*]]>*/
         </script>
         <meta th:replace="fragments/tracker" />
     </head>
-    <body class="kiezatlas confirm">
+    <body class="kiezatlas comments">
 
         <div class="top-menu" th:include="fragments/navigation :: top (publisher=${is_publisher})"></div>
 
@@ -50,21 +50,21 @@
 
             <div id="header">
                 <p>&nbsp;</p>
-                <h3 th:if="${is_publisher}">Einrichtungsdatens&auml;tze freischalten</h3>
+                <h3 th:if="${is_publisher}">Kommentare an Einrichtungsdatens&auml;tzen</h3>
                 <p th:if="${not is_publisher}"><b>Sorry!</b><br/>Sie haben aktuell nicht die n&ouml;tigen Berechtigungen um neue Einrichtungen im Kiezatlas freizuschalten.</p>
             </div>
 
             <!-- Details Area -->
             <div th:if="${is_publisher}" class="ui container">
                 <div class="commands">
-                    <h3>Alle</h3>
-                    <a class="button ui" href="/website/list">Orte</a>
-                    <a class="button ui green active" href="/website/list/freischalten">Neueintragungen</a>
-                    <a class="button ui" href="/website/list/hinweise">Bearbeitungshinweise</a>
+                    <h3>&nbsp;</h3>
+                    <a class="button ui" href="/website/list">Alle Orte</a>
+                    <a class="button ui" href="/website/list/freischalten">Neueintragungen</a>
+                    <a class="button ui green active" href="/website/list/hinweise">Bearbeitungshinweise</a>
                     <!--div class="item" data-tab="third">Newsbereich</div-->
                     <form>
                         <label>im Bezirk</label>
-                        <select id="districts" class="ui dropdown" onchange="refresh_confirmation_list()">
+                        <select id="districts" class="ui dropdown" onchange="refresh_comment_list()">
                             <option th:each="district: ${userDistricts}" th:selected="${districtId == district.id} ? true : false"
                                     th:value="${district.id}" th:text="${district.simpleValue}">
                             </option>
@@ -84,10 +84,13 @@
                                 </select-->
                                 <a class="read-more" th:href="'/website/geo/' + ${geoobject.id}">Link zum Eintrag</a>
                             </div>
+                            <p class="comment" th:each="comment : ${geoobject.comments}">
+                                <span class="contact" th:if="${comment.contact}" th:text="${comment.contact} + ':'"></span>
+                                <span class="message" th:text="${comment.message}"></span>
+                            </p>
                         </li>
                     </ul>
                 </div>
-
             </div>
 
         </div>

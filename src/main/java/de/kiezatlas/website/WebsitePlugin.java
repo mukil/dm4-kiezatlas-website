@@ -136,6 +136,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     static final String DEFAULT_ROLE = "dm4.core.default";
     static final String PARENT_ROLE = "dm4.core.parent";
     static final String CHILD_ROLE = "dm4.core.child";
+    static final String ASSOCIATION = "dm4.core.association";
 
     public static DateFormat df = DateFormat.getDateInstance(DateFormat.LONG, Locale.GERMANY);
     public static final String SYSTEM_MAINTENANCE_MAILBOX = "support@kiezatlas.de";
@@ -189,7 +190,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     @Path("/sites")
     @Produces(MediaType.TEXT_HTML)
     public Viewable getWebsiteListing() {
-        if (!isAuthenticated() || !isAuthorizedSiteManager()) return getUnauthorizedPage();
+        if (!isAuthenticated() || !isKiezatlasMember()) return getUnauthorizedPage();
         viewData("page", "site-listing");
         viewData("sites", getKiezatlasWebsites());
         prepareGeneralPageData("sites");
@@ -201,7 +202,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     @Produces(MediaType.APPLICATION_JSON)
     public List<Topic> getKiezatlasWebsites() {
         List<Topic> sites = new ArrayList<Topic>();
-        if (isAuthorizedSiteManager()) {
+        if (isKiezatlasMember()) {
             sites = dm4.getTopicsByType("ka2.website");
             DeepaMehtaUtils.loadChildTopics(sites);
         }
@@ -212,7 +213,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     @Path("/edit/{siteId}")
     @Produces(MediaType.TEXT_HTML)
     public Viewable getWebsiteEditor(@PathParam("siteId") long topicId) {
-        if (!isAuthenticated() || !isAuthorizedSiteManager()) return getUnauthorizedPage();
+        if (!isAuthenticated() || !isKiezatlasMember()) return getUnauthorizedPage();
         viewData("site", dm4.getTopic(topicId));
         viewData("page", "site-editor");
         List<RelatedTopic> websites = kiezatlas.getGeoObjectsBySite(topicId);
@@ -226,7 +227,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     @Path("/edit/{siteId}/facets/{objectId}")
     @Produces(MediaType.TEXT_HTML)
     public Viewable getWebsiteFacetEditor(@PathParam("siteId") long siteId, @PathParam("objectId") long objectId) {
-        if (!isAuthenticated() || !isAuthorizedSiteManager()) return getUnauthorizedPage();
+        if (!isAuthenticated() || !isKiezatlasMember()) return getUnauthorizedPage();
         Topic object = dm4.getTopic(objectId);
         if (isGeoObjectTopic(object)) {
             viewData("site", dm4.getTopic(siteId));
@@ -245,7 +246,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     @Produces(MediaType.APPLICATION_JSON)
     @Transactional
     public Topic updateWebsiteFacets(@PathParam("siteId") long siteId, @PathParam("objectId") long objectId, TopicModel tm) {
-        if (!isAuthorizedSiteManager()) throw new WebApplicationException(Status.UNAUTHORIZED);
+        if (!isKiezatlasMember()) throw new WebApplicationException(Status.UNAUTHORIZED);
         Topic object = dm4.getTopic(objectId);
         if (isGeoObjectTopic(object)) {
             log.info("Updating facets for geo object in site with TopicModel=" + tm.toJSON().toString());
@@ -578,7 +579,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
                 log.info("DELETED: " + dm4.getTopic(Long.parseLong(topicId)));
                 return getSimpleMessagePage();
             } else {
-                viewData("message", "Der Datensatz konnte nicht gelöscht werden, da ein Fehler aufgetreten ist.");
+                viewData("message", "Der Datensatz konnte nicht gelöscht werden da ein Fehler aufgetreten ist.");
                 return getGeoObjectDetailsPage("" + topicId);
             }
         } else {
@@ -644,12 +645,51 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     @Path("/list")
     @Produces(MediaType.TEXT_HTML)
     public Viewable getEinrichtungsListing() {
+        if (!isAuthenticated()) return getUnauthorizedPage();
         List<RelatedTopic> usersDistricts = getUserDistrictTopics();
         long districtId = -1;
         if (usersDistricts != null && usersDistricts.size() > 0) {
             districtId = usersDistricts.get(0).getId();
         }
         return getEinrichtungsListing(districtId);
+    }
+
+    @GET
+    @Path("/list/{districtId}")
+    @Produces(MediaType.TEXT_HTML)
+    public Viewable getEinrichtungsListing(@PathParam("districtId") long districtId) {
+        if (!isAuthenticated()) return getUnauthorizedPage();
+        if (isAssociatedDistrictMember(districtId)) {
+            List<EinrichtungView> results = getEinrichtungList(districtId);
+            viewData("districtId", districtId);
+            viewData("name", "Einrichtungen");
+            return getListPage(results);
+        }
+        viewData("name", "Listenansicht");
+        viewData("message", "Ihr Account scheint noch nicht als Kiez-Administrator_in eingerichtet zu sein. "
+            + "Wenden Sie sich bitte an die Administrator_innen.");
+        return getSimpleMessagePage();
+    }
+
+    /**
+     * Responds with a Viewable, the administrative confirmation page of the Kiezatlas Website.
+     * @return
+     */
+    @GET
+    @Path("/list/bezirksregionen")
+    @Produces(MediaType.TEXT_HTML)
+    public Viewable getBezirksregionenListing() {
+        if (!isAuthenticated()) return getUnauthorizedPage();
+        List<RelatedTopic> usersDistricts = getUserDistrictTopics();
+        log.info("LOAD listing of BEZIRKSRGEIONEN/ANSPRECHPARTNER...");
+        long districtId = -1;
+        if (usersDistricts != null && usersDistricts.size() > 0) {
+            districtId = usersDistricts.get(0).getId();
+            List<RelatedTopic> regions = getKiezatlasBezirksregionen(districtId);
+            log.info("> Fetched " + regions.size() + " Bezirksregionen in Bezirk " + districtId);
+        }
+        // ###
+        return getCommentsListing(districtId);
     }
 
     /**
@@ -660,6 +700,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     @Path("/list/hinweise")
     @Produces(MediaType.TEXT_HTML)
     public Viewable getCommentsListing() {
+        if (!isAuthenticated() && isConfirmationWorkspaceMember()) return getUnauthorizedPage();
         List<RelatedTopic> usersDistricts = getUserDistrictTopics();
         log.info("LOAD listing of HINWEISE ...");
         long districtId = -1;
@@ -676,6 +717,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     @Path("/list/freischalten")
     @Produces(MediaType.TEXT_HTML)
     public Viewable getConfirmationListing() {
+        if (!isAuthenticated() && isConfirmationWorkspaceMember()) return getUnauthorizedPage();
         List<RelatedTopic> usersDistricts = getUserDistrictTopics();
         log.info("LOAD listing of NEUEINTRAGUNGEN ...");
         long districtId = -1;
@@ -686,26 +728,11 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     }
 
     @GET
-    @Path("/list/{districtId}")
-    @Produces(MediaType.TEXT_HTML)
-    public Viewable getEinrichtungsListing(@PathParam("districtId") long districtId) {
-        if (isAssociatedDistrictMember(districtId)) {
-            List<EinrichtungView> results = getEinrichtungList(districtId);
-            viewData("districtId", districtId);
-            viewData("name", "Einrichtungen");
-            return getListPage(results);
-        }
-        viewData("name", "Listenansicht");
-        viewData("message", "Ihr Account scheint noch nicht als Kiez-Administrator_in eingerichtet zu sein. "
-            + "Wenden Sie sich bitte an die Administrator_innen.");
-        return getSimpleMessagePage();
-    }
-
-    @GET
     @Path("/list/hinweise/{districtId}")
     @Produces(MediaType.TEXT_HTML)
     public Viewable getCommentsListing(@PathParam("districtId") long districtId) {
         // TODO: Check if user isCommentsWorkspaceMember...
+        if (!isAuthenticated()) return getUnauthorizedPage();
         if (isAssociatedDistrictMember(districtId)) {
             List<EinrichtungView> results = getCommentedEinrichtungList(districtId);
             viewData("districtId", districtId);
@@ -726,6 +753,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     @Path("/list/freischalten/{districtId}")
     @Produces(MediaType.TEXT_HTML)
     public Viewable getConfirmationListing(@PathParam("districtId") long districtId) {
+        if (!isAuthenticated()) return getUnauthorizedPage();
         Topic district = dm4.getTopic(districtId);
         List<RelatedTopic> usersDistricts = getUserDistrictTopics();
         for (RelatedTopic userDistrict : usersDistricts) {
@@ -860,6 +888,15 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     @Path("/bezirksregion")
     public List<Topic> fetchKiezatlasSubregions() {
         return dm4.getTopicsByType("ka2.bezirksregion");
+    }
+
+    @GET
+    @Path("/bezirk/{districtId}/bezirksregionen")
+    public List<RelatedTopic> getKiezatlasBezirksregionen(long districtId) {
+        Topic bezirk = dm4.getTopic(districtId);
+        List<RelatedTopic> regionen = bezirk.getRelatedTopics("dm4.core.association", DEFAULT_ROLE,
+            DEFAULT_ROLE, "ka2.bezirksregion");
+        return regionen;
     }
 
     /**
@@ -1477,13 +1514,13 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     private Viewable getConfirmationPage(List<EinrichtungView> results) {
         prepareGeneralPageData("confirmation");
         prepareGeoObjectListing(results);
-        return view("confirmation");
+        return view("list-confirms");
     }
 
     private Viewable getCommentsPage(List<EinrichtungView> results) {
         prepareGeneralPageData("comments");
         prepareGeoObjectListing(results);
-        return view("comments");
+        return view("list-comments");
     }
 
     private Viewable getSimpleMessagePage() {
@@ -1536,7 +1573,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     private void prepareGeneralPageData(String templateName) {
         boolean isAuthenticated = isAuthenticated();
         boolean isPrivileged = isConfirmationWorkspaceMember();
-        boolean isSiteManager = isAuthorizedSiteManager();
+        boolean isSiteManager = isKiezatlasMember();
         viewData("authenticated", isAuthenticated);
         viewData("is_publisher", isPrivileged);
         viewData("is_district_admin", (getUserDistrictTopics() != null));
@@ -1604,8 +1641,24 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         }
     }
 
-    private boolean isAuthorizedSiteManager() {
-        return kiezatlas.isKiezatlasWorkspaceMember();
+    /** private boolean isAuthorizedSuperEditor() {
+        return (isAuthenticated() && ); // # DM Workspace Membership
+    } **/
+
+    /** private boolean isConfirmationManager() {
+        return (isAuthenticated() && ); # DM Confirmation Membership
+    } **/
+
+    /** private boolean isCommentManager() {
+        return (isAuthenticated() && ); # DM Comments Membership
+    } **/
+
+    private boolean isDistrictMember() {
+        return (isAuthenticated() && getUserDistrictTopics().size() > 0);
+    }
+
+    private boolean isKiezatlasMember() {
+        return (isAuthenticated() && kiezatlas.isKiezatlasWorkspaceMember());
     }
 
     private boolean isAuthenticated() {
@@ -1949,12 +2002,13 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
             if (description != null) description.delete();
             if (oeffnungszeit != null) oeffnungszeit.delete();
             if (website != null) website.delete();
-            // geoObject.delete(); fires NO aclexception (and does not delete topics if one occurs)
+            // geoObject.delete(); // fires NO aclexception (and does not delete topics if one occurs)
             dm4.deleteTopic(geoObject.getId()); // fires acl exception if user has no write permission
             return true;
         } catch (RuntimeException re) {
             tx.failure();
-            log.severe("Could not delete geo object ("+geoObject+"), RuntimeException Message: " + re.getMessage());
+            log.severe("Geo Object could not delete geo object ("+geoObject+"), RuntimeException Message: " + re.getMessage()
+                + " caused by \"" + re.getCause().getMessage() + "\"");
             return false;
         } finally {
             tx.finish();
