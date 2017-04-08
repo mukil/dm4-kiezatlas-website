@@ -39,7 +39,7 @@
         </script>
         <meta th:replace="fragments/tracker" />
     </head>
-    <body class="kiezatlas comments">
+    <body class="kiezatlas list comments">
 
         <div class="top-menu" th:include="fragments/navigation :: top (publisher=${is_publisher})"></div>
 
@@ -50,26 +50,27 @@
 
             <div id="header">
                 <p>&nbsp;</p>
-                <h3 th:if="${is_publisher}">Kommentare an Einrichtungsdatens&auml;tzen</h3>
-                <p th:if="${not is_publisher}"><b>Sorry!</b><br/>Sie haben aktuell nicht die n&ouml;tigen Berechtigungen um neue Einrichtungen im Kiezatlas freizuschalten.</p>
-            </div>
-
-            <!-- Details Area -->
-            <div th:if="${is_publisher}" class="ui container">
-                <div class="commands">
-                    <h3>&nbsp;</h3>
-                    <a class="button ui" href="/website/list">Alle Orte</a>
-                    <a class="button ui" href="/website/list/freischalten">Neueintragungen</a>
-                    <a class="button ui green active" href="/website/list/hinweise">Bearbeitungshinweise</a>
-                    <!--div class="item" data-tab="third">Newsbereich</div-->
+                <h3 th:if="${is_publisher}">
                     <form>
-                        <label>im Bezirk</label>
-                        <select id="districts" class="ui dropdown" onchange="refresh_comment_list()">
+                        <label>Kiez-Redaktion im Bezirk</label>
+                        <select id="districts" class="ui dropdown button" onchange="refresh_comment_list()">
                             <option th:each="district: ${userDistricts}" th:selected="${districtId == district.id} ? true : false"
                                     th:value="${district.id}" th:text="${district.simpleValue}">
                             </option>
                         </select>
                     </form>
+                </h3>
+                <p th:if="${not is_publisher}"><b>Sorry!</b><br/>Sie haben aktuell nicht die n&ouml;tigen Berechtigungen um neue Einrichtungen im Kiezatlas freizuschalten.</p>
+            </div>
+
+            <!-- Details Area -->
+            <div th:if="${is_publisher}" class="ui container">
+                <div class="commands buttons ui">
+                    <a class="button ui" href="/website/list">Alle Orte</a>
+                    <a class="button ui" href="/website/list/freischalten">Unver&ouml;ffentlichte Orte</a>
+                    <a class="button ui green active" href="/website/list/hinweise">Bearbeitungshinweise</a>
+                    <!--div class="item" data-tab="third">Newsbereich</div-->
+                    <a th:if="${is_district_admin}" class="button ui" href="/website/list/bezirksregionen">Bezirksregionen</a>
                 </div>
                 <div id="listing">
                     <ul class="soziale-einrichtungen">

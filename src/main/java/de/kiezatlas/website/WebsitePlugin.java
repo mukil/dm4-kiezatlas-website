@@ -660,6 +660,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     public Viewable getEinrichtungsListing(@PathParam("districtId") long districtId) {
         if (!isAuthenticated()) return getUnauthorizedPage();
         if (isAssociatedDistrictMember(districtId)) {
+            log.info("Loading LIST for districtId=\"" + districtId + "\"");
             List<EinrichtungView> results = getEinrichtungList(districtId);
             viewData("districtId", districtId);
             viewData("name", "Einrichtungen");
@@ -688,8 +689,8 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
             List<RelatedTopic> regions = getKiezatlasBezirksregionen(districtId);
             log.info("> Fetched " + regions.size() + " Bezirksregionen in Bezirk " + districtId);
         }
-        // ###
-        return getCommentsListing(districtId);
+        // ### Fetch first Bezirksregion in District
+        return getBezirksregionListing(districtId, -1);
     }
 
     /**
@@ -737,7 +738,25 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
             List<EinrichtungView> results = getCommentedEinrichtungList(districtId);
             viewData("districtId", districtId);
             viewData("name", "Bearbeitungshinweise");
-            return WebsitePlugin.this.getCommentsPage(results);
+            return getCommentsPage(results);
+        }
+        viewData("name", "Kommentare einsehen");
+        viewData("message", "Ihr Account scheint noch nicht als Kiez-Administrator_in eingerichtet zu sein. "
+            + "Wenden Sie sich bitte an die Administrator_innen.");
+        return getSimpleMessagePage();
+    }
+
+    @GET
+    @Path("/list/{districtId}/bezirksregion/{regionId}")
+    @Produces(MediaType.TEXT_HTML)
+    public Viewable getBezirksregionListing(@PathParam("districtId") long districtId, @PathParam("regionId") long regionId) {
+        // TODO: Check if user isCommentsWorkspaceMember...
+        if (!isAuthenticated()) return getUnauthorizedPage();
+        if (isAssociatedDistrictMember(districtId)) {
+            List<EinrichtungView> results = getCommentedEinrichtungList(districtId);
+            viewData("districtId", districtId);
+            viewData("name", "Bezirksregionen");
+            return getEditorsPage(results);
         }
         viewData("name", "Kommentare einsehen");
         viewData("message", "Ihr Account scheint noch nicht als Kiez-Administrator_in eingerichtet zu sein. "
@@ -761,7 +780,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
                 List<EinrichtungView> results = getUnconfirmedEinrichtungenList(district);
                 viewData("districtId", districtId);
                 viewData("name", "Neueintragungen");
-                return WebsitePlugin.this.getConfirmationPage(results);
+                return getConfirmationPage(results);
             }
         }
         viewData("name", "Neueintragungen freischalten");
@@ -1503,11 +1522,13 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         // viewData("availableLor", getAvailableLORNumberTopics());
         viewData("workspace", getStandardWorkspace());
         viewData("geoobjects", results);
+        viewData("geoobjectsCount", results.size());
     }
 
     private Viewable getListPage(List<EinrichtungView> results) {
         prepareGeneralPageData("list");
         prepareGeoObjectListing(results);
+        log.info("Completed preparation of LIST");
         return view("list");
     }
 
@@ -1521,6 +1542,12 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         prepareGeneralPageData("comments");
         prepareGeoObjectListing(results);
         return view("list-comments");
+    }
+
+    private Viewable getEditorsPage(List<EinrichtungView> results) {
+        prepareGeneralPageData("editors");
+        prepareGeoObjectListing(results);
+        return view("list-editors");
     }
 
     private Viewable getSimpleMessagePage() {
@@ -1838,7 +1865,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         Topic bezirk = getRelatedBezirk(geoObject);
         if (bezirk == null) listItem.addClassName("no-district");
         if (!listItem.getClassName().equals("")) {
-            log.info("> Identified geo object \"" + geoObject.getId() + "\" misses some facets \"" + listItem.getClassName() + "\"");
+            log.fine("> Identified geo object \"" + geoObject.getId() + "\" misses some facets \"" + listItem.getClassName() + "\"");
         }
         // Assigned Username
         listItem.setCreator(accesscl.getCreator(geoObject.getId()));
@@ -1896,6 +1923,8 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
                     detail.setImprintUrl(bezirkInfo.getImprintLink().getSimpleValue().toString());
                 }
             }
+            // Set Creator
+            detail.setCreator(accesscl.getCreator(geoObject.getId()));
             // Last Modified
             detail.setLastModified((Long) dm4.getProperty(geoObject.getId(), "dm4.time.modified"));
             // Image Path

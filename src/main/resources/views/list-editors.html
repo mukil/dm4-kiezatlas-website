@@ -27,19 +27,19 @@
                 // $('.ui.dropdown').dropdown();
             })
 
-            function refresh_confirmation_list() {
+            function refresh_comment_list() {
                 var selection = document.getElementById("districts")
                 if (selection) {
-                    console.log("Navigating to district confirmation list...")
+                    console.log("Navigating to district comment list...")
                     var districtId = document.getElementById("districts").value
-                    window.document.location.href = "/website/list/freischalten/" + districtId
+                    window.document.location.href = "/website/list/hinweise/" + districtId
                 }
             }
         /*]]>*/
         </script>
         <meta th:replace="fragments/tracker" />
     </head>
-    <body class="kiezatlas list confirm">
+    <body class="kiezatlas list comments">
 
         <div class="top-menu" th:include="fragments/navigation :: top (publisher=${is_publisher})"></div>
 
@@ -52,8 +52,8 @@
                 <p>&nbsp;</p>
                 <h3 th:if="${is_publisher}">
                     <form>
-                        <label>Kiez-Redaktion im Bezirk</label>
-                        <select id="districts" class="ui dropdown button" onchange="refresh_confirmation_list()">
+                        <label>Bezirksregionen des Bezirks</label>
+                        <select id="districts" class="ui dropdown button" onchange="refresh_comment_list()">
                             <option th:each="district: ${userDistricts}" th:selected="${districtId == district.id} ? true : false"
                                     th:value="${district.id}" th:text="${district.simpleValue}">
                             </option>
@@ -65,12 +65,12 @@
 
             <!-- Details Area -->
             <div th:if="${is_publisher}" class="ui container">
-                <div class="commands ui buttons">
+                <div class="commands buttons ui">
                     <a class="button ui" href="/website/list">Alle Orte</a>
-                    <a class="button ui green active" href="/website/list/freischalten">Unver&ouml;ffentlichte Orte</a>
+                    <a class="button ui" href="/website/list/freischalten">Unver&ouml;ffentlichte Orte</a>
                     <a class="button ui" href="/website/list/hinweise">Bearbeitungshinweise</a>
                     <!--div class="item" data-tab="third">Newsbereich</div-->
-                    <a th:if="${is_district_admin}" class="button ui" href="/website/list/bezirksregionen">Bezirksregionen</a>>
+                    <a th:if="${is_district_admin}" class="button ui green active" href="/website/list/bezirksregionen">Bezirksregionen</a>
                 </div>
                 <div id="listing">
                     <ul class="soziale-einrichtungen">
@@ -85,10 +85,13 @@
                                 </select-->
                                 <a class="read-more" th:href="'/website/geo/' + ${geoobject.id}">Link zum Eintrag</a>
                             </div>
+                            <p class="comment" th:each="comment : ${geoobject.comments}">
+                                <span class="contact" th:if="${comment.contact}" th:text="${comment.contact} + ':'"></span>
+                                <span class="message" th:text="${comment.message}"></span>
+                            </p>
                         </li>
                     </ul>
                 </div>
-
             </div>
 
         </div>

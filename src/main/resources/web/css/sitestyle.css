@@ -1312,11 +1312,14 @@ span.bold {
     margin-top: 5px;
 }
 
-.list form,
-.comments form,
-.confirm form {
+.list form {
     display: inline-block;
-    padding-left: 2px;
+    padding-left: 1em;
+    padding-right: 1em;
+}
+
+.list .commands {
+    display: block;
 }
 
 #fulltext-do {
@@ -1642,6 +1645,19 @@ span.bold {
     padding-right: 8px;
 }
 
+.kiezatlas.topic #detail-area .metadata {
+    font-size: .8em;
+    padding: .5em;
+    color: #9a9999;
+    text-align: left;
+}
+
+.kiezatlas.topic #detail-area .metadata a {
+    color: #9a9999;
+    font-style: italic;
+    font-weight: normal;
+}
+
 #navigation {
     /** #D3D3D3; opacity: 0.8; be-link blue #2D509A **/
     /** position: absolute; top: 0px; left: 0px; **/
@@ -1810,9 +1826,13 @@ div.link-area {
     padding-bottom: 30px;
 }
 
+#listing .status {
+    padding-left: 1em;
+}
+
 .soziale-einrichtungen {
     max-width: 70%;
-    padding-left: 15px;
+    padding-left: 1em;
 }
 
 ul.soziale-einrichtungen li {
@@ -1825,7 +1845,7 @@ ul.soziale-einrichtungen li {
 
 .soziale-einrichtungen .list-item {
     background: #fff;
-    padding: 15px;
+    padding: 1em;
     border: 1px solid #002856;
     margin: 5px;
 }
@@ -1844,7 +1864,6 @@ ul.soziale-einrichtungen li {
     color: #a9a9a9;
     font-style: italic;
 }
-
 
 .soziale-einrichtungen .value {
     color: #000;

@@ -37,7 +37,7 @@
         </script>
         <meta th:replace="fragments/tracker" />
     </head>
-    <body class="kiezatlas list">
+    <body class="kiezatlas list places">
         
         <div class="top-menu" th:include="fragments/navigation :: top (publisher=${is_publisher})"></div>
 
@@ -47,32 +47,32 @@
 
             <div id="header">
                 <p>&nbsp;</p>
-                <h3>&nbsp;</h3>
-                <p th:if="${not is_publisher}"><b>Sorry!</b><br/>Sie haben aktuell nicht die n&ouml;tigen Berechtigungen um alle Einrichtungen im Kiezatlas einzusehen.</p>
-            </div>
-
-            <div class="ui container">
-                <div class="commands">
-                    <h3>&nbsp;</h3>
-                    <a class="button ui green active" href="/website/list">Alle Orte</a>
-                    <a th:if="${is_district_admin}" class="button ui" href="/website/list/bezirksregionen">Ansprechpartner_innen</a>
-                    <a class="button ui" href="/website/list/freischalten">Neueintragungen</a>
-                    <a class="button ui" href="/website/list/hinweise">Bearbeitungshinweise</a>
-                    <!--div class="item" data-tab="third">Newsbereich</div-->
+                <h3>
                     <form>
-                        <label>im Bezirk</label>
-                        <select id="districts" class="ui dropdown" onchange="refresh_list_filter()">
+                        <label>Listenansicht des Bezirks</label>
+                        <select id="districts" class="ui button dropdown" onchange="refresh_list_filter()">
                             <option th:each="district: ${userDistricts}"
                                     th:selected="${districtId == district.id} ? true : false"
                                     th:value="${district.id}" th:text="${district.simpleValue}">
                             </option>
                         </select>
                     </form>
+                </h3>
+                <p th:if="${not is_publisher}"><b>Sorry!</b><br/>Sie haben aktuell nicht die n&ouml;tigen Berechtigungen um alle Einrichtungen im Kiezatlas einzusehen.</p>
+            </div>
+
+            <div class="ui container">
+                <div class="commands ui buttons">
+                    <a class="button ui green active" href="/website/list">Alle Orte</a>
+                    <a class="button ui" href="/website/list/freischalten">Unver&ouml;ffentlichte Orte</a>
+                    <a class="button ui" href="/website/list/hinweise">Bearbeitungshinweise</a>
+                    <!--div class="item" data-tab="third">Newsbereich</div-->
+                    <a th:if="${is_district_admin}" class="button ui" href="/website/list/bezirksregionen">Bezirksregionen</a>
                 </div>
             </div>
 
             <div id="listing" class="ui container">
-                <p class="status">Sortierung der <span th:text="$#arrays.length(geoobjects)}" class="count"></span> Eintr&auml;ge: Zuletzt bearbeitete zuerst</p>
+                <p class="status"><span th:text="${geoobjectsCount}" class="count"></span> Eintr&auml;ge, Sortierung: <span class="sorting">Zuletzt bearbeitete zuerst</span></p>
                 <ul class="soziale-einrichtungen">
                     <li th:each="geoobject : ${geoobjects}">
                         <div th:class="'list-item ' + ${geoobject.className}">
