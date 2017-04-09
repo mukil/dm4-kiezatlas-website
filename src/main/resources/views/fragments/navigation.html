@@ -76,9 +76,9 @@
         <div class="header">Administration</div>
         <div class="menu">
             <a th:if="${is_district_admin}" href="/website/list" class="item">Listenansicht</a>
-            <a th:if="${is_publisher}" href="/website/geo/freischalten" class="item">Neueintragungen</a>
+            <a th:if="${is_publisher}" href="/website/list/freischalten" class="item">Unver&ouml;ffentlichte Orte</a>
             <!--a href="/website/bezirk/edit" class="item">Bezirksseite bearbeiten</a-->
-            <a th:if="${is_publisher}" href="/website/geo/hinweise" class="item">Bearbeitungshinweise</a>
+            <a th:if="${is_publisher}" href="/website/list/hinweise" class="item">Bearbeitungshinweise</a>
             <!--a href="/site/administration/" class="item">Listenansicht</a-->
             <!-- Kiezatlas Membership -->
             <a th:if="${is_site_manager}" href="/website/sites/" class="item">Stadtpl&auml;ne bearbeiten</a>
@@ -196,9 +196,9 @@
                 <h3>Administration</h3>
                 <ul class="menu">
                     <li th:if="${is_district_admin}"><a href="/website/list" class="item">Listenansicht</a></li>
-                    <li th:if="${is_publisher}"><a href="/website/geo/freischalten" class="item">Neueintragungen</a></li>
+                    <li th:if="${is_publisher}"><a href="/website/list/freischalten" class="item">Unver&ouml;ffentlichte Orte</a></li>
                     <!--a href="/website/bezirk/edit" class="item">Bezirksseite bearbeiten</a-->
-                    <li th:if="${is_publisher}"><a href="/website/geo/hinweise" class="item">Bearbeitungshinweise</a></li>
+                    <li th:if="${is_publisher}"><a href="/website/list/hinweise" class="item">Bearbeitungshinweise</a></li>
                     <!-- Kiezatlas Membership -->
                     <li th:if="${is_site_manager}"><a href="/website/sites/" class="item">Stadtpl&auml;ne bearbeiten</a></li>
                 </ul>

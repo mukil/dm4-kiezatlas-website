@@ -30,9 +30,9 @@
             function refresh_comment_list() {
                 var selection = document.getElementById("districts")
                 if (selection) {
-                    console.log("Navigating to district comment list...")
+                    console.log("Navigating to district bezirksregionen list...")
                     var districtId = document.getElementById("districts").value
-                    window.document.location.href = "/website/list/hinweise/" + districtId
+                    window.document.location.href = "/website/list/bezirksregionen/" + districtId
                 }
             }
         /*]]>*/
@@ -73,22 +73,18 @@
                     <a th:if="${is_district_admin}" class="button ui green active" href="/website/list/bezirksregionen">Bezirksregionen</a>
                 </div>
                 <div id="listing">
-                    <ul class="soziale-einrichtungen">
-                        <li th:each="geoobject : ${geoobjects}">
+                    <ul class="soziale-einrichtungen bezirksregion">
+                        <li th:each="region : ${regions}">
                             <div class="list-item">
-                                <h3 th:text="${geoobject.name}"></h3>
-                                <p>
-                                    Eingepflegt von <span th:text="${geoobject.assignedUsername}"></span> am <span th:text="${geoobject.lastModified}"></span>
-                                </p>
+                                <h3 th:text="${region.simpleValue}"></h3>
                                 <!--select>
                                     <option th:each="site : ${websites}" th:text="${site.simpleValue}" th:value="${site.id}"></option>
                                 </select-->
-                                <a class="read-more" th:href="'/website/geo/' + ${geoobject.id}">Link zum Eintrag</a>
                             </div>
-                            <p class="comment" th:each="comment : ${geoobject.comments}">
+                            <!-- List of Geo Objets.. p class="comment" th:each="comment : ${geoobject.comments}">
                                 <span class="contact" th:if="${comment.contact}" th:text="${comment.contact} + ':'"></span>
                                 <span class="message" th:text="${comment.message}"></span>
-                            </p>
+                            </p-->
                         </li>
                     </ul>
                 </div>

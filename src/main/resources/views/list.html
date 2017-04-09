@@ -75,7 +75,8 @@
                 <p class="status"><span th:text="${geoobjectsCount}" class="count"></span> Eintr&auml;ge, Sortierung: <span class="sorting">Zuletzt bearbeitete zuerst</span></p>
                 <ul class="soziale-einrichtungen">
                     <li th:each="geoobject : ${geoobjects}">
-                        <div th:class="'list-item ' + ${geoobject.className}">
+                        <div th:class="'list-item ' + ${geoobject.className}"
+                             th:title="(${#strings.contains(geoobject.className, 'unconfirmed')} ? 'Dieser Datensatz wurde noch nicht veröffentlicht.' : 'Unknown')">
                             <h3 th:text="${geoobject.name}"></h3>
                             <p class="meta">
                                 Eingepflegt von <span class="value" th:text="${geoobject.creator}"></span>

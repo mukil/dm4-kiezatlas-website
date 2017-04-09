@@ -194,7 +194,7 @@
                         <span class="zielgruppe" th:text='${topic.simpleValue}'>Name des Themas</span>
                     </div>
                 </div>
-                <div class="debug metadata">
+                <div th:if="${authenticated}" class="debug metadata">
                     <div class="creator">Ein Eintrag von <a href="#creator" th:text="${geoobject.creator}" title="Benutzername"></a></div>
                 </div>
             </div>

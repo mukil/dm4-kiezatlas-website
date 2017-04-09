@@ -1892,6 +1892,10 @@ ul.soziale-einrichtungen li {
     background-color: #f00 !important;
 }
 
+.soziale-einrichtungen .list-item.unconfirmed {
+    opacity: .4;
+}
+
 .soziale-einrichtungen .list-item.no-bezirksregion,
 .soziale-einrichtungen .list-item.no-email.no-bezirksregion {
     background-color: #eaef13;

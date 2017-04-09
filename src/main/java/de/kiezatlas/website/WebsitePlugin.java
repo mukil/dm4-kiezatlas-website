@@ -673,7 +673,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     }
 
     /**
-     * Responds with a Viewable, the administrative confirmation page of the Kiezatlas Website.
+     * Responds with a Viewable, the administrative page for managing bezirksregion contacts on the Kiezatlas Website.
      * @return
      */
     @GET
@@ -686,11 +686,30 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         long districtId = -1;
         if (usersDistricts != null && usersDistricts.size() > 0) {
             districtId = usersDistricts.get(0).getId();
-            List<RelatedTopic> regions = getKiezatlasBezirksregionen(districtId);
-            log.info("> Fetched " + regions.size() + " Bezirksregionen in Bezirk " + districtId);
+        }
+        return getBezirksregionenListing(districtId);
+    }
+
+    @GET
+    @Path("/list/bezirksregionen/{districtId}")
+    @Produces(MediaType.TEXT_HTML)
+    public Viewable getBezirksregionenListing(@PathParam("districtId") long districtId) {
+        if (!isAuthenticated()) return getUnauthorizedPage();
+        List<RelatedTopic> usersDistricts = getUserDistrictTopics();
+        List<Topic> regions = null;
+        if (districtId != -1) {
+            regions = getKiezatlasBezirksregionen(districtId);
+        } else if (usersDistricts != null && usersDistricts.size() > 0) {
+            regions = getKiezatlasBezirksregionen(usersDistricts.get(0).getId());
+        }
+        if (regions != null && !regions.isEmpty()) {
+            return getBezirksregionListing(districtId, regions);
         }
         // ### Fetch first Bezirksregion in District
-        return getBezirksregionListing(districtId, -1);
+        viewData("name", "Bezirksregionen");
+        viewData("message", "Es tut uns leid, wir konnten die Bezirksregionen für den Bezirk mit der ID=\""
+            + districtId + "\" nicht laden.");
+        return getSimpleMessagePage();
     }
 
     /**
@@ -749,14 +768,13 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     @GET
     @Path("/list/{districtId}/bezirksregion/{regionId}")
     @Produces(MediaType.TEXT_HTML)
-    public Viewable getBezirksregionListing(@PathParam("districtId") long districtId, @PathParam("regionId") long regionId) {
+    public Viewable getBezirksregionListing(@PathParam("districtId") long districtId, List<Topic> regions) {
         // TODO: Check if user isCommentsWorkspaceMember...
         if (!isAuthenticated()) return getUnauthorizedPage();
         if (isAssociatedDistrictMember(districtId)) {
-            List<EinrichtungView> results = getCommentedEinrichtungList(districtId);
             viewData("districtId", districtId);
             viewData("name", "Bezirksregionen");
-            return getEditorsPage(results);
+            return getEditorsPage(regions);
         }
         viewData("name", "Kommentare einsehen");
         viewData("message", "Ihr Account scheint noch nicht als Kiez-Administrator_in eingerichtet zu sein. "
@@ -895,6 +913,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
 
     @GET
     @Path("/bezirk")
+    @Produces(MediaType.APPLICATION_JSON)
     public List<BezirkView> fetchKiezatlasDistricts() {
         ArrayList<BezirkView> results = new ArrayList<BezirkView>();
         for (Topic bezirk : dm4.getTopicsByType("ka2.bezirk")) {
@@ -905,17 +924,39 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
 
     @GET
     @Path("/bezirksregion")
+    @Produces(MediaType.APPLICATION_JSON)
     public List<Topic> fetchKiezatlasSubregions() {
-        return dm4.getTopicsByType("ka2.bezirksregion");
+        return dm4.getTopicsByType("ka2.util.bezirksregion_name");
     }
 
     @GET
     @Path("/bezirk/{districtId}/bezirksregionen")
-    public List<RelatedTopic> getKiezatlasBezirksregionen(long districtId) {
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<Topic> getKiezatlasBezirksregionen(long districtId) {
+        List<Topic> regionen = dm4.getTopicsByType("ka2.util.bezirksregion_name");
         Topic bezirk = dm4.getTopic(districtId);
-        List<RelatedTopic> regionen = bezirk.getRelatedTopics("dm4.core.association", DEFAULT_ROLE,
-            DEFAULT_ROLE, "ka2.bezirksregion");
-        return regionen;
+        log.info("LOAD listing of BEZIRKSRGEIONEN/ANSPRECHPARTNER... for Bezirk \"" + bezirk + "\" (\"" + districtId + "\")");
+        List<Topic> result = new ArrayList<Topic>();
+        for (Topic region : regionen) {
+            Topic bezirksUtil = fetchBezirkUtilName(region);
+            if (bezirksUtil.getSimpleValue().toString().equals(bezirk.getSimpleValue().toString())) {
+                result.add(region);
+            }
+        }
+        if (result.isEmpty()) {
+            log.warning("Fetching Bezirksregionen by LOR Utils Bezirk's Name FAILED - Results: 0");
+        }
+        return result;
+    }
+
+    private Topic fetchBezirkUtilName(Topic region) {
+        List<RelatedTopic> lorUtil = region.getRelatedTopics("dm4.core.composition", CHILD_ROLE,
+            PARENT_ROLE, "ka2.util.lor");
+        if (!lorUtil.isEmpty()) {
+            RelatedTopic utilParent = lorUtil.get(0);
+            return utilParent.getChildTopics().getTopic("ka2.util.bezirk_name");
+        }
+        return null;
     }
 
     /**
@@ -925,8 +966,9 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
      */
     @GET
     @Path("/search/by_name")
+    @Produces(MediaType.APPLICATION_JSON)
     public List<GeoMapView> searchGeoObjectsByExactName(@HeaderParam("Referer") String referer,
-                                                          @QueryParam("query") String query) {
+                                                        @QueryParam("query") String query) {
         if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
         try {
             log.log(Level.INFO, "> nameQuery=\"{0}\"", query);
@@ -954,6 +996,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
      */
     @GET
     @Path("/search/duplicates")
+    @Produces(MediaType.APPLICATION_JSON)
     public List<GeoMapView> searchGeoObjectsByLooseName(@HeaderParam("Referer") String referer,
                                                           @QueryParam("geoobject") String geoObjectName) {
         if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
@@ -986,6 +1029,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
      */
     @GET
     @Path("/search/autocomplete")
+    @Produces(MediaType.APPLICATION_JSON)
     public SearchResultList autoCompleteFrontpageQuickSearchByName(@HeaderParam("Referer") String referer,
                                                              @QueryParam("query") String query) {
         if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
@@ -1038,6 +1082,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
      */
     @GET
     @Path("/search")
+    @Produces(MediaType.APPLICATION_JSON)
     public List<GeoMapView> searchGeoObjectsFulltext(@HeaderParam("Referer") String referer,
                                                        @QueryParam("search") String query) {
         if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
@@ -1069,6 +1114,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
      */
     @GET
     @Path("/search/{contextId}")
+    @Produces(MediaType.APPLICATION_JSON)
     @Transactional
     public List<GeoMapView> searchGeoObjectsFulltextInContext(@HeaderParam("Referer") String referer,
             @PathParam("contextId") long contextId, @QueryParam("search") String query) {
@@ -1110,6 +1156,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
      * @return A list of unique topics of type "ka2.geo_object".
      */
     @Override
+    @Produces(MediaType.APPLICATION_JSON)
     public List<Topic> searchFulltextInGeoObjectChilds(String query, boolean doSplitWildcards, boolean appendWildcard,
                                                        boolean doExact, boolean leadingWildcard) {
         // ### Todo: Fetch for ka2.ansprechpartner, traeger name, too
@@ -1169,6 +1216,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
      */
     @GET
     @Path("/search/{coordinatePair}/{radius}")
+    @Produces(MediaType.APPLICATION_JSON)
     public List<GeoMapView> searchGeoObjectsNearBy(@HeaderParam("Referer") String referer,
                                                      @PathParam("coordinatePair") String coordinates,
                                                      @PathParam("radius") String radius) {
@@ -1451,10 +1499,11 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         sortByModificationDateDescending(sortedGeoObjects);
         for (RelatedTopic geoObject : sortedGeoObjects) {
             EinrichtungView einrichtung = assembleEinrichtungListElement(geoObject, false);
-            einrichtung.setAssignedUsername(getFirstUsernameAssigned(geoObject));
-            if (einrichtung.getBezirkId() == district.getId()) {
-                log.info("Including unconfirmed geo object - In district " + einrichtung.getBezirk());
-                results.add(einrichtung);
+            if (einrichtung != null) {
+                einrichtung.setAssignedUsername(getFirstUsernameAssigned(geoObject));
+                if (einrichtung.getBezirkId() == district.getId()) {
+                    results.add(einrichtung);
+                }
             }
         }
         return results;
@@ -1518,6 +1567,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     }
 
     private void prepareGeoObjectListing(List<EinrichtungView> results) {
+        // Optimize: Loads district topic twice (see earlier calls to isAssociatedDistrictMember())
         viewData("userDistricts", getUserDistrictTopics());
         // viewData("availableLor", getAvailableLORNumberTopics());
         viewData("workspace", getStandardWorkspace());
@@ -1528,7 +1578,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     private Viewable getListPage(List<EinrichtungView> results) {
         prepareGeneralPageData("list");
         prepareGeoObjectListing(results);
-        log.info("Completed preparation of LIST");
+        log.info("Completed preparation of LIST with " + results.size() + " entries");
         return view("list");
     }
 
@@ -1544,9 +1594,12 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         return view("list-comments");
     }
 
-    private Viewable getEditorsPage(List<EinrichtungView> results) {
+    private Viewable getEditorsPage(List<Topic> results) {
+        // Optimize: Loads district topic twice (see earlier calls to isAssociatedDistrictMember())
+        viewData("userDistricts", getUserDistrictTopics());
         prepareGeneralPageData("editors");
-        prepareGeoObjectListing(results);
+        // prepareGeoObjectListing(results);
+        viewData("regions", results);
         return view("list-editors");
     }
 
@@ -1770,7 +1823,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
 
     /** ------------------- Kiezatlas Application Model Related Helper Methods -------------------------- **/
 
-    private List<CoordinatesView> getKiezatlasStreetCoordinates(String queryPhrase) {
+    /** private List<CoordinatesView> getKiezatlasStreetCoordinates(String queryPhrase) {
         List<CoordinatesView> results = new ArrayList<CoordinatesView>();
         List<Topic> singleTopics = dm4.searchTopics(queryPhrase, "dm4.contacts.street");
         for (Topic streetname : singleTopics) {
@@ -1788,7 +1841,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         }
         log.info("Fetched " + results.size() + " internal street coordinate values");
         return results;
-    }
+    } **/
 
     private HashMap<String, String[]> loadCitymapWebAliases() {
         HashMap<String, String[]> aliases = new HashMap();
@@ -1828,13 +1881,27 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     }
 
     private EinrichtungView assembleEinrichtungListElement(Topic geoObject, boolean includeComments) {
+        if (geoObject == null) return null;
         EinrichtungView listItem = new EinrichtungView();
-        listItem.setName(geoObject.getChildTopics().getString(GEO_OBJECT_NAME));
+        try {
+            listItem.setName(geoObject.getChildTopics().getString(GEO_OBJECT_NAME));
+        } catch (Exception ex) {
+            log.warning("Identified geo object \""+geoObject.getId()+"\" has no Geo Object Name child topic set"
+                + "- Skip adding geo object to list, caused by " + ex.getMessage());
+            return null;
+        }
         listItem.setUri(geoObject.getUri());
         listItem.setId(geoObject.getId());
         // Anschrift
-        RelatedTopic address = geoObject.getChildTopics().getTopic(GEO_OBJECT_ADDRESS);
-        listItem.setAddress(address);
+        RelatedTopic address = null;
+        try {
+            address = geoObject.getChildTopics().getTopic(GEO_OBJECT_ADDRESS);
+            listItem.setAddress(address);
+        } catch (Exception e) {
+            log.warning("Identified geo object \"" + geoObject.getId() + "\" has no Address child topic set -"
+                + "Skip adding geo object to list, caused by " + e.getMessage());
+            return null;
+        }
         // Kontakt
         Topic contactTopic = getContactFacet(geoObject);
         String contactValue = "k.A.";
@@ -1858,12 +1925,18 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         } else {
             listItem.addClassName("no-coordinates");
         }
+        // Unconfirmed Check
+        if (isAssignedToConfirmationWorkspace(geoObject)) listItem.addClassName("unconfirmed");
         // Bezirksregionen Check
         Topic bezirksregion = getFacettedBezirksregionChildTopic(geoObject);
         if (bezirksregion == null) listItem.addClassName("no-bezirksregion");
         // Bezirk
         Topic bezirk = getRelatedBezirk(geoObject);
-        if (bezirk == null) listItem.addClassName("no-district");
+        if (bezirk != null) {
+            listItem.setBezirkId(bezirk.getId());
+        } else {
+            listItem.addClassName("no-district");
+        }
         if (!listItem.getClassName().equals("")) {
             log.fine("> Identified geo object \"" + geoObject.getId() + "\" misses some facets \"" + listItem.getClassName() + "\"");
         }
@@ -1875,7 +1948,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         if (includeComments) { // Collect Comments
             List<RelatedTopic> commentTopics = comments.getComments(geoObject.getId());
             if (commentTopics != null) {
-                listItem.setComments(assembleCommentModels(commentTopics));
+                listItem.setComments(assembleCommentViews(commentTopics));
             }
         }
         return listItem;
@@ -1948,7 +2021,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
             // Collect Comments
             List<RelatedTopic> commentTopics = comments.getComments(geoObject.getId());
             if (commentTopics != null) {
-                detail.setComments(assembleCommentModels(commentTopics));
+                detail.setComments(assembleCommentViews(commentTopics));
             }
         } catch (Exception ex) {
             throw new RuntimeException("Could not assemble EinrichtungsInfo", ex);
@@ -1978,7 +2051,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         return value.replaceAll("Flaeche ", "");
     }
 
-    private List<CommentView> assembleCommentModels(List<RelatedTopic> comments) {
+    private List<CommentView> assembleCommentViews(List<RelatedTopic> comments) {
         List<CommentView> results = new ArrayList<CommentView>();
         for (RelatedTopic comment : comments) {
             CommentView model = new CommentView(null, null);
