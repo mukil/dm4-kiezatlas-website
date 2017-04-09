@@ -696,20 +696,13 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     public Viewable getBezirksregionenListing(@PathParam("districtId") long districtId) {
         if (!isAuthenticated()) return getUnauthorizedPage();
         List<RelatedTopic> usersDistricts = getUserDistrictTopics();
-        List<Topic> regions = null;
-        if (districtId != -1) {
-            regions = getKiezatlasBezirksregionen(districtId);
+        if (districtId != -1 || districtId != 0) {
+            return getBezirksregionListingPage(districtId);
         } else if (usersDistricts != null && usersDistricts.size() > 0) {
-            regions = getKiezatlasBezirksregionen(usersDistricts.get(0).getId());
+            return getBezirksregionListingPage(usersDistricts.get(0).getId());
+        } else {
+            return getBezirksregionListingPage(-1);
         }
-        if (regions != null && !regions.isEmpty()) {
-            return getBezirksregionListing(districtId, regions);
-        }
-        // ### Fetch first Bezirksregion in District
-        viewData("name", "Bezirksregionen");
-        viewData("message", "Es tut uns leid, wir konnten die Bezirksregionen für den Bezirk mit der ID=\""
-            + districtId + "\" nicht laden.");
-        return getSimpleMessagePage();
     }
 
     /**
@@ -765,18 +758,22 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         return getSimpleMessagePage();
     }
 
-    @GET
-    @Path("/list/{districtId}/bezirksregion/{regionId}")
-    @Produces(MediaType.TEXT_HTML)
-    public Viewable getBezirksregionListing(@PathParam("districtId") long districtId, List<Topic> regions) {
-        // TODO: Check if user isCommentsWorkspaceMember...
+    private Viewable getBezirksregionListingPage(@PathParam("districtId") long districtId) {
         if (!isAuthenticated()) return getUnauthorizedPage();
-        if (isAssociatedDistrictMember(districtId)) {
+        List<Topic> bezirksregionen = null;
+        viewData("name", "Bezirksregionen");
+        if (districtId != -1 && isAssociatedDistrictMember(districtId)) {
             viewData("districtId", districtId);
-            viewData("name", "Bezirksregionen");
-            return getEditorsPage(regions);
+            bezirksregionen = getKiezatlasBezirksregionen(districtId);
+            // ### Fetch first Bezirksregion in District
+            if (bezirksregionen == null || bezirksregionen.isEmpty()) {
+                viewData("message", "Es tut uns leid, wir konnten die Bezirksregionen für den Bezirk mit der ID=\""
+                    + districtId + "\" nicht laden.");
+                return getSimpleMessagePage();
+            } else {
+                return getEditorsPage(bezirksregionen);
+            }
         }
-        viewData("name", "Kommentare einsehen");
         viewData("message", "Ihr Account scheint noch nicht als Kiez-Administrator_in eingerichtet zu sein. "
             + "Wenden Sie sich bitte an die Administrator_innen.");
         return getSimpleMessagePage();
