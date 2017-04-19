@@ -9,20 +9,43 @@ var list = (function($) {
     var objects =  []
     var district = { id: 7275 }
     var usernames = []
-    
+
+    api.init_page = function() {
+        /** var districtId = parseInt(window.location.href.slice(window.location.href.lastIndexOf("/") +1))
+        restc.load_district_manager(districtId, function(results) {
+            console.log("Loaded list of possible district manager", results)
+        })
+        restc.load_district_regions(districtId, function(results) {
+            console.log("Loaded list of bezirskregionen", results)
+        }) **/
+    }
+
     api.search_usernames = function(input, callback) {
         //
         console.log("Search for users \"" + input.trim() + "\"")
     }
 
-    api.create_user_assignment = function(geoObjectId, username, callback) {
-        // 
-        console.log("Create user assignment for \"" + geoObjectId + "\" and " + username)
+    api.do_assign_user = function(topicId) {
+        var $selectedOption = $('#' + topicId + ' .assign-username .selected')
+        console.log("Selected User for Assignment", $selectedOption, $('#' + topicId + ' .assign-username'))
+        var userId = parseInt($selectedOption.attr('data-value'))
+        if (userId !== -1 && !isNaN(userId)) {
+            console.log("Create Assign User", topicId, userId)
+            restc.create_user_assignment(topicId, userId, function(response) {
+                console.log("Attempt to create a kiezatlas user assignment", response)
+                if (response.state === "ok") window.document.location.reload()
+            })
+        }
     }
 
-    api.delete_user_assignment = function(geoObjectId, username, callback) {
-        // 
-        console.log("Remove user assignment for \"" + geoObjectId + "\" and " + username)
+    api.do_remove_assignment = function(topicId, userId) {
+        if (userId !== -1 && !isNaN(userId)) {
+            console.log("Remove User Assignment", topicId, userId)
+            restc.delete_user_assignment(topicId, userId, function(response) {
+                console.log("Attempt to delete a kiezatlas user assignment", response)
+                if (response.state === "ok") window.document.location.reload()
+            })
+        }
     }
 
     api.load_assigned_usernames = function(geoObjectId, callback) {

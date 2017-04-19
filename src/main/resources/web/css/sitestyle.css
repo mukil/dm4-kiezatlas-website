@@ -1322,6 +1322,15 @@ span.bold {
     display: block;
 }
 
+.list .list-item h3,
+.list .ui.search.dropdown {
+    display: inline;
+}
+
+.list .ui.search.dropdown .text {
+    min-width: 150px;
+}
+
 #fulltext-do {
     cursor: pointer;
 }
@@ -1903,6 +1912,21 @@ ul.soziale-einrichtungen li {
 
 .soziale-einrichtungen .list-item.no-email .label {
     color: #fff;
+}
+
+.list-item .ansprechpartner {
+    margin-top: .5em;
+    color: #a9a9a9;
+    font-style: italic;
+}
+
+.list-item .ansprechpartner .remove {
+    display: inline-block;
+    margin-left: .5em;
+}
+
+.list-item .managers {
+    margin-bottom: 1em;
 }
 
 /** --------------------------------------- Overrides for Sign-up Dialog --- */

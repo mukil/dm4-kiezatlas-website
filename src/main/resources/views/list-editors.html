@@ -12,10 +12,13 @@
         <link rel="stylesheet" href="/de.kiezatlas.website/css/semantic-ui/2.2/components/dropdown.min.css"/>
         <link rel="stylesheet" href="/de.kiezatlas.website/css/semantic-ui/2.2/components/transition.min.css"/>
 
-        <script src="/de.kiezatlas.website/dist/vendor/jquery-1.9.1.min.js"></script>
+        <script src="/de.kiezatlas.angebote/dist/vendor/jquery-1.9.1-and-1.12.1-ui-custom.min.js"></script>
         <script src="/de.kiezatlas.website/css/semantic-ui/2.2/sidebar.min.js"></script>
-        <!--script src="/de.kiezatlas.website/css/semantic-ui/2.2/dropdown.min.js"></script>
-        <script src="/de.kiezatlas.website/css/semantic-ui/2.2/transition.min.js"></script-->
+        <script src="/de.kiezatlas.website/css/semantic-ui/2.2/dropdown.min.js"></script>
+        <script src="/de.kiezatlas.website/css/semantic-ui/2.2/transition.min.js"></script>
+        <script src="/de.kiezatlas.website/dist/vendor/dm4-webclient-utils.min.js"></script>
+        <script src="/de.kiezatlas.website/ka-restclient.js"></script>
+        <script src="/de.kiezatlas.website/ka-admin.js"></script>
 
         <script type="text/javascript" th:inline="javascript">
         /*<![CDATA[*/
@@ -23,11 +26,13 @@
             // App initialization
             $(document).ready(function(e) {
                 $sidebarUi = $('.ui.sidebar').sidebar('setting', 'dimPage', false)
-                console.log("hello publisher")
-                // $('.ui.dropdown').dropdown();
+                $('#listing select.ui.dropdown').dropdown({
+                    fullTextSearch: true, sortSelect: true, placeholder: "Benutzer auswählen"
+                })
+                list.init_page()
             })
 
-            function refresh_comment_list() {
+            function refresh_regionen_list() {
                 var selection = document.getElementById("districts")
                 if (selection) {
                     console.log("Navigating to district bezirksregionen list...")
@@ -53,7 +58,7 @@
                 <h3 th:if="${is_publisher}">
                     <form>
                         <label>Bezirksregionen des Bezirks</label>
-                        <select id="districts" class="ui dropdown button" onchange="refresh_comment_list()">
+                        <select id="districts" class="ui dropdown basic selection" onchange="refresh_regionen_list()">
                             <option th:each="district: ${userDistricts}" th:selected="${districtId == district.id} ? true : false"
                                     th:value="${district.id}" th:text="${district.simpleValue}">
                             </option>
@@ -72,14 +77,28 @@
                     <!--div class="item" data-tab="third">Newsbereich</div-->
                     <a th:if="${is_district_admin}" class="button ui green active" href="/website/list/bezirksregionen">Bezirksregionen</a>
                 </div>
+                <p>Auf dieser Seite kannst du Ansprechpartner_innen auf der Ebene von Bezirksregionen verwalten.</p>
                 <div id="listing">
                     <ul class="soziale-einrichtungen bezirksregion">
-                        <li th:each="region : ${regions}">
-                            <div class="list-item">
-                                <h3 th:text="${region.simpleValue}"></h3>
-                                <!--select>
-                                    <option th:each="site : ${websites}" th:text="${site.simpleValue}" th:value="${site.id}"></option>
-                                </select-->
+                        <li th:each="region : ${regions}" th:with="members=${confirmationMembers}">
+                            <div class="list-item" th:id="${region.id}">
+                                <h3 th:text="${region.name}"></h3>
+                                <div class="managers" th:each="ansprechpartner, iterStat : ${region.ansprechpartner}">
+                                    <div class="ansprechpartner">
+                                        <span th:text="${ansprechpartner.simpleValue}" title="Ansprechpartner/in"></span>
+                                        <button class="ui button basic circle remove compact" th:onclick="'list.do_remove_assignment(' + ${region.id} + ', ' + ${ansprechpartner.id} + ')'"
+                                                title="Diesen Ansprechpartner/in f&uuml;r diese Bezirksregion zur&uuml;ckziehen">
+                                            <i class="icon close"></i>Entfernen
+                                        </button>
+                                    </div>
+                                </div>
+                                <select class="assign-username ui dropdown selection search">
+                                    <option value="-1" class="placeholder">Benutzer ausw&auml;hlen</option>
+                                    <option th:each="username : ${members}" th:text="${username.simpleValue}" th:value="${username.id}"></option>
+                                </select>
+                                <button th:onclick="'list.do_assign_user(' + ${region.id} + ')'" class="ui button">
+                                    Hinzuf&uuml;gen
+                                </button>
                             </div>
                             <!-- List of Geo Objets.. p class="comment" th:each="comment : ${geoobject.comments}">
                                 <span class="contact" th:if="${comment.contact}" th:text="${comment.contact} + ':'"></span>

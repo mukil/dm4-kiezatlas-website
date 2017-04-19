@@ -87,9 +87,11 @@ import de.kiezatlas.angebote.AssignedAngebotListener;
 import de.kiezatlas.angebote.ContactAnbieterListener;
 import de.kiezatlas.angebote.RemovedAngebotListener;
 import de.kiezatlas.comments.CommentsService;
+import de.kiezatlas.website.model.BezirksregionView;
 import de.kiezatlas.website.model.CommentView;
 import de.kiezatlas.website.model.SearchResultList;
 import de.kiezatlas.website.model.SearchResult;
+import javax.ws.rs.DELETE;
 
 /**
  * The module bundling the Kiezatlas 2 Website.<br/>
@@ -179,64 +181,57 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         }
     }
 
+
+
+    // --------------------------------------------------------------------------------- Routing Pages and Forms ------/
+
     /** Responds witha a Viewable,the frontpage of the Kiezatlas Website. */
     @GET
     @Produces(MediaType.TEXT_HTML)
-    public Viewable getWebsite() {
-        return getWebsiteFrontpage();
+    public Viewable prepareFrontpage() {
+        prepatePageTemplate("ka-index");
+        return view("ka-index");
     }
 
     @GET
     @Path("/sites")
     @Produces(MediaType.TEXT_HTML)
-    public Viewable getWebsiteListing() {
-        if (!isAuthenticated() || !isKiezatlasMember()) return getUnauthorizedPage();
+    public Viewable prepareSitespage() {
+        if (!isAuthenticated() || !isSiteEditor()) return getUnauthorizedPage();
         viewData("page", "site-listing");
-        viewData("sites", getKiezatlasWebsites());
-        prepareGeneralPageData("sites");
+        viewData("sites", getSites());
+        prepatePageTemplate("sites");
         return view("sites");
-    }
-
-    @GET
-    @Path("/sites/json")
-    @Produces(MediaType.APPLICATION_JSON)
-    public List<Topic> getKiezatlasWebsites() {
-        List<Topic> sites = new ArrayList<Topic>();
-        if (isKiezatlasMember()) {
-            sites = dm4.getTopicsByType("ka2.website");
-            DeepaMehtaUtils.loadChildTopics(sites);
-        }
-        return sites;
     }
 
     @GET
     @Path("/edit/{siteId}")
     @Produces(MediaType.TEXT_HTML)
-    public Viewable getWebsiteEditor(@PathParam("siteId") long topicId) {
-        if (!isAuthenticated() || !isKiezatlasMember()) return getUnauthorizedPage();
+    public Viewable prepareSitesEditorPage(@PathParam("siteId") long topicId) {
+        if (!isAuthenticated() || !isSiteEditor()) return getUnauthorizedPage();
         viewData("site", dm4.getTopic(topicId));
         viewData("page", "site-editor");
         List<RelatedTopic> websites = kiezatlas.getGeoObjectsBySite(topicId);
         sortBySimpleValueDescending(websites);
         viewData("geoobjects", websites);
-        prepareGeneralPageData("sites");
+        prepatePageTemplate("sites");
         return view("sites");
     }
 
     @GET
     @Path("/edit/{siteId}/facets/{objectId}")
     @Produces(MediaType.TEXT_HTML)
-    public Viewable getWebsiteFacetEditor(@PathParam("siteId") long siteId, @PathParam("objectId") long objectId) {
-        if (!isAuthenticated() || !isKiezatlasMember()) return getUnauthorizedPage();
+    public Viewable prepareSitesFacetEditorPage(@PathParam("siteId") long siteId, @PathParam("objectId") long objectId) {
+        if (!isAuthenticated() || !isSiteEditor()) return getUnauthorizedPage();
         Topic object = dm4.getTopic(objectId);
         if (isGeoObjectTopic(object)) {
             viewData("site", dm4.getTopic(siteId));
             viewData("geoobject", kiezatlas.enrichWithFacets(object, siteId));
             viewData("facets", kiezatlas.getFacetTypes(siteId));
-            prepareGeneralPageData("facet-editor");
+            prepatePageTemplate("facet-editor");
             return view("facet-editor");
         } else {
-            prepareGeneralPageData("facet-editor");
+            prepatePageTemplate("facet-editor");
             return getNotFoundPage("Der angeforderte Datensatz ist kein Geoobjekt, so funktioniert das nicht.");
         }
     }
@@ -246,7 +241,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     @Produces(MediaType.APPLICATION_JSON)
     @Transactional
     public Topic updateWebsiteFacets(@PathParam("siteId") long siteId, @PathParam("objectId") long objectId, TopicModel tm) {
-        if (!isKiezatlasMember()) throw new WebApplicationException(Status.UNAUTHORIZED);
+        if (!isSiteEditor()) throw new WebApplicationException(Status.UNAUTHORIZED);
         Topic object = dm4.getTopic(objectId);
         if (isGeoObjectTopic(object)) {
             log.info("Updating facets for geo object in site with TopicModel=" + tm.toJSON().toString());
@@ -258,106 +253,6 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     }
 
     /**
-     * Loads geo objects for a given kieatlas site web alias.
-     *
-     * @param siteId long   Topic id of Kiezatlas Website Topic
-     * @return
-     */
-    @GET
-    @Path("/{siteId}/geo/{categoryId}")
-    @Produces(MediaType.APPLICATION_JSON)
-    public List<GeoMapView> getWebsiteGeoObjectsInCategory(@HeaderParam("Referer") String referer,
-            @PathParam("siteId") long siteId, @PathParam("categoryId") long categoryId) {
-        if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
-        Topic category = dm4.getTopic(categoryId);
-        Topic site = dm4.getTopic(siteId);
-        log.info("Attempting to load a category's geo objects \"" + category.getSimpleValue() + "\" in site " + site.getSimpleValue());
-        // populate new resultset
-        List<GeoMapView> results = new ArrayList<GeoMapView>();
-        List<RelatedTopic> geoObjects = kiezatlas.getGeoObjectsBySite(siteId);
-        for (RelatedTopic geoObject : geoObjects) {
-            if (isGeoObjectTopic(geoObject) && isAggregatingChildTopic(geoObject, categoryId)) {
-                results.add(new GeoMapView(geoObject, geomaps));
-            }
-        }
-        log.info("Loaded " + results.size() + " geo object for category \""
-            + category.getSimpleValue() + "\" in site " + site.getSimpleValue());
-        return results;
-    }
-
-    /**
-     * Loads geo objects for a given kieatlas site web alias.
-     *
-     * @param siteId long   Topic id of Kiezatlas Website Topic
-     * @return
-     */
-    @GET
-    @Path("/{siteId}/geo")
-    @Produces(MediaType.APPLICATION_JSON)
-    public List<GeoMapView> getWebsiteGeoObjects(@HeaderParam("Referer") String referer, @PathParam("siteId") long siteId) {
-        if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
-        // ### TODO: Make "Cache Site"  an option of "Kiezatlas Website" topic
-        // use cache
-        Topic site = dm4.getTopic(siteId);
-        if (siteId != 499904) {
-            // Do not cache Showcase Stadtplan "VSKA Stadtteilzentren"
-            if (citymapCache.containsKey(siteId)) {
-                // caching lifetime is 30 000 or 12 000 ms for testing purposes
-                if (citymapCachedAt.get(siteId) > new Date().getTime() - 21600000) { // 21600000 for approx. 6hr in ms
-                    log.info("Returning cached list of geo object for site " + site.getSimpleValue());
-                    return citymapCache.get(siteId);
-                }
-                // invalidate cache
-                citymapCache.remove(siteId);
-                citymapCachedAt.remove(siteId);
-            }
-        }
-        // populate new resultset
-        List<GeoMapView> results = new ArrayList<GeoMapView>();
-        try {
-            log.info("Attempting to load a site's geo objects: " + site.getSimpleValue() + "...");
-            List<RelatedTopic> geoObjects = kiezatlas.getGeoObjectsBySite(siteId);
-            for (RelatedTopic geoObject : geoObjects) {
-                if (isGeoObjectTopic(geoObject)) {
-                    results.add(new GeoMapView(geoObject, geomaps));
-                }
-            }
-            log.info("Populated cached list of geo object for site " + site.getSimpleValue());
-        } catch (NoSuchElementException nsex) {
-            log.warning("Probably this web alias is not unique among websites: " + nsex.getLocalizedMessage());
-        }
-        // insert new result into cache
-        citymapCache.put(siteId, results);
-        citymapCachedAt.put(siteId, new Date().getTime());
-        return results;
-    }
-
-    /**
-     * Loads site info object for a given kieatlas site web alias.
-     *
-     * @param pageAlias  String  ka2.website.web_alias
-     * @return
-     */
-    @GET
-    @Path("/info/{webAlias}")
-    @Produces(MediaType.APPLICATION_JSON)
-    public CitymapView getWebsiteInfo(@PathParam("webAlias") String pageAlias) {
-        CitymapView result = null;
-        try {
-            Topic webAlias = dm4.getTopicByValue("ka2.website.web_alias", new SimpleValue(pageAlias));
-            Topic site = webAlias.getRelatedTopic("dm4.core.composition", CHILD_ROLE,
-                PARENT_ROLE, "ka2.website");
-            log.info("Identified Kiezatlas Website: " + site.getSimpleValue());
-            if (site != null) {
-                result = new CitymapView(site);
-            }
-        } catch (NoSuchElementException nsex) {
-            log.warning("Probably this web alias is not unique among websites: " + nsex.getLocalizedMessage());
-        }
-        return result;
-    }
-
-    /**
      * Processes the form for creating a Kiezatlas Einrichtung in a specific Workspace.
      * Note: Saving Address needs "dm4_no_geocoding=true" Cookie, otherwise it geo-codes automatically.
      */
@@ -366,7 +261,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Path("/geo/save")
     @Transactional
-    public Viewable processGeoObjectForm(@FormParam("id") long topicId, @FormParam("name") String name, @FormParam("strasse") String strasse,
+    public Viewable processGeoObjectFormPage(@FormParam("id") long topicId, @FormParam("name") String name, @FormParam("strasse") String strasse,
             @FormParam("plz") String plz, @FormParam("city") long city, @FormParam("district") long district, @FormParam("fileTopicId") long fileId,
             @FormParam("country") long country, @FormParam("beschreibung") String beschreibung,
             @FormParam("open") String oeffnungszeiten, @FormParam("ansprechpartner") String ansprechpartner,
@@ -382,7 +277,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
             // ### Server side validation will let user loose all user input...
             log.warning("Saving new geo object prohibited - NO DISTRICT Given");
             viewData("warning", INVALID_DISTRICT_SELECTION);
-            return (topicId == NEW_TOPIC_ID) ? getGeoObjectCreatePage() : getGeoObjectEditPage(topicId);
+            return (topicId == NEW_TOPIC_ID) ? WebsitePlugin.this.prepareGeoObjectFormPage() : prepareGeoObjectFormPage(topicId);
         }
         // Handle Geo Coordinates of Geo Object
         if (latitude == -1000 || longitude == -1000) {
@@ -410,15 +305,15 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
                     geoObject, ansprechpartner, telefon, fax, email, beschreibung, oeffnungszeiten, website,
                     coordinatePair, district, themen, zielgruppen, angebote);
                 Association assignment = createUserAssignment(geoObject);
-                privilegedAssignToWorkspace(assignment, getPrivilegedWorkspace().getId());
+                privilegedAssignToWorkspace(assignment, getConfirmationWorkspace().getId());
                 // Handles Image-File Upload (Seperately)
                 if (fileId != 0) {
                     log.info("> Bild File Topic Upload is file at=\"" + files.getFile(fileId).toString());
                     createBildAssignment(geoObject, username, fileId);
                 }
-                initiallyAssignGeoObjectFacetsToWorkspace(geoObject, getPrivilegedWorkspace());
+                initiallyAssignGeoObjectFacetsToWorkspace(geoObject, getConfirmationWorkspace());
                 // Assign Geo Object to Confirmation WS (at last, otherwise we could not write its facets)
-                initiallyAssignGeoObjecToWorkspace(geoObject, getPrivilegedWorkspace());
+                initiallyAssignGeoObjecToWorkspace(geoObject, getConfirmationWorkspace());
                 // Note: If notification fails, confirmation mail fails too (Check again, also that effect on creation)
                 sendGeoObjectCreationNotice("Neuer Einrichtungsdatensatz im Kiezatlas", geoObject, username);
                 viewData("message", "Vielen Dank, Sie haben erfolgreich einen neuen Ort in den Kiezatlas eingetragen. "
@@ -456,10 +351,10 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     @GET
     @Produces(MediaType.TEXT_HTML)
     @Path("/geo/create/simple")
-    public Viewable getGeoObjectCreateSimplePage() {
+    public Viewable prepareGeoObjectFormPageSimple() {
         if (!isAuthenticated()) return getUnauthorizedPage();
         viewData("simple", true);
-        return getGeoObjectCreatePage();
+        return WebsitePlugin.this.prepareGeoObjectFormPage();
     }
 
     /**
@@ -468,7 +363,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     @GET
     @Produces(MediaType.TEXT_HTML)
     @Path("/geo/create")
-    public Viewable getGeoObjectCreatePage() {
+    public Viewable prepareGeoObjectFormPage() {
         if (!isAuthenticated()) return getUnauthorizedPage();
         EinrichtungView geoObject = new EinrichtungView();
         geoObject.setCoordinates(new GeoCoordinate(13.4, 52.5));
@@ -478,9 +373,9 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         viewData("themen", new ArrayList<RelatedTopic>());
         viewData("zielgruppen", new ArrayList<RelatedTopic>());
         viewData("angebote", new ArrayList<RelatedTopic>());
-        prepareFormWithAvailableTopics();
-        prepareGeneralPageData("edit");
-        viewData("workspace", getPrivilegedWorkspace());
+        populateGeoObjectFormTemplate();
+        prepatePageTemplate("edit");
+        viewData("workspace", getConfirmationWorkspace());
         return view("edit");
     }
 
@@ -490,7 +385,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     @GET
     @Produces(MediaType.TEXT_HTML)
     @Path("/geo/edit/{topicId}")
-    public Viewable getGeoObjectEditPage(@PathParam("topicId") long topicId) {
+    public Viewable prepareGeoObjectFormPage(@PathParam("topicId") long topicId) {
         Topic geoObject = dm4.getTopic(topicId);
         if (!isAuthenticated()) return getUnauthorizedPage();
         Topic username = getUsernameTopic();
@@ -506,13 +401,13 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
             } else {
                 viewData("message", "Sie haben aktuell nicht die nötigen Berechtigungen "
                     + "um diesen Datensatz in Kiezatlas 2 zu bearbeiten.");
-                return getWebsiteGeoObjectPage(geoObject.getId());
+                return prepareGeoObjectTemplate(geoObject.getId());
             }
         } else {
             return getNotFoundPage("Eine Einrichtung mit dieser ID ist uns nicht bekannt.");
         }
-        prepareFormWithAvailableTopics();
-        prepareGeneralPageData("edit");
+        populateGeoObjectFormTemplate();
+        prepatePageTemplate("edit");
         // this makes sure we keep all (potentially new) child topics in the same workspace its parent is while editing
         viewData("workspace", getAssignedWorkspace(geoObject));
         viewData("editable", isEditable);
@@ -528,9 +423,9 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     @GET
     @Path("/geo/{topicId}")
     @Produces(MediaType.TEXT_HTML)
-    public Viewable getGeoObjectDetailsPage(@PathParam("topicId") String topicId) {
+    public Viewable prepareGeoObjectInfoPage(@PathParam("topicId") String topicId) {
         Topic geoObject = getGeoObjectById(topicId);
-        return (geoObject != null) ? getWebsiteGeoObjectPage(geoObject.getId()) : getNotFoundPage();
+        return (geoObject != null) ? prepareGeoObjectTemplate(geoObject.getId()) : getNotFoundPage();
     }
 
     /**
@@ -558,7 +453,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
                     geoDetailsView.setLorValue(cleanUpShapefileFeatureNameAttribute(lor));
                 }
             }
-            if (isAssignedToConfirmationWorkspace(geoObject)) geoDetailsView.setUnconfirmed();
+            if (isInConfirmation(geoObject)) geoDetailsView.setUnconfirmed();
         }
         return geoDetailsView;
     }
@@ -566,7 +461,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     @GET
     @Path("/geo/delete/{topicId}")
     @Produces(MediaType.TEXT_HTML)
-    public Viewable deleteGeoObject(@PathParam("topicId") String topicId) {
+    public Viewable processGeoObjectDeletion(@PathParam("topicId") String topicId) {
         // Check Authorization
         Topic geoObject = getGeoObjectById(topicId);
         String name = geoObject.getSimpleValue().toString();
@@ -580,189 +475,20 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
                 return getSimpleMessagePage();
             } else {
                 viewData("message", "Der Datensatz konnte nicht gelöscht werden da ein Fehler aufgetreten ist.");
-                return getGeoObjectDetailsPage("" + topicId);
+                return prepareGeoObjectInfoPage("" + topicId);
             }
         } else {
             log.info("Geo Object could not be loaded by topicId=\"" + topicId + "\"");
         }
         viewData("message", "Der Datensatz konnte nicht gelöscht werden, da Sie dazu nicht die nötigen Berechtigungen haben.");
-        return getGeoObjectDetailsPage("" + topicId);
+        return prepareGeoObjectInfoPage("" + topicId);
     }
 
-    @Override
-    public Topic getGeoObjectById(String topicId) {
-        Topic geoObject = null;
-        try {
-            if (topicId.startsWith("t-")) {
-                geoObject = dm4.getTopicByUri("de.kiezatlas.topic." + topicId);
-            } else {
-                String username = accesscl.getUsername();
-                boolean readOp = dm4.getAccessControl().hasPermission(accesscl.getUsername(),
-                        Operation.READ, Long.parseLong(topicId));
-                if (readOp) {
-                    geoObject = dm4.getTopic(Long.parseLong(topicId));
-                } else {
-                    log.warning("Read permission for " + username + " on topicId=" + topicId + ", allowed=" + readOp);
-                }
-            }
-        } catch(RuntimeException e) {
-            log.severe("Website module could not load geo object by id=" + topicId + ", " + e.getLocalizedMessage());
-        }
-        return geoObject;
-    }
-
-    /**
-     * Fetches topic Kiezatlas Geo Object topic in context of a given site.
-     *
-     * @param referer
-     * @param topicId
-     * @param siteId
-     * @return A GeoObject DetailsView as DTO to presend details about a place.
-     */
-    @GET
-    @Path("/geo/{topicId}/facetted/{siteId}")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Topic getFacettedGeoObjectTopic(@HeaderParam("Referer") String referer, @PathParam("topicId") String topicId,
-                                           @PathParam("siteId") long siteId) {
-        if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
-        Topic geoObject = getFacettedGeoObjectTopic(topicId, siteId);
-        return geoObject;
-    }
-
-    @Override
-    public Topic getFacettedGeoObjectTopic(String topicId, long siteId) {
-        Topic geoObject = getGeoObjectById(topicId);
-        Topic website = dm4.getTopic(siteId);
-        if (isGeoObjectTopic(geoObject) && website.getTypeUri().equals("ka2.website")) {
-            kiezatlas.enrichWithFacets(geoObject, siteId);
-        }
-        return geoObject;
-    }
-
-    /** --- Bezirks and Bezirksregionen List Resources --- **/
-
-    @GET
-    @Path("/list")
-    @Produces(MediaType.TEXT_HTML)
-    public Viewable getEinrichtungsListing() {
+     private Viewable prepareBezirksregionListingPage(@PathParam("districtId") long districtId) {
         if (!isAuthenticated()) return getUnauthorizedPage();
-        List<RelatedTopic> usersDistricts = getUserDistrictTopics();
-        long districtId = -1;
-        if (usersDistricts != null && usersDistricts.size() > 0) {
-            districtId = usersDistricts.get(0).getId();
-        }
-        return getEinrichtungsListing(districtId);
-    }
-
-    @GET
-    @Path("/list/{districtId}")
-    @Produces(MediaType.TEXT_HTML)
-    public Viewable getEinrichtungsListing(@PathParam("districtId") long districtId) {
-        if (!isAuthenticated()) return getUnauthorizedPage();
-        if (isAssociatedDistrictMember(districtId)) {
-            log.info("Loading LIST for districtId=\"" + districtId + "\"");
-            List<EinrichtungView> results = getEinrichtungList(districtId);
-            viewData("districtId", districtId);
-            viewData("name", "Einrichtungen");
-            return getListPage(results);
-        }
-        viewData("name", "Listenansicht");
-        viewData("message", "Ihr Account scheint noch nicht als Kiez-Administrator_in eingerichtet zu sein. "
-            + "Wenden Sie sich bitte an die Administrator_innen.");
-        return getSimpleMessagePage();
-    }
-
-    /**
-     * Responds with a Viewable, the administrative page for managing bezirksregion contacts on the Kiezatlas Website.
-     * @return
-     */
-    @GET
-    @Path("/list/bezirksregionen")
-    @Produces(MediaType.TEXT_HTML)
-    public Viewable getBezirksregionenListing() {
-        if (!isAuthenticated()) return getUnauthorizedPage();
-        List<RelatedTopic> usersDistricts = getUserDistrictTopics();
-        log.info("LOAD listing of BEZIRKSRGEIONEN/ANSPRECHPARTNER...");
-        long districtId = -1;
-        if (usersDistricts != null && usersDistricts.size() > 0) {
-            districtId = usersDistricts.get(0).getId();
-        }
-        return getBezirksregionenListing(districtId);
-    }
-
-    @GET
-    @Path("/list/bezirksregionen/{districtId}")
-    @Produces(MediaType.TEXT_HTML)
-    public Viewable getBezirksregionenListing(@PathParam("districtId") long districtId) {
-        if (!isAuthenticated()) return getUnauthorizedPage();
-        List<RelatedTopic> usersDistricts = getUserDistrictTopics();
-        if (districtId != -1 || districtId != 0) {
-            return getBezirksregionListingPage(districtId);
-        } else if (usersDistricts != null && usersDistricts.size() > 0) {
-            return getBezirksregionListingPage(usersDistricts.get(0).getId());
-        } else {
-            return getBezirksregionListingPage(-1);
-        }
-    }
-
-    /**
-     * Responds with a Viewable, the administrative confirmation page of the Kiezatlas Website.
-     * @return
-     */
-    @GET
-    @Path("/list/hinweise")
-    @Produces(MediaType.TEXT_HTML)
-    public Viewable getCommentsListing() {
-        if (!isAuthenticated() && isConfirmationWorkspaceMember()) return getUnauthorizedPage();
-        List<RelatedTopic> usersDistricts = getUserDistrictTopics();
-        log.info("LOAD listing of HINWEISE ...");
-        long districtId = -1;
-        if (usersDistricts != null && usersDistricts.size() > 0) {
-            districtId = usersDistricts.get(0).getId();
-        }
-        return getCommentsListing(districtId);
-    }
-
-    /** Responds with a Viewable, the administrative confirmation page of the Kiezatlas Website.
-     * @return
-     */
-    @GET
-    @Path("/list/freischalten")
-    @Produces(MediaType.TEXT_HTML)
-    public Viewable getConfirmationListing() {
-        if (!isAuthenticated() && isConfirmationWorkspaceMember()) return getUnauthorizedPage();
-        List<RelatedTopic> usersDistricts = getUserDistrictTopics();
-        log.info("LOAD listing of NEUEINTRAGUNGEN ...");
-        long districtId = -1;
-        if (usersDistricts != null && usersDistricts.size() > 0) {
-            districtId = usersDistricts.get(0).getId();
-        }
-        return getConfirmationListing(districtId);
-    }
-
-    @GET
-    @Path("/list/hinweise/{districtId}")
-    @Produces(MediaType.TEXT_HTML)
-    public Viewable getCommentsListing(@PathParam("districtId") long districtId) {
-        // TODO: Check if user isCommentsWorkspaceMember...
-        if (!isAuthenticated()) return getUnauthorizedPage();
-        if (isAssociatedDistrictMember(districtId)) {
-            List<EinrichtungView> results = getCommentedEinrichtungList(districtId);
-            viewData("districtId", districtId);
-            viewData("name", "Bearbeitungshinweise");
-            return getCommentsPage(results);
-        }
-        viewData("name", "Kommentare einsehen");
-        viewData("message", "Ihr Account scheint noch nicht als Kiez-Administrator_in eingerichtet zu sein. "
-            + "Wenden Sie sich bitte an die Administrator_innen.");
-        return getSimpleMessagePage();
-    }
-
-    private Viewable getBezirksregionListingPage(@PathParam("districtId") long districtId) {
-        if (!isAuthenticated()) return getUnauthorizedPage();
-        List<Topic> bezirksregionen = null;
+        List<BezirksregionView> bezirksregionen = null;
         viewData("name", "Bezirksregionen");
-        if (districtId != -1 && isAssociatedDistrictMember(districtId)) {
+        if (districtId != -1 && hasRelatedDistrict(districtId)) {
             viewData("districtId", districtId);
             bezirksregionen = getKiezatlasBezirksregionen(districtId);
             // ### Fetch first Bezirksregion in District
@@ -771,7 +497,8 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
                     + districtId + "\" nicht laden.");
                 return getSimpleMessagePage();
             } else {
-                return getEditorsPage(bezirksregionen);
+                viewData("confirmationMembers", getConfirmationWorkspaceMembers());
+                return prepareBezirksregionenTemplate(bezirksregionen);
             }
         }
         viewData("message", "Ihr Account scheint noch nicht als Kiez-Administrator_in eingerichtet zu sein. "
@@ -786,7 +513,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     @GET
     @Path("/list/freischalten/{districtId}")
     @Produces(MediaType.TEXT_HTML)
-    public Viewable getConfirmationListing(@PathParam("districtId") long districtId) {
+    public Viewable prepareConfirmationListing(@PathParam("districtId") long districtId) {
         if (!isAuthenticated()) return getUnauthorizedPage();
         Topic district = dm4.getTopic(districtId);
         List<RelatedTopic> usersDistricts = getUserDistrictTopics();
@@ -795,7 +522,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
                 List<EinrichtungView> results = getUnconfirmedEinrichtungenList(district);
                 viewData("districtId", districtId);
                 viewData("name", "Neueintragungen");
-                return getConfirmationPage(results);
+                return getConfirmationTemplate(results);
             }
         }
         viewData("name", "Neueintragungen freischalten");
@@ -811,7 +538,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     @Produces(MediaType.TEXT_HTML)
     @Path("/geo/confirm/{topicId}")
     @Transactional
-    public Viewable doConfirmGeoObject(@PathParam("topicId") long topicId) {
+    public Viewable processGeoObjectConfirmation(@PathParam("topicId") long topicId) {
         if (!isAuthenticated()) return getUnauthorizedPage();
         if (!isConfirmationWorkspaceMember()) {
             viewData("message", "Sie haben aktuell keine Berechtigungen neue Datens&auml;tze zu ver&ouml;ffentlichen.");
@@ -823,13 +550,250 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
             moveGeoObjecFacetsToWorkspace(geoObject, getStandardWorkspace());
             viewData("message", "Der Eintrag \"" + geoObject.getSimpleValue() + "\" erfolgreich freigeschaltet.");
             List<String> mailboxes = getAssignedUserMailboxes(geoObject);
-            // ### Fixme: Develop setup 
             sendConfirmationNotice(mailboxes, geoObject);
         } else {
             viewData("message", "Eine Einrichtung mit dieser ID ist uns nicht bekannt.");
             return getNotFoundPage();
         }
-        return getWebsiteGeoObjectPage(geoObject.getId());
+        return prepareGeoObjectTemplate(geoObject.getId());
+    }
+
+    // ------------------------------------------------------------ Bezirks and Bezirksregionen List Resources ----- //
+
+    @GET
+    @Path("/list")
+    @Produces(MediaType.TEXT_HTML)
+    public Viewable prepareEinrichtungsListing() {
+        if (!isAuthenticated()) return getUnauthorizedPage();
+        List<RelatedTopic> usersDistricts = getUserDistrictTopics();
+        long districtId = -1;
+        if (usersDistricts != null && usersDistricts.size() > 0) {
+            districtId = usersDistricts.get(0).getId();
+        }
+        return prepareEinrichtungsListing(districtId);
+    }
+
+    @GET
+    @Path("/list/{districtId}")
+    @Produces(MediaType.TEXT_HTML)
+    public Viewable prepareEinrichtungsListing(@PathParam("districtId") long districtId) {
+        if (!isAuthenticated()) return getUnauthorizedPage();
+        if (hasRelatedDistrict(districtId)) {
+            log.info("Loading LIST for districtId=\"" + districtId + "\"");
+            List<EinrichtungView> results = getEinrichtungList(districtId);
+            viewData("districtId", districtId);
+            viewData("name", "Einrichtungen");
+            return getListTemplate(results);
+        }
+        viewData("name", "Listenansicht");
+        viewData("message", "Ihr Account scheint noch nicht als Kiez-Administrator_in eingerichtet zu sein. "
+            + "Wenden Sie sich bitte an die Administrator_innen.");
+        return getSimpleMessagePage();
+    }
+
+    /**
+     * Responds with a Viewable, the administrative page for managing bezirksregion contacts on the Kiezatlas Website.
+     * @return
+     */
+    @GET
+    @Path("/list/bezirksregionen")
+    @Produces(MediaType.TEXT_HTML)
+    public Viewable prepareBezirksregionenListing() {
+        if (!isAuthenticated()) return getUnauthorizedPage();
+        List<RelatedTopic> usersDistricts = getUserDistrictTopics();
+        log.info("LOAD listing of BEZIRKSRGEIONEN/ANSPRECHPARTNER...");
+        long districtId = -1;
+        if (usersDistricts != null && usersDistricts.size() > 0) {
+            districtId = usersDistricts.get(0).getId();
+        }
+        return prepareBezirksregionenListing(districtId);
+    }
+
+    @GET
+    @Path("/list/bezirksregionen/{districtId}")
+    @Produces(MediaType.TEXT_HTML)
+    public Viewable prepareBezirksregionenListing(@PathParam("districtId") long districtId) {
+        if (!isAuthenticated()) return getUnauthorizedPage();
+        List<RelatedTopic> usersDistricts = getUserDistrictTopics();
+        if (districtId != -1 && districtId != 0) {
+            // Return bezirksregion for district requestetd
+            return prepareBezirksregionListingPage(districtId);
+        } else if (usersDistricts != null && usersDistricts.size() > 0) {
+            // Return bezirksregionen of the first district user is related to
+            return prepareBezirksregionListingPage(usersDistricts.get(0).getId());
+        } else {
+            // Return unauthorized page
+            return prepareBezirksregionListingPage(-1);
+        }
+    }
+
+    /**
+     * Responds with a Viewable, the administrative confirmation page of the Kiezatlas Website.
+     * @return
+     */
+    @GET
+    @Path("/list/hinweise")
+    @Produces(MediaType.TEXT_HTML)
+    public Viewable prepareCommentsListing() {
+        if (!isAuthenticated() && isCommentEditor()) return getUnauthorizedPage();
+        List<RelatedTopic> usersDistricts = getUserDistrictTopics();
+        log.info("LOAD listing of HINWEISE ...");
+        long districtId = -1;
+        if (usersDistricts != null && usersDistricts.size() > 0) {
+            districtId = usersDistricts.get(0).getId();
+        }
+        return prepareCommentsListing(districtId);
+    }
+
+    /** Responds with a Viewable, the administrative confirmation page of the Kiezatlas Website.
+     * @return
+     */
+    @GET
+    @Path("/list/freischalten")
+    @Produces(MediaType.TEXT_HTML)
+    public Viewable prepareConfirmationListing() {
+        if (!isAuthenticated() && isConfirmationWorkspaceMember()) return getUnauthorizedPage();
+        List<RelatedTopic> usersDistricts = getUserDistrictTopics();
+        log.info("LOAD listing of NEUEINTRAGUNGEN ...");
+        long districtId = -1;
+        if (usersDistricts != null && usersDistricts.size() > 0) {
+            districtId = usersDistricts.get(0).getId();
+        }
+        return prepareConfirmationListing(districtId);
+    }
+
+    @GET
+    @Path("/list/hinweise/{districtId}")
+    @Produces(MediaType.TEXT_HTML)
+    public Viewable prepareCommentsListing(@PathParam("districtId") long districtId) {
+        // TODO: Check if user isCommentsWorkspaceMember...
+        if (!isAuthenticated()) return getUnauthorizedPage();
+        if (hasRelatedDistrict(districtId)) {
+            List<EinrichtungView> results = getCommentedEinrichtungList(districtId);
+            viewData("districtId", districtId);
+            viewData("name", "Bearbeitungshinweise");
+            return getCommentsTemplate(results);
+        }
+        viewData("name", "Kommentare einsehen");
+        viewData("message", "Ihr Account scheint noch nicht als Kiez-Administrator_in eingerichtet zu sein. "
+            + "Wenden Sie sich bitte an die Administrator_innen.");
+        return getSimpleMessagePage();
+    }
+
+
+
+    // ----------------------------------------------------------------------------------------- AJAX Endpoints ------/
+
+    @GET
+    @Path("/sites/json")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<Topic> getSites() {
+        List<Topic> sites = new ArrayList<Topic>();
+        if (isSiteEditor()) {
+            sites = dm4.getTopicsByType("ka2.website");
+            DeepaMehtaUtils.loadChildTopics(sites);
+        }
+        return sites;
+    }
+
+    /**
+     * Loads site info object for a given kieatlas site web alias.
+     *
+     * @param pageAlias  String  ka2.website.web_alias
+     * @return
+     */
+    @GET
+    @Path("/info/{webAlias}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public CitymapView getSiteInfo(@PathParam("webAlias") String pageAlias) {
+        CitymapView result = null;
+        try {
+            Topic webAlias = dm4.getTopicByValue("ka2.website.web_alias", new SimpleValue(pageAlias));
+            Topic site = webAlias.getRelatedTopic("dm4.core.composition", CHILD_ROLE,
+                PARENT_ROLE, "ka2.website");
+            log.info("Identified Kiezatlas Website: " + site.getSimpleValue());
+            if (site != null) {
+                result = new CitymapView(site);
+            }
+        } catch (NoSuchElementException nsex) {
+            log.warning("Probably this web alias is not unique among websites: " + nsex.getLocalizedMessage());
+        }
+        return result;
+    }
+
+    /**
+     * Loads geo objects for a given kieatlas site web alias.
+     *
+     * @param siteId long   Topic id of Kiezatlas Website Topic
+     * @return
+     */
+    @GET
+    @Path("/{siteId}/geo/{categoryId}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<GeoMapView> getSiteGeoObjectsInCategory(@HeaderParam("Referer") String referer,
+            @PathParam("siteId") long siteId, @PathParam("categoryId") long categoryId) {
+        if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
+        Topic category = dm4.getTopic(categoryId);
+        Topic site = dm4.getTopic(siteId);
+        log.info("Attempting to load a category's geo objects \"" + category.getSimpleValue() + "\" in site " + site.getSimpleValue());
+        // populate new resultset
+        List<GeoMapView> results = new ArrayList<GeoMapView>();
+        List<RelatedTopic> geoObjects = kiezatlas.getGeoObjectsBySite(siteId);
+        for (RelatedTopic geoObject : geoObjects) {
+            if (isGeoObjectTopic(geoObject) && isAggregatingChildTopic(geoObject, categoryId)) {
+                results.add(new GeoMapView(geoObject, geomaps));
+            }
+        }
+        log.info("Loaded " + results.size() + " geo object for category \""
+            + category.getSimpleValue() + "\" in site " + site.getSimpleValue());
+        return results;
+    }
+
+    /**
+     * Loads geo objects for a given kieatlas site web alias.
+     *
+     * @param siteId long   Topic id of Kiezatlas Website Topic
+     * @return
+     */
+    @GET
+    @Path("/{siteId}/geo")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<GeoMapView> getSiteGeoObjects(@HeaderParam("Referer") String referer, @PathParam("siteId") long siteId) {
+        if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
+        // ### TODO: Make "Cache Site"  an option of "Kiezatlas Website" topic
+        // use cache
+        Topic site = dm4.getTopic(siteId);
+        if (siteId != 499904) {
+            // Do not cache Showcase Stadtplan "VSKA Stadtteilzentren"
+            if (citymapCache.containsKey(siteId)) {
+                // caching lifetime is 30 000 or 12 000 ms for testing purposes
+                if (citymapCachedAt.get(siteId) > new Date().getTime() - 21600000) { // 21600000 for approx. 6hr in ms
+                    log.info("Returning cached list of geo object for site " + site.getSimpleValue());
+                    return citymapCache.get(siteId);
+                }
+                // invalidate cache
+                citymapCache.remove(siteId);
+                citymapCachedAt.remove(siteId);
+            }
+        }
+        // populate new resultset
+        List<GeoMapView> results = new ArrayList<GeoMapView>();
+        try {
+            log.info("Attempting to load a site's geo objects: " + site.getSimpleValue() + "...");
+            List<RelatedTopic> geoObjects = kiezatlas.getGeoObjectsBySite(siteId);
+            for (RelatedTopic geoObject : geoObjects) {
+                if (isGeoObjectTopic(geoObject)) {
+                    results.add(new GeoMapView(geoObject, geomaps));
+                }
+            }
+            log.info("Populated cached list of geo object for site " + site.getSimpleValue());
+        } catch (NoSuchElementException nsex) {
+            log.warning("Probably this web alias is not unique among websites: " + nsex.getLocalizedMessage());
+        }
+        // insert new result into cache
+        citymapCache.put(siteId, results);
+        citymapCachedAt.put(siteId, new Date().getTime());
+        return results;
     }
 
     /**
@@ -889,6 +853,92 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         return results;
     }
 
+    /**
+     * Fetches topic Kiezatlas Geo Object topic in context of a given site.
+     *
+     * @param referer
+     * @param topicId
+     * @param siteId
+     * @return A GeoObject DetailsView as DTO to presend details about a place.
+     */
+    @GET
+    @Path("/geo/{topicId}/facetted/{siteId}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Topic getFacettedGeoObjectTopic(@HeaderParam("Referer") String referer, @PathParam("topicId") String topicId,
+                                           @PathParam("siteId") long siteId) {
+        if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
+        Topic geoObject = getFacettedGeoObjectTopic(topicId, siteId);
+        return geoObject;
+    }
+
+    @Override
+    public Topic getFacettedGeoObjectTopic(String topicId, long siteId) {
+        Topic geoObject = getGeoObjectById(topicId);
+        Topic website = dm4.getTopic(siteId);
+        if (isGeoObjectTopic(geoObject) && website.getTypeUri().equals("ka2.website")) {
+            kiezatlas.enrichWithFacets(geoObject, siteId);
+        }
+        return geoObject;
+    }
+
+    @POST
+    @Path("/assign/{topicId}/{userId}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Transactional
+    public Response createUserAssignment(@PathParam("topicId") long topicId, @PathParam("userId") long userId) {
+        if (isConfirmationWorkspaceMember() && isSiteEditor()) {
+           // Create user assignment in "Kiezatlas" workspace ...
+           Association assoc = createUserAssignment(dm4.getTopic(topicId), dm4.getTopic(userId), true);
+           if (assoc != null) {
+               return Response.ok(assoc.getId()).build();
+           } else {
+               return Response.serverError().build();
+           }
+        } else {
+            log.warning("Unauthorized attempt to create a user assignment between topicId=" + topicId
+                + " and user \"" + dm4.getTopic(userId).getSimpleValue() + "\"");
+            return Response.status(401).build();
+        }
+    }
+
+    @DELETE
+    @Path("/assign/{topicId}/{userId}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Transactional
+    public Response deleteUserAssignment(@PathParam("topicId") long topicId, @PathParam("userId") long userId) {
+        if (isConfirmationWorkspaceMember() && isSiteEditor()) {
+           Association assoc = deleteUserAssignment(dm4.getTopic(topicId), dm4.getTopic(userId));
+           if (assoc != null) {
+               return Response.ok(assoc.getId()).build();
+           } else {
+               return Response.serverError().build();
+           }
+        } else {
+            log.warning("Unauthorized attempt to create a user assignment between topicId=" + topicId
+                + " and user \"" + dm4.getTopic(userId).getSimpleValue() + "\"");
+            return Response.status(401).build();
+        }
+    }
+
+    @GET
+    @Path("/list/manager/{districtId}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<Topic> getConfirmationWorkspaceMembers() {
+        List<Topic> result = new ArrayList<Topic>();
+        if (!isAuthenticated()) return result;
+        log.info("LOAD listing of ALL potential Kiezatlas MANAGER");
+        List<Topic> usernames = dm4.getTopicsByType("dm4.accesscontrol.username");
+        for (Topic username : usernames) {
+            if (isConfirmationWorkspaceMember(username)) {
+                result.add(username);
+            }
+        }
+        if (result.isEmpty()) {
+            log.warning("Fetching Kiezatlas confirmation membership Usernames FAILED - 0 Results");
+        }
+        return result;
+    }
+
     @GET
     @Path("/bezirksregion/{topicId}")
     @Produces(MediaType.APPLICATION_JSON)
@@ -906,7 +956,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         return results;
     }
 
-    // --- Bezirk Specific Resource Search, Overall, Listing
+    // --- Bezirks and Region Specific Resources
 
     @GET
     @Path("/bezirk")
@@ -929,21 +979,28 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     @GET
     @Path("/bezirk/{districtId}/bezirksregionen")
     @Produces(MediaType.APPLICATION_JSON)
-    public List<Topic> getKiezatlasBezirksregionen(long districtId) {
-        List<Topic> regionen = dm4.getTopicsByType("ka2.util.bezirksregion_name");
+    public List<BezirksregionView> getKiezatlasBezirksregionen(@PathParam("districtId") long districtId) {
+        List<Topic> utilNames = dm4.getTopicsByType("ka2.util.bezirksregion_name");
+        List<BezirksregionView> regionen = new ArrayList<BezirksregionView>();
         Topic bezirk = dm4.getTopic(districtId);
         log.info("LOAD listing of BEZIRKSRGEIONEN/ANSPRECHPARTNER... for Bezirk \"" + bezirk + "\" (\"" + districtId + "\")");
-        List<Topic> result = new ArrayList<Topic>();
-        for (Topic region : regionen) {
-            Topic bezirksUtil = fetchBezirkUtilName(region);
+        for (Topic utilName : utilNames) {
+            Topic bezirksUtil = fetchBezirkUtilName(utilName);
             if (bezirksUtil.getSimpleValue().toString().equals(bezirk.getSimpleValue().toString())) {
-                result.add(region);
+                // ### Attempt to (unify) bezirksregionen and bezirksregion_name topics
+                // Topic bezirksregion = dm4.getTopicByValue("ka2.bezirksregion", name.getSimpleValue());
+                BezirksregionView regionViewModel = new BezirksregionView(utilName);
+                regionViewModel.setBezirk(bezirk);
+                regionViewModel.setAnsprechpartner(utilName.getRelatedTopics("de.kiezatlas.user_assignment"));
+                regionViewModel.setGeoObjects(utilName.getRelatedTopics("dm4.core.aggregation", null,
+                   null, "ka2.geo_objects"));
+                regionen.add(regionViewModel);
             }
         }
-        if (result.isEmpty()) {
-            log.warning("Fetching Bezirksregionen by LOR Utils Bezirk's Name FAILED - Results: 0");
+        if (regionen.isEmpty()) {
+            log.warning("Fetching Bezirksregionen by LOR Utils Bezirk's Name FAILED - 0 Results");
         }
-        return result;
+        return regionen;
     }
 
     private Topic fetchBezirkUtilName(Topic region) {
@@ -955,6 +1012,10 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         }
         return null;
     }
+
+
+
+    // ---------------------------------------------------------------------------- Website Search Endpoints -------- //
 
     /**
      * Fetches a list of Geo Objects for assignment used in Angebotszeitraum editor.
@@ -1027,8 +1088,8 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     @GET
     @Path("/search/autocomplete")
     @Produces(MediaType.APPLICATION_JSON)
-    public SearchResultList autoCompleteFrontpageQuickSearchByName(@HeaderParam("Referer") String referer,
-                                                             @QueryParam("query") String query) {
+    public SearchResultList getSearchResultListByNameQuick(@HeaderParam("Referer") String referer,
+                                                           @QueryParam("query") String query) {
         if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
         SearchResultList results = new SearchResultList();
         try {
@@ -1081,7 +1142,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     @Path("/search")
     @Produces(MediaType.APPLICATION_JSON)
     public List<GeoMapView> searchGeoObjectsFulltext(@HeaderParam("Referer") String referer,
-                                                       @QueryParam("search") String query) {
+                                                     @QueryParam("search") String query) {
         if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
         try {
             String queryValue = query.trim();
@@ -1167,7 +1228,8 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
             List<Topic> stichworteResults = dm4.searchTopics(queryString, "ka2.stichworte");
             List<Topic> bezirksregionResults = dm4.searchTopics(queryString, "ka2.bezirksregion"); // many
             // List<Topic> streetNameResults = dm4.searchTopics(query, "dm4.contacts.street"); // deeply related  **/
-            log.info("> Matched " + searchResults.size() + " (Einrichtungsnamen), "+ descrResults.size() +" (Beschreibungen), "+stichworteResults.size() + " (Stichwörtern) , "
+            log.info("> Matched " + searchResults.size() + " (Einrichtungsnamen), "+ descrResults.size() +" (Beschreibungen), "
+                + stichworteResults.size() + " (Stichwörtern) , "
                 + bezirksregionResults.size() + " (Bezirksregionen) "); /**  + streetNameResults.size()
                     + " (Straßennamen) results for query=\""+queryString+"\""); **/
             // merge all types in search into one results set
@@ -1254,11 +1316,36 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         }
     } */
 
-    /** ------------------------------------------------------- Kiezatlas Angebotsinfo Notification Mechanics ---------- */
+
+
+    // ------------------------------------------- Kiezatlas Website Service and Event Interface Implementation ----- //
+
+    @Override
+    public Topic getGeoObjectById(String topicId) {
+        Topic geoObject = null;
+        try {
+            if (topicId.startsWith("t-")) {
+                geoObject = dm4.getTopicByUri("de.kiezatlas.topic." + topicId);
+            } else {
+                String username = accesscl.getUsername();
+                boolean readOp = dm4.getAccessControl().hasPermission(accesscl.getUsername(),
+                        Operation.READ, Long.parseLong(topicId));
+                if (readOp) {
+                    geoObject = dm4.getTopic(Long.parseLong(topicId));
+                } else {
+                    log.warning("Read permission for " + username + " on topicId=" + topicId + ", allowed=" + readOp);
+                }
+            }
+        } catch(RuntimeException e) {
+            log.severe("Website module could not load geo object by id=" + topicId + ", " + e.getLocalizedMessage());
+        }
+        return geoObject;
+    }
 
     @Override
     public void angebotsInfoAssigned(Topic angebotsInfo, Topic geoObject, Association assignmentEdge) {
-        log.info("Website listening to \"" + angebotsInfo.getSimpleValue() + "\" being assigned to \"" + geoObject.getSimpleValue() + "\" as a NEW ANGEBOT");
+        log.info("Website listening to \"" + angebotsInfo.getSimpleValue() + "\" being assigned to \""
+            + geoObject.getSimpleValue() + "\" as a NEW ANGEBOT");
         // Include Einrichtungs-Inhaberin into Recipients
         Topic contactFacet = getContactFacet(geoObject);
         String eMailAddress = getAnsprechpartnerMailboxValue(contactFacet);
@@ -1436,10 +1523,164 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         }
     }
 
-    /** --------------------------- Thymeleaf Template Accessor and Helper Methods -------------------------- */
+    // ------------------------------------------ Kiezatlas Website Page/Template Preparation Helpers --------------- //
+
+    private void initializeCityMapWebAliasResources() {
+        webpages.setFrontpageAliases(loadCitymapSiteAliases());
+        webpages.reinitTemplateEngine();
+    }
+
+    /**
+     * Prepares the most basic data used across all our Thymeleaf page templates.
+     * @param website
+     */
+    private void prepareCityMapSite(Topic website) {
+        if (website != null) {
+            Website site = new Website(website, dm4);
+            viewData("siteName", site.getName());
+            viewData("siteCaption", site.getCaption());
+            viewData("siteAbout", site.getAboutHTML());
+            viewData("siteId", website.getId());
+            viewData("footerText", site.getFooter());
+            viewData("customSiteCss", site.getStylesheetPath());
+            viewData("menuItems", site.getActiveMenuItems());
+            List<Webpage> pages = webpages.getPublishedWebpages(website);
+            // sort webpages on websites frontpage by modification time
+            viewData("webpages", webpages.getWebpagesSortedByTimestamp(pages, true)); // false=creationDate
+        } else {
+            log.warning("Preparing webpage template failed because the website was not given");
+        }
+    }
+
+    private void prepareEditorListing(List<EinrichtungView> results) {
+        // Optimize: Loads district topic twice (see earlier calls to isAssociatedDistrictMember())
+        viewData("userDistricts", getUserDistrictTopics());
+        // viewData("availableLor", getAvailableLORNumberTopics());
+        viewData("workspace", getStandardWorkspace());
+        viewData("geoobjects", results);
+        viewData("geoobjectsCount", results.size());
+    }
+
+    private Viewable prepareGeoObjectTemplate(@PathParam("topicId") long topicId) {
+        // ### redirect if user has no READ permission on this topic
+        Topic username = getUsernameTopic();
+        Topic geoObject = dm4.getTopic(topicId);
+        if (!isGeoObjectTopic(geoObject)) return getNotFoundPage();
+        // Assemble Generic Einrichtungs Infos
+        EinrichtungView einrichtung = assembleEinrichtungsDetails(geoObject);
+        // ### Yet Missing: Träger und Stichworte
+        // Eventually show: Bezirk, Bezirksregion and Sonstiges (Administrator Infos)
+        viewData("geoobject", einrichtung);
+        // Assemble Category Assignments for Einrichtung;
+        viewData("zielgruppen", facets.getFacets(geoObject, ZIELGRUPPE_FACET));
+        viewData("themen", facets.getFacets(geoObject, THEMA_FACET));
+        viewData("angebote", facets.getFacets(geoObject, ANGEBOT_FACET));
+        // fetch related angebote, includeFutureOnes=true
+        List<AngebotsinfosAssigned> angebotsInfos = angebote.getActiveAngebotsinfosAssigned(geoObject, true);
+        if (angebotsInfos.size() > 0) viewData("angebotsinfos", angebotsInfos);
+        // user auth
+        prepatePageTemplate("detail");
+        // geo object auth
+        viewData("is_published", isTopicInStandardWorkspace(geoObject));
+        viewData("editable", isGeoObjectEditable(geoObject, username));
+        return view("detail");
+    }
+
+    private Viewable prepareBezirksregionenTemplate(List<BezirksregionView> results) {
+        // Optimize: Loads district topic twice (see earlier calls to isAssociatedDistrictMember())
+        viewData("userDistricts", getUserDistrictTopics());
+        prepatePageTemplate("editors");
+        // prepareGeoObjectListing(results);
+        viewData("regions", results);
+        return view("list-editors");
+    }
+
+    private Viewable getListTemplate(List<EinrichtungView> results) {
+        prepatePageTemplate("list");
+        prepareEditorListing(results);
+        log.info("Completed preparation of LIST with " + results.size() + " entries");
+        return view("list");
+    }
+
+    private Viewable getConfirmationTemplate(List<EinrichtungView> results) {
+        prepatePageTemplate("confirmation");
+        prepareEditorListing(results);
+        return view("list-confirms");
+    }
+
+    private Viewable getCommentsTemplate(List<EinrichtungView> results) {
+        prepatePageTemplate("comments");
+        prepareEditorListing(results);
+        return view("list-comments");
+    }
+
+    private Viewable getSimpleMessagePage() {
+        prepatePageTemplate("page");
+        return view("message");
+    }
+
+    private Viewable getNotFoundPage() {
+        return getNotFoundPage(null, null);
+    }
+
+    private Viewable getNotFoundPage(String message) {
+        return getNotFoundPage(message, null);
+    }
+
+    private Viewable getNotFoundPage(String message, String backLinkUrl) {
+        if (message != null) viewData("message", message);
+        if (backLinkUrl != null) viewData("originated", backLinkUrl);
+        prepatePageTemplate("page");
+        return view("404");
+    }
+
+    private Viewable getUnauthorizedPage() {
+        return getUnauthorizedPage(null, null);
+    }
+
+    private Viewable getUnauthorizedPage(String message) {
+        return getUnauthorizedPage(message, null);
+    }
+
+    private Viewable getUnauthorizedPage(String message, String backLinkUrl) {
+        prepatePageTemplate("page");
+        if (message != null) viewData("message", message);
+        if (backLinkUrl != null) viewData("originated", backLinkUrl);
+        return view("401");
+    }
+
+    private void populateGeoObjectFormTemplate() {
+        viewData("availableCities", getAvailableCityTopics());
+        viewData("availableDistricts", getAvailableDistrictTopics());
+        viewData("availableCountries", getAvailableCountryTopics());
+        viewData("availableThemen", getThemaCriteriaTopics());
+        viewData("availableTraeger", getAvailableTraegerTopics());
+        // viewData("availableLor", getAvailableLORNumberTopics());
+        viewData("availableAngebote", getAngebotCriteriaTopics());
+        viewData("availableZielgruppen", getZielgruppeCriteriaTopics());
+        log.info("> Prepare Form Template with available Topics");
+    }
+
+    private void prepatePageTemplate(String templateName) {
+        boolean isAuthenticated = isAuthenticated();
+        boolean isConfirmationMember = isConfirmationWorkspaceMember();
+        boolean isSiteManager = isSiteEditor();
+        viewData("authenticated", isAuthenticated);
+        viewData("is_publisher", isConfirmationMember);
+        viewData("is_district_admin", (getUserDistrictTopics() != null));
+        viewData("is_site_manager", isSiteManager);
+        viewData("template", templateName);
+        Topic standardwebsite = webpages.getStandardWebsite();
+        viewData("website", "standard");
+        prepareCityMapSite(standardwebsite);
+        log.info("Checking Authorization (isConfirmationMember=" + isConfirmationMember
+            + ", isSiteManager="+isSiteManager+", isAuthenticated=" + isAuthenticated + ")");
+    }
+
+    // --------------------------- Thymeleaf Template Accessor and Private Helper Methods --------------------------- //
 
     private List<RelatedTopic> getUnconfirmedEinrichtungTopics() {
-        Topic confirmationWs = getPrivilegedWorkspace();
+        Topic confirmationWs = getConfirmationWorkspace();
         return confirmationWs.getRelatedTopics("dm4.core.aggregation",
                 CHILD_ROLE,PARENT_ROLE, KiezatlasService.GEO_OBJECT);
     }
@@ -1497,7 +1738,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         for (RelatedTopic geoObject : sortedGeoObjects) {
             EinrichtungView einrichtung = assembleEinrichtungListElement(geoObject, false);
             if (einrichtung != null) {
-                einrichtung.setAssignedUsername(getFirstUsernameAssigned(geoObject));
+                einrichtung.setAssignedUsername(getAssignedUsernameOne(geoObject));
                 if (einrichtung.getBezirkId() == district.getId()) {
                     results.add(einrichtung);
                 }
@@ -1506,171 +1747,14 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         return results;
     }
 
-    private Viewable getWebsiteGeoObjectPage(@PathParam("topicId") long topicId) {
-        // ### redirect if user has no READ permission on this topic
-        Topic username = getUsernameTopic();
-        Topic geoObject = dm4.getTopic(topicId);
-        if (!isGeoObjectTopic(geoObject)) return getNotFoundPage();
-        // Assemble Generic Einrichtungs Infos
-        EinrichtungView einrichtung = assembleEinrichtungsDetails(geoObject);
-        // ### Yet Missing: Träger und Stichworte
-        // Eventually show: Bezirk, Bezirksregion and Sonstiges (Administrator Infos)
-        viewData("geoobject", einrichtung);
-        // Assemble Category Assignments for Einrichtung;
-        viewData("zielgruppen", facets.getFacets(geoObject, ZIELGRUPPE_FACET));
-        viewData("themen", facets.getFacets(geoObject, THEMA_FACET));
-        viewData("angebote", facets.getFacets(geoObject, ANGEBOT_FACET));
-        // fetch related angebote, includeFutureOnes=true
-        List<AngebotsinfosAssigned> angebotsInfos = angebote.getActiveAngebotsinfosAssigned(geoObject, true);
-        if (angebotsInfos.size() > 0) viewData("angebotsinfos", angebotsInfos);
-        // user auth
-        prepareGeneralPageData("detail");
-        // geo object auth
-        viewData("is_published", isGeoObjectInDeepaMehtaWorkspace(geoObject));
-        viewData("editable", isGeoObjectEditable(geoObject, username));
-        return view("detail");
-    }
-
-    private Viewable getWebsiteFrontpage() {
-        prepareGeneralPageData("ka-index");
-        return view("ka-index");
-    }
-
-    private void initializeCityMapWebAliasResources() {
-        webpages.setFrontpageAliases(loadCitymapWebAliases());
-        webpages.reinitTemplateEngine();
-    }
-
-    /**
-     * Prepares the most basic data used across all our Thymeleaf page templates.
-     * @param website
-     */
-    private void prepareWebsiteViewData(Topic website) {
-        if (website != null) {
-            Website site = new Website(website, dm4);
-            viewData("siteName", site.getName());
-            viewData("siteCaption", site.getCaption());
-            viewData("siteAbout", site.getAboutHTML());
-            viewData("siteId", website.getId());
-            viewData("footerText", site.getFooter());
-            viewData("customSiteCss", site.getStylesheetPath());
-            viewData("menuItems", site.getActiveMenuItems());
-            List<Webpage> pages = webpages.getPublishedWebpages(website);
-            // sort webpages on websites frontpage by modification time
-            viewData("webpages", webpages.getWebpagesSortedByTimestamp(pages, true)); // false=creationDate
-        } else {
-            log.warning("Preparing webpage template failed because the website was not given");
-        }
-    }
-
-    private void prepareGeoObjectListing(List<EinrichtungView> results) {
-        // Optimize: Loads district topic twice (see earlier calls to isAssociatedDistrictMember())
-        viewData("userDistricts", getUserDistrictTopics());
-        // viewData("availableLor", getAvailableLORNumberTopics());
-        viewData("workspace", getStandardWorkspace());
-        viewData("geoobjects", results);
-        viewData("geoobjectsCount", results.size());
-    }
-
-    private Viewable getListPage(List<EinrichtungView> results) {
-        prepareGeneralPageData("list");
-        prepareGeoObjectListing(results);
-        log.info("Completed preparation of LIST with " + results.size() + " entries");
-        return view("list");
-    }
-
-    private Viewable getConfirmationPage(List<EinrichtungView> results) {
-        prepareGeneralPageData("confirmation");
-        prepareGeoObjectListing(results);
-        return view("list-confirms");
-    }
-
-    private Viewable getCommentsPage(List<EinrichtungView> results) {
-        prepareGeneralPageData("comments");
-        prepareGeoObjectListing(results);
-        return view("list-comments");
-    }
-
-    private Viewable getEditorsPage(List<Topic> results) {
-        // Optimize: Loads district topic twice (see earlier calls to isAssociatedDistrictMember())
-        viewData("userDistricts", getUserDistrictTopics());
-        prepareGeneralPageData("editors");
-        // prepareGeoObjectListing(results);
-        viewData("regions", results);
-        return view("list-editors");
-    }
-
-    private Viewable getSimpleMessagePage() {
-        prepareGeneralPageData("page");
-        return view("message");
-    }
-
-    private Viewable getNotFoundPage() {
-        return getNotFoundPage(null, null);
-    }
-
-    private Viewable getNotFoundPage(String message) {
-        return getNotFoundPage(message, null);
-    }
-
-    private Viewable getNotFoundPage(String message, String backLinkUrl) {
-        if (message != null) viewData("message", message);
-        if (backLinkUrl != null) viewData("originated", backLinkUrl);
-        prepareGeneralPageData("page");
-        return view("404");
-    }
-
-    private Viewable getUnauthorizedPage() {
-        return getUnauthorizedPage(null, null);
-    }
-
-    private Viewable getUnauthorizedPage(String message) {
-        return getUnauthorizedPage(message, null);
-    }
-
-    private Viewable getUnauthorizedPage(String message, String backLinkUrl) {
-        prepareGeneralPageData("page");
-        if (message != null) viewData("message", message);
-        if (backLinkUrl != null) viewData("originated", backLinkUrl);
-        return view("401");
-    }
-
-    private void prepareFormWithAvailableTopics() {
-        viewData("availableCities", getAvailableCityTopics());
-        viewData("availableDistricts", getAvailableDistrictTopics());
-        viewData("availableCountries", getAvailableCountryTopics());
-        viewData("availableThemen", getThemaCriteriaTopics());
-        viewData("availableTraeger", getAvailableTraegerTopics());
-        // viewData("availableLor", getAvailableLORNumberTopics());
-        viewData("availableAngebote", getAngebotCriteriaTopics());
-        viewData("availableZielgruppen", getZielgruppeCriteriaTopics());
-        log.info("> Prepare Form Template with available Topics");
-    }
-
-    private void prepareGeneralPageData(String templateName) {
-        boolean isAuthenticated = isAuthenticated();
-        boolean isPrivileged = isConfirmationWorkspaceMember();
-        boolean isSiteManager = isKiezatlasMember();
-        viewData("authenticated", isAuthenticated);
-        viewData("is_publisher", isPrivileged);
-        viewData("is_district_admin", (getUserDistrictTopics() != null));
-        viewData("is_site_manager", isSiteManager);
-        viewData("template", templateName);
-        Topic standardwebsite = webpages.getStandardWebsite();
-        viewData("website", "standard");
-        prepareWebsiteViewData(standardwebsite);
-        log.info("Checking Authorization (isPrivileged=" + isPrivileged + ", isSiteManager="+isSiteManager+", isAuthenticated=" + isAuthenticated + ")");
-    }
-
-
     /** -------------------- Permission, Workspace and Membership Related Helpers ----------------------- **/
 
     private boolean hasWorkspaceAssignment(DeepaMehtaObject object) {
         return (dm4.getAccessControl().getAssignedWorkspaceId(object.getId()) > NEW_TOPIC_ID);
     }
 
-    private boolean isAssignedToConfirmationWorkspace(DeepaMehtaObject object) {
-        return (dm4.getAccessControl().getAssignedWorkspaceId(object.getId()) == getPrivilegedWorkspace().getId());
+    private boolean isInConfirmation(DeepaMehtaObject object) {
+        return (dm4.getAccessControl().getAssignedWorkspaceId(object.getId()) == getConfirmationWorkspace().getId());
     }
 
     private void privilegedAssignToWorkspace(DeepaMehtaObject object, long workspaceId) {
@@ -1685,9 +1769,13 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         }
     }
 
-    private boolean isAssociatedDistrictMember(long districtId) {
+    private boolean hasRelatedDistrict(long districtId) {
+        return hasRelatedDistrict(districtId, null);
+    }
+
+    private boolean hasRelatedDistrict(long districtId, Topic username) {
         if (districtId == -1) return false;
-        List<RelatedTopic> districts = getUserDistrictTopics();
+        List<RelatedTopic> districts = (username == null) ? getUserDistrictTopics() : getUserDistrictTopics(username);
         for (RelatedTopic district : districts) {
             if (district.getId() == districtId) {
                 return true;
@@ -1708,10 +1796,10 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
             username = usernameTopic.getSimpleValue().toString();
         }
         if (username != null) {
-            Topic workspace = getPrivilegedWorkspace();
+            Topic workspace = getConfirmationWorkspace();
             boolean wsMember = (accesscl.isMember(username, workspace.getId())
                                 || accesscl.getWorkspaceOwner(workspace.getId()).equals(username));
-            log.info("Permissions Check, isConfirmationWorkspaceMember=" + wsMember);
+            log.fine("Permissions Check, isConfirmationWorkspaceMember=" + wsMember);
             return wsMember;
         } else {
             return false;
@@ -1722,20 +1810,20 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         return (isAuthenticated() && ); // # DM Workspace Membership
     } **/
 
-    /** private boolean isConfirmationManager() {
-        return (isAuthenticated() && ); # DM Confirmation Membership
-    } **/
-
-    /** private boolean isCommentManager() {
-        return (isAuthenticated() && ); # DM Comments Membership
-    } **/
-
-    private boolean isDistrictMember() {
-        return (isAuthenticated() && getUserDistrictTopics().size() > 0);
+    private boolean isCommentEditor() {
+        return (isAuthenticated() && comments.isCommentsWorkspaceMember());
     }
 
-    private boolean isKiezatlasMember() {
+    private boolean isCommentEditor(String username) {
+        return (isAuthenticated() && comments.isCommentsWorkspaceMember(username));
+    }
+
+    private boolean isSiteEditor() {
         return (isAuthenticated() && kiezatlas.isKiezatlasWorkspaceMember());
+    }
+
+    private boolean isSiteEditor(Topic username) {
+        return kiezatlas.isKiezatlasWorkspaceMember(username);
     }
 
     private boolean isAuthenticated() {
@@ -1754,7 +1842,6 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     private boolean isGeoObjectTopic(Topic geoObject) {
         // ### Checking for typeuri AND Confirmed flagmay be redundant
         return geoObject != null && geoObject.getTypeUri().equals(KiezatlasService.GEO_OBJECT);
-            // && geoObject.getChildTopics().getBoolean(CONFIRMED_TYPE);
     }
 
     private boolean isAggregatingChildTopic(Topic geoObject, long topicId) {
@@ -1762,17 +1849,16 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
             CHILD_ROLE, topicId) != null;
     }
 
-    /** ### TODO: Allow users also to EDIT Kiezatlas 1 Geo Objects **/
     private boolean isGeoObjectEditable(Topic geoObject, Topic username) {
         if (username == null) return false;
         String usernameValue = username.getSimpleValue().toString();
-        if (isUsernameResponsibleForGeoObject(geoObject, usernameValue)) { // && !isKiezatlas1GeoObject(geoObject)) {
+        if (isTopicAssignedToUsername(geoObject, usernameValue)) { // && !isKiezatlas1GeoObject(geoObject)) {
             log.info("Edit Permission GRANTED for user=" + usernameValue + " - Assigned to Geo Object");
             return true;
         }
         if (isConfirmationWorkspaceMember(username)) {
-            Topic district = getDistrict(geoObject);
-            if (isAssociatedDistrictMember(district.getId())) {
+            Topic district = getRelatedBezirk(geoObject);
+            if (hasRelatedDistrict(district.getId())) {
                 log.info("Edit Permission GRANTED for user=" + usernameValue + " - Confirmation Workspace Member");
                 return true;
             } else {
@@ -1784,12 +1870,8 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         return false;
     }
 
-    private Topic getDistrict(Topic geoObject) {
-        return geoObject.getRelatedTopic("dm4.core.aggregation", null, null, BEZIRK);
-    }
-
-    private boolean isGeoObjectInDeepaMehtaWorkspace(Topic geoObject) {
-        Topic workspace = workspaces.getAssignedWorkspace(geoObject.getId());
+    private boolean isTopicInStandardWorkspace(Topic topic) {
+        Topic workspace = workspaces.getAssignedWorkspace(topic.getId());
         return (workspace.getUri().equals(WorkspacesService.DEEPAMEHTA_WORKSPACE_URI));
     }
 
@@ -1797,21 +1879,21 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         return (geoObject.getUri().startsWith(KA1_GEO_OBJECT_URI_PREFIX));
     } */
 
-    private boolean isUsernameResponsibleForGeoObject(Topic geoObject, String username) {
+    private boolean isTopicAssignedToUsername(Topic topic, String username) {
         if (username == null) return false;
-        List<RelatedTopic> assignments = getAssignedUsernameTopics(geoObject);
+        List<RelatedTopic> assignments = getAssignedUsernames(topic);
         for (RelatedTopic assignedUsername : assignments) {
             if (assignedUsername.getSimpleValue().toString().equals(username)) return true;
         }
         return false;
     }
 
-    private List<RelatedTopic> getAssignedUsernameTopics(Topic topic) {
+    private List<RelatedTopic> getAssignedUsernames(Topic topic) {
         return topic.getRelatedTopics(USER_ASSIGNMENT, DEFAULT_ROLE, DEFAULT_ROLE, null);
     }
 
-    private String getFirstUsernameAssigned(Topic geoObject) {
-        List<RelatedTopic> assignments = getAssignedUsernameTopics(geoObject);
+    private String getAssignedUsernameOne(Topic geoObject) {
+        List<RelatedTopic> assignments = getAssignedUsernames(geoObject);
         for (RelatedTopic assignedUsername : assignments) {
             return assignedUsername.getSimpleValue().toString();
         }
@@ -1840,7 +1922,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         return results;
     } **/
 
-    private HashMap<String, String[]> loadCitymapWebAliases() {
+    private HashMap<String, String[]> loadCitymapSiteAliases() {
         HashMap<String, String[]> aliases = new HashMap();
         try {
             List<Topic> websiteAliases = dm4.getTopicsByType("ka2.website.web_alias");
@@ -1871,10 +1953,6 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
             }
         }
         return null;
-    }
-
-    private Topic getContactFacet(Topic facettedTopic) {
-        return facets.getFacet(facettedTopic, KONTAKT_FACET);
     }
 
     private EinrichtungView assembleEinrichtungListElement(Topic geoObject, boolean includeComments) {
@@ -1923,9 +2001,9 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
             listItem.addClassName("no-coordinates");
         }
         // Unconfirmed Check
-        if (isAssignedToConfirmationWorkspace(geoObject)) listItem.addClassName("unconfirmed");
+        if (isInConfirmation(geoObject)) listItem.addClassName("unconfirmed");
         // Bezirksregionen Check
-        Topic bezirksregion = getFacettedBezirksregionChildTopic(geoObject);
+        Topic bezirksregion = getBezirksregionFacet(geoObject);
         if (bezirksregion == null) listItem.addClassName("no-bezirksregion");
         // Bezirk
         Topic bezirk = getRelatedBezirk(geoObject);
@@ -1971,7 +2049,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
             }
             detail.setCoordinates(geoCoordinate);
             // Sets Kontakt Facet
-            Topic kontakt = facets.getFacet(geoObject, KONTAKT_FACET);
+            Topic kontakt = getContactFacet(geoObject);
             if (kontakt != null) {
                 kontakt.loadChildTopics();
                 detail.setEmail(kontakt.getChildTopics().getString(KONTAKT_MAIL));
@@ -2139,22 +2217,49 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
 
     private Association createUserAssignment(final Topic geoObject) {
         final Topic usernameTopic = getUsernameTopic();
-        if (!isUsernameResponsibleForGeoObject(geoObject, usernameTopic.getSimpleValue().toString())) {
+        return createUserAssignment(geoObject, usernameTopic);
+    }
+
+    private Association createUserAssignment(final Topic topic, final Topic username) {
+        return createUserAssignment(topic, username, false);
+    }
+
+    private Association createUserAssignment(final Topic topic, final Topic username, final boolean assignToWorkspace) {
+        if (!isTopicAssignedToUsername(topic, username.getSimpleValue().toString())) {
             try {
                 return dm4.getAccessControl().runWithoutWorkspaceAssignment(new Callable<Association>() {
                     @Override
                     public Association call() {
-                        // Assign all new "confirmed"-flag topics to our dedicated "Confirmation"-Workspace
                         Association assignment = dm4.createAssociation(mf.newAssociationModel(USER_ASSIGNMENT,
-                            mf.newTopicRoleModel(geoObject.getId(), DEFAULT_ROLE),
-                            mf.newTopicRoleModel(usernameTopic.getId(), DEFAULT_ROLE)));
-                        log.info("Created User Assignment ("+usernameTopic.getSimpleValue()+") for Geo Object \""
-                                + geoObject.getSimpleValue() + "\" without Workspace Assignment");
+                            mf.newTopicRoleModel(topic.getId(), DEFAULT_ROLE),
+                            mf.newTopicRoleModel(username.getId(), DEFAULT_ROLE)));
+                        log.info("Created Kiezatlas User Assignment ("+username.getSimpleValue()+") for Topic \""
+                                + topic.getSimpleValue() + "\" without Workspace Assignment");
+                        if (assignToWorkspace) { // Place into "Kiezatlas" Workspace
+                            workspaces.assignToWorkspace(assignment, kiezatlas.getStandardWorkspaceId());
+                        }
                         return assignment;
                     }
                 });
             } catch (Exception e) {
-                throw new RuntimeException("Creating User Assignment to Geo Object FAILED", e);
+                throw new RuntimeException("Creating User Assignment to Topic FAILED", e);
+            }
+        }
+        return null;
+    }
+
+    private Association deleteUserAssignment(final Topic topic, final Topic usernameTopic) {
+        if (isTopicAssignedToUsername(topic, usernameTopic.getSimpleValue().toString())) {
+            try {
+                Association assoc = topic.getAssociation(USER_ASSIGNMENT, null, null, usernameTopic.getId());
+                if (assoc != null) {
+                    dm4.deleteAssociation(assoc.getId());
+                    return assoc;
+                } else {
+                    throw new RuntimeException("Deleting User Assignment to Topic FAILED - Assoc not found");
+                }
+            } catch (Exception e) {
+                throw new RuntimeException("Deleting User Assignment to Topic FAILED", e);
             }
         }
         return null;
@@ -2162,7 +2267,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
 
     private Association createBildAssignment(final Topic geoObject, final Topic username, final long fileTopicId) {
         final Topic usernameTopic = username;
-        if (isUsernameResponsibleForGeoObject(geoObject, usernameTopic.getSimpleValue().toString())) {
+        if (isTopicAssignedToUsername(geoObject, usernameTopic.getSimpleValue().toString())) {
             try {
                 return dm4.getAccessControl().runWithoutWorkspaceAssignment(new Callable<Association>() {
                     @Override
@@ -2212,11 +2317,15 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
             mf.newFacetValueModel(IMAGE_PATH).put(imageFilePath));
     }
 
+    private Topic getContactFacet(Topic geoObject) {
+        return facets.getFacet(geoObject, KONTAKT_FACET);
+    }
+
     private Topic getImageFileFacetByGeoObject(Topic geoObject) {
         return facets.getFacet(geoObject, IMAGE_FACET);
     }
 
-    private Topic getFacettedBezirksregionChildTopic(Topic facettedTopic) {
+    private Topic getBezirksregionFacet(Topic facettedTopic) {
         return facets.getFacet(facettedTopic, BEZIRKSREGION_FACET);
     }
 
@@ -2289,7 +2398,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     }
 
     private void updateContactFacet(Topic geoObject, String ansprechpartner, String telefon, String email, String fax) {
-        Topic kontakt = facets.getFacet(geoObject, KONTAKT_FACET);
+        Topic kontakt = getContactFacet(geoObject);
         if (kontakt == null) { // Create
             FacetValueModel facetValue = mf.newFacetValueModel(KONTAKT);
             facetValue.put(mf.newChildTopicsModel()
@@ -2561,7 +2670,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         return workspaces.getWorkspace(workspaces.DEEPAMEHTA_WORKSPACE_URI);
     }
 
-    private Topic getPrivilegedWorkspace() {
+    private Topic getConfirmationWorkspace() {
         return dm4.getAccessControl().getWorkspace(CONFIRMATION_WS_URI);
     }
 
@@ -2702,6 +2811,10 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
 
     private List<RelatedTopic> getUserDistrictTopics() {
         Topic username = accesscl.getUsernameTopic();
+        return getUserDistrictTopics(username);
+    }
+
+    private List<RelatedTopic> getUserDistrictTopics(Topic username) {
         if (username != null) {
             List<RelatedTopic> topics = username.getRelatedTopics("dm4.core.association", null, null, BEZIRK);
             log.info("Loaded related " + topics.size() + " bezirks topic");

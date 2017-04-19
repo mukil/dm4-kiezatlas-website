@@ -88,9 +88,33 @@ var restc = (function($) {
     }
 
     restc.load_district_topics = function(id, callback) {
-        $.getJSON('/website/bezirk/' + id, function(results) {
-            callback(results)
-        })
+        if (id && !isNaN(id)) {
+            $.getJSON('/website/bezirk/' + id, function(results) {
+                callback(results)
+            })
+        } else {
+            callback("No district ID given, skipping request id=", id)
+        }
+    }
+
+    restc.load_district_regions = function(id, callback) {
+        if (id && !isNaN(id)) {
+            $.getJSON('/website/bezirk/' + id + '/bezirksregionen', function(results) {
+                callback(results)
+            })
+        } else {
+            callback("No district ID given, skipping request id=", id)
+        }
+    }
+
+    restc.load_district_manager = function(id, callback) {
+        if (id && !isNaN(id)) {
+            $.getJSON('/website/list/manager/' + id, function(results) {
+                callback(results)
+            })
+        } else {
+            callback("No district ID given, skipping request id=", id)
+        }
     }
 
     restc.load_website_geoobjects = function(siteId, callback) {
@@ -153,6 +177,34 @@ var restc = (function($) {
             error: function(x, s, e) {
                 callback({ state : "error", detail: e })
                 console.log("Deleting geo-website assignment failed", x,s,e)
+            }
+        })
+    }
+
+    restc.create_user_assignment = function(topicId, userId, callback) {
+        $.ajax({
+            type: "POST", url: "/website/assign/" + topicId + "/" + userId,
+            success: function() {
+                console.log("Successfully created a kiezatlas topic-user assignment")
+                callback({ state : "ok" })
+            },
+            error: function(x, s, e) {
+                callback({ state : "error", detail: e })
+                console.log("Creating a kiezatlas topic-user assignment failed", x,s,e)
+            }
+        })
+    }
+
+    restc.delete_user_assignment = function(topicId, userId, callback) {
+        $.ajax({
+            type: "DELETE", url: "/website/assign/" + topicId + "/" + userId,
+            success: function() {
+                console.log("Successfully deleted kiezatlas topic-user assignment")
+                callback({ state : "ok" })
+            },
+            error: function(x, s, e) {
+                callback({ state : "error", detail: e })
+                console.log("Deleting kiezatlas topic-user assignment failed", x,s,e)
             }
         })
     }
