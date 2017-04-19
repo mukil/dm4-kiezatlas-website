@@ -2666,11 +2666,13 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         return workspaces.getAssignedWorkspace(geoObject.getId());
     }
 
-    private Topic getStandardWorkspace() {
+    @Override
+    public Topic getStandardWorkspace() {
         return workspaces.getWorkspace(workspaces.DEEPAMEHTA_WORKSPACE_URI);
     }
 
-    private Topic getConfirmationWorkspace() {
+    @Override
+    public Topic getConfirmationWorkspace() {
         return dm4.getAccessControl().getWorkspace(CONFIRMATION_WS_URI);
     }
 

@@ -91,4 +91,8 @@ public interface WebsiteService {
      */
     Topic getFacettedGeoObjectTopic(String topicId, long siteId);
 
+    Topic getStandardWorkspace();
+
+    Topic getConfirmationWorkspace();
+
 }
