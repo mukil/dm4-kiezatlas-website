@@ -179,7 +179,18 @@
                             <a target="_blank" th:if="!${geoobject.webpage.contains('http')}" th:href="'http://' + ${geoobject.webpage}" th:text="${geoobject.webpage}">Website</a>
                             <a target="_blank" th:if="${geoobject.webpage.contains('http')}" th:href="${geoobject.webpage}" th:text="${geoobject.webpage}">Website</a>
                         </p>
-                        <p class="sozialraumdaten" th:if="${!#strings.isEmpty(geoobject.lor)}"><a th:href="@{http://sozialraumdaten.kiezatlas.de/seiten/2014/12/(lor=${geoobject.lor})}">Sozialraumdaten</a></p>
+                        <p class="sozialraumdaten" th:if="${!#strings.isEmpty(geoobject.LORId)}">
+                            <label>Statistische Informationen zur Bev&ouml;lkerungsstruktur in der Umgebung dieses Ortes</label>
+                            <a th:href="@{http://sozialraumdaten.kiezatlas.de/seiten/2014/12/(lor=${geoobject.LORId})}">Sozialraumdaten anzeigen</a>
+                        </p>
+                        <p class="regionen" th:if="${!#strings.isEmpty(geoobject.bezirk)}">
+                            <label>Bezirk</label>
+                            <span th:utext='${geoobject.bezirk}'>Bezirk</span>
+                        </p>
+                        <p class="regionen" th:if="${!#strings.isEmpty(geoobject.bezirksregionName)}">
+                            <label>Bezirksregion</label>
+                            <span th:utext='${geoobject.bezirksregionName}'>Bezirk</span>
+                        </p>
                         <a class="imprint" th:href="${geoobject.imprint}">Impressum</a>
                     </div>
                 </div>

@@ -38,6 +38,7 @@ import de.deepamehta.thymeleaf.ThymeleafPlugin;
 import de.deepamehta.time.TimeService;
 import de.deepamehta.workspaces.WorkspacesService;
 import de.kiezatlas.KiezatlasService;
+import static de.kiezatlas.KiezatlasService.GEO_OBJECT;
 import static de.kiezatlas.KiezatlasService.GEO_OBJECT_ADDRESS;
 import static de.kiezatlas.KiezatlasService.GEO_OBJECT_NAME;
 import de.kiezatlas.angebote.AngebotService;
@@ -128,6 +129,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     // Application Cache of District Overview Resultsets
     HashMap<Long, List<GeoMapView>> citymapCache = new HashMap<Long, List<GeoMapView>>();
     HashMap<Long, Long> citymapCachedAt = new HashMap<Long, Long>();
+    HashMap<String, Topic> internalLORs = new HashMap<String, Topic>();
 
     public static final String DM4_HOST_URL = System.getProperty("dm4.host.url"); // should come with trailing slash
     public static final String ANGEBOTE_RESOURCE = "angebote/";
@@ -151,6 +153,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     @Override
     public void init() {
         initTemplateEngine(); // initting a thymeleaf template engine for this bundle specifically too
+        populateInternalLORIDMapCache();
     }
 
     @Override
@@ -450,7 +453,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
                 String lor = geospatial.getGeometryFeatureNameByCoordinate(geoView.getGeoCoordinateLatValue()
                     + ", " + geoView.getGeoCoordinateLngValue());
                 if (lor != null) { // Strip "Flaeche .." (lor-berlin Shapefile specific)
-                    geoDetailsView.setLorValue(cleanUpShapefileFeatureNameAttribute(lor));
+                    geoDetailsView.setLorValue(cleanUpShapefileFeatureName(lor));
                 }
             }
             if (isInConfirmation(geoObject)) geoDetailsView.setUnconfirmed();
@@ -947,7 +950,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         ArrayList<GeoMapView> results = new ArrayList<GeoMapView>();
         Topic bezirksregion = dm4.getTopic(bezirksregionId);
         List<RelatedTopic> geoObjects = bezirksregion.getRelatedTopics("dm4.core.aggregation",
-            CHILD_ROLE, PARENT_ROLE, "ka2.geo_object");
+            CHILD_ROLE, PARENT_ROLE, GEO_OBJECT);
         for (RelatedTopic geoObject : geoObjects) {
             if (isGeoObjectTopic(geoObject)) {
                 results.add(new GeoMapView(geoObject, geomaps, angebote));
@@ -963,7 +966,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     @Produces(MediaType.APPLICATION_JSON)
     public List<BezirkView> fetchKiezatlasDistricts() {
         ArrayList<BezirkView> results = new ArrayList<BezirkView>();
-        for (Topic bezirk : dm4.getTopicsByType("ka2.bezirk")) {
+        for (Topic bezirk : dm4.getTopicsByType(BEZIRK)) {
             results.add(new BezirkView(bezirk));
         }
         return results;
@@ -973,28 +976,30 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     @Path("/bezirksregion")
     @Produces(MediaType.APPLICATION_JSON)
     public List<Topic> fetchKiezatlasSubregions() {
-        return dm4.getTopicsByType("ka2.util.bezirksregion_name");
+        return dm4.getTopicsByType(BEZIRKSREGION_NAME);
     }
 
     @GET
     @Path("/bezirk/{districtId}/bezirksregionen")
     @Produces(MediaType.APPLICATION_JSON)
     public List<BezirksregionView> getKiezatlasBezirksregionen(@PathParam("districtId") long districtId) {
-        List<Topic> utilNames = dm4.getTopicsByType("ka2.util.bezirksregion_name");
+        List<Topic> bezirksregionen = dm4.getTopicsByType(BEZIRKSREGION_NAME);
         List<BezirksregionView> regionen = new ArrayList<BezirksregionView>();
-        Topic bezirk = dm4.getTopic(districtId);
-        log.info("LOAD listing of BEZIRKSRGEIONEN/ANSPRECHPARTNER... for Bezirk \"" + bezirk + "\" (\"" + districtId + "\")");
-        for (Topic utilName : utilNames) {
-            Topic bezirksUtil = fetchBezirkUtilName(utilName);
-            if (bezirksUtil.getSimpleValue().toString().equals(bezirk.getSimpleValue().toString())) {
-                // ### Attempt to (unify) bezirksregionen and bezirksregion_name topics
-                // Topic bezirksregion = dm4.getTopicByValue("ka2.bezirksregion", name.getSimpleValue());
-                BezirksregionView regionViewModel = new BezirksregionView(utilName);
-                regionViewModel.setBezirk(bezirk);
-                regionViewModel.setAnsprechpartner(utilName.getRelatedTopics("de.kiezatlas.user_assignment"));
-                regionViewModel.setGeoObjects(utilName.getRelatedTopics("dm4.core.aggregation", null,
-                   null, "ka2.geo_objects"));
+        Topic district = dm4.getTopic(districtId);
+        log.info("LOAD listing of BEZIRKSRGEIONEN/ANSPRECHPARTNER... for Bezirk \"" + district + "\" (\"" + districtId + "\")");
+        for (Topic bezirksregionName : bezirksregionen) {
+            Topic bezirksUtilName = getBezirksUtilName(bezirksregionName);
+            if (bezirksUtilName.getSimpleValue().toString().equals(district.getSimpleValue().toString())) {
+                // Migraton14: Introduced new "Bezirksregion Name" Facet topics to all Geo Objects
+                BezirksregionView regionViewModel = new BezirksregionView(bezirksregionName);
+                regionViewModel.setBezirk(district);
+                regionViewModel.setAnsprechpartner(bezirksregionName.getRelatedTopics(USER_ASSIGNMENT));
+                List<RelatedTopic> geoObjects = bezirksregionName.getRelatedTopics("dm4.core.aggregation", null,
+                   null, GEO_OBJECT);
+                sortAlphabeticalDescending(geoObjects);
+                regionViewModel.setGeoObjects(geoObjects);
                 regionen.add(regionViewModel);
+                log.info("LOADed " + geoObjects.size() + " geo objects for Bezirksregion Name \"" + bezirksregionName.getSimpleValue() + "\")");
             }
         }
         if (regionen.isEmpty()) {
@@ -1002,18 +1007,6 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         }
         return regionen;
     }
-
-    private Topic fetchBezirkUtilName(Topic region) {
-        List<RelatedTopic> lorUtil = region.getRelatedTopics("dm4.core.composition", CHILD_ROLE,
-            PARENT_ROLE, "ka2.util.lor");
-        if (!lorUtil.isEmpty()) {
-            RelatedTopic utilParent = lorUtil.get(0);
-            return utilParent.getChildTopics().getTopic("ka2.util.bezirk_name");
-        }
-        return null;
-    }
-
-
 
     // ---------------------------------------------------------------------------- Website Search Endpoints -------- //
 
@@ -2066,7 +2059,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
             } else {
                 detail.setBezirk(bezirk.getSimpleValue().toString());
                 detail.setBezirkId(bezirk.getId());
-                BezirkView bezirkInfo = new BezirkView(bezirk);
+                BezirkView bezirkInfo = new BezirkView(bezirk); // convert to BezirkView for accessing imprint url
                 if (bezirkInfo.getImprintLink() != null) {
                     detail.setImprintUrl(bezirkInfo.getImprintLink().getSimpleValue().toString());
                 }
@@ -2087,8 +2080,8 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
             // Stichworte Facet
             Topic stichworte = facets.getFacet(geoObject, STICHWORTE_FACET);
             if (stichworte != null) detail.setStichworte(stichworte.getSimpleValue().toString());
-            // LOR Nummer Facet
-            setLORNumber(geoObject, geoCoordinate, detail);
+            // Note: We enrich EinrichtungsDetails about "LOR ID" and "Bezirksregion Nme" on-the-fly
+            enrichWithBezirksregionAndLOR(geoObject, geoCoordinate, detail);
             // Website Facet
             Topic website = facets.getFacet(geoObject, WEBSITE_FACET);
             if (website != null) detail.setWebpage(website.getSimpleValue().toString());
@@ -2106,24 +2099,58 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
 
     /** ----------------------------- Private Create and Update Geo Object Methdos ----------------------- */
 
-    private void setLORNumber(Topic geoObject, GeoCoordinate geoCoordinate, EinrichtungView einrichtung) {
+    private void enrichWithBezirksregionAndLOR(Topic geoObject, GeoCoordinate geoCoordinate, EinrichtungView einrichtung) {
         // double check
         if (geoObject == null) {
-            log.warning("Geo Coordinates null...");
+            log.warning("Can not calculate LOR and Bezirksregion Name when geo object is NULL");
             return;
         }
         // try new way of getting LOR number
         String lor = geospatial.getGeometryFeatureNameByCoordinate(geoCoordinate.lat + ", " + geoCoordinate.lon);
-        if (lor != null) {
-            einrichtung.setLORId(cleanUpShapefileFeatureNameAttribute(lor));
+        if (lor != null) { // if successfull, calculate Bezirksregion name for this LOR
+            String lorIdValue = cleanUpShapefileFeatureName(lor);
+            einrichtung.setLORId(lorIdValue);
+            if (internalLORs.containsKey(lorIdValue)) {
+                Topic lorId = internalLORs.get(lorIdValue);
+                Topic bezirksregion = getBezirksregionUtilName(lorId);
+                log.info("ENRICHED geo object \"" + geoObject.getSimpleValue() + "\" with Bezirksregion Name \"" + bezirksregion.getSimpleValue() + "\"");
+                einrichtung.setBezirksregionName(bezirksregion.getSimpleValue().toString());
+            }
         } else { // old school way
             Topic lorTopic = facets.getFacet(geoObject, LOR_FACET);
             einrichtung.setLORId(lorTopic.getSimpleValue().toString());
+            Topic bezirksregionTopic = facets.getFacet(geoObject, BEZIRKSREGION_NAME_FACET);
+            einrichtung.setBezirksregionName(bezirksregionTopic.getSimpleValue().toString());
         }
     }
 
-    private String cleanUpShapefileFeatureNameAttribute(String value) {
-        return value.replaceAll("Flaeche ", "");
+    private String cleanUpShapefileFeatureName(String value) {
+        return value.replace(WebsiteService.BEZIRKSREGION_SHAPEFILE_NAME_PREFIX, "");
+    }
+
+    private RelatedTopic getLorUtilParent(Topic lorUtilChild) {
+        List<RelatedTopic> lorUtil = lorUtilChild.getRelatedTopics("dm4.core.composition", CHILD_ROLE,
+            PARENT_ROLE, LOR_UTIL);
+        if (!lorUtil.isEmpty()) {
+            return lorUtil.get(0);
+        }
+        return null;
+    }
+
+    private Topic getBezirksUtilName(Topic lorUtilChild) {
+        RelatedTopic lorUtil = getLorUtilParent(lorUtilChild);
+        if (lorUtil != null) {
+            return lorUtil.getChildTopics().getTopic(BEZIRK_NAME);
+        }
+        return null;
+    }
+
+    private Topic getBezirksregionUtilName(Topic lorUtilChild) {
+        Topic utilParent = getLorUtilParent(lorUtilChild);
+        if (utilParent != null) {
+            return utilParent.getChildTopics().getTopicOrNull(BEZIRKSREGION_NAME);
+        }
+        return null;
     }
 
     private List<CommentView> assembleCommentViews(List<RelatedTopic> comments) {
@@ -2206,6 +2233,8 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
             updateSimpleCompositeFacet(geoObject, OEFFNUNGSZEITEN_FACET, OEFFNUNGSZEITEN, oeffnungszeiten);
             // Assign existing Bezirks Topic, Create, Update or Re-use existing Webpage URL and Assign
             writeBezirksFacet(geoObject, district);
+            // Calculate bezirksregion via coordinates and LOR geometry
+            writeBezirksregionNameFacet(geoObject);
             // All new webbrowser url topics will be assign to Standard Workspace
             writeSimpleKeyCompositeFacet(geoObject, WEBSITE_FACET, "dm4.webbrowser.url", website);
             // Handle Category Relations
@@ -2326,7 +2355,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     }
 
     private Topic getBezirksregionFacet(Topic facettedTopic) {
-        return facets.getFacet(facettedTopic, BEZIRKSREGION_FACET);
+        return facets.getFacet(facettedTopic, BEZIRKSREGION_NAME_FACET);
     }
 
     private void updateSimpleCompositeFacet(Topic geoObject, String facetTypeUri, String childTypeUri, String value) {
@@ -2448,6 +2477,32 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         }
     }
 
+    private void writeBezirksregionNameFacet(Topic geoObject) {
+        GeoCoordinate coordinates = kiezatlas.getGeoCoordinateByGeoObject(geoObject);
+        if (coordinates != null) {
+            String lorName = geospatial.getGeometryFeatureNameByCoordinate(coordinates.lat + "," + coordinates.lon);
+            if (lorName != null) {
+                String cleanedLorID = lorName.replace(WebsiteService.BEZIRKSREGION_SHAPEFILE_NAME_PREFIX, "");
+                Topic lorUtil = null;
+                if (internalLORs.containsKey(cleanedLorID)) {
+                    lorUtil = internalLORs.get(cleanedLorID);
+                    Topic utilParent = lorUtil.getRelatedTopic("dm4.core.composition", null, null, LOR_UTIL);
+                    Topic bezirksregion = utilParent.getChildTopics().getTopicOrNull(BEZIRKSREGION_NAME);
+                    facets.updateFacet(geoObject, BEZIRKSREGION_NAME_FACET,
+                        mf.newFacetValueModel(BEZIRKSREGION_NAME).putRef(bezirksregion.getId()));
+                    log.info("ASSIGNED geo object \"" + geoObject.getSimpleValue() + "\" to Bezirksregion \"" + bezirksregion.getSimpleValue() + "\"");
+                    // workspaces.assignToWorkspace(geoObject, website.getStandardWorkspace().getId());
+                } else {
+                    log.warning("Could NOT assign geo object \"" + geoObject.getSimpleValue() + "\" as Bezirksregion Name is UNKNOWN \"" + cleanedLorID + "\"");
+                }
+            } else {
+                log.warning("Could NOT find LOR of geo object \"" + geoObject.getSimpleValue() + "\" with GeoCoordinates \"" + coordinates + "\"");
+            }
+        } else {
+            log.warning("Could NOT assign geo object \"" + geoObject.getSimpleValue() + "\" as it has NO GEO COORDINATE");
+        }
+    }
+
     private void delFacetTopicReferences(Topic geoObject, List<RelatedTopic> topics, String facetTypeUri, String childTypeUri) {
         for (Topic topic : topics) {
             facets.updateFacet(geoObject, facetTypeUri,
@@ -2461,7 +2516,14 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         }
     }
 
-
+    private void populateInternalLORIDMapCache() {
+        // Builds up lor name -> id topicmap
+        List<Topic> lorIds = dm4.getTopicsByType("ka2.util.lor_id");
+        for (Topic lorId : lorIds) {
+            this.internalLORs.put(lorId.getSimpleValue().toString(), lorId);
+        }
+        log.info("Populated LOR ID <-> Topic Cache on plugin startup");
+    }
 
     /** --------------------------- Workspace Assignment Helper Methods ----------------------------- */
 
@@ -2828,8 +2890,8 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     private List<? extends Topic> sortAlphabeticalDescending(List<? extends Topic> topics) {
         Collections.sort(topics, new Comparator<Topic>() {
             public int compare(Topic t1, Topic t2) {
-                String one = t1.getSimpleValue().toString();
-                String two = t2.getSimpleValue().toString();
+                String one = t1.getSimpleValue().toString().toLowerCase();
+                String two = t2.getSimpleValue().toString().toLowerCase();
                 return one.compareTo(two);
             }
         });
@@ -2852,8 +2914,8 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     private void sortBySimpleValueDescending(List<? extends Topic> topics) {
         Collections.sort(topics, new Comparator<Topic>() {
             public int compare(Topic t1, Topic t2) {
-                String one = t1.getSimpleValue().toString();
-                String two = t2.getSimpleValue().toString();
+                String one = t1.getSimpleValue().toString().toLowerCase();
+                String two = t2.getSimpleValue().toString().toLowerCase();
                 return one.compareTo(two);
             }
         });
@@ -2865,6 +2927,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         initiallyAssignSingleFacetToWorkspace(geoObject, BESCHREIBUNG_FACET, workspace.getId());
         initiallyAssignSingleFacetToWorkspace(geoObject, OEFFNUNGSZEITEN_FACET, workspace.getId());
         initiallyAssignSingleFacetToWorkspace(geoObject, BEZIRK_FACET, workspace.getId());
+        initiallyAssignSingleFacetToWorkspace(geoObject, BEZIRKSREGION_NAME_FACET, workspace.getId());
         initiallyAssignSingleFacetToWorkspace(geoObject, WEBSITE_FACET, workspace.getId());
         initiallyAssignMultiFacetToWorkspace(geoObject, THEMA_FACET, workspace.getId()); // Topics already in "Kiezatlas"
         initiallyAssignMultiFacetToWorkspace(geoObject, ZIELGRUPPE_FACET, workspace.getId()); // But Associations new
@@ -2923,6 +2986,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         moveSingleFacetToWorkspace(geoObject, BESCHREIBUNG_FACET, workspace.getId());
         moveSingleFacetToWorkspace(geoObject, OEFFNUNGSZEITEN_FACET, workspace.getId());
         moveSingleFacetToWorkspace(geoObject, BEZIRK_FACET, workspace.getId());
+        moveSingleFacetToWorkspace(geoObject, BEZIRKSREGION_NAME_FACET, workspace.getId());
         moveSingleFacetToWorkspace(geoObject, WEBSITE_FACET, workspace.getId());
         moveMultiFacetToWorkspace(geoObject, THEMA_FACET, workspace.getId()); // Topics already in "Kiezatlas"
         moveMultiFacetToWorkspace(geoObject, ZIELGRUPPE_FACET, workspace.getId()); // But Associations new

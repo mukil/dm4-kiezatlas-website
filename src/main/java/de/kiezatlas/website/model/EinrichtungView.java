@@ -165,6 +165,14 @@ public class EinrichtungView implements JSONEnabled {
         }
     }
 
+    public void setBezirksregionName(String name) {
+        try {
+            json.put("bezirksregion_name", name);
+        } catch (JSONException ex) {
+            log.log(Level.SEVERE, null, ex);
+        }
+    }
+
     public void setImprintUrl(String descriptionValue) {
         try {
             json.put("imprint", descriptionValue);
@@ -443,12 +451,21 @@ public class EinrichtungView implements JSONEnabled {
             return "";
         }
     }
-    
-    public String getLor() {
+
+    public String getLORId() {
         try {
             return json.getString("lor_nr");
         } catch (JSONException ex) {
             log.log(Level.FINE, "Einrichtung has no LOR ID (Id: " + getId() + ")", ex);
+            return "";
+        }
+    }
+
+    public String getBezirksregionName() {
+        try {
+            return json.getString("bezirksregion_name");
+        } catch (JSONException ex) {
+            log.log(Level.FINE, "Einrichtung has no Bezirksregion (Id: " + getId() + ")", ex);
             return "";
         }
     }

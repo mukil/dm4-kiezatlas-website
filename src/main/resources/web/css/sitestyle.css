@@ -1869,6 +1869,26 @@ ul.soziale-einrichtungen li {
     margin-bottom: 0px;
 }
 
+.soziale-einrichtungen .einrichtungen {
+    margin-top: 1em;
+    padding: 0em;
+}
+
+.soziale-einrichtungen .einrichtungen .label:hover {
+    color: #343434;
+}
+
+ul.soziale-einrichtungen .einrichtungen ul {
+    padding: 1.5em;
+    padding-top: .5em;
+}
+
+ul.soziale-einrichtungen .einrichtungen li {
+    list-style-type: circle;
+    color: #a9a9a9;
+    line-height: 1.5em;
+}
+
 .soziale-einrichtungen p.meta {
     color: #a9a9a9;
     font-style: italic;
@@ -1881,6 +1901,14 @@ ul.soziale-einrichtungen li {
 
 .soziale-einrichtungen .label {
     color: #a9a9a9;
+}
+
+.label.clickable {
+    cursor: pointer;
+}
+
+.soziale-einrichtungen .einrichtungen .items.hidden {
+    display: none;
 }
 
 .soziale-einrichtungen .list-item:hover {

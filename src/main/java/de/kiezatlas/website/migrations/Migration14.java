@@ -9,6 +9,8 @@ import de.deepamehta.plugins.geospatial.GeospatialService;
 import de.deepamehta.workspaces.WorkspacesService;
 import de.kiezatlas.KiezatlasService;
 import de.kiezatlas.website.WebsiteService;
+import static de.kiezatlas.website.WebsiteService.BEZIRKSREGION_NAME;
+import static de.kiezatlas.website.WebsiteService.BEZIRKSREGION_NAME_FACET;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -33,9 +35,9 @@ public class Migration14 extends Migration {
     @Override
     public void run() {
         // 1) Fetch all existing geo objects
-        List<Topic> einrichtungen = dm4.getTopicsByType("ka2.geo_object");
+        List<Topic> einrichtungen = dm4.getTopicsByType(KiezatlasService.GEO_OBJECT);
         // 2) Build up region name topics with id
-        List<Topic> lorIds = dm4.getTopicsByType("ka2.util.lor_id");
+        List<Topic> lorIds = dm4.getTopicsByType(WebsiteService.LOR_UTIL_ID);
         HashMap<String, Topic> lorIdMap = new HashMap<String, Topic>();
         for (Topic lorId : lorIds) {
             lorIdMap.put(lorId.getSimpleValue().toString(), lorId);
@@ -49,14 +51,14 @@ public class Migration14 extends Migration {
             if (coordinates != null) {
                 String lorName = spatial.getGeometryFeatureNameByCoordinate(coordinates.lat + "," + coordinates.lon);
                 if (lorName != null) {
-                    String cleanedLorID = lorName.replace("Flaeche ", "");
+                    String cleanedLorID = lorName.replace(WebsiteService.BEZIRKSREGION_SHAPEFILE_NAME_PREFIX, "");
                     Topic lorUtil = null;
                     if (lorIdMap.containsKey(cleanedLorID)) {
                         lorUtil = lorIdMap.get(cleanedLorID);
-                        Topic utilParent = lorUtil.getRelatedTopic("dm4.core.composition", null, null, "ka2.util.lor");
-                        Topic bezirksregion = utilParent.getChildTopics().getTopicOrNull("ka2.util.bezirksregion_name");
-                        facets.updateFacet(geoObject, "ka2.util.bezirksregion_name_facet",
-                            mf.newFacetValueModel("ka2.util.bezirksregion_name").putRef(bezirksregion.getId()));
+                        Topic utilParent = lorUtil.getRelatedTopic("dm4.core.composition", null, null, WebsiteService.LOR_UTIL);
+                        Topic bezirksregion = utilParent.getChildTopics().getTopicOrNull(BEZIRKSREGION_NAME);
+                        facets.updateFacet(geoObject, BEZIRKSREGION_NAME_FACET,
+                            mf.newFacetValueModel(BEZIRKSREGION_NAME).putRef(bezirksregion.getId()));
                         log.info("ASSIGNED geo object \"" + geoObject.getSimpleValue() + "\" with Bezirksregion \"" + bezirksregion.getSimpleValue() + "\"");
                         // workspaces.assignToWorkspace(geoObject, website.getStandardWorkspace().getId());
                     } else {

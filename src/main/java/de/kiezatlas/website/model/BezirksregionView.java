@@ -61,6 +61,10 @@ public class BezirksregionView implements JSONEnabled {
         return this.geoobjects;
     }
 
+    public int getGeoObjectsSize() {
+        return this.geoobjects.size();
+    }
+
     @Override
     public JSONObject toJSON() {
         try {

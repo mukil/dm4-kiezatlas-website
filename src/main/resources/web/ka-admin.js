@@ -20,6 +20,16 @@ var list = (function($) {
         }) **/
     }
 
+    api.toggle_item_list = function(e) {
+        console.log("Toggle Item List Click", e)
+        var region = $(e).attr("data-custom-id")
+        if ($('#' + region + ' .einrichtungen .items').hasClass('hidden')) {
+            $('#' + region + ' .einrichtungen .items').removeClass('hidden')
+        } else {
+            $('#' + region + ' .einrichtungen .items').addClass('hidden')
+        }
+    }
+
     api.search_usernames = function(input, callback) {
         //
         console.log("Search for users \"" + input.trim() + "\"")

@@ -48,11 +48,19 @@ public interface WebsiteService {
     static final String BEZIRK_FACET = "ka2.bezirk.facet";
     static final String BEZIRK = "ka2.bezirk";
 
+    // New as of Migration13: LOR - Bezirksregion - Bezirk Utility Topic Types
+    static final String BEZIRK_NAME = "ka2.util.bezirk_name";
+    static final String BEZIRKSREGION_NAME_FACET = "ka2.util.bezirksregion_name_facet";
+    static final String BEZIRKSREGION_NAME = "ka2.util.bezirksregion_name";
+
     static final String BEZIRKSREGION_FACET = "ka2.bezirksregion.facet";
     static final String BEZIRKSREGION = "ka2.bezirksregion";
 
     static final String LOR_FACET = "ka2.lor_nummer.facet";
     static final String LOR = "ka2.lor_nummer";
+
+    static final String LOR_UTIL = "ka2.util.lor";
+    static final String LOR_UTIL_ID = "ka2.util.lor_id";
 
     static final String WEBSITE_FACET = "ka2.website.facet";
     static final String IMAGE_FACET = "ka2.bild.facet";
@@ -63,6 +71,7 @@ public interface WebsiteService {
     // The URIs of KA2 Geo Object topics synchronized (and kept up-to-date in) Kiezatlas 1 have this prefix.
     // The remaining part of the URI is the original KA1 topic id.
     static final String KA1_GEO_OBJECT_URI_PREFIX = "de.kiezatlas.topic.";
+    static final String BEZIRKSREGION_SHAPEFILE_NAME_PREFIX = "Flaeche ";
 
     /**
      * Searching in four child topic types of geo object, returning topics of type "ka2.geo_object".

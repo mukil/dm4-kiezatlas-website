@@ -99,11 +99,17 @@
                                 <button th:onclick="'list.do_assign_user(' + ${region.id} + ')'" class="ui button">
                                     Hinzuf&uuml;gen
                                 </button>
+                                <!-- List of Geo Objects.. -->
+                                <div class="einrichtungen">
+                                    <span class="label clickable" onclick="list.toggle_item_list(this)" th:attr="data-custom-id=${region.id}"
+                                          th:text="${region.geoObjectsSize} + ' Einrichtungen/Orte in dieser Region'"></span>
+                                    <ul class="items hidden">
+                                        <li class="item" th:each="geo : ${region.geoObjects}">
+                                            <a th:href="'/website/geo/' + ${geo.id}" th:text="${geo.simpleValue}" target="_blank"></a>
+                                        </li>
+                                    </ul>
+                                </div>
                             </div>
-                            <!-- List of Geo Objets.. p class="comment" th:each="comment : ${geoobject.comments}">
-                                <span class="contact" th:if="${comment.contact}" th:text="${comment.contact} + ':'"></span>
-                                <span class="message" th:text="${comment.message}"></span>
-                            </p-->
                         </li>
                     </ul>
                 </div>
