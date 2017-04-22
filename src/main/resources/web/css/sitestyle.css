@@ -1661,6 +1661,7 @@ span.bold {
     text-align: left;
 }
 
+.kiezatlas.topic #detail-area .metadata span,
 .kiezatlas.topic #detail-area .metadata a {
     color: #9a9999;
     font-style: italic;

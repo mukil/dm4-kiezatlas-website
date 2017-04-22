@@ -173,6 +173,14 @@ public class EinrichtungView implements JSONEnabled {
         }
     }
 
+    public void setBezirksregionId(long name) {
+        try {
+            json.put("bezirksregion_id", name);
+        } catch (JSONException ex) {
+            log.log(Level.SEVERE, null, ex);
+        }
+    }
+
     public void setImprintUrl(String descriptionValue) {
         try {
             json.put("imprint", descriptionValue);
@@ -467,6 +475,15 @@ public class EinrichtungView implements JSONEnabled {
         } catch (JSONException ex) {
             log.log(Level.FINE, "Einrichtung has no Bezirksregion (Id: " + getId() + ")", ex);
             return "";
+        }
+    }
+
+    public long getBezirksregionId() {
+        try {
+            return json.getLong("bezirksregion_id");
+        } catch (JSONException ex) {
+            log.log(Level.FINE, "Einrichtung has no Bezirksregion (Id: " + getId() + ")", ex);
+            return -1;
         }
     }
 

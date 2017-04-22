@@ -301,8 +301,8 @@
 
         <!-- Details Area -->
         <div id="detail-area">
-            <h2 th:if="${geoobject.id eq -1}">Neuen Standort eintragen</h2>
-            <h2 th:if="${geoobject.id gt -1}">Standort bearbeiten</h2>
+            <h2 th:if="${geoobject.id eq -1}">Neuen Ort anlegen</h2>
+            <h2 th:if="${geoobject.id gt -1}">Ortseintrag bearbeiten</h2>
             <div class="commands">
                 <span th:if="${!#strings.isEmpty(message)}" th:utext="${message}" class="message"></span>
                 <!--a th:if="${editable} and ${authenticated}" th:href="'/website/geo/' + ${geoobject.id}">Cancel</a-->

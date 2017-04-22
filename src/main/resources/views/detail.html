@@ -110,10 +110,9 @@
             <div id="detail-area" th:class="${angebotsinfos} ? 'angebotsinfos'">
                 <div class="commands">
                     <p th:if="${!#strings.isEmpty(message)}" th:text="${message}"></p>
-                    <a class="ui button olive edit" th:if="${authenticated} and ${editable}" th:href="'/website/geo/edit/' + ${geoobject.id}">Bearbeiten</a>
-                    <a class="ui button red delete" th:if="${authenticated} and ${editable}" th:href="'javascript:delete_geo_object(' + ${geoobject.id} + ')'">L&ouml;schen</a>
-                    <!-- th:href="'/website/geo/delete/' + ${geoobject.id}"-->
-                    <a class="ui button olive button publish" th:if="${is_publisher} and ${!is_published}" th:href="'/website/geo/confirm/' + ${geoobject.id}">Freischalten</a>
+                    <a class="ui button olive edit" th:if="${authenticated} and ${editable}" th:href="'/website/geo/edit/' + ${geoobject.id}">Ortseintrag bearbeiten</a>
+                    <a class="ui button red delete" th:if="${authenticated} and ${deletable}" th:href="'javascript:delete_geo_object(' + ${geoobject.id} + ')'">Eintrag l&ouml;schen</a>
+                    <a class="ui button olive button publish" th:if="${is_publisher} and ${!is_published}" th:href="'/website/geo/confirm/' + ${geoobject.id}">Ver&ouml;ffentlichen</a>
                 </div>
                 <p class="comment" th:each="comment : ${geoobject.comments}">
                     <span class="message" th:text="${comment.message}"></span>
@@ -206,7 +205,10 @@
                     </div>
                 </div>
                 <div th:if="${authenticated}" class="debug metadata">
-                    <div class="creator">Ein Eintrag von <a href="#creator" th:text="${geoobject.creator}" title="Benutzername"></a></div>
+                    <div class="creator">
+                        Ein Eintrag von <a href="#creator" th:text="${geoobject.creator}" title="Benutzername"></a> 
+                        in Workspace <span class="workspace" th:text="${#strings.contains(workspace.simpleValue, 'DeepaMehta')} ? 'Standard' : ${workspace.simpleValue}"></span>.
+                    </div>
                 </div>
             </div>
         </div>

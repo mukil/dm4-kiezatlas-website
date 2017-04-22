@@ -1,6 +1,19 @@
 {
     "topic_types": [
         {
+            "value":           "Marker Size (Radius, px)",
+            "uri":             "ka2.website.marker_size",
+            "data_type_uri":   "dm4.core.number",
+            "view_config_topics": [
+                {
+                    "type_uri": "dm4.webclient.view_config",
+                    "childs": {
+                        "dm4.webclient.show_in_create_menu": false
+                    }
+                }
+            ]
+        },
+        {
             "value":            "LOR ID",
             "uri":              "ka2.util.lor_id",
             "data_type_uri":    "dm4.core.text",

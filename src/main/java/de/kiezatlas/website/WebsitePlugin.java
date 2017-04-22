@@ -456,7 +456,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
                     geoDetailsView.setLorValue(cleanUpShapefileFeatureName(lor));
                 }
             }
-            if (isInConfirmation(geoObject)) geoDetailsView.setUnconfirmed();
+            if (isInReview(geoObject)) geoDetailsView.setUnconfirmed();
         }
         return geoDetailsView;
     }
@@ -468,7 +468,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         // Check Authorization
         Topic geoObject = getGeoObjectById(topicId);
         String name = geoObject.getSimpleValue().toString();
-        if (geoObject != null && isGeoObjectEditable(geoObject, accesscl.getUsernameTopic())) {
+        if (geoObject != null && hasUserWritePermission(geoObject, accesscl.getUsernameTopic())) {
             log.info("DELETING Geo Object " + geoObject);
             if (deleteCompleteGeoObject(geoObject)) {
                 viewData("message", "Der Kiezatlas Ort wurde erfolgreich gelöscht.");
@@ -491,7 +491,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         if (!isAuthenticated()) return getUnauthorizedPage();
         List<BezirksregionView> bezirksregionen = null;
         viewData("name", "Bezirksregionen");
-        if (districtId != -1 && hasRelatedDistrict(districtId)) {
+        if (districtId != -1 && isUserAssociatedWithBezirk(districtId)) {
             viewData("districtId", districtId);
             bezirksregionen = getKiezatlasBezirksregionen(districtId);
             // ### Fetch first Bezirksregion in District
@@ -517,17 +517,41 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     @Path("/list/freischalten/{districtId}")
     @Produces(MediaType.TEXT_HTML)
     public Viewable prepareConfirmationListing(@PathParam("districtId") long districtId) {
-        if (!isAuthenticated()) return getUnauthorizedPage();
-        Topic district = dm4.getTopic(districtId);
-        List<RelatedTopic> usersDistricts = getUserDistrictTopics();
-        for (RelatedTopic userDistrict : usersDistricts) {
-            if (userDistrict.getId() == districtId) {
-                List<EinrichtungView> results = getUnconfirmedEinrichtungenList(district);
-                viewData("districtId", districtId);
+        if (!isConfirmationWorkspaceMember()) return getUnauthorizedPage();
+        // 1) Requesting User is related to District
+        List<RelatedTopic> eligibleRegions = null;
+        if (districtId > 0) {
+            Topic district = dm4.getTopic(districtId);
+            eligibleRegions = getUserDistrictTopics();
+            for (RelatedTopic userDistrict : eligibleRegions) {
+                if (userDistrict.getId() == districtId) {
+                    List<EinrichtungView> results = getUnconfirmedEinrichtungenInBezirk(district);
+                    viewData("districtId", districtId);
+                    viewData("name", "Neueintragungen");
+                    return getConfirmationBezirkTemplate(results);
+                    // 1.1) Returns list of all geo objects in this district
+                }
+            }
+        } else {
+            // 2) Requesting a list of all geoobjects organized by bezirksregionen the user is manager of
+            List<BezirksregionView> bezirksregionen = new ArrayList<BezirksregionView>();
+            eligibleRegions = getUserSubregionTopics();
+            if (eligibleRegions.size() > 0) {
+                for (RelatedTopic region : eligibleRegions) {
+                    List<RelatedTopic> geoObjects = getUnconfirmedGeoObjectsInBezirksregion(region);
+                    BezirksregionView regionViewModel = new BezirksregionView(region);
+                    regionViewModel.setBezirk(getBezirksUtilName(region));
+                    regionViewModel.setAnsprechpartner(region.getRelatedTopics(USER_ASSIGNMENT));
+                    sortAlphabeticalDescending(geoObjects);
+                    regionViewModel.setGeoObjects(geoObjects);
+                    bezirksregionen.add(regionViewModel);
+                }
                 viewData("name", "Neueintragungen");
-                return getConfirmationTemplate(results);
+                return getConfirmationBezirksregionTemplate(bezirksregionen);
+                // 2.1) Returns list of all geo objects organized in bezirksregionen the editor is manager of
             }
         }
+        // 3) Returns a message page with info on "not authorized"
         viewData("name", "Neueintragungen freischalten");
         viewData("message", "Ihr Account scheint f&uuml;r diesen Bezirk nicht als Kiez-Administrator_in eingerichtet zu sein. "
             + "Wenden Sie sich bitte an die Administrator_innen.");
@@ -568,6 +592,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     @Produces(MediaType.TEXT_HTML)
     public Viewable prepareEinrichtungsListing() {
         if (!isAuthenticated()) return getUnauthorizedPage();
+        // ### Use: isEligibleForListView()
         List<RelatedTopic> usersDistricts = getUserDistrictTopics();
         long districtId = -1;
         if (usersDistricts != null && usersDistricts.size() > 0) {
@@ -581,7 +606,8 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     @Produces(MediaType.TEXT_HTML)
     public Viewable prepareEinrichtungsListing(@PathParam("districtId") long districtId) {
         if (!isAuthenticated()) return getUnauthorizedPage();
-        if (hasRelatedDistrict(districtId)) {
+        // ## Allow guests to view district listings, too?
+        if (isUserAssociatedWithBezirk(districtId)) {
             log.info("Loading LIST for districtId=\"" + districtId + "\"");
             List<EinrichtungView> results = getEinrichtungList(districtId);
             viewData("districtId", districtId);
@@ -657,11 +683,12 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     public Viewable prepareConfirmationListing() {
         if (!isAuthenticated() && isConfirmationWorkspaceMember()) return getUnauthorizedPage();
         List<RelatedTopic> usersDistricts = getUserDistrictTopics();
-        log.info("LOAD listing of NEUEINTRAGUNGEN ...");
         long districtId = -1;
         if (usersDistricts != null && usersDistricts.size() > 0) {
             districtId = usersDistricts.get(0).getId();
         }
+        String logMessage = (districtId == -1) ? " complete listing of NEUEINTRAGUNGEN in Bezirk" : " listing of NEUEINTRAGUNGEN per Bezirksregion";
+        log.info("LOAD " + logMessage);
         return prepareConfirmationListing(districtId);
     }
 
@@ -671,7 +698,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     public Viewable prepareCommentsListing(@PathParam("districtId") long districtId) {
         // TODO: Check if user isCommentsWorkspaceMember...
         if (!isAuthenticated()) return getUnauthorizedPage();
-        if (hasRelatedDistrict(districtId)) {
+        if (isUserAssociatedWithBezirk(districtId)) {
             List<EinrichtungView> results = getCommentedEinrichtungList(districtId);
             viewData("districtId", districtId);
             viewData("name", "Bearbeitungshinweise");
@@ -1545,13 +1572,11 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         }
     }
 
-    private void prepareEditorListing(List<EinrichtungView> results) {
+    private void prepareEditorListing() {
         // Optimize: Loads district topic twice (see earlier calls to isAssociatedDistrictMember())
         viewData("userDistricts", getUserDistrictTopics());
         // viewData("availableLor", getAvailableLORNumberTopics());
         viewData("workspace", getStandardWorkspace());
-        viewData("geoobjects", results);
-        viewData("geoobjectsCount", results.size());
     }
 
     private Viewable prepareGeoObjectTemplate(@PathParam("topicId") long topicId) {
@@ -1576,6 +1601,8 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         // geo object auth
         viewData("is_published", isTopicInStandardWorkspace(geoObject));
         viewData("editable", isGeoObjectEditable(geoObject, username));
+        viewData("deletable", hasUserWritePermission(geoObject, username));
+        viewData("workspace", getAssignedWorkspace(geoObject));
         return view("detail");
     }
 
@@ -1583,6 +1610,8 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         // Optimize: Loads district topic twice (see earlier calls to isAssociatedDistrictMember())
         viewData("userDistricts", getUserDistrictTopics());
         prepatePageTemplate("editors");
+        viewData("geoobjects", results);
+        viewData("geoobjectsCount", results.size());
         // prepareGeoObjectListing(results);
         viewData("regions", results);
         return view("list-editors");
@@ -1590,20 +1619,36 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
 
     private Viewable getListTemplate(List<EinrichtungView> results) {
         prepatePageTemplate("list");
-        prepareEditorListing(results);
+        prepareEditorListing();
+        viewData("geoobjects", results);
+        viewData("geoobjectsCount", results.size());
         log.info("Completed preparation of LIST with " + results.size() + " entries");
         return view("list");
     }
 
-    private Viewable getConfirmationTemplate(List<EinrichtungView> results) {
+    private Viewable getConfirmationBezirkTemplate(List<EinrichtungView> results) {
         prepatePageTemplate("confirmation");
-        prepareEditorListing(results);
+        prepareEditorListing();
+        viewData("viewtype", "bezirk");
+        viewData("geoobjects", results);
+        viewData("geoobjectsCount", results.size());
+        return view("list-confirms");
+    }
+
+    private Viewable getConfirmationBezirksregionTemplate(List<BezirksregionView> results) {
+        prepatePageTemplate("confirmation");
+        prepareEditorListing();
+        viewData("viewtype", "bezirksregion");
+        viewData("bezirksregionen", results);
+        viewData("bezirksregionenCount", results.size());
         return view("list-confirms");
     }
 
     private Viewable getCommentsTemplate(List<EinrichtungView> results) {
         prepatePageTemplate("comments");
-        prepareEditorListing(results);
+        prepareEditorListing();
+        viewData("geoobjects", results);
+        viewData("geoobjectsCount", results.size());
         return view("list-comments");
     }
 
@@ -1651,7 +1696,6 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         // viewData("availableLor", getAvailableLORNumberTopics());
         viewData("availableAngebote", getAngebotCriteriaTopics());
         viewData("availableZielgruppen", getZielgruppeCriteriaTopics());
-        log.info("> Prepare Form Template with available Topics");
     }
 
     private void prepatePageTemplate(String templateName) {
@@ -1666,7 +1710,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         Topic standardwebsite = webpages.getStandardWebsite();
         viewData("website", "standard");
         prepareCityMapSite(standardwebsite);
-        log.info("Checking Authorization (isConfirmationMember=" + isConfirmationMember
+        log.fine("Checked Authorization (isConfirmationMember=" + isConfirmationMember
             + ", isSiteManager="+isSiteManager+", isAuthenticated=" + isAuthenticated + ")");
     }
 
@@ -1723,7 +1767,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         return results;
     }
 
-    private List<EinrichtungView> getUnconfirmedEinrichtungenList(Topic district) {
+    private List<EinrichtungView> getUnconfirmedEinrichtungenInBezirk(Topic district) {
         List<EinrichtungView> results = new ArrayList();
         List<RelatedTopic> unconfirmedGeoObjects = getUnconfirmedEinrichtungTopics();
         List<RelatedTopic> sortedGeoObjects = unconfirmedGeoObjects;
@@ -1740,13 +1784,26 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         return results;
     }
 
+    private List<RelatedTopic> getUnconfirmedGeoObjectsInBezirksregion(Topic bezirksregionName) {
+        List<RelatedTopic> results = new ArrayList();
+        List<RelatedTopic> unconfirmedGeoObjects = getUnconfirmedEinrichtungTopics();
+        List<RelatedTopic> sortedGeoObjects = unconfirmedGeoObjects;
+        sortByModificationDateDescending(sortedGeoObjects);
+        for (RelatedTopic geoObject : sortedGeoObjects) {
+            if (getBezirksregionFacet(geoObject).getId() == bezirksregionName.getId()) {
+                results.add(geoObject);
+            }
+        }
+        return results;
+    }
+
     /** -------------------- Permission, Workspace and Membership Related Helpers ----------------------- **/
 
     private boolean hasWorkspaceAssignment(DeepaMehtaObject object) {
         return (dm4.getAccessControl().getAssignedWorkspaceId(object.getId()) > NEW_TOPIC_ID);
     }
 
-    private boolean isInConfirmation(DeepaMehtaObject object) {
+    private boolean isInReview(DeepaMehtaObject object) {
         return (dm4.getAccessControl().getAssignedWorkspaceId(object.getId()) == getConfirmationWorkspace().getId());
     }
 
@@ -1762,11 +1819,15 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         }
     }
 
-    private boolean hasRelatedDistrict(long districtId) {
-        return hasRelatedDistrict(districtId, null);
+    private boolean isUserAssociatedWithBezirk(long districtId) {
+        return isUserAssociatedWithBezirk(districtId, null);
     }
 
-    private boolean hasRelatedDistrict(long districtId, Topic username) {
+    private boolean isUserAssociatedWithBezirksregion(long bezirksregionId) {
+        return isUserAssociatedWithBezirksregion(bezirksregionId, null);
+    }
+
+    private boolean isUserAssociatedWithBezirk(long districtId, Topic username) {
         if (districtId == -1) return false;
         List<RelatedTopic> districts = (username == null) ? getUserDistrictTopics() : getUserDistrictTopics(username);
         for (RelatedTopic district : districts) {
@@ -1775,6 +1836,21 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
             }
         }
         return false;
+    }
+
+    private boolean isUserAssociatedWithBezirksregion(long bezirksregionId, Topic username) {
+        if (bezirksregionId == -1) return false;
+        List<RelatedTopic> regions = (username == null) ? getUserSubregionTopics() : getUserSubregionTopics(username);
+        for (RelatedTopic region : regions) {
+            if (region.getId() == bezirksregionId) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean isEligibleForListView() {
+        return (getUserDistrictTopics().size() > 0 || getUserSubregionTopics().size() > 0);
     }
 
     private boolean isConfirmationWorkspaceMember() {
@@ -1846,21 +1922,41 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         if (username == null) return false;
         String usernameValue = username.getSimpleValue().toString();
         if (isTopicAssignedToUsername(geoObject, usernameValue)) { // && !isKiezatlas1GeoObject(geoObject)) {
-            log.info("Edit Permission GRANTED for user=" + usernameValue + " - Assigned to Geo Object");
+            log.info("Edit Permission GRANTED for user=" + usernameValue + " being the geo object's editor");
             return true;
         }
         if (isConfirmationWorkspaceMember(username)) {
             Topic district = getRelatedBezirk(geoObject);
-            if (hasRelatedDistrict(district.getId())) {
-                log.info("Edit Permission GRANTED for user=" + usernameValue + " - Confirmation Workspace Member");
+            Topic region = getRelatedBezirksregion(geoObject);
+            // Level 1 Permission: District Level
+            if (isUserAssociatedWithBezirk(district.getId())) {
+                log.info("Edit Permission GRANTED for \"" + usernameValue + "\" being a confirmation-ws member");
                 return true;
-            } else {
-                // && !isKiezatlas1GeoObject(geoObject)) {
-                log.warning("DENIED permissions on Geo Object with district ("+district+"), for user " + usernameValue);
+            }
+            // Level 2 Permission: Region Level
+            if (isUserAssociatedWithBezirksregion(region.getId())) {
+                log.info("Edit Permissions GRANTED on Geo Object by Bezirksregion " + region.getSimpleValue()
+                    + ") for \"" + usernameValue + "\" being an assigned member");
+                return true;
             }
         }
-        log.warning("Edit Permission DENIED for user=" + usernameValue + " - Not Assigned to Geo Object");
+        if (hasUserWritePermission(geoObject, username)) return true;
+        log.info("Edit Permission DENIED for user \"" + usernameValue + "\". No permission or assignment detected.");
         return false;
+    }
+
+    private boolean hasUserWritePermission(Topic geoObject, Topic username) {
+        if (username == null) return false;
+        String usernameValue = username.getSimpleValue().toString();
+        Topic workspace = getAssignedWorkspace(geoObject);
+        if (workspace == null) {
+            log.warning("Geo Object \""+geoObject.getSimpleValue().toString()+"\" has NO WORKSPACE ASSIGNMENT");
+            return false;
+        }
+        boolean hasWritePermission = dm4.getAccessControl().hasWritePermission(usernameValue, workspace.getId());
+        String logMessage = (hasWritePermission) ? "GRANTED" : "DENIED";
+        log.info("Write Permission " + logMessage + " for \"" + usernameValue + "\" - Object in \"" + workspace.getSimpleValue() + "\"");
+        return hasWritePermission;
     }
 
     private boolean isTopicInStandardWorkspace(Topic topic) {
@@ -1994,10 +2090,14 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
             listItem.addClassName("no-coordinates");
         }
         // Unconfirmed Check
-        if (isInConfirmation(geoObject)) listItem.addClassName("unconfirmed");
+        if (isInReview(geoObject)) listItem.addClassName("unconfirmed");
         // Bezirksregionen Check
         Topic bezirksregion = getBezirksregionFacet(geoObject);
-        if (bezirksregion == null) listItem.addClassName("no-bezirksregion");
+        if (bezirksregion != null) {
+            listItem.setBezirksregionName(bezirksregion.getSimpleValue().toString());
+        } else {
+            listItem.addClassName("no-bezirksregion");
+        }
         // Bezirk
         Topic bezirk = getRelatedBezirk(geoObject);
         if (bezirk != null) {
@@ -2113,14 +2213,18 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
             if (internalLORs.containsKey(lorIdValue)) {
                 Topic lorId = internalLORs.get(lorIdValue);
                 Topic bezirksregion = getBezirksregionUtilName(lorId);
-                log.info("ENRICHED geo object \"" + geoObject.getSimpleValue() + "\" with Bezirksregion Name \"" + bezirksregion.getSimpleValue() + "\"");
-                einrichtung.setBezirksregionName(bezirksregion.getSimpleValue().toString());
+                if (bezirksregion != null) {
+                    log.info("ENRICHED geo object \"" + geoObject.getSimpleValue() + "\" with Bezirksregion Name \"" + bezirksregion.getSimpleValue() + "\"");
+                    einrichtung.setBezirksregionName(bezirksregion.getSimpleValue().toString());
+                    einrichtung.setBezirksregionId(bezirksregion.getId());
+                }
             }
         } else { // old school way
             Topic lorTopic = facets.getFacet(geoObject, LOR_FACET);
             einrichtung.setLORId(lorTopic.getSimpleValue().toString());
             Topic bezirksregionTopic = facets.getFacet(geoObject, BEZIRKSREGION_NAME_FACET);
             einrichtung.setBezirksregionName(bezirksregionTopic.getSimpleValue().toString());
+            einrichtung.setBezirksregionId(bezirksregionTopic.getId());
         }
     }
 
@@ -2129,6 +2233,10 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     }
 
     private RelatedTopic getLorUtilParent(Topic lorUtilChild) {
+        return lorUtilChild.getRelatedTopic("dm4.core.composition", CHILD_ROLE, PARENT_ROLE, LOR_UTIL);
+    }
+
+    private RelatedTopic getLorUtilParentOne(Topic lorUtilChild) {
         List<RelatedTopic> lorUtil = lorUtilChild.getRelatedTopics("dm4.core.composition", CHILD_ROLE,
             PARENT_ROLE, LOR_UTIL);
         if (!lorUtil.isEmpty()) {
@@ -2138,7 +2246,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     }
 
     private Topic getBezirksUtilName(Topic lorUtilChild) {
-        RelatedTopic lorUtil = getLorUtilParent(lorUtilChild);
+        RelatedTopic lorUtil = getLorUtilParentOne(lorUtilChild);
         if (lorUtil != null) {
             return lorUtil.getChildTopics().getTopic(BEZIRK_NAME);
         }
@@ -2766,6 +2874,10 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         return bezirk;
     }
 
+    private Topic getRelatedBezirksregion(Topic geoObject) {
+        return facets.getFacet(geoObject, BEZIRKSREGION_NAME_FACET);
+    }
+
     private Topic getRelatedAddressStreetName(Topic geoObject) {
         Topic address = geoObject.getChildTopics().getTopicOrNull("dm4.contacts.address");
         if (address == null) log.warning("Geo Object ("+geoObject+") has no related ADDRESS topic");
@@ -2878,10 +2990,24 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         return getUserDistrictTopics(username);
     }
 
+    private List<RelatedTopic> getUserSubregionTopics() {
+        Topic username = accesscl.getUsernameTopic();
+        return getUserSubregionTopics(username);
+    }
+
     private List<RelatedTopic> getUserDistrictTopics(Topic username) {
         if (username != null) {
             List<RelatedTopic> topics = username.getRelatedTopics("dm4.core.association", null, null, BEZIRK);
             log.info("Loaded related " + topics.size() + " bezirks topic");
+            return topics;
+        }
+        return null;
+    }
+
+    private List<RelatedTopic> getUserSubregionTopics(Topic username) {
+        if (username != null) {
+            List<RelatedTopic> topics = username.getRelatedTopics(USER_ASSIGNMENT, null, null, BEZIRKSREGION_NAME);
+            log.info("Loaded related " + topics.size() + " bezirksregion topic");
             return topics;
         }
         return null;

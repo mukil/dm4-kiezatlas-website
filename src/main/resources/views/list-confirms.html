@@ -51,7 +51,7 @@
             <div id="header">
                 <p>&nbsp;</p>
                 <h3 th:if="${is_publisher}">
-                    <form>
+                    <form th:if="${#strings.equals(viewtype, 'bezirk')}">
                         <label>Kiez-Redaktion im Bezirk</label>
                         <select id="districts" class="ui dropdown button" onchange="refresh_confirmation_list()">
                             <option th:each="district: ${userDistricts}" th:selected="${districtId == district.id} ? true : false"
@@ -72,10 +72,13 @@
                     <!--div class="item" data-tab="third">Newsbereich</div-->
                     <a th:if="${is_district_admin}" class="button ui" href="/website/list/bezirksregionen">Bezirksregionen</a>>
                 </div>
-                <div id="listing">
+
+                <!-- Bezirks-wide confirmation list -->
+                <div id="listing" th:if="${#strings.equals(viewtype, 'bezirk')}">
                     <ul class="soziale-einrichtungen">
                         <li th:each="geoobject : ${geoobjects}">
                             <div class="list-item">
+                                <span class="region label" th:text="'Bezirksregion ' + ${geoobject.bezirksregionName}"></span><br/>
                                 <h3 th:text="${geoobject.name}"></h3>
                                 <p>
                                     Eingepflegt von <span th:text="${geoobject.assignedUsername}"></span> am <span th:text="${geoobject.lastModified}"></span>
@@ -84,6 +87,27 @@
                                     <option th:each="site : ${websites}" th:text="${site.simpleValue}" th:value="${site.id}"></option>
                                 </select-->
                                 <a class="read-more" th:href="'/website/geo/' + ${geoobject.id}">Link zum Eintrag</a>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Bezirksregion-wide confirmation list -->
+                <div id="listing" th:if="${#strings.equals(viewtype, 'bezirksregion')}">
+                    <ul class="soziale-einrichtungen">
+                        <li th:each="bezirksregion : ${bezirksregionen}">
+                            <div class="list-item" th:id="${bezirksregion.id}">
+                                <h3 th:text="${bezirksregion.name} + ', ' + ${bezirksregion.bezirk.simpleValue}"></h3>
+                                <!-- List of Geo Objects.. -->
+                                <div class="einrichtungen">
+                                    <span class="label clickable" onclick="list.toggle_item_list(this)" th:attr="data-custom-id=${bezirksregion.id}"
+                                          th:text="${bezirksregion.geoObjectsSize} + ' Neueintragungen in dieser Region'"></span>
+                                    <ul class="items">
+                                        <li class="item" th:each="einrichtung : ${bezirksregion.geoObjects}">
+                                            <a th:href="'/website/geo/' + ${einrichtung.id}" th:text="${einrichtung.simpleValue}" target="_blank"></a>
+                                        </li>
+                                    </ul>
+                                </div>
                             </div>
                         </li>
                     </ul>

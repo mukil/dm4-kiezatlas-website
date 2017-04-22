@@ -1,6 +1,7 @@
 package de.kiezatlas.website.migrations;
 
 import de.deepamehta.core.Topic;
+import de.deepamehta.core.TopicType;
 import de.deepamehta.core.service.Migration;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -8,7 +9,8 @@ import java.util.List;
 import java.util.logging.Logger;
 
 /**
- *
+ * A migration to fix CSV-Import, which one must do manually after deploying Migration11 and before running Migration12.
+ * 
  * @author malted
  */
 public class Migration12 extends Migration {
@@ -19,6 +21,13 @@ public class Migration12 extends Migration {
 
     @Override
     public void run() {
+        // 0) Extend "Kiezatlas Website" Topic about Marker Radius Size Option
+        TopicType kaWebsite = dm4.getTopicType("ka2.website");
+        TopicType siteAutoSelect = dm4.getTopicType("ka2.website.marker_size");
+        kaWebsite.addAssocDef(mf.newAssociationDefinitionModel("dm4.core.composition_def", kaWebsite.getUri(),
+            siteAutoSelect.getUri(), "dm4.core.one", "dm4.core.one"));
+        // --- Finished Extension of \"Kiezatlas Websites\" ---
+        // --- Start Manipulating CSV Imported Bezirksregion - LOR ID Map ---
         List<Topic> regions = dm4.getTopicsByType("ka2.util.bezirksregion_name");
         HashMap<String, Topic> nameMap = new HashMap<String, Topic>();
         HashMap<Long, Topic> idMap = new HashMap<Long, Topic>();
