@@ -92,7 +92,7 @@
         <dependency>
             <groupId>org.deepamehta</groupId>
             <artifactId>dm48-sign-up</artifactId>
-            <version>1.5.1</version>
+            <version>1.5.3-SNAPSHOT</version>
         </dependency>
     </dependencies>
 

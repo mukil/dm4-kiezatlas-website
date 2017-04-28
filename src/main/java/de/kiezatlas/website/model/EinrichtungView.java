@@ -22,6 +22,8 @@ public class EinrichtungView implements JSONEnabled {
     Logger log = Logger.getLogger(GeoDetailView.class.getName());
     public JSONObject json = null;
 
+    List<UsernameView> assignedUsernames;
+
     public EinrichtungView() {
         json = new JSONObject();
     }
@@ -41,7 +43,7 @@ public class EinrichtungView implements JSONEnabled {
             log.log(Level.SEVERE, null, ex);
         }
     }
-    
+
     public void setTelefon(String kontaktValue) {
         try {
             json.put("telefon", kontaktValue);
@@ -222,6 +224,10 @@ public class EinrichtungView implements JSONEnabled {
         }
     }
 
+    public void setAssignedUsernames(List<UsernameView> usernames) {
+        this.assignedUsernames = usernames;
+    }
+
     public void setComments(List<CommentView> comments) {
         try {
             json.put("comments", DeepaMehtaUtils.toJSONArray(comments));
@@ -294,6 +300,11 @@ public class EinrichtungView implements JSONEnabled {
 
     public JSONObject toJSON() {
         return json;
+    }
+
+    @Override
+    public String toString() {
+        return getName() + " (Geo Object: " + getId() + ")";
     }
 
     /** --------------------------- Thymeleaf Getter ----------------- */
@@ -491,7 +502,7 @@ public class EinrichtungView implements JSONEnabled {
         try {
             return json.getDouble("longitude");
         } catch (JSONException ex) {
-            log.log(Level.WARNING, "Einrichtung has no Longitude (Id: " + getId() + ")", ex);
+            log.warning("Einrichtung (Id: " + getId() + ") has no Longitude");
             return 0.0;
         }
     }
@@ -500,7 +511,7 @@ public class EinrichtungView implements JSONEnabled {
         try {
             return json.getDouble("latitude");
         } catch (JSONException ex) {
-            log.log(Level.WARNING, "Einrichtung has no Latitude (Id: " + getId() + ")", ex);
+            log.warning("Einrichtung (Id: " + getId() + ") has no Latitude");
             return 0.0;
         }
     }
@@ -585,6 +596,14 @@ public class EinrichtungView implements JSONEnabled {
         }
     }
 
+    public List<UsernameView> getAssignedUsernames() {
+        return this.assignedUsernames;
+    }
+
+    public int getAssignedUsernamesCount() {
+        return this.assignedUsernames.size();
+    }
+
     public List<CommentView> getComments() {
         List<CommentView> results = new ArrayList<CommentView>();
         try {
@@ -598,6 +617,14 @@ public class EinrichtungView implements JSONEnabled {
         } catch (JSONException ex) {
             // log.info("Displaying an Einrichtung without any comments...");
             return results;
+        }
+    }
+
+    public int getCommentsCount() {
+        try {
+            return this.json.getJSONArray("comments").length();
+        } catch (JSONException ex) {
+            return 0;
         }
     }
 
