@@ -31,7 +31,7 @@
                     <!--  or #strings.contains(template, 'page')} -->
                     <div class="ui category search small input">
                         <div class="ui icon input">
-                            <input class="prompt" id="text-search" type="text"
+                            <input class="prompt" id="text-search" type="search"
                                    placeholder="Suche in Namen"/> <!-- onfocus="show_search_options()" -->
                         </div>
                         <button id="search-submit" onclick="do_fulltext_search()" class="circular ui icon button basic small">
@@ -75,7 +75,8 @@
     <div th:if="${is_publisher} or ${is_district_admin}" class="item administration">
         <div class="header">Administration</div>
         <div class="menu">
-            <a th:if="${is_district_admin}" href="/website/list" class="item">Listenansicht</a>
+            <a th:if="${is_district_admin}"><a href="/website/list/filter/0" class="item">Große Liste</a>
+            <a th:if="${is_district_admin}" href="/website/list" class="item">Einfache Listen</a>
             <a th:if="${is_publisher}" href="/website/list/freischalten" class="item">Unver&ouml;ffentlichte Orte</a>
             <!--a href="/website/bezirk/edit" class="item">Bezirksseite bearbeiten</a-->
             <a th:if="${is_publisher}" href="/website/list/hinweise" class="item">Bearbeitungshinweise</a>
@@ -195,10 +196,15 @@
             <div class="content">
                 <h3>Administration</h3>
                 <ul class="menu">
-                    <li th:if="${is_district_admin}"><a href="/website/list" class="item">Listenansicht</a></li>
-                    <li th:if="${is_publisher}"><a href="/website/list/freischalten" class="item">Unver&ouml;ffentlichte Orte</a></li>
-                    <!--a href="/website/bezirk/edit" class="item">Bezirksseite bearbeiten</a-->
-                    <li th:if="${is_publisher}"><a href="/website/list/hinweise" class="item">Bearbeitungshinweise</a></li>
+                    <li th:if="${is_district_admin}"><a href="/website/list/filter/0" class="item">Große Liste</a></li>
+                    <li th:if="${is_district_admin}">
+                        <a href="/website/list" class="item">Einfache Listen</a>
+                        <ul>
+                            <li th:if="${is_publisher}"><a href="/website/list/freischalten" class="item">Unver&ouml;ffentlichte Orte</a></li>
+                            <!--a href="/website/bezirk/edit" class="item">Bezirksseite bearbeiten</a-->
+                            <li th:if="${is_publisher}"><a href="/website/list/hinweise" class="item">Bearbeitungshinweise</a></li>
+                        </ul>
+                    </li>
                     <!-- Kiezatlas Membership -->
                     <li th:if="${is_site_manager}"><a href="/website/sites/" class="item">Stadtpl&auml;ne bearbeiten</a></li>
                 </ul>

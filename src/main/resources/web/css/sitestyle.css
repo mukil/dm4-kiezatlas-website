@@ -1575,9 +1575,23 @@ span.bold {
     margin-bottom: 1em;
 }
 
-.kiezatlas.topic .infos .imprint,
-.kiezatlas.topic .infos .fahrinfo-link {
+.kiezatlas.topic .infos .data-features,
+.kiezatlas.topic .infos .imprint {
     float: right;
+}
+
+.kiezatlas.topic .infos .data-features {
+    font-size: .8em;
+    max-width: 280px;
+}
+
+.kiezatlas.topic .infos .data-features .ui.selection.dropdown {
+    min-height: 1em;
+}
+
+.kiezatlas.topic .infos .data-features .comment-input-fields .ui.input {
+    min-width: 200px;
+    display: block;
 }
 
 .kiezatlas.topic .infos label {
@@ -1836,7 +1850,37 @@ div.link-area {
     padding-bottom: 30px;
 }
 
-#listing .status {
+.filter.list .status,
+.filter.list .dataTables_wrapper {
+    padding-left: 5em;
+    padding-right: 5em;
+}
+
+.filter.list .display.dataTable {
+    border-left: 1px solid #434343;
+    border-right: 1px solid #434343;
+    /** font-size: 0.9em; **/
+}
+
+table.dataTable.display tbody tr.no-coordinates td:first-child,
+table.dataTable.display tbody tr.no-email td:first-child {
+    border-left: 4px solid #8F1414;
+}
+
+table.dataTable.display tbody tr.unconfirmed {
+    opacity: .3;
+}
+
+.filter.list select,
+.filter.list input {
+    padding: .5em;
+}
+
+.filter.list .dataTables_info {
+    padding-left: 1.2em;
+}
+
+.list .status {
     padding-left: 1em;
 }
 
@@ -1908,6 +1952,7 @@ ul.soziale-einrichtungen .einrichtungen li {
     cursor: pointer;
 }
 
+.kiezatlas.topic .data-features .comment-input-fields.hidden,
 .soziale-einrichtungen .einrichtungen .items.hidden {
     display: none;
 }
@@ -1952,6 +1997,10 @@ ul.soziale-einrichtungen .einrichtungen li {
 .list-item .ansprechpartner .remove {
     display: inline-block;
     margin-left: .5em;
+}
+
+.soziale-einrichtungen .list-item .ansprechpartner {
+    margin-top: 0em;
 }
 
 .list-item .managers {
@@ -2232,6 +2281,18 @@ body.sign-up {
     }
 }
 
+@media(max-width: 1600px) {
+    .filter.list .status,
+    .filter.list .dataTables_wrapper {
+        padding-left: 2em;
+        padding-right: 2em;
+    }
+    .filter.list td.lat-col,
+    .filter.list td.lon-col {
+        display: none;
+    }
+}
+
 @media(max-width: 1400px) {
     .citymap-title {
         display: none;
@@ -2266,6 +2327,15 @@ body.sign-up {
         width: 98%;
         padding-left: 0.5em;
     }
+    .filter.list td.comment-col,
+    .filter.list td.author-col {
+        display: none;
+    }
+    .filter.list .status,
+    .filter.list .dataTables_wrapper {
+        padding-left: 1em;
+        padding-right: 1em;
+    }
 }
 
 @media (max-width: 1024px) {
@@ -2278,6 +2348,9 @@ body.sign-up {
 }
 
 @media(max-width:900px) {
+    .filter.list td.mail-col {
+        display: none;
+    }
     #site-area {
         flex-direction: column;
     }

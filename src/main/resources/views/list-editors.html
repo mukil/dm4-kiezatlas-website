@@ -29,6 +29,7 @@
                 $('#listing select.ui.dropdown').dropdown({
                     fullTextSearch: true, sortSelect: true, placeholder: "Benutzer auswählen"
                 })
+                 // $('#districts').dropdown()
                 list.init_page()
             })
 
@@ -58,7 +59,7 @@
                 <h3 th:if="${is_publisher}">
                     <form>
                         <label>Bezirksregionen des Bezirks</label>
-                        <select id="districts" class="ui dropdown basic selection" onchange="refresh_regionen_list()">
+                        <select id="districts" class="ui dropdown basic" onchange="refresh_regionen_list()">
                             <option th:each="district: ${userDistricts}" th:selected="${districtId == district.id} ? true : false"
                                     th:value="${district.id}" th:text="${district.simpleValue}">
                             </option>
@@ -71,13 +72,13 @@
             <!-- Details Area -->
             <div th:if="${is_publisher}" class="ui container">
                 <div class="commands buttons ui">
-                    <a class="button ui" href="/website/list">Alle Orte</a>
+                    <a class="button ui" href="/website/list">Ortseintr&auml;ge</a>
                     <a class="button ui" href="/website/list/freischalten">Unver&ouml;ffentlichte Orte</a>
                     <a class="button ui" href="/website/list/hinweise">Bearbeitungshinweise</a>
                     <!--div class="item" data-tab="third">Newsbereich</div-->
                     <a th:if="${is_district_admin}" class="button ui green active" href="/website/list/bezirksregionen">Bezirksregionen</a>
                 </div>
-                <p>Auf dieser Seite kannst du Ansprechpartner_innen auf der Ebene von Bezirksregionen verwalten.</p>
+                <p>Auf dieser Seite kannst du die Ansprechpartner_innen f&uuml;r die folgenden Bezirksregionen festlegen.</p>
                 <div id="listing">
                     <ul class="soziale-einrichtungen bezirksregion">
                         <li th:each="region : ${regions}" th:with="members=${confirmationMembers}">

@@ -58,6 +58,16 @@ var list = (function($) {
         }
     }
 
+    api.do_remove_geo_assignment = function(topicId, userId) {
+        if (userId !== -1 && !isNaN(userId)) {
+            console.log("Remove User Assignment", topicId, userId)
+            restc.delete_user_assignment(topicId, userId, function(response) {
+                console.log("Attempt to delete a kiezatlas user assignment", response)
+                if (response.state === "ok") window.document.location.reload()
+            })
+        }
+    }
+
     api.load_assigned_usernames = function(geoObjectId, callback) {
         // 
         console.log("Load assigned usernames for \"" + geoObjectId + "\"")

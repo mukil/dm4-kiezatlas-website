@@ -6,38 +6,35 @@
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 
-        <link rel="stylesheet" href="/de.kiezatlas.angebote/dist/vendor/jquery-ui-1.12.1-kiezatlas.min.css"/>
-        <link rel="stylesheet" href="/de.kiezatlas.website/css/sitestyle.css"/>
-        <link rel="stylesheet" href="/de.kiezatlas/style/kiezatlas.css"/>
+        <link rel="stylesheet" type="text/css" href="/de.kiezatlas.angebote/dist/vendor/jquery-ui-1.12.1-kiezatlas.min.css"/>
+        <link rel="stylesheet" type="text/css" href="/de.kiezatlas.website/css/sitestyle.css"/>
+        <link rel="stylesheet" type="text/css" href="/de.kiezatlas/style/kiezatlas.css"/>
+        <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/dt/dt-1.10.15/datatables.min.css"/>
 
-        <script src="/de.kiezatlas.angebote/dist/vendor/jquery-1.9.1-and-1.12.1-ui-custom.min.js"></script>
-        <script src="/de.kiezatlas.website/dist/vendor/dm4-webclient-utils.min.js"></script>
-        <script src="/de.kiezatlas.website/ka-restclient.js"></script>
-        <script src="/de.kiezatlas.website/ka-admin.js"></script>
+        <script type="text/javascript" src="/de.kiezatlas.angebote/dist/vendor/jquery-1.9.1-and-1.12.1-ui-custom.min.js"></script>
+        <script type="text/javascript" src="https://cdn.datatables.net/v/dt/dt-1.10.15/datatables.min.js"></script>
 
         <script type="text/javascript">
 
             // SAP List initialization
             $(document).ready(function(e) {
-                // render user menu
-                restc.is_logged_in(function(response) {
-                    /** list.render_page(response) **/
-                    console.log("User is logged in?", response)
-                })
+                console.log("Document ready")
+                $('#listing').dataTable({ "lengthMenu": [ 10, 25, 50, 75, 100, 250, 500, 750, 1000, 2000 ] })
+                // { "lengthMenu": [ 10, 25, 50, 75, 100, 500, 1000, 2000 ] }
             })
-            
+
             function refresh_list_filter() {
                 var selection = document.getElementById("districts")
                 if (selection) {
                     var districtId = document.getElementById("districts").value
-                    window.document.location.href = "/website/list/" + districtId
+                    window.document.location.href = "/website/list/filter/" + districtId
                 }
             }
 
         </script>
         <meta th:replace="fragments/tracker" />
     </head>
-    <body class="kiezatlas list places">
+    <body class="kiezatlas filter list places">
         
         <div class="top-menu" th:include="fragments/navigation :: top (publisher=${is_publisher})"></div>
 
@@ -61,40 +58,55 @@
                 <p th:if="${not is_publisher}"><b>Sorry!</b><br/>Sie haben aktuell nicht die n&ouml;tigen Berechtigungen um alle Einrichtungen im Kiezatlas einzusehen.</p>
             </div>
 
-            <div class="ui container">
-                <div class="commands ui buttons">
-                    <a class="button ui green active" href="/website/list">Alle Orte</a>
-                    <a class="button ui" href="/website/list/freischalten">Unver&ouml;ffentlichte Orte</a>
-                    <a class="button ui" href="/website/list/hinweise">Bearbeitungshinweise</a>
-                    <!--div class="item" data-tab="third">Newsbereich</div-->
-                    <a th:if="${is_district_admin}" class="button ui" href="/website/list/bezirksregionen">Bezirksregionen</a>
-                </div>
-            </div>
-
-            <div id="listing" class="ui container">
-                <p class="status"><span th:text="${geoobjectsCount}" class="count"></span> Eintr&auml;ge, Sortierung: <span class="sorting">Zuletzt bearbeitete zuerst</span></p>
-                <ul class="soziale-einrichtungen">
-                    <li th:each="geoobject : ${geoobjects}">
-                        <div th:class="'list-item ' + ${geoobject.className}"
-                             th:title="(${#strings.contains(geoobject.className, 'unconfirmed')} ? 'Dieser Datensatz wurde noch nicht veröffentlicht.' : 'Unknown')">
-                            <h3 th:text="${geoobject.name}"></h3>
-                            <p class="meta">
-                                Eingepflegt von <span class="value" th:text="${geoobject.creator}"></span>
-                                am <span class="value" th:text="${geoobject.created}"></span>,
-                                Zuletzt bearbeitet <span class="value" th:text="${geoobject.lastModified}"></span>
-                            </p>
-                            <!--select>
-                                <option th:each="site : ${websites}" th:text="${site.simpleValue}" th:value="${site.id}"></option>
-                            </select-->
-                            <a class="read-more" th:href="'/website/geo/' + ${geoobject.id}">Link zum Eintrag</a>
-                        </div>
-                        <p class="comment" th:each="comment : ${geoobject.comments}">
-                            <span class="contact" th:if="${comment.contact}" th:text="${comment.contact} + ':'"></span>
-                            <span class="message" th:text="${comment.message}"></span>
-                        </p>
-                    </li>
-                </ul>
-            </div>
+            <p class="status">Insgesamt <span th:text="${geoobjectsCount}" class="count"></span> Eintr&auml;ge</p>
+            <table id="listing" class="display" cellspacing="0" width="100%">
+                <thead>
+                    <tr>
+                        <td class="name-col">Name des Ortes</td>
+                        <td class="mail-col">Email</td>
+                        <!--td>Kontakt</td-->
+                        <td class="br-col">Bezirksregion</td>
+                        <td class="lat-col">Breite</td>
+                        <td class="lon-col">L&auml;nge</td>
+                        <td class="user-col">Ansprechpartner*in</td>
+                        <td class="comment-col">Kommentare</td>
+                        <td class="author-col">Autor*in</td>
+                        <td class="modified-col">Bearbeitet</td>
+                        <td class="created-col">Erstellt</td>
+                    </tr>
+                </thead>
+                <tfoot>
+                    <tr>
+                        <td class="name-col">Name des Ortes</td>
+                        <td class="mail-col">Email</td>
+                        <!--td>Kontakt</td-->
+                        <td class="br-col">Bezirksregion</td>
+                        <td class="lat-col">Breite</td>
+                        <td class="lon-col">L&auml;nge</td>
+                        <td class="user-col">Ansprechpartner*in</td>
+                        <td class="comment-col">Kommentare</td>
+                        <td class="author-col">Autor*in</td>
+                        <td class="modified-col">Bearbeitet</td>
+                        <td class="created-col">Erstellt</td>
+                    </tr>
+                </tfoot>
+                <tbody>
+                    <tr th:each="geoobject : ${geoobjects}" th:class="'list-item ' + ${geoobject.className}"
+                        th:title="${#strings.contains(geoobject.className, 'unconfirmed')} ? 'Noch unveröffentlichter Beitrag: ' + ${geoobject.name} : ${geoobject.name}">
+                        <td th:text="${geoobject.name}" class="name-col"></td>
+                        <td th:text="${geoobject.email}" class="mail-col"></td>
+                        <!--td th:text="${geoobject.contact}"></td-->
+                        <td th:text="${geoobject.bezirksregionName}" class="br-col"></td>
+                        <td th:text="${geoobject.latitude}" class="lat-col"></td>
+                        <td th:text="${geoobject.longitude}" class="lon-col"></td>
+                        <td th:text="(${geoobject.assignedUsernamesCount> 0}) ? ${geoobject.assignedUsernames} : 'kiezatlas1'" class="user-col"></td>
+                        <td th:text="(${geoobject.commentsCount > 0}) ? ${geoobject.comments} : 'Keine'" class="comment-col"></td>
+                        <td th:text="${geoobject.creator}" class="author-col"></td>
+                        <td th:text="${geoobject.lastModified}" class="date modified-col"></td>
+                        <td th:text="${geoobject.created}" class="date created-col"></td>
+                    </tr>
+                </tbody>
+            </table>
 
             <!-- Notification area -->
             <div id="notification" onclick="javascript:kiezatlas.close_message_window()">

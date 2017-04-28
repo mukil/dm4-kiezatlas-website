@@ -17,15 +17,6 @@
 
         <script type="text/javascript">
 
-            // SAP List initialization
-            $(document).ready(function(e) {
-                // render user menu
-                restc.is_logged_in(function(response) {
-                    /** list.render_page(response) **/
-                    console.log("User is logged in?", response)
-                })
-            })
-            
             function refresh_list_filter() {
                 var selection = document.getElementById("districts")
                 if (selection) {
@@ -63,7 +54,7 @@
 
             <div class="ui container">
                 <div class="commands ui buttons">
-                    <a class="button ui green active" href="/website/list">Alle Orte</a>
+                    <a class="button ui green active" href="/website/list">Ortseintr&auml;ge</a>
                     <a class="button ui" href="/website/list/freischalten">Unver&ouml;ffentlichte Orte</a>
                     <a class="button ui" href="/website/list/hinweise">Bearbeitungshinweise</a>
                     <!--div class="item" data-tab="third">Newsbereich</div-->
@@ -77,11 +68,21 @@
                     <li th:each="geoobject : ${geoobjects}">
                         <div th:class="'list-item ' + ${geoobject.className}"
                              th:title="(${#strings.contains(geoobject.className, 'unconfirmed')} ? 'Dieser Datensatz wurde noch nicht veröffentlicht.' : 'Unknown')">
+                            <span class="region label" th:text="'Bezirksregion ' + ${geoobject.bezirksregionName}"></span><br/>
                             <h3 th:text="${geoobject.name}"></h3>
+                            <div class="managers" th:each="ansprechpartner, iterStat : ${geoobject.assignedUsernames}">
+                                <div class="ansprechpartner">
+                                    <span class="label">Ansprechpartner:</span>
+                                    <span th:text="${ansprechpartner.name}" title="Ansprechpartner/in"></span>
+                                    <!--button class="ui button basic circle remove compact" th:onclick="'list.do_remove_geo_assignment(' + ${geoobject.id} + ', ' + ${ansprechpartner.id} + ')'"
+                                            title="Ansprechpartner/in f&uuml;r diesen Ortseintrag zur&uuml;ckziehen">
+                                        <i class="icon close"></i>Verwalten
+                                    </button-->
+                                </div>
+                            </div>
                             <p class="meta">
-                                Eingepflegt von <span class="value" th:text="${geoobject.creator}"></span>
-                                am <span class="value" th:text="${geoobject.created}"></span>,
-                                Zuletzt bearbeitet <span class="value" th:text="${geoobject.lastModified}"></span>
+                                Eingepflegt am <span class="value" th:text="${geoobject.created}"></span>,
+                                zuletzt bearbeitet <span class="value" th:text="${geoobject.lastModified}"></span>
                             </p>
                             <!--select>
                                 <option th:each="site : ${websites}" th:text="${site.simpleValue}" th:value="${site.id}"></option>
