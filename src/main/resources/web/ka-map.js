@@ -204,9 +204,22 @@ var leafletMap = (function($, L) {
             var coordinate = L.latLng(result["latitude"], result["longitude"])
             var circle = L.circleMarker(coordinate, map.calculate_default_circle_options(result))
             circle.setRadius(mapping.marker_radius)
-            circle.on('click', function(e) { map.select_geo_object_marker(e.target) })
-            circle.on('mouseover', function(e) { map.fire_marker_mouseover(e) })
-            circle.on('mouseout', function(e) { map.fire_marker_mouseout(e) })
+            circle.on('click', function(e) {
+                map.select_geo_object_marker(e.target)
+            })
+            circle.on('mouseover', function(e) {
+                circle.setRadius(mapping.marker_radius + 5)
+                circle.setStyle({
+                    color: colors.ka_gold, weight: 3, opacity: 1,
+                    fillColor: colors.ka_red, fillOpacity: 1, className: "selected"
+                })
+                map.fire_marker_mouseover(e)
+            })
+            circle.on('mouseout', function(e) {
+                circle.setRadius(mapping.marker_radius)
+                circle.setStyle(map.calculate_default_circle_options(result))
+                map.fire_marker_mouseout(e)
+            })
             return circle
         } else {
             console.warn("Could not geo object marker caused by missing geo coordinates")

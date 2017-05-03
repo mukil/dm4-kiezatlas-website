@@ -29,6 +29,17 @@ var restc = (function($) {
         })
     }
 
+    restc.create_location_string = function(location) {
+        return location.lng.toFixed(4) + ', '+location.lat.toFixed(4)
+    }
+
+    restc.get_places_nearby = function(location, radius, callback) {
+        var locationString = restc.create_location_string(location)
+        var radius_value = radius
+        if (!radius) radius_value = 750 // meter
+        $.getJSON('/website/search/'+encodeURIComponent(locationString)+'/' + (radius_value / 1000), callback)
+    }
+
     restc.do_reverse_geocode = function(leafletMap, _self, callback) {
         $.getJSON('/website/reverse-geocode/' + leafletMap.get_current_location_lat()
                 + ',' + leafletMap.get_current_location_lng(), function (geo_names) {
@@ -205,6 +216,22 @@ var restc = (function($) {
             error: function(x, s, e) {
                 callback({ state : "error", detail: e })
                 console.log("Deleting kiezatlas topic-user assignment failed", x,s,e)
+            }
+        })
+    }
+
+    restc.create_comment = function(topicId, topicUri, message, contact, callback) {
+        // 1.) ### Authorize UI,
+        // 2.) Then post comment
+        $.ajax({
+            type: "POST", url: "/website/comment/" + topicId + '/' + topicUri + '/' + message + '/' + contact ,
+            success: function() {
+                console.log("Successfully created a kiezatlas topic-user assignment")
+                callback({ state : "ok" })
+            },
+            error: function(x, s, e) {
+                callback({ state : "error", detail: e })
+                console.log("Creating a kiezatlas topic-user assignment failed", x,s,e)
             }
         })
     }

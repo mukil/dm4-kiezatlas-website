@@ -721,17 +721,22 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
         }
     }
 
-    this.do_circle_search = function(location, radius) {
-        _self.show_spinning_wheel()
-        _self.set_mapcontrol_mode_query()
+    this.create_location_string = function(location) {
         var location_string = ''
-        var radius_value = radius
-        if (!radius) radius_value = leafletMap.get_circle_control_radius()
         if (!location) {
             location_string = leafletMap.get_current_location_lng() + ', '+ leafletMap.get_current_location_lat()
         } else {
             location_string = location.lng.toFixed(4) + ', '+location.lat.toFixed(4)
         }
+        return location_string
+    }
+
+    this.do_circle_search = function(location, radius) {
+        _self.show_spinning_wheel()
+        _self.set_mapcontrol_mode_query()
+        var location_string = kiezatlas.create_location_string(location)
+        var radius_value = radius
+        if (!radius) radius_value = leafletMap.get_circle_control_radius()
         $.getJSON('/website/search/'+encodeURIComponent(location_string)+'/' + (radius_value / 1000),
             function (geo_objects) {
                 if (geo_objects.length > 0) {
@@ -742,7 +747,7 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
                     _self.show_message('Keine Treffer in diesem Umkreis', 2000)
                 }
                 _self.hide_spinning_wheel()
-            })
+        })
     }
 
     this.do_text_search_geo_objects = function(text, callback) {

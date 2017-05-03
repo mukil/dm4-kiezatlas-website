@@ -10,20 +10,98 @@
         <link rel="stylesheet" href="/de.kiezatlas.angebote/dist/vendor/jquery-ui-1.12.1-kiezatlas.min.css"/>
         <link rel="stylesheet" href="/de.kiezatlas.website/css/semantic-ui/2.2/components/button.min.css"/>
         <link rel="stylesheet" href="/de.kiezatlas.website/css/semantic-ui/2.2/components/search.min.css"/>
+        <!--link rel="stylesheet" href="/de.kiezatlas.website/css/semantic-ui/2.2/components/dropdown.min.css"/>
+        <link rel="stylesheet" href="/de.kiezatlas.website/css/semantic-ui/2.2/components/transition.min.css"/-->
 
         <script src="/de.kiezatlas.angebote/dist/vendor/jquery-1.9.1-and-1.12.1-ui-custom.min.js"></script>
         <script src="/de.kiezatlas.website/dist/vendor/dm4-webclient-utils.min.js"></script>
         <script src="/de.kiezatlas.website/vendor/leaflet/leaflet.js"></script>
+        <script src="/de.kiezatlas.website/ka-restclient.js"></script>
         <script src="/de.kiezatlas.website/css/semantic-ui/2.2/sidebar.min.js"></script>
+        <!--script src="/de.kiezatlas.website/css/semantic-ui/2.2/transition.min.js"></script>
+        <script src="/de.kiezatlas.website/css/semantic-ui/2.2/dropdown.min.js"></script-->
         <script src="/de.kiezatlas.website/css/semantic-ui/2.2/api.min.js"></script>
         <script src="/de.kiezatlas.website/css/semantic-ui/2.2/search.min.js"></script>
 
         <script type="text/javascript" th:inline="javascript">
         /*<![CDATA[*/
-            $sidebarUi = undefined
+            var NEIGHBOUR_QUERY_RADIUS = 800
+            var GEO_OBJECT_DELETE_URI = "/website/geo/delete/"
+            var $sidebarUi = undefined
             // App initialization
             $(document).ready(function(e) {
                 $sidebarUi = $('.ui.sidebar').sidebar('setting', 'dimPage', false)
+                init_quick_search()
+                // init_comments_menu()
+                // init
+                var latitude = /*[[${geoobject.latitude}]]*/ undefined;
+                var longitude = /*[[${geoobject.longitude}]]*/ undefined;
+                var lCoordinate = L.latLng(latitude, longitude)
+                var name = /*[[${geoobject.name}]]*/ undefined;
+                var map = L.map('map', { scrollWheelZoom: false } ).setView(lCoordinate, 16)
+                L.tileLayer('https://api.tiles.mapbox.com/v4/kiezatlas.pd8lkp64/{z}/{x}/{y}.png?' // old style id="kiezatlas.map-feifsq6f"
+                    + 'access_token=pk.eyJ1Ijoia2llemF0bGFzIiwiYSI6ImNpa3BndjU2ODAwYm53MGxzM3JtOXFmb2IifQ._PcBhOcfLYDD8RP3BS0U_g', {
+                    attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors,'
+                    + '<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery &#169; <a href="http://mapbox.com">Mapbox</a>',
+                    id: 'kiezatlas.m7222ia5'}).addTo(map)
+                // 1) show geo object in question
+                var standort = L.circleMarker(lCoordinate, {
+                    weight: 3, opacity: 0.6, fillColor: "#8f1414", fillOpacity: 0.6, color: "#EACA8F", radius: 10
+                })
+                standort.addTo(map)
+                // 2) fetch geo objects naerby
+                restc.get_places_nearby(lCoordinate, NEIGHBOUR_QUERY_RADIUS, function(places) {
+                    // console.log("Found neighbouring places in radius of " + NEIGHBOUR_QUERY_RADIUS + "m", places.length)
+                    for (var p in places) {
+                        var place = places[p]
+                        if (place.name !== name && (place.longitude != longitude && place.latitude != latitude)) {
+                            var neighbour = create_nearby_marker(place)
+                            neighbour.addTo(map)
+                        }
+                    }
+                })
+                standort.bringToFront()
+            })
+
+            function create_nearby_marker(place) {
+                if (place.latitude && place.longitude) {
+                    var coords = L.latLng(place.latitude, place.longitude)
+                    var marker = L.circleMarker(coords, {
+                        weight: 3, opacity: 0.6, fillColor: "#a9a9a9", fillOpacity: 0.4, color: "#999",
+                        geo_object_id: place.id, title: place.name + ', ' + place.anschrift
+                    })
+                    marker.on('click', function(e) {
+                        window.document.location.href = "/website/geo/" + e.target.options.geo_object_id
+                    }).bindPopup(place.name + ', ' + place.anschrift, {autoPan: false})
+                    marker.on('mouseover', function(e) {
+                        // check if popup is openn ..if (this.popup)
+                        e.target.setStyle({ fillColor: "#8f1414", fillOpacity: 0.6 })
+                        this.openPopup()
+                    })
+                    marker.on('mouseout', function(e) {
+                        e.target.setStyle({ fillColor: "#a9a9a9", fillOpacity: 0.2 })
+                        this.closePopup()
+                    })
+                    return marker
+                }
+            }
+
+            function delete_geo_object(id) {
+                $("#dialog-confirm").dialog({
+                    resizable: false, height: "auto", width: 340, modal: true,
+                    title: "Kiezatlas Standort löschen", buttons: {
+                        "Ja, löschen": function() {
+                            $( this ).dialog( "close" );
+                            window.document.location.href = GEO_OBJECT_DELETE_URI + id
+                        },
+                        "Nein": function() {
+                            $( this ).dialog( "close" );
+                        }
+                    }
+                })
+            }
+
+            function init_quick_search() {
                 $searchUi = $('.right.menu .ui.search').search({
                     apiSettings: {
                         url: '/website/search/autocomplete?query={query}',
@@ -45,33 +123,20 @@
                     minCharacters : 3,
                     type: 'category'
                 })
-                var latitude = /*[[${geoobject.latitude}]]*/ undefined;
-                var longitude = /*[[${geoobject.longitude}]]*/ undefined;
-                var lCoordinate = L.latLng(latitude, longitude)
-                var name = /*[[${geoobject.name}]]*/ undefined;
-                var map = L.map('map', { scrollWheelZoom: false } ).setView(lCoordinate, 17)
-                L.tileLayer('https://api.tiles.mapbox.com/v4/kiezatlas.pd8lkp64/{z}/{x}/{y}.png?' // old style id="kiezatlas.map-feifsq6f"
-                    + 'access_token=pk.eyJ1Ijoia2llemF0bGFzIiwiYSI6ImNpa3BndjU2ODAwYm53MGxzM3JtOXFmb2IifQ._PcBhOcfLYDD8RP3BS0U_g', {
-                    attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors,'
-                    + '<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery &#169; <a href="http://mapbox.com">Mapbox</a>',
-                    id: 'kiezatlas.m7222ia5'}).addTo(map)
-                L.circleMarker(lCoordinate, {
-                    weight: 3, opacity: 0.6, fillColor: "#a9a9a9", fillOpacity: 0.2, color: "#8f1414",
-                }).addTo(map)
-            })
+            }
 
-            function delete_geo_object(id) {
-                console.log("Delete Geo Object", id)
-                $("#dialog-confirm").dialog({
-                    resizable: false, height: "auto", width: 340, modal: true,
-                    title: "Kiezatlas Standort löschen", buttons: {
-                        "Ja, löschen": function() {
-                            $( this ).dialog( "close" );
-                            window.document.location.href = "/website/geo/delete/" + id
-                        },
-                        "Nein": function() {
-                            $( this ).dialog( "close" );
-                        }
+            function init_comments_menu() {
+                $('#add-comment').dropdown({
+                    action: 'hide',
+                    placeholder: 'Daten aktuell?',
+                    onChange: function(value, text, $selectedItem) {
+                        console.log("onChange selectedItem", $selectedItem)
+                        $('#add-comment').dropdown('set selected', value)
+                        $('.comment-input-fields').removeClass("hidden")
+                        // custom action
+                        add_editorial_note(text, value)
+                        // $selectedItem.addClass("selected")
+                        // $selectedItem.addAttr("selected")
                     }
                 })
             }
@@ -83,6 +148,11 @@
 
             function do_fulltext_search() { // to be implemented
                 console.log("Do fulltext search on detail window...")
+            }
+
+            function add_editorial_note(text, value) {
+                var $selection = $('#add-comment')
+                console.log("Allow user to input a note for data editors...", $selection, text, value)
             }
 
         /*]]>*/
@@ -135,10 +205,32 @@
                     </div>
                     <div class="infos">
                         <h3 th:text='${geoobject.name}'>Name</h3>
-                        <a class="fahrinfo-link"
-                           th:href="@{https://fahrinfo.bvg.de/Fahrinfo/bin/query.bin/dn(Z=${geoobject.address},REQ0JourneyStopsZA1=2,start=1,pk_campaign='kiezatlas.de')}">
-                            <img src="/de.kiezatlas.website/images/fahrinfo.gif"/>
-                        </a>
+                        <div class="data-features">
+                            <!--select class="ui dropdown small" name="bearbeitungshinweis" id="add-comment">
+                                <option value="">Bearbeitungshinweis geben...</option>
+                                <option value="ka2.util.outdated_contact">Neuer Ansprechpartner*in...</option>
+                                <option value="ka2.util.outdated_address">Anschrift veraltet...</option>
+                                <option value="ka2.util.outdated_contact">Email-Adresse veraltet...</option>
+                                <option value="ka2.util.outdated_contact">Telefonnummer veraltet...</option>
+                                <option value="ka2.util.missing_webpage">Webseite hinzufügen...</option>
+                                <option value="ka2.util.missing_fb_link">Facebook Page hinzufügen...</option>
+                            </select><br/>
+                            <div class="comment-input-fields ui input hidden">
+                                <div class="ui input">
+                                    <input name="hinweis" class="ui input message" type="text" placeholder="Anmerkung"/>
+                                </div>
+                                <div class="ui input">
+                                    <input name="kontakt" class="ui input contact" type="text" placeholder="Kontakt (Email, Name)"/>
+                                </div>
+                                <div class="ui input">
+                                    <button class="ok ui button default" type="button">Absenden</button>
+                                </div>
+                            </div-->
+                            <a class="fahrinfo-link"
+                               th:href="@{https://fahrinfo.bvg.de/Fahrinfo/bin/query.bin/dn(Z=${geoobject.address},REQ0JourneyStopsZA1=2,start=1,pk_campaign='kiezatlas.de')}">
+                               <img src="/de.kiezatlas.website/images/fahrinfo.gif"/>
+                            </a>
+                        </div>
                         <p class="anschrift" th:if="${!#strings.isEmpty(geoobject.address)}">
                             <span th:utext='${geoobject.address}'>Anschrift</span>
                         </p>

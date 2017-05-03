@@ -734,6 +734,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     @Produces(MediaType.TEXT_HTML)
     public Viewable prepareAssignmentListing() {
         if (isConfirmationWorkspaceMember()) {
+            viewData("confirmationMembers", getConfirmationWorkspaceMembers());
             return getAssignmentTemplate();
         }
         viewData("name", "AnsprechpartnerInnen verwalten");
@@ -959,13 +960,15 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     @Transactional
     public Response createUserAssignment(@PathParam("topicId") long topicId, @PathParam("userId") long userId) {
         if (isConfirmationWorkspaceMember() && isSiteEditor()) {
-           // Create user assignment in "Kiezatlas" workspace ...
-           Association assoc = createUserAssignment(dm4.getTopic(topicId), dm4.getTopic(userId), true);
-           if (assoc != null) {
-               return Response.ok(assoc.getId()).build();
-           } else {
-               return Response.serverError().build();
-           }
+            // Create user assignment in "Kiezatlas" workspace ...
+            Topic refTopic = dm4.getTopic(topicId);
+            if (refTopic.getTypeUri().equals(GEO_OBJECT) || refTopic.getTypeUri().equals(BEZIRKSREGION_NAME)) {
+                Association assoc = createUserAssignment(dm4.getTopic(topicId), dm4.getTopic(userId), true);
+                if (assoc != null) {
+                    return Response.ok(assoc.getId()).build();
+                }
+            }
+            return Response.serverError().build();
         } else {
             log.warning("Unauthorized attempt to create a user assignment between topicId=" + topicId
                 + " and user \"" + dm4.getTopic(userId).getSimpleValue() + "\"");
@@ -1439,24 +1442,25 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
      * TODO: Just deliver UNIQUE Streets (by NAME and NR)
      * @param referer
      * @param query
+     * */
     @GET
     @Path("/search/coordinates")
-    public List<CoordinatesViewModel> searchStreetCoordinatesByName(@HeaderParam("Referer") String referer,
-                                                                    @QueryParam("query") String query) {
+    public List<CoordinatesView> searchStreetCoordinatesByName(@HeaderParam("Referer") String referer,
+                                                               @QueryParam("query") String query) {
         if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
         try {
             // String queryValue = prepareLuceneQueryString(query, false, false, false, false);
             // log.info("Street Coordinates Query=\""+queryValue+"\"");
-            List<CoordinatesViewModel> results = new ArrayList<CoordinatesViewModel>();
+            // List<CoordinatesView> results = new ArrayList<CoordinatesView>();
             // if (isInvalidSearchQuery(queryValue)) return results;
             // getKiezatlasStreetCoordinates();
-            List<CoordinatesViewModel> googleResults = getGoogleStreetCoordinates(query + ", Berlin, Germany");
+            List<CoordinatesView> googleResults = getGoogleStreetCoordinates(query + ", Berlin, Germany");
             log.info("Fetched " + googleResults.size() + " google street coordinate values");
             return googleResults;
         } catch (Exception e) {
             throw new RuntimeException("Searching street coordinate values by name failed", e);
         }
-    } */
+    }
 
 
 
@@ -2596,6 +2600,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         if (coordinates != null && !coordinates.isEmpty() && coordinates.contains(",")) {
             lon = Double.parseDouble(coordinates.split(",")[0].trim());
             lat = Double.parseDouble(coordinates.split(",")[1].trim());
+            log.info("Spatial Geo Object Search @" + coordinates + " r=" + radius);
             List<Topic> geoCoordTopics = geospatial.getTopicsWithinDistance(new GeoCoordinate(lon, lat), radius);
             // 2) Process spatial search results (=topics of type Geo Coordinate)
             for (Topic geoCoordTopic : geoCoordTopics) {
