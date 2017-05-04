@@ -503,7 +503,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
                     + districtId + "\" nicht laden.");
                 return getSimpleMessagePage();
             } else {
-                viewData("confirmationMembers", getConfirmationWorkspaceMembers());
+                viewData("confirmationMembers", getAngeboteMembers());
                 return prepareBezirksregionenTemplate(bezirksregionen);
             }
         }
@@ -621,12 +621,12 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
             List<RelatedTopic> bezirksregionen = getUserSubregionTopics();
             if (bezirke != null && bezirke.size() > 0) {
                 Topic bezirk = bezirke.get(0);
-                log.info("Initializing filter LIST for districtId=\"" + bezirk.getId() + "\" for user  \"" + accesscl.getUsername() + "\"");
+                log.info("Initializing filter LIST for districtId=\"" + bezirk.getId() + "\" and user \"" + accesscl.getUsername() + "\"");
                 viewData("viewName", bezirk.getSimpleValue().toString());
                 return preparePublicFilterList(bezirke.get(0).getId());
             } else if (bezirksregionen != null && bezirksregionen.size() > 0) {
                 Topic bezirksregion = bezirksregionen.get(0);
-                log.info("Initializing filter LIST for regionId=\"" + bezirksregion.getId() + "\" for user  \"" + accesscl.getUsername() + "\"");
+                log.info("Initializing filter LIST for regionId=\"" + bezirksregion.getId() + "\" and user \"" + accesscl.getUsername() + "\"");
                 viewData("viewName", bezirksregion.getSimpleValue().toString());
                 return preparePublicFilterList(bezirksregion.getId());
             }
@@ -717,13 +717,13 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     public Viewable prepareConfirmationListing() {
         if (!isAuthenticated() && isConfirmationWorkspaceMember()) return getUnauthorizedPage();
         List<RelatedTopic> usersDistricts = getUserDistrictTopics();
-        long districtId = -1;
+        long regionId = -1;
         if (usersDistricts != null && usersDistricts.size() > 0) {
-            districtId = usersDistricts.get(0).getId();
+            regionId = usersDistricts.get(0).getId();
         }
-        String logMessage = (districtId == -1) ? " complete listing of NEUEINTRAGUNGEN in Bezirk" : " listing of NEUEINTRAGUNGEN per Bezirksregion";
+        String logMessage = (regionId == -1) ? " complete listing of NEUEINTRAGUNGEN in Bezirk" : " listing of NEUEINTRAGUNGEN per Bezirksregion";
         log.info("LOAD " + logMessage);
-        return prepareConfirmationListing(districtId);
+        return prepareConfirmationListing(regionId);
     }
 
     @GET
@@ -1722,7 +1722,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         try {
             String angebotsName = angebotsInfo.getSimpleValue().toString();
             String einrichtungsName = geoObject.getSimpleValue().toString();
-            String subject = "Rückfrage zur Angebotsinfo \"" + angebotsName + "\", Ort: " + einrichtungsName;
+            String subject = "Rückfrage zur Angebotsinfo \"" + angebotsName.trim() + "\", Ort: " + einrichtungsName.trim();
             // From
             String fromMailbox = dm4.getAccessControl().getEmailAddress(usernameFrom);
             StringBuilder mailBody = new StringBuilder();
@@ -1834,7 +1834,10 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
 
     private void prepareEditorListing() {
         // Optimize: Loads district topic twice (see earlier calls to isAssociatedDistrictMember())
-        viewData("userDistricts", getUserDistrictTopics());
+        List<RelatedTopic> districts = getUserDistrictTopics();
+        List<RelatedTopic> regions = getUserSubregionTopics();
+        districts.addAll(regions);
+        viewData("userDistricts", districts);
         // viewData("availableLor", getAvailableLORNumberTopics());
         viewData("workspace", getStandardWorkspace());
     }
@@ -2374,9 +2377,21 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         GeoCoordinate coordinates = geomaps.getGeoCoordinate(address);
         if (coordinates != null) {
             listItem.setCoordinates(coordinates);
+            /** if (!geospatial.validWGS84Coordinates(coordinates)) { // Check if geo-coordinates are valid
+                log.warning("Detected Invalid WGS 84 coordinates: " + coordinates + ", at" + geoObject.getSimpleValue().toString());
+                listItem.addClassName("invalid-coordinates");
+            } **/
         } else {
             listItem.addClassName("no-coordinates");
         }
+        // Angebote count
+        List<RelatedTopic> offers = angebote.getAngeboteTopicsByGeoObject(geoObject);
+        if (offers.size() > 1) {
+            listItem.setAngeboteCount(offers.size());
+        }
+        // Kategorien
+        List<RelatedTopic> cat = getAllCategories(geoObject);
+        listItem.setCategories(cat);
         // Unconfirmed Check
         if (isInReview(geoObject)) listItem.addClassName("unconfirmed");
         // Bezirksregionen Check
@@ -2817,6 +2832,17 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
             .put("dm4.geomaps.latitude",  latitude)
         );
         facets.updateFacet(address, "dm4.geomaps.geo_coordinate_facet", value);
+    }
+
+    private List<RelatedTopic> getAllCategories(Topic geoObject) {
+        List<RelatedTopic> cats = new ArrayList<RelatedTopic>();
+        List<RelatedTopic> themen = facets.getFacets(geoObject, THEMA_FACET);
+        List<RelatedTopic> zielgruppen = facets.getFacets(geoObject, ZIELGRUPPE_FACET);
+        List<RelatedTopic> angebot = facets.getFacets(geoObject, ANGEBOT_FACET);
+        cats.addAll(themen);
+        cats.addAll(zielgruppen);
+        cats.addAll(angebot);
+        return cats;
     }
 
     private void updateCriteriaFacets(Topic geoObject, List<Long> themen, List<Long> zielgruppen, List<Long> angebote) {

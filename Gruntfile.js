@@ -8,6 +8,7 @@ module.exports = function(grunt) {
                     'src/main/resources/web/css/semantic-ui/2.2/components/ka-website-custom.min.css': [
                         'src/main/resources/web/css/semantic-ui/2.2/components/container.min.css',
                         'src/main/resources/web/css/semantic-ui/2.2/components/dropdown.min.css',
+                        'src/main/resources/web/css/semantic-ui/2.2/components/transition.min.css',
                         'src/main/resources/web/css/semantic-ui/2.2/components/header.min.css',
                         'src/main/resources/web/css/semantic-ui/2.2/components/icon.min.css',
                         'src/main/resources/web/css/semantic-ui/2.2/components/input.min.css',

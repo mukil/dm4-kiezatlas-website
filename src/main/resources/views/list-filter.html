@@ -72,6 +72,8 @@
                         <td class="lon-col">L&auml;nge</td>
                         <td class="user-col">Ansprechpartner*in</td>
                         <td class="comment-col">Kommentare</td>
+                        <td class="angebote-col">Angebote</td>
+                        <td class="kategorien-col">Kategorien</td>
                         <td class="author-col">Autor*in</td>
                         <td class="modified-col">Bearbeitet</td>
                         <td class="created-col">Erstellt</td>
@@ -87,6 +89,8 @@
                         <td class="lon-col">L&auml;nge</td>
                         <td class="user-col">Ansprechpartner*in</td>
                         <td class="comment-col">Kommentare</td>
+                        <td class="angebote-col">Angebote</td>
+                        <td class="kategorien-col">Kategorien</td>
                         <td class="author-col">Autor*in</td>
                         <td class="modified-col">Bearbeitet</td>
                         <td class="created-col">Erstellt</td>
@@ -103,6 +107,13 @@
                         <td th:text="${geoobject.longitude}" class="lon-col"></td>
                         <td th:text="(${geoobject.assignedUsernamesCount> 0}) ? ${geoobject.assignedUsernames} : 'kiezatlas1'" class="user-col"></td>
                         <td th:text="(${geoobject.commentsCount > 0}) ? ${geoobject.comments} : 'Keine'" class="comment-col"></td>
+                        <td th:text="${geoobject.angeboteCount}" class="angebote-col">Angebote</td>
+                        <td class="kategorien-col">
+                            <span th:each="cat, iterStat : ${geoobject.categories}">
+                                <i th:text="${cat.simpleValue}"></i>
+                                <i th:if="!${iterStat.last}">,</i>
+                            </span>
+                        </td>
                         <td th:text="${geoobject.creator}" class="author-col"></td>
                         <td th:text="${geoobject.lastModified}" class="date modified-col"></td>
                         <td th:text="${geoobject.created}" class="date created-col"></td>

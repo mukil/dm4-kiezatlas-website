@@ -1873,6 +1873,10 @@ table.dataTable.display tbody tr.no-email td:first-child {
     border-left: 4px solid #8F1414;
 }
 
+table.dataTable.display tbody tr.invaid-coordinates td:first-child {
+    border-left: 4px solid #0078A8;
+}
+
 table.dataTable.display tbody tr.unconfirmed {
     opacity: .3;
 }
@@ -2310,6 +2314,9 @@ body.sign-up {
         display: inline-block;
         padding: 0.5em 1em 0.5em 1em;
         border-left: 0px solid transparent;
+    }
+    .filter.list td.kategorien-col {
+        display: none;
     }
 }
 

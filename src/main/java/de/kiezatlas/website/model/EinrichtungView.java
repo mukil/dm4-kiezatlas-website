@@ -1,6 +1,7 @@
 package de.kiezatlas.website.model;
 
 import de.deepamehta.core.JSONEnabled;
+import de.deepamehta.core.RelatedTopic;
 import de.deepamehta.core.Topic;
 import de.deepamehta.core.util.DeepaMehtaUtils;
 import de.deepamehta.geomaps.model.GeoCoordinate;
@@ -23,6 +24,7 @@ public class EinrichtungView implements JSONEnabled {
     public JSONObject json = null;
 
     List<UsernameView> assignedUsernames;
+    List<RelatedTopic> categories;
 
     public EinrichtungView() {
         json = new JSONObject();
@@ -59,7 +61,19 @@ public class EinrichtungView implements JSONEnabled {
             log.log(Level.SEVERE, null, ex);
         }
     }
-    
+
+    public void setAngeboteCount(int angeboteCount) {
+        try {
+            json.put("angebote_count", angeboteCount);
+        } catch (JSONException ex) {
+            log.log(Level.SEVERE, null, ex);
+        }
+    }
+
+    public void setCategories(List<RelatedTopic> cats) {
+        this.categories = cats;
+    }
+
     public void setEmail(String kontaktValue) {
         try {
             json.put("email", kontaktValue);
@@ -361,6 +375,19 @@ public class EinrichtungView implements JSONEnabled {
             log.log(Level.FINE, "Einrichtung has Email (Id: " + getId() + ")", ex);
             return "";
         }
+    }
+
+    public int getAngeboteCount() {
+        try {
+            return json.getInt("angebote_count");
+        } catch (JSONException ex) {
+            log.log(Level.FINE, "Einrichtung has Email (Id: " + getId() + ")", ex);
+            return 0;
+        }
+    }
+
+    public List<RelatedTopic> getCategories() {
+        return categories;
     }
 
     public String getTelefon() {
