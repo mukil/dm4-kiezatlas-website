@@ -977,25 +977,34 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         if (isConfirmationWorkspaceMember()) { // && isSiteEditor()
             // Create user assignment in "Kiezatlas" workspace ...
             Topic refTopic = dm4.getTopic(topicId);
-            if (refTopic.getTypeUri().equals(GEO_OBJECT) || refTopic.getTypeUri().equals(BEZIRKSREGION_NAME)) {
+            Topic userPlayer = dm4.getTopic(userId);
+            // 1) Assignment Player is "Geo Object"
+            if (refTopic.getTypeUri().equals(GEO_OBJECT)) {
                 Topic bezirk = getRelatedBezirk(refTopic);
-                if (bezirk == null) {
-                    log.warning("Geo Object is not in any Bezirk, can not determine ansprechpartner-assignment permissions");
-                } else if (isUserAssociatedWithBezirk(bezirk.getId())) {
-                    Topic userPlayer = dm4.getTopic(userId);
+                Topic bezirksregion = getRelatedBezirksregion(refTopic);
+                if (bezirk == null && bezirksregion == null) {
+                    log.warning("Geo Object is neither in any Bezirk nor in any Bezirksregion. "
+                        + "Can not create ansprechpartner-assignment");
+                } else if ((bezirk != null && isUserAssociatedWithBezirk(bezirk.getId()))
+                        || (bezirksregion != null && isUserAssociatedWithBezirksregion(bezirksregion.getId()))) {
                     Association assoc = createUserAssignment(refTopic, userPlayer, true);
-                    if (assoc != null && refTopic.getTypeUri().equals(BEZIRKSREGION_NAME)) {
+                    if (assoc != null) {
                         log.info("ASSIGNED userRef " + userPlayer.getSimpleValue() + " with topic " + refTopic.getSimpleValue());
-                        // create confirm workspace membership
-                        if (!isConfirmationWorkspaceMember(userPlayer)) {
-                            accesscl.createMembership(userPlayer.getSimpleValue().toString()
-                                , getConfirmationWorkspace().getId());
-                            log.info("Additionally CREATED Confirmation Workspace Membership for user " + accesscl.getUsername());
-                        }
-                        return Response.ok(assoc.getId()).build();
-                    } else if (assoc != null) {
                         return Response.ok(assoc.getId()).build();
                     }
+                }
+            // 2) Assignment Player is of Type "Bezirksregion Name"
+            } else if (refTopic.getTypeUri().equals(BEZIRKSREGION_NAME)) {
+                Association assoc = createUserAssignment(refTopic, userPlayer, true);
+                if (assoc != null) {
+                    log.info("ASSIGNED userRef " + userPlayer.getSimpleValue() + " with topic " + refTopic.getSimpleValue());
+                    // create confirm workspace membership
+                    if (!isConfirmationWorkspaceMember(userPlayer)) {
+                        accesscl.createMembership(userPlayer.getSimpleValue().toString()
+                            , getConfirmationWorkspace().getId());
+                        log.info("Additionally CREATED Confirmation Workspace Membership for user " + accesscl.getUsername());
+                    }
+                    return Response.ok(assoc.getId()).build();
                 }
             }
             return Response.serverError().build();

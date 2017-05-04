@@ -60,7 +60,7 @@ Version History
 
 **0.6** -- 04 May, 2017
 
-* Installs migration11
+* Installed migration11, imported Bezirksregion-LOR CSV topics as LOR Utilities and Installed migration13
 * Introduced csv bezirksregion / lor mapping (csv-import)
 
 **0.5** -- Winter, 2016
