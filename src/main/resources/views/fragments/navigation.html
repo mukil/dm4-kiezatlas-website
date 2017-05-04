@@ -75,11 +75,11 @@
     <div th:if="${is_publisher} or ${is_district_admin}" class="item administration">
         <div class="header">Administration</div>
         <div class="menu">
-            <a th:if="${is_district_admin}" href="/website/list/filter/0" class="item">Große Liste</a>
-            <a th:if="${is_district_admin}" href="/website/list" class="item">Einfache Listen</a>
+            <a th:if="${is_publisher}" href="/website/list/filter/0" class="item">Gro&szlig;e Listenansicht</a>
             <a th:if="${is_publisher}" href="/website/list/freischalten" class="item">Unver&ouml;ffentlichte Orte</a>
             <!--a href="/website/bezirk/edit" class="item">Bezirksseite bearbeiten</a-->
-            <a th:if="${is_publisher}" href="/website/list/hinweise" class="item">Bearbeitungshinweise</a>
+            <a th:if="${is_district_admin}" href="/website/list/bezirksregionen" class="item">StadtteilkoordinatorInnen</a>
+            <a th:if="${is_publisher}" href="/website/list/ansprechpartner" class="item">EinrichtungsinhaberInnen</a>
             <!--a href="/site/administration/" class="item">Listenansicht</a-->
             <!-- Kiezatlas Membership -->
             <a th:if="${is_site_manager}" href="/website/sites/" class="item">Stadtpl&auml;ne bearbeiten</a>
@@ -196,13 +196,14 @@
             <div class="content">
                 <h3>Administration</h3>
                 <ul class="menu">
-                    <li th:if="${is_district_admin}"><a href="/website/list/filter/0" class="item">Große Liste</a></li>
-                    <li th:if="${is_district_admin}">
+                    <li th:if="${is_publisher}"><a href="/website/list/filter/0" class="item">Gro&szlig;e Listenansicht</a></li>
+                    <!--li th:if="${is_district_admin}">
                         <a href="/website/list" class="item">Einfache Listen</a>
-                    </li>
+                    </li-->
                     <li th:if="${is_publisher}"><a href="/website/list/freischalten" class="item">Unver&ouml;ffentlichte Orte</a></li>
                         <!--a href="/website/bezirk/edit" class="item">Bezirksseite bearbeiten</a-->
-                    <li th:if="${is_publisher}"><a href="/website/list/hinweise" class="item">Bearbeitungshinweise</a></li>
+                    <li th:if="${is_district_admin}"><a href="/website/list/bezirksregionen" class="item">StadtteilkoordinatorInnen</a></li>
+                    <li th:if="${is_publisher}"> <a href="/website/list/ansprechpartner" class="item">EinrichtungsinhaberInnen</a></li>
                     <!-- Kiezatlas Membership -->
                     <li th:if="${is_site_manager}"><a href="/website/sites/" class="item">Stadtpl&auml;ne bearbeiten</a></li>
                 </ul>

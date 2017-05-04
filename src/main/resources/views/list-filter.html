@@ -12,15 +12,16 @@
         <link rel="stylesheet" type="text/css" href="/de.kiezatlas.website/vendor/datatables/datatables1.10.15.min.css"/>
 
         <script type="text/javascript" src="/de.kiezatlas.angebote/dist/vendor/jquery-1.9.1-and-1.12.1-ui-custom.min.js"></script>
+        <script type="text/javascript" src="/de.kiezatlas.website/css/semantic-ui/2.2/sidebar.min.js"></script>
         <script type="text/javascript" src="/de.kiezatlas.website/vendor/datatables/datatables1.10.15.min.js"></script>
 
         <script type="text/javascript">
 
             // SAP List initialization
             $(document).ready(function(e) {
-                console.log("Document ready")
                 $('#listing').dataTable({ "lengthMenu": [ 10, 25, 50, 75, 100, 250, 500, 750, 1000, 2000 ] })
                 // { "lengthMenu": [ 10, 25, 50, 75, 100, 500, 1000, 2000 ] }
+                $sidebarUi = $('.ui.sidebar').sidebar('setting', 'dimPage', false)
             })
 
             function refresh_list_filter() {
@@ -46,7 +47,7 @@
                 <p>&nbsp;</p>
                 <h3>
                     <form>
-                        <label>Listenansicht des Bezirks</label>
+                        <label>Listenansicht alle Orte des Bezirks</label>
                         <select id="districts" class="ui button dropdown" onchange="refresh_list_filter()">
                             <option th:each="district: ${userDistricts}"
                                     th:selected="${districtId == district.id} ? true : false"

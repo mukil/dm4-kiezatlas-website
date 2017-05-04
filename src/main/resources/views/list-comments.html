@@ -66,11 +66,12 @@
             <!-- Details Area -->
             <div th:if="${is_publisher}" class="ui container">
                 <div class="commands buttons ui">
-                    <a class="button ui" href="/website/list">Ortseintr&auml;ge</a>
+                    <a class="button ui" href="/website/list">Alle Orte</a>
                     <a class="button ui" href="/website/list/freischalten">Unver&ouml;ffentlichte Orte</a>
                     <a class="button ui green active" href="/website/list/hinweise">Bearbeitungshinweise</a>
+                    <a class="button ui" href="/website/list/ansprechpartner">EinrichtungsinhaberInnen</a>
                     <!--div class="item" data-tab="third">Newsbereich</div-->
-                    <a th:if="${is_district_admin}" class="button ui" href="/website/list/bezirksregionen">Bezirksregionen</a>
+                    <a th:if="${is_district_admin}" class="button ui" href="/website/list/bezirksregionen">StadtteilkoordinatorInnen</a>
                 </div>
                 <div id="listing">
                     <ul class="soziale-einrichtungen">

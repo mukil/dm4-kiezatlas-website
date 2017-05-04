@@ -63,6 +63,7 @@ var list = (function($) {
         $('.assign-username.ui.dropdown').dropdown({
             placeholder: "Benutzer auswählen"
         })
+        $sidebarUi = $('.ui.sidebar').sidebar('setting', 'dimPage', false)
     }
 
     api.handle_name_search_input = function (e) {
