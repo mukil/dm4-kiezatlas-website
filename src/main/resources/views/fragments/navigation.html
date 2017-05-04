@@ -76,7 +76,7 @@
         <div class="header">Administration</div>
         <div class="menu">
             <a th:if="${is_publisher}" href="/website/list/filter/0" class="item">Gro&szlig;e Listenansicht</a>
-            <a th:if="${is_publisher}" href="/website/list/freischalten" class="item">Unver&ouml;ffentlichte Orte</a>
+            <a th:if="${is_publisher}" href="/website/list/freischalten" class="item">Neue Orte freischalten</a>
             <!--a href="/website/bezirk/edit" class="item">Bezirksseite bearbeiten</a-->
             <a th:if="${is_district_admin}" href="/website/list/bezirksregionen" class="item">StadtteilkoordinatorInnen</a>
             <a th:if="${is_publisher}" href="/website/list/ansprechpartner" class="item">EinrichtungsinhaberInnen</a>
@@ -200,7 +200,7 @@
                     <!--li th:if="${is_district_admin}">
                         <a href="/website/list" class="item">Einfache Listen</a>
                     </li-->
-                    <li th:if="${is_publisher}"><a href="/website/list/freischalten" class="item">Unver&ouml;ffentlichte Orte</a></li>
+                    <li th:if="${is_publisher}"><a href="/website/list/freischalten" class="item">Neue Orte freischalten</a></li>
                         <!--a href="/website/bezirk/edit" class="item">Bezirksseite bearbeiten</a-->
                     <li th:if="${is_district_admin}"><a href="/website/list/bezirksregionen" class="item">StadtteilkoordinatorInnen</a></li>
                     <li th:if="${is_publisher}"> <a href="/website/list/ansprechpartner" class="item">EinrichtungsinhaberInnen</a></li>

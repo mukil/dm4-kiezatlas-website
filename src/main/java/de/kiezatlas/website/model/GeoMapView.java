@@ -24,6 +24,7 @@ public class GeoMapView implements JSONEnabled {
     long geoCoordTopicId = -1;
     // Kiez
     Topic bezirk = null;
+    Topic bezirksregion = null;
     Topic addressTopic = null;
     // Angebote
     int angeboteCount = 0;
@@ -58,6 +59,16 @@ public class GeoMapView implements JSONEnabled {
                 new Object[]{geoObject.getUri(), geoObject.getSimpleValue()});
         }
         return bezirk;
+    }
+
+    public Topic getBezirksregion() {
+        bezirksregion = geoObject.getRelatedTopic("dm4.core.aggregation", "dm4.core.parent",
+            "dm4.core.child", "ka2.util.bezirksregion_name");
+        if (bezirksregion == null) {
+            log.log(Level.WARNING, "### Geo Object ({0}, {1}) has no BEZIRKSREGION set!",
+                new Object[]{geoObject.getUri(), geoObject.getSimpleValue()});
+        }
+        return bezirksregion;
     }
 
     private GeoCoordinate getGeoCoordinate(GeomapsService geomaps) {
@@ -119,6 +130,14 @@ public class GeoMapView implements JSONEnabled {
         return (bezirk != null) ? bezirk.getUri() : "";
     }
 
+    public String getBezirksName() {
+        return (bezirk != null) ? bezirk.getSimpleValue().toString(): "";
+    }
+
+    public String getBezirksregionName() {
+        return (bezirksregion != null) ? bezirksregion.getSimpleValue().toString(): "";
+    }
+
     public boolean hasGeoCoordinateValues() {
         return (getGeoCoordinateLatValue() != -1000 && getGeoCoordinateLngValue() != -1000);
     }
@@ -138,6 +157,8 @@ public class GeoMapView implements JSONEnabled {
                 .put("latitude", getGeoCoordinateLatValue())
                 .put("longitude", getGeoCoordinateLngValue())
                 .put("bezirk_uri", getBezirkUri())
+                .put("bezirk", getBezirksName())
+                .put("bezirksregion", getBezirksregionName())
                 .put("angebote_count", this.angeboteCount)
                 .put("angebot_search_name", this.angebotSearchName);
         } catch (Exception jex) {

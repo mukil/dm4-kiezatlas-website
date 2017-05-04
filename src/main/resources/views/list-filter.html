@@ -47,8 +47,9 @@
                 <p>&nbsp;</p>
                 <h3>
                     <form>
-                        <label>Listenansicht alle Orte des Bezirks</label>
-                        <select id="districts" class="ui button dropdown" onchange="refresh_list_filter()">
+                        <label>Listenansicht alle Orte der Region <span th:text="${viewName}" class="italic"></span></label>
+                        <br/><label>Auswahl der Region</label>
+                        <select th:if="!${#arrays.isEmpty(userDistricts)}" id="districts" class="ui button dropdown" onchange="refresh_list_filter()">
                             <option th:each="district: ${userDistricts}"
                                     th:selected="${districtId == district.id} ? true : false"
                                     th:value="${district.id}" th:text="${district.simpleValue}">
@@ -94,7 +95,7 @@
                 <tbody>
                     <tr th:each="geoobject : ${geoobjects}" th:class="'list-item ' + ${geoobject.className}"
                         th:title="${#strings.contains(geoobject.className, 'unconfirmed')} ? 'Noch unveröffentlichter Beitrag: ' + ${geoobject.name} : ${geoobject.name}">
-                        <td th:text="${geoobject.name}" class="name-col"></td>
+                        <td class="name-col"><a th:href="'/website/geo/' + ${geoobject.id}" th:text="${geoobject.name}"></a></td>
                         <td th:text="${geoobject.email}" class="mail-col"></td>
                         <!--td th:text="${geoobject.contact}"></td-->
                         <td th:text="${geoobject.bezirksregionName}" class="br-col"></td>

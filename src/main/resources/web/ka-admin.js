@@ -53,6 +53,7 @@ var list = (function($) {
                 console.log("Show Search", query, "District", districtId)
             } else {
                 console.log("Show Search", query)
+                $("#name-search").val(query)
                 do_search_geo_objects_by_name(render_geo_object_search_results) // calls render function in 'edit-angebote.js'   
             }
         }
@@ -64,6 +65,9 @@ var list = (function($) {
             placeholder: "Benutzer auswählen"
         })
         $sidebarUi = $('.ui.sidebar').sidebar('setting', 'dimPage', false)
+        /** restc.load_view_permissions(function(info) {
+            // console.log("User has permissions on", info)
+        }) **/
     }
 
     api.handle_name_search_input = function (e) {
@@ -75,6 +79,7 @@ var list = (function($) {
     api.show_current_name = function(topicId) {
         restc.load_geo_object_detail(topicId, function(response) {
             $('h3 .angebot-name').text(response.name)
+            // console.log("Loaded", response)
         })
     }
 

@@ -363,7 +363,7 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
         $('a.lock-control').hide()
         $('a.circle-control').hide()
         $('#site-area').show("flex")
-        $('#site-area .content-area').html('<h2>Willkommen</h2>' + bezirk_html + '<br/>'
+        $('#site-area .content-area').html(bezirk_html + '<br/>'
             + '<a href="'+_self.get_site_info().imprint+'">Impressum</a>')
         leafletMap.scroll_into_view()
         leafletMap.deactivate_circle_control()

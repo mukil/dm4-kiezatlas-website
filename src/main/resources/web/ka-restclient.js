@@ -85,6 +85,12 @@ var restc = (function($) {
         })
     }
 
+    restc.load_view_permissions = function(callback) {
+        $.getJSON('/website/menu', function(results) {
+            callback(results)
+        })
+    }
+
     restc.load_angebotsinfo = function(id, callback) {
         $.getJSON('/angebote/' + id + "/json", function(result) {
             callback(result)

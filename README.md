@@ -58,6 +58,11 @@ Thise source code is licensed under the GNU GPL 3.0. It comes with no warranty.
 Version History
 ---------------
 
+**0.6** -- 04 May, 2017
+
+* Installs migration11
+* Introduced csv bezirksregion / lor mapping (csv-import)
+
 **0.5** -- Winter, 2016
 
 * More robust geo object entry form

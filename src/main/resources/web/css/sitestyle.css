@@ -1155,6 +1155,7 @@ span.bold {
     display: none;
 }
 
+.task-info .shortcuts a,
 .district-area ul.bezirke li {
     color: #002856;
     margin: 1em;
@@ -1522,6 +1523,7 @@ span.bold {
     font-weight: bold;
 }
 
+.kiezatlas .italic,
 .kiezatlas.topic .italic {
     font-style: italic;
 }

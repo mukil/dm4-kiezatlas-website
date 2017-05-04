@@ -605,19 +605,34 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     }
 
     @GET
-    @Path("/list/filter/{districtId}")
+    @Path("/list/filter")
     @Produces(MediaType.TEXT_HTML)
-    public Viewable prepareGeoObjectFilterListing(@PathParam("districtId") long districtId) {
+    public Viewable prepareGeoObjectFilterListing() {
+        return prepareGeoObjectFilterListing(0);
+    }
+
+    @GET
+    @Path("/list/filter/{region}")
+    @Produces(MediaType.TEXT_HTML)
+    public Viewable prepareGeoObjectFilterListing(@PathParam("region") long region) {
         if (!isAuthenticated()) return getUnauthorizedPage();
-        if (districtId == 0) {
-            List<RelatedTopic> usersDistricts = getUserDistrictTopics();
-            if (usersDistricts != null && usersDistricts.size() > 0) {
-                log.info("Initializing filter LIST for districtId=\"" + usersDistricts.get(0).getId() + "\" for user  \"" + accesscl.getUsername() + "\"");
-                return preparePublicFilterList(usersDistricts.get(0).getId());
+        if (region == 0) {
+            List<RelatedTopic> bezirke = getUserDistrictTopics();
+            List<RelatedTopic> bezirksregionen = getUserSubregionTopics();
+            if (bezirke != null && bezirke.size() > 0) {
+                Topic bezirk = bezirke.get(0);
+                log.info("Initializing filter LIST for districtId=\"" + bezirk.getId() + "\" for user  \"" + accesscl.getUsername() + "\"");
+                viewData("viewName", bezirk.getSimpleValue().toString());
+                return preparePublicFilterList(bezirke.get(0).getId());
+            } else if (bezirksregionen != null && bezirksregionen.size() > 0) {
+                Topic bezirksregion = bezirksregionen.get(0);
+                log.info("Initializing filter LIST for regionId=\"" + bezirksregion.getId() + "\" for user  \"" + accesscl.getUsername() + "\"");
+                viewData("viewName", bezirksregion.getSimpleValue().toString());
+                return preparePublicFilterList(bezirksregion.getId());
             }
         }
-        log.info("Initializing filter LIST for districtId=\"" + districtId + "\"");
-        return preparePublicFilterList(districtId);
+        log.info("Initializing filter LIST for districtId=\"" + region + "\"");
+        return preparePublicFilterList(region);
     }
 
     @GET
@@ -959,17 +974,26 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     @Produces(MediaType.APPLICATION_JSON)
     @Transactional
     public Response createUserAssignment(@PathParam("topicId") long topicId, @PathParam("userId") long userId) {
-        if (isConfirmationWorkspaceMember() && isSiteEditor()) {
+        if (isConfirmationWorkspaceMember()) { // && isSiteEditor()
             // Create user assignment in "Kiezatlas" workspace ...
             Topic refTopic = dm4.getTopic(topicId);
             if (refTopic.getTypeUri().equals(GEO_OBJECT) || refTopic.getTypeUri().equals(BEZIRKSREGION_NAME)) {
-                // ### Todo: Check if requesting user is related to the respective "Bezirk" or "Bezirksregion"
                 Topic bezirk = getRelatedBezirk(refTopic);
                 if (bezirk == null) {
                     log.warning("Geo Object is not in any Bezirk, can not determine ansprechpartner-assignment permissions");
                 } else if (isUserAssociatedWithBezirk(bezirk.getId())) {
-                    Association assoc = createUserAssignment(dm4.getTopic(topicId), dm4.getTopic(userId), true);
-                    if (assoc != null) {
+                    Topic userPlayer = dm4.getTopic(userId);
+                    Association assoc = createUserAssignment(refTopic, userPlayer, true);
+                    if (assoc != null && refTopic.getTypeUri().equals(BEZIRKSREGION_NAME)) {
+                        log.info("ASSIGNED userRef " + userPlayer.getSimpleValue() + " with topic " + refTopic.getSimpleValue());
+                        // create confirm workspace membership
+                        if (!isConfirmationWorkspaceMember(userPlayer)) {
+                            accesscl.createMembership(userPlayer.getSimpleValue().toString()
+                                , getConfirmationWorkspace().getId());
+                            log.info("Additionally CREATED Confirmation Workspace Membership for user " + accesscl.getUsername());
+                        }
+                        return Response.ok(assoc.getId()).build();
+                    } else if (assoc != null) {
                         return Response.ok(assoc.getId()).build();
                     }
                 }
@@ -987,13 +1011,23 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     @Produces(MediaType.APPLICATION_JSON)
     @Transactional
     public Response deleteUserAssignment(@PathParam("topicId") long topicId, @PathParam("userId") long userId) {
-        if (isConfirmationWorkspaceMember() && isSiteEditor()) {
-           Association assoc = deleteUserAssignment(dm4.getTopic(topicId), dm4.getTopic(userId));
-           if (assoc != null) {
-               return Response.ok(assoc.getId()).build();
-           } else {
-               return Response.serverError().build();
-           }
+        if (isConfirmationWorkspaceMember()) { // getUserDistrictTopics()
+            Topic user = dm4.getTopic(userId);
+            Topic topicRef = dm4.getTopic(topicId);
+            Association assoc = deleteUserAssignment(topicRef, user);
+            if (assoc != null) {
+                if (topicRef.getTypeUri().equals(BEZIRKSREGION_NAME)) {
+                    log.info("Check if CONFIRMATION WORKSPACE Membership is to be removed for " + accesscl.getUsername());
+                    List<RelatedTopic> bezirksregionen = getUserSubregionTopics(user);
+                    if (bezirksregionen.isEmpty()) {
+                        // ### Remove Membership
+                        log.info("CONFIRMATION WORKSPACE Membership should be removed for " + accesscl.getUsername());
+                    }
+                }
+                return Response.ok(assoc.getId()).build();
+            } else {
+                return Response.serverError().build();
+            }
         } else {
             log.warning("Unauthorized attempt to create a user assignment between topicId=" + topicId
                 + " and user \"" + dm4.getTopic(userId).getSimpleValue() + "\"");
@@ -1043,6 +1077,25 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
             sortAlphabeticalDescending(result);
         }
         return result;
+    }
+
+    @GET
+    @Path("/menu")
+    @Produces(MediaType.APPLICATION_JSON)
+    public String getAccountPermissionInfo() {
+        String failureMessage = "{ \"status\": \"Permission check failed\" }";
+        if (!isAuthenticated()) return failureMessage;
+        try {
+            JSONObject info = new JSONObject();
+            info.put("confirmation", isConfirmationWorkspaceMember());
+            // info.put("comments", isCommentEditor());
+            info.put("bezirke", DeepaMehtaUtils.toJSONArray(getUserDistrictTopics()));
+            info.put("bezirksregionen", DeepaMehtaUtils.toJSONArray(getUserSubregionTopics()));
+            return info.toString();
+        } catch (JSONException ex) {
+            Logger.getLogger(WebsitePlugin.class.getName()).log(Level.SEVERE, null, ex);
+            return failureMessage;
+        }
     }
 
     // --------------------------------- Allows Kiezatlas Website Visitors to provide editorial hints per place ----- //
@@ -2067,10 +2120,6 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
             }
         }
         return false;
-    }
-
-    private boolean isEligibleForListView() {
-        return (getUserDistrictTopics().size() > 0 || getUserSubregionTopics().size() > 0);
     }
 
     private boolean isConfirmationWorkspaceMember() {

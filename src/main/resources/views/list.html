@@ -64,7 +64,10 @@
             </div>
 
             <div id="listing" class="ui container">
-                <p class="status"><span th:text="${geoobjectsCount}" class="count"></span> Eintr&auml;ge, Sortierung: <span class="sorting">Zuletzt bearbeitete zuerst</span></p>
+                <p class="status">
+                    <span th:text="${geoobjectsCount}" class="count"></span> Eintr&auml;ge, Sortierung: <span class="sorting">Zuletzt bearbeitete zuerst</span>
+                    <a href="/website/list/filter">zur gro&szlig;en Listenansicht</a>
+                </p>
                 <ul class="soziale-einrichtungen">
                     <li th:each="geoobject : ${geoobjects}">
                         <div th:class="'list-item ' + ${geoobject.className}"
