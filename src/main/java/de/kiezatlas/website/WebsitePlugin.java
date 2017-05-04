@@ -1071,7 +1071,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         }
     }
 
-    @POST
+    /** @POST
     @Path("/geoobject/claim/{username}/{mailbox}/{geoObjectId}")
     @Transactional
     public Viewable initiateGeoObjectRecovery(@PathParam("username") String username, @PathParam("mailbox") String mailbox,

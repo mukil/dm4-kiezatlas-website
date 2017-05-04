@@ -72,7 +72,7 @@
                     })
                     marker.on('click', function(e) {
                         window.document.location.href = "/website/geo/" + e.target.options.geo_object_id
-                    }).bindPopup(place.name + ', ' + place.anschrift, {autoPan: false})
+                    }).bindPopup(place.name, {'offset': L.point(0, -10)})
                     marker.on('mouseover', function(e) {
                         // check if popup is openn ..if (this.popup)
                         e.target.setStyle({ fillColor: "#8f1414", fillOpacity: 0.6 })
