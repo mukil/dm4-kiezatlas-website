@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title th:text="'Freischaltung neuer Einrichtungen - Kiezatlas'"></title>
+        <title th:text="'AnsprechpartnerInnen in den Bezirksregionen - Kiezatlas'"></title>
         <meta charset="UTF-8"/>
         <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 
@@ -80,7 +80,7 @@
                 </div>
                 <p>Auf dieser Seite kannst du die Ansprechpartner_innen f&uuml;r die folgenden Bezirksregionen festlegen.</p>
                 <div id="listing">
-                    <ul class="soziale-einrichtungen bezirksregion">
+                    <ul class="soziale-einrichtungen bezirksregion add-assignment">
                         <li th:each="region : ${regions}" th:with="members=${confirmationMembers}">
                             <div class="list-item" th:id="${region.id}">
                                 <h3 th:text="${region.name}"></h3>
@@ -97,7 +97,7 @@
                                     <option value="-1" class="placeholder">Benutzer ausw&auml;hlen</option>
                                     <option th:each="username : ${members}" th:text="${username.simpleValue}" th:value="${username.id}"></option>
                                 </select>
-                                <button th:onclick="'list.do_assign_user(' + ${region.id} + ')'" class="ui button">
+                                <button th:onclick="'list.do_assign_editor(' + ${region.id} + ')'" class="ui button">
                                     Hinzuf&uuml;gen
                                 </button>
                                 <!-- List of Geo Objects.. -->

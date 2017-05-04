@@ -778,7 +778,7 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
     }
 
     this.do_text_search_angebotsinfos = function(text) { // Remove Duplicate Lines
-        var queryUrl = '/angebote/search/geoobjects/?search=' + text
+        var queryUrl = '/website/search/angebote?search=' + text
         // _self.clear_details_area()
         _self.show_spinning_wheel()
         $.getJSON(queryUrl, function (geo_objects) {

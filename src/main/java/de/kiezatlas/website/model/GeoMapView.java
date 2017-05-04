@@ -27,6 +27,7 @@ public class GeoMapView implements JSONEnabled {
     Topic addressTopic = null;
     // Angebote
     int angeboteCount = 0;
+    String angebotSearchName = null;
 
     Logger log = Logger.getLogger(GeoMapView.class.getName());
 
@@ -39,6 +40,10 @@ public class GeoMapView implements JSONEnabled {
         this.geoObject = geoObject;
         getGeoCoordinate(geomaps);
         this.angeboteCount = angebote.getAngeboteTopicsByGeoObject(geoObject).size();
+    }
+
+    public void setAngebotSearchName(String value) {
+        this.angebotSearchName = value;
     }
 
     public String getName() {
@@ -133,7 +138,8 @@ public class GeoMapView implements JSONEnabled {
                 .put("latitude", getGeoCoordinateLatValue())
                 .put("longitude", getGeoCoordinateLngValue())
                 .put("bezirk_uri", getBezirkUri())
-                .put("angebote_count", this.angeboteCount);
+                .put("angebote_count", this.angeboteCount)
+                .put("angebot_search_name", this.angebotSearchName);
         } catch (Exception jex) {
             throw new RuntimeException("Constructing a JSON GeoObjectView FAILED", jex);
         }

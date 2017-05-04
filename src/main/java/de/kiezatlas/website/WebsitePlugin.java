@@ -323,7 +323,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
                 // Note: If notification fails, confirmation mail fails too (Check again, also that effect on creation)
                 sendGeoObjectCreationNotice("Neuer Einrichtungsdatensatz im Kiezatlas", geoObject, username);
                 viewData("message", "Vielen Dank, Sie haben erfolgreich einen neuen Ort in den Kiezatlas eingetragen. "
-                    + "Die Kiez-AdministratorInnen wurden benachrichtigt und wir werden Ihren Eintrag so schnell wie m&ouml;glich freischalten.");
+                    + "Die Bezirk-Administrator_innen wurden benachrichtigt und wir werden Ihren Eintrag so schnell wie m&ouml;glich freischalten.");
                 log.info("// ---------- Es wurde erfolgreiche eine neue Einrichtung im Kiezatlas ANGELEGT (" + name + ")");
             } catch (Exception ex) {
                 // If a geoObject was already created assign it to a workspace (otherwise we can not easily delete it).
@@ -507,7 +507,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
                 return prepareBezirksregionenTemplate(bezirksregionen);
             }
         }
-        viewData("message", "Ihr Account scheint noch nicht als Kiez-Administrator_in eingerichtet zu sein. "
+        viewData("message", "Ihr Account scheint noch nicht als Bezirk-Administrator_in eingerichtet zu sein. "
             + "Wenden Sie sich bitte an die Administrator_innen.");
         return getSimpleMessagePage();
     }
@@ -556,7 +556,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         }
         // 3) Returns a message page with info on "not authorized"
         viewData("name", "Neueintragungen freischalten");
-        viewData("message", "Ihr Account scheint f&uuml;r diesen Bezirk nicht als Kiez-Administrator_in eingerichtet zu sein. "
+        viewData("message", "Ihr Account scheint f&uuml;r diesen Bezirk nicht als Bezirk-Administrator_in eingerichtet zu sein. "
             + "Wenden Sie sich bitte an die Administrator_innen.");
         return getSimpleMessagePage();
     }
@@ -634,7 +634,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
             return getListTemplate(results);
         }
         viewData("name", "Listenansicht");
-        viewData("message", "Ihr Account scheint noch nicht als Kiez-Administrator_in eingerichtet zu sein. "
+        viewData("message", "Ihr Account scheint noch nicht als Bezirk-Administrator_in eingerichtet zu sein. "
             + "Wenden Sie sich bitte an die Administrator_innen.");
         return getSimpleMessagePage();
     }
@@ -724,7 +724,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
             return getCommentsTemplate(results);
         }
         viewData("name", "Kommentare einsehen");
-        viewData("message", "Ihr Account scheint noch nicht als Kiez-Administrator_in eingerichtet zu sein. "
+        viewData("message", "Ihr Account scheint noch nicht als Bezirk-Administrator_in eingerichtet zu sein. "
             + "Wenden Sie sich bitte an die Administrator_innen.");
         return getSimpleMessagePage();
     }
@@ -734,11 +734,11 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     @Produces(MediaType.TEXT_HTML)
     public Viewable prepareAssignmentListing() {
         if (isConfirmationWorkspaceMember()) {
-            viewData("confirmationMembers", getConfirmationWorkspaceMembers());
+            viewData("confirmationMembers", getAngeboteMembers());
             return getAssignmentTemplate();
         }
         viewData("name", "AnsprechpartnerInnen verwalten");
-        viewData("message", "Ihr Account scheint noch nicht als Kiez-Administrator_in eingerichtet zu sein. "
+        viewData("message", "Ihr Account scheint noch nicht als Bezirk-Administrator_in eingerichtet zu sein. "
             + "Wenden Sie sich bitte an die Administrator_innen.");
         return getSimpleMessagePage();
     }
@@ -963,9 +963,15 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
             // Create user assignment in "Kiezatlas" workspace ...
             Topic refTopic = dm4.getTopic(topicId);
             if (refTopic.getTypeUri().equals(GEO_OBJECT) || refTopic.getTypeUri().equals(BEZIRKSREGION_NAME)) {
-                Association assoc = createUserAssignment(dm4.getTopic(topicId), dm4.getTopic(userId), true);
-                if (assoc != null) {
-                    return Response.ok(assoc.getId()).build();
+                // ### Todo: Check if requesting user is related to the respective "Bezirk" or "Bezirksregion"
+                Topic bezirk = getRelatedBezirk(refTopic);
+                if (bezirk == null) {
+                    log.warning("Geo Object is not in any Bezirk, can not determine ansprechpartner-assignment permissions");
+                } else if (isUserAssociatedWithBezirk(bezirk.getId())) {
+                    Association assoc = createUserAssignment(dm4.getTopic(topicId), dm4.getTopic(userId), true);
+                    if (assoc != null) {
+                        return Response.ok(assoc.getId()).build();
+                    }
                 }
             }
             return Response.serverError().build();
@@ -1000,7 +1006,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     @Produces(MediaType.APPLICATION_JSON)
     public List<Topic> getConfirmationWorkspaceMembers() {
         List<Topic> result = new ArrayList<Topic>();
-        if (!isAuthenticated()) return result;
+        if (!isConfirmationWorkspaceMember()) return result;
         log.info("LOAD listing of ALL potential Kiezatlas MANAGER");
         List<Topic> usernames = dm4.getTopicsByType("dm4.accesscontrol.username");
         for (Topic username : usernames) {
@@ -1010,6 +1016,31 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         }
         if (result.isEmpty()) {
             log.warning("Fetching Kiezatlas confirmation membership Usernames FAILED - 0 Results");
+        } else {
+            log.warning("Sorting usernames in confirmation workspace...");
+            sortAlphabeticalDescending(result);
+        }
+        return result;
+    }
+
+    @GET
+    @Path("/list/accounts")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<Topic> getAngeboteMembers() {
+        List<Topic> result = new ArrayList<Topic>();
+        if (!isConfirmationWorkspaceMember()) return result;
+        log.info("LOAD listing of ALL potential Kiezatlas data-owner");
+        List<Topic> usernames = dm4.getTopicsByType("dm4.accesscontrol.username");
+        for (Topic username : usernames) {
+            if (angebote.isAngeboteWorkspaceMember(username.getSimpleValue().toString())) {
+                result.add(username);
+            }
+        }
+        if (result.isEmpty()) {
+            log.warning("Fetching Kiezatlas angebote workspace members FAILED - 0 Results");
+        } else {
+            log.warning("Sorting all usernames in angebote workspace...");
+            sortAlphabeticalDescending(result);
         }
         return result;
     }
@@ -1309,6 +1340,39 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     }
 
     /**
+     * Builds up a list of search results (Geo Objects to be displayed in a map) by text query.
+     * @param referer
+     * @param query
+     */
+    @GET
+    @Path("/search/angebote")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<GeoMapView> searchAngebotsinfosFulltext(@HeaderParam("Referer") String referer,
+                                                        @QueryParam("search") String query) {
+        if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
+        try {
+            ArrayList<GeoMapView> results = new ArrayList<GeoMapView>();
+            if (isInvalidSearchQuery(query)) return results;
+            String queryValue = prepareLuceneQueryString(query, false, true, false, true);
+            // 2) Fetch unique geo object topics by text query string (leading AND ending ASTERISK)
+            List<Topic> offers = angebote.searchInAngebotsinfoChildsByText(queryValue);
+            // 3) Process saerch results and create DTS for map display
+            for (Topic angebot : offers) {
+                List<RelatedTopic> places = angebote.getAssignedGeoObjectTopics(angebot);
+                if (places != null && places.size() > 0) {
+                    GeoMapView angebotLocation = new GeoMapView(places.get(0), geomaps, angebote);
+                    angebotLocation.setAngebotSearchName(angebot.getSimpleValue().toString());
+                    results.add(angebotLocation);
+                }
+            }
+            log.info("Build up response " + offers.size() + " geo objects across all districts");
+            return results;
+        } catch (Exception e) {
+            throw new RuntimeException("Searching geo object topics failed", e);
+        }
+    }
+
+    /**
      * Builds up a list of search results (Geo Objects to be displayed in a map) by district
      * topic id and text query.
      * @param referer
@@ -1495,6 +1559,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         // Include Einrichtungs-Inhaberin into Recipients
         Topic contactFacet = getContactFacet(geoObject);
         String eMailAddress = getAnsprechpartnerMailboxValue(contactFacet);
+        List<String> mailboxes = getAssignedUserMailboxes(geoObject);
         StringBuilder recipients = new StringBuilder();
         if (eMailAddress != null && !eMailAddress.isEmpty()) {
             log.info("Angebotsinfo Assignment Notification goes to \"" + eMailAddress + "\"");
@@ -1505,10 +1570,17 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
                 log.warning("Einrichtung has AnsprechpartnerIn set but \"" + eMailAddress + "\" is NOT A VALID EMAIL");
                 recipients.append(SYSTEM_MAINTENANCE_MAILBOX);
             }
+        } else if (mailboxes != null && mailboxes.size() > 0) {
+            log.info("NO EMAIL value set for Angebotsinfo location, informing responsible username...");
+            for (String mailbox : mailboxes) {
+                log.info("NO EMAIL value set for Angebotsinfo location, informing responsible username...");
+                recipients.append(mailbox);
+            }
         } else {
-            log.info("NO ANSPRECHPARTNERIN set for Angebotsinfo Assignment Notification, informing Super-Administrators"
+            log.info("NO USER ASSIGNED to Angebots location informing regional administrators"
                 + "(and " + SYSTEM_MAINTENANCE_MAILBOX + ")");
-            // recipients.append(collectDistrictAdministrativeRecipients(geoObject));
+            // Informing AnsprechpartnerIn and System Mailbox about missing User Assignment
+            recipients.append(collectDistrictAdministrativeRecipients(geoObject, true));
             recipients.append(SYSTEM_MAINTENANCE_MAILBOX);
         }
         // Create revision key
@@ -2131,7 +2203,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     }
 
     private List<RelatedTopic> getAssignedUsernames(Topic topic) {
-        return topic.getRelatedTopics(USER_ASSIGNMENT, DEFAULT_ROLE, DEFAULT_ROLE, null);
+        return topic.getRelatedTopics(USER_ASSIGNMENT, DEFAULT_ROLE, DEFAULT_ROLE, "dm4.accesscontrol.username");
     }
 
     private String getAssignedUsernameOne(Topic geoObject) {
@@ -2913,10 +2985,10 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     }
 
     private void sendGeoObjectCreationNotice(String subject, Topic geoObject, Topic username) {
-        String recipients = collectDistrictAdministrativeRecipients(geoObject);
+        String recipients = collectDistrictAdministrativeRecipients(geoObject, false);
         String detailsPage = SignupPlugin.DM4_HOST_URL+"website/geo/" + geoObject.getId();
         String loginPage = SignupPlugin.DM4_HOST_URL + "sign-up/login";
-        signup.sendUserMailboxNotification(recipients, subject, "<br/>Liebe/r Kiez-Administrator_in,<br/><br/>"
+        signup.sendUserMailboxNotification(recipients, subject, "<br/>Liebe/r Bezirk-Administrator_in,<br/><br/>"
             + "es gibt einen neuen Einrichtungsdatensatz von \""+username.getSimpleValue().toString()+"\"."
                     + "Bitte schaue mal ob Du diesen nicht gleich freischalten kannst.<br/><br/>"
             + "Name des neuen Eintrags: \"" + geoObject.getSimpleValue().toString() + "\"<br/>"
@@ -2924,17 +2996,18 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
             + "<br/><br/>Ok, das war's schon.<br/><br/>Danke + Ciao!");
     }
 
-    private String collectDistrictAdministrativeRecipients(Topic geoObject) {
+    private String collectDistrictAdministrativeRecipients(Topic geoObject, boolean regionalOnly) {
         log.info("Collecting Bezirks-Administrative Notification Recipients...");
-        Topic bezirksTopic = getRelatedBezirk(geoObject);
-        List<String> mailboxes = getAssignedAdministrativeMailboxes(bezirksTopic);
+        Topic bezirk = getRelatedBezirk(geoObject);
+        Topic bezirksregion = getRelatedBezirksregion(geoObject);
+        List<String> mailboxes = getAssignedAdministrativeMailboxes(bezirk, bezirksregion, regionalOnly);
         StringBuilder recipients = new StringBuilder();
         if (mailboxes != null && mailboxes.size() > 0) {
             recipients = new StringBuilder(buildRecipientsString(mailboxes));
             recipients.append(";");
         } else {
-            log.warning("No Kiez-Administrator Mailboxes could be retrieved via Bezirks relation to geo object id="
-                + "\"" + geoObject.getId() + "\" to NOTIFY, just System Mailbx");
+            log.warning("No Kiez-Administrator Mailboxes could be retrieved via Bezirks or Bezirksregion relation "
+                + "of geo object id=\"" + geoObject.getId() + "\" to NOTIFY, using System Mailbox");
             recipients.append(SYSTEM_MAINTENANCE_MAILBOX);
         }
         return recipients.toString();
@@ -3051,11 +3124,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         return address.getChildTopics().getTopicOrNull("dm4.contacts.street");
     }
 
-    private List<String> getAssignedAdministrativeMailboxes(Topic bezirksTopic) {
-        List<String> mailboxes = new ArrayList<String>();
-        if (bezirksTopic == null) return mailboxes;
-        List<RelatedTopic> usernames = bezirksTopic.getRelatedTopics("dm4.core.association", DEFAULT_ROLE,
-            DEFAULT_ROLE, "dm4.accesscontrol.username");
+    private void collectMailBoxes(List<String> mailboxes, List<RelatedTopic> usernames) {
         for (RelatedTopic username : usernames) {
             try {
                 String emailAddress = dm4.getAccessControl().getEmailAddress(username.getSimpleValue().toString());
@@ -3066,14 +3135,27 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
                 log.warning("No Email Address assigned to username " + username);
             }
         }
+    }
+
+    private List<String> getAssignedAdministrativeMailboxes(Topic bezirk, Topic bezirksregion, boolean skipDistrict) {
+        List<String> mailboxes = new ArrayList<String>();
+        if (bezirk != null && !skipDistrict) {
+            List<RelatedTopic> usernames = bezirk.getRelatedTopics("dm4.core.association", DEFAULT_ROLE,
+                DEFAULT_ROLE, "dm4.accesscontrol.username");
+            collectMailBoxes(mailboxes, usernames);
+        }
+        if (bezirksregion != null) {
+            List<RelatedTopic> regionals = bezirksregion.getRelatedTopics(USER_ASSIGNMENT, DEFAULT_ROLE,
+                DEFAULT_ROLE, "dm4.accesscontrol.username");
+            collectMailBoxes(mailboxes, regionals);
+        }
         return mailboxes;
     }
 
     /** Informs editors of their geo object about changes. */
     private List<String> getAssignedUserMailboxes(Topic geoObject) {
         List<String> mailboxes = new ArrayList<String>();
-        List<RelatedTopic> usernames = geoObject.getRelatedTopics(USER_ASSIGNMENT, DEFAULT_ROLE,
-            DEFAULT_ROLE, "dm4.accesscontrol.username");
+        List<RelatedTopic> usernames = getAssignedUsernames(geoObject);
         for (RelatedTopic username : usernames) {
             String emailAddress = dm4.getAccessControl().getEmailAddress(username.getSimpleValue().toString());
             if (emailAddress != null && !emailAddress.isEmpty()) {

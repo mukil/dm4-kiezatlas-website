@@ -1,3 +1,11 @@
+var URL_ANGEBOT_LISTING     = "/angebote/"
+var URL_MY_ANGEBOT_LIST     = "/angebote/my"
+var URL_ANGEBOT_DETAIL      = "/angebote/"
+var URL_ANGEBOT_EDIT        = "/angebote/edit/"
+var URL_ANGEBOT_ASSIGNMENT  = "/angebote/zuordnen/"
+var URL_EINRICHTUNG_EDIT    = "/website/geo/edit/"
+var URL_EINRICHTUNG         = "/website/geo/"
+var URL_EINRICHTUNG_CREATE  = "/website/geo/create/simple"
 
 var list = (function($) {
     
@@ -14,27 +22,46 @@ var list = (function($) {
 
     api.init_page = function() {
         /** var districtId = parseInt(window.location.href.slice(window.location.href.lastIndexOf("/") +1))
-        restc.load_district_manager(districtId, function(results) {
-            console.log("Loaded list of possible district manager", results)
-        })
         restc.load_district_regions(districtId, function(results) {
             console.log("Loaded list of bezirskregionen", results)
         }) **/
     }
 
-    api.void = function(e) {
-        console.log("Void..")
+    api.void = function() {
+        // void
     }
 
     api.render_user_assignments_page = function() {
-        console.log("Rendered user assignment page...")
+        // console.log("Rendered user assignment page...", window.document.location.hash)
         // Init with 1) geo object id 2) search term or 3) blank
+        var pageId = window.document.location.hash
+        if (pageId.indexOf("id") !== -1) {
+            // initalize geo object and assignees..
+            var id = pageId.substr(4)
+            api.show_assigned_usernames(id)
+        } else if (pageId.indexOf("query") !== -1) {
+            // initialize search...
+            var query = pageId.substr(7)
+            var districtId = undefined
+            if (query.indexOf(";bezirk=") !== -1) {
+                // set district filter
+                var values = query.split(";bezirk=")
+                query = values[0]
+                $('#district-filter').val(values[1])
+                $("#name-search").val(query)
+                set_search_district_filter()
+                console.log("Show Search", query, "District", districtId)
+            } else {
+                console.log("Show Search", query)
+                do_search_geo_objects_by_name(render_geo_object_search_results) // calls render function in 'edit-angebote.js'   
+            }
+        }
         $("#name-search").on("keyup", api.handle_name_search_input)
         $("#do-search").on("click", function(e) {
             api.assignment_geo_object_search(render_geo_object_search_results) // calls render function in 'edit-angebote.js'
         })
         $('.assign-username.ui.dropdown').dropdown({
-            fullTextSearch: true, sortSelect: true, placeholder: "Benutzer auswählen"
+            placeholder: "Benutzer auswählen"
         })
     }
 
@@ -44,16 +71,24 @@ var list = (function($) {
         }
     }
 
+    api.show_current_name = function(topicId) {
+        restc.load_geo_object_detail(topicId, function(response) {
+            $('h3 .angebot-name').text(response.name)
+        })
+    }
+
     api.assignment_geo_object_search = function(callback) {
         var queryString = do_search_geo_objects_by_name(callback)
         // do url..
-        window.document.location.hash = queryString
+        window.document.location.hash = "query=" + queryString
     }
 
     api.show_assigned_usernames = function (topicId) {
         if (topicId) {
+            window.document.location.hash = "id=" + topicId
             // display username select box
             api.load_assigned_usernames(topicId, api.render_user_assignments, false)
+            api.show_current_name(topicId)
         } else {
             console.error("Cannot load user assignments for undefined geo object")
         }
@@ -61,7 +96,6 @@ var list = (function($) {
     }
 
     api.toggle_item_list = function(e) {
-        console.log("Toggle Item List Click", e)
         var region = $(e).attr("data-custom-id")
         if ($('#' + region + ' .einrichtungen .items').hasClass('hidden')) {
             $('#' + region + ' .einrichtungen .items').removeClass('hidden')
@@ -75,11 +109,31 @@ var list = (function($) {
         console.log("Search for users \"" + input.trim() + "\"")
     }
 
-    api.do_assign_user = function(topicId) {
-        var $selectedOption = $('.add-assignment .assign-username .selected')
-        console.log("Selected Username for Assignment", $selectedOption, $('.add-assignment .assign-username .selected'))
-        var userId = parseInt($selectedOption.attr('data-value'))
+    api.do_assign_ansprechpartner = function() {
+        var selectedValue = $('.add-assignment .assign-username').dropdown('get value')
+        // var $selectedOption = $('.add-assignment .assign-username .selected')
+        // console.log("Selected Username for Assignment", $selectedOption, "Dropdown API selectedValue", selectedValue)
+        var userId = parseInt(selectedValue)
         console.log("Selected Username for Assignment", userId)
+         if (selected_geo) {
+            console.log("Assigning user to ", selected_geo)
+            api.do_assign_user(selected_geo, userId)
+        } else {
+            alert("Sie müssen zuerst ein Ortsdatensatz auswählen. Nutzen Sie dafür bitte die Suche auf der linken Seite, danke!")
+        }
+    }
+
+    api.do_assign_editor = function(topicId) {
+        var selectedValue = $('#' + topicId + ' .assign-username').dropdown('get value')
+        // console.log("Selected Dropdown Value", selectedValue)
+        // var $selectedOption = $('#' + topicId + ' .assign-username .selected')
+        // var userId = parseInt($selectedOption.attr('data-value'))
+        var userId = parseInt(selectedValue)
+        console.log("Selected Username for Assignment", userId)
+        api.do_assign_user(topicId, userId)
+    }
+
+    api.do_assign_user = function(topicId, userId) {
         // if (givenUserId) userId == givenUserId
         if (userId !== -1 && !isNaN(userId) && topicId) {
             console.log("Create Assign User", topicId, userId)
@@ -89,15 +143,6 @@ var list = (function($) {
             })
         } else {
             console.error("Bad parameters for assignment request topicId", topicId, "userId", userId)
-        }
-    }
-
-    api.do_assign_user_geo = function() {
-        if (selected_geo) {
-            console.log("Assigning user to ", selected_geo)
-            api.do_assign_user(selected_geo)
-        } else {
-            alert("Sie müssen zuerst ein Ortsdatensatz auswählen. Nutzen Sie dafür bitte die Suche auf der linken Seite, danke!")
         }
     }
 
@@ -171,8 +216,8 @@ var list = (function($) {
         // Display Assignments on Assignment Page
         $('.right-side div.einrichtungen').empty()
         if (usernames.length === 0) {
-            $('.right-side .help').html('<p>Diesem Angebot sind noch keine Benutzer zugewiesen. Zur Zuweisung w&auml;hlen Sie '
-                + 'bitte &uuml;ber die linke Seite des Bildschirms einen Ortsdatensatz aus.</p>')
+            $('.right-side .help').html('<p>Diesem Ortsdatensatz ist noch kein Kiezatlas 2 Account zugewiesen. Zur Zuweisung w&auml;hlen Sie '
+                + 'bitte &uuml;ber die linke Seite des Bildschirms einen Ortsdatensatz aus. <p>Nach erfolgter Zuweisung taucht dieser Ort f&uuml;r diese/n Benutzer_in unter <em>Meine Einträge</em> &gt; <em>Meine Orte</em> auf.</p>')
         } else {
             // $('.help').html('Um einen Zeitraum zu aktualisieren w&auml;hlen Sie diesen bitte aus.')
             $('.right-side .help').empty()

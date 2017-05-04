@@ -8,7 +8,7 @@
 
         <link rel="stylesheet" href="/de.kiezatlas/style/kiezatlas.css"/>
         <link rel="stylesheet" href="/de.kiezatlas.angebote/css/sitestyle.css"/>
-        <!--link rel="stylesheet" href="/de.kiezatlas.website/css/sitestyle.css"/-->
+        <link rel="stylesheet" href="/de.kiezatlas.website/css/sitestyle.css"/>
         <link rel="stylesheet" href="/de.kiezatlas.website/css/semantic-ui/2.2/components/search.min.css"/>
         <link rel="stylesheet" href="/de.kiezatlas.website/css/semantic-ui/2.2/components/tab.min.css"/>
         <link rel="stylesheet" href="/de.kiezatlas.website/css/semantic-ui/2.2/components/dropdown.min.css"/>
@@ -20,6 +20,7 @@
         <script defer="true" src="/de.kiezatlas.website/css/semantic-ui/2.2/transition.min.js"></script>
         <script defer="true" src="/de.kiezatlas.website/dist/vendor/dm4-webclient-utils.min.js"></script>
         <script defer="true" src="/de.kiezatlas.website/ka-restclient.js"></script>
+        <!--script defer="true" src="/de.kiezatlas.angebote/angebote-util.js"></script-->
         <script defer="true" src="/de.kiezatlas.angebote/edit-angebote.js"></script>
         <script defer="true" src="/de.kiezatlas.website/ka-admin.js" onload="list.render_user_assignments_page()"></script>
 
@@ -36,7 +37,7 @@
             <div class="left-side">
                 <div class="task-info">
                     <h3>
-                        AnsprechpartnerIn f&uuml;r <span class="angebot-name">...</span>festlegen.<br/>
+                        AnsprechpartnerIn f&uuml;r <span class="angebot-name">...</span> festlegen.<br/>
                     </h3>
                     <p>
                         <span class="label">Bitte w&auml;hle einen Ort &uuml;ber das Suchfeld</span>
@@ -77,62 +78,6 @@
                     </div>
                 </div>
 
-                <div class="date-area disabled">
-                    <h3 class="edit-info">Neuen Angebotszeitraum anlegen</h3>
-                    <!-- <span class="angebot-name">des Angebots</span> am Standort <i class="marker icon"></i><span class="einrichtung-name">...</span> -->
-                    <form id="date-select-form" action="javascript:_void()" accept-charset="UTF-8">
-
-                        <label for="from" class="block-space">Das Angebot findet hier statt vom</label>
-                        <div class="ui input focus">
-                            <input type="text" id="from" name="from" />
-
-                            <!--div class="ui input focus ticker">
-                                <label class="text" for="oneday">
-                                    <input type="checkbox" id="do-oneday" name="oneday" class="ui basic checkbox"
-                                           onclick="handle_oneday_assignment()"
-                                           title="Bitte auswählen falls Ihr Angebot nur an diesem Tag stattfindet" />
-                                    Nur an einem Tag
-                                </label>
-                            </div-->
-
-                        </div>
-
-                        <div id="to-form-block">
-                            <label for="to" class="block-space">bis zum</label>
-                            <div class="ui input focus">
-                                <input type="text" id="to" name="to" />
-                            </div>
-                        </div>
-
-                        <div id="override-block">
-                            <label for="additional-details" class="block-space">Zusatzinfos f&uuml;r das Angebot an diesem Ort</label>
-                            <div class="ui input focus block-space">
-                                <textarea rows="2" id="additional-details" name="add-infos"></textarea>
-                            </div>
-                            <label for="additional-kontakt" class="block-space">Kontakt f&uuml;r das Angebots an diesem Ort</label>
-                            <div class="ui input focus">
-                                <input type="text" id="additional-kontakt" name="add-kontakt" />
-                            </div>
-                        </div>
-
-                        <div class="ui input focus icon block-space">
-                            <button id="do-assign" class="ui olive button" onclick="do_save_assignment()"
-                                    title="Bestätigt diesen Veranstaltungszeitraum">
-                                <i class="icon save"></i><span class="text">Speichern</span></button>
-                            <button id="do-delete" class="ui red button hidden" onclick="do_delete_assignment()"
-                                    title="Achtung: Entfernt diesen Veranstaltungszeitraum">
-                                <i class="icon trash"></i><span class="text">Zeitraum l&ouml;schen</span></button>
-                        </div>
-
-                        <!--div class="ui input focus icon block-space">
-                            <button id="do-override" class="ui basic button" onclick="show_override_details_form()"
-                                    title="Sie können den Kontakt und die Angebotsbeschreibung je nach Standort ändern">
-                                <i class="icon plus"></i><span class="text">Standortspezifische Infos</span>
-                            </button>
-                        </div-->
-
-                    </form>
-                </div>
             </div>
             <div class="right-side">
                 <h3>Nutzernamen der AnsprechpartnerInnen</h3>
@@ -140,11 +85,11 @@
                 <div class="help"></div>
                 <h3>AnsprechpartnerIn hinzuf&uuml;gen</h3>
                 <div class="add-assignment">
-                    <select class="assign-username ui dropdown selection search">
+                    <select class="assign-username ui dropdown search">
                         <option value="-1" class="placeholder">Benutzer ausw&auml;hlen</option>
                         <option th:each="username : ${confirmationMembers}" th:text="${username.simpleValue}" th:value="${username.id}"></option>
                     </select>
-                    <button th:onclick="'list.do_assign_user_geo()'" class="ui button">
+                    <button th:onclick="'list.do_assign_ansprechpartner()'" class="ui button">
                         Hinzuf&uuml;gen
                     </button>
                 </div>

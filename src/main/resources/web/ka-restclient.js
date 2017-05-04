@@ -118,16 +118,6 @@ var restc = (function($) {
         }
     }
 
-    restc.load_district_manager = function(id, callback) {
-        if (id && !isNaN(id)) {
-            $.getJSON('/website/list/manager/' + id, function(results) {
-                callback(results)
-            })
-        } else {
-            callback("No district ID given, skipping request id=", id)
-        }
-    }
-
     restc.load_website_geoobjects = function(siteId, callback) {
         $.getJSON('/website/' + siteId + '/geo', function(results) {
             callback(results)
