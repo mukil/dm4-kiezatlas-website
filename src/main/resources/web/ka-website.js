@@ -210,6 +210,10 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
         })
     }
 
+    this.void = function() {
+        //
+    }
+
     this.render_bezirkspage = function(bezirksTopic) {
         if (bezirksTopic) {
             _self.set_site_info(bezirksTopic)
@@ -753,16 +757,17 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
     this.do_text_search_geo_objects = function(text, callback) {
         _self.set_mapcontrol_mode_results()
         var queryUrl = '/website/search/?search='+text
-        if (_self.is_kiezatlas_site()) queryUrl = '/website/search/' + _self.get_site_id() + '/?search=' + text
+        if (_self.get_site_id()) {
+            queryUrl = '/website/search/' + _self.get_site_id() + '/?search=' + text
+        }
         _self.show_searching_indicator()
         _self.show_spinning_wheel()
         $('span.einrichtungen-btn').addClass('bold')
         $('span.angebote-btn').removeClass('bold')
         $.getJSON(queryUrl, function (geo_objects) {
-            console.log("> Text based Geo Object Search returned", geo_objects)
             // If search results are not zero
             if (geo_objects.length > 0) {
-                // ### for resultsets bigger than 100 implement an incremental rendering method
+                // ### Todo: for resultsets bigger than 100 implement an incremental rendering method
                 leafletMap.set_items(geo_objects)
                 leafletMap.clear_marker()
                 leafletMap.render_geo_objects(true)

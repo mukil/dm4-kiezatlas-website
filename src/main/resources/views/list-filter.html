@@ -48,7 +48,7 @@
                 <h3>
                     <form>
                         <label>Listenansicht alle Orte der Region <span th:text="${viewName}" class="italic"></span></label>
-                        <br/><label>Auswahl der Region</label>
+                        <p><label>Auswahl der Region</label></p>
                         <select th:if="!${#arrays.isEmpty(userDistricts)}" id="districts" class="ui button dropdown" onchange="refresh_list_filter()">
                             <option th:each="district: ${userDistricts}"
                                     th:selected="${districtId == district.id} ? true : false"

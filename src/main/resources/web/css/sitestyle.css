@@ -1155,6 +1155,10 @@ span.bold {
     display: none;
 }
 
+.task-info .shortcuts {
+    padding: 0px;
+}
+
 .task-info .shortcuts a,
 .district-area ul.bezirke li {
     color: #002856;
@@ -1849,7 +1853,7 @@ div.link-area {
 #listing {
     position: relative;
     top: 30px;
-    padding-bottom: 30px;
+    padding-bottom: 250px;
 }
 
 .filter.list .status,

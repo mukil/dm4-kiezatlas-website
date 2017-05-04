@@ -164,12 +164,12 @@ var restc = (function($) {
         $.ajax({
             type: "DELETE", url: "/site/" + geoId + "/" + siteId,
             success: function() {
-                console.log("Successfully deleted geo-website assignment")
+                // console.log("Successfully deleted geo-website assignment")
                 callback({ state : "ok" })
             },
             error: function(x, s, e) {
                 callback({ state : "error", detail: e })
-                console.log("Deleting geo-website assignment failed", x,s,e)
+                console.warn("Deleting geo-website assignment failed", x,s,e)
             }
         })
     }
@@ -178,12 +178,12 @@ var restc = (function($) {
         $.ajax({
             type: "POST", url: "/site/" + geoId + "/" + siteId,
             success: function() {
-                console.log("Successfully created a geo-website assignment")
+                // console.log("Successfully created a geo-website assignment")
                 callback({ state : "ok" })
             },
             error: function(x, s, e) {
                 callback({ state : "error", detail: e })
-                console.log("Deleting geo-website assignment failed", x,s,e)
+                console.warn("Deleting geo-website assignment failed", x,s,e)
             }
         })
     }

@@ -135,7 +135,7 @@
                 <!--- Filter & Map Controls Area -->
                 <div class="legende">
                     <div class="text-search-control">
-                        <form action="javascript:search_fulltext_geo_objects()" id="fulltext-search-form" accept-charset="ISO-8859-15">
+                        <form action="javascript:kiezatlas.void()" id="fulltext-search-form" accept-charset="ISO-8859-15">
                             <span class="elements angebote-btn" onclick="kiezatlas.show_angebote_page()">
                                 <img src="/de.kiezatlas.website/images/ka-einrichtung-mit-angeboten2.png"
                                     title="Markierer: Einrichtungen mit Angeboten"/> Aktuelle Angebote
@@ -148,7 +148,7 @@
                                  title="Markierer: Angebote"/> Angebote -->
                             <!--label for="fulltext" id="fulltext-search-label"></label-->
                             <input id="fulltext-search" type="text" placeholder="Volltextsuche" />
-                            <input id="fulltext-do" type="submit" class="btn" value="Suchen" />
+                            <input id="fulltext-do" onclick="search_fulltext_geo_objects()" type="submit" class="btn" value="Suchen" />
                         </form>
                     </div>
                     <a href="javascript:kiezatlas.toggle_circle_search_lock_button()" class="lock-control">Umkreissuche</a>
