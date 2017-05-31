@@ -103,15 +103,12 @@ var list = (function($) {
     }
 
     api.show_assigned_usernames = function (topicId) {
-        if (topicId) {
+        if (topicId && topicId !== -1) {
             window.document.location.hash = "id=" + topicId
             // display username select box
             api.load_assigned_usernames(topicId, api.render_user_assignments, false)
             api.show_current_name(topicId)
-        } else {
-            console.error("Cannot load user assignments for undefined geo object")
         }
-        // init_datepicker()
     }
 
     api.toggle_item_list = function(e) {
