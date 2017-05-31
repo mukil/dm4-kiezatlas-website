@@ -31,6 +31,7 @@ public class GeoDetailView implements JSONEnabled {
     Topic opening_hours = null;
     Topic lor_nr = null;
     String lor_nr_val = null;
+    String bezirksregionName = null;
     boolean isUnconfirmed = false;
 
     Logger log = Logger.getLogger(GeoDetailView.class.getName());
@@ -64,6 +65,10 @@ public class GeoDetailView implements JSONEnabled {
 
     public boolean hasLorNumber() {
         return (this.lor_nr_val != null);
+    }
+
+    public void setBezirksregion(String name) {
+        this.bezirksregionName = name;
     }
 
     public void setUnconfirmed() {
@@ -105,6 +110,7 @@ public class GeoDetailView implements JSONEnabled {
                 object.put("lor_id", lor_nr_val);
             }
             object.put("unconfirmed", isUnconfirmed);
+            object.put("bezirksregion", this.bezirksregionName);
             return object;
         } catch (Exception jex) {
             throw new RuntimeException("Constructing a JSON GeoObjectDetailsView FAILED", jex);

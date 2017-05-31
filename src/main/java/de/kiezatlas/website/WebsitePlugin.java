@@ -41,15 +41,15 @@ import de.kiezatlas.KiezatlasService;
 import static de.kiezatlas.KiezatlasService.GEO_OBJECT;
 import static de.kiezatlas.KiezatlasService.GEO_OBJECT_ADDRESS;
 import static de.kiezatlas.KiezatlasService.GEO_OBJECT_NAME;
+import static de.kiezatlas.KiezatlasService.IMAGE_FACET;
+import static de.kiezatlas.KiezatlasService.IMAGE_PATH;
 import de.kiezatlas.angebote.AngebotService;
 import static de.kiezatlas.angebote.AngebotService.ANGEBOT_BESCHREIBUNG;
 import de.kiezatlas.angebote.model.AngebotsinfosAssigned;
-import static de.kiezatlas.website.WebsiteService.BESCHREIBUNG;
-import static de.kiezatlas.website.WebsiteService.BESCHREIBUNG_FACET;
-import static de.kiezatlas.website.WebsiteService.CONFIRMATION_WS_URI;
-import static de.kiezatlas.website.WebsiteService.OEFFNUNGSZEITEN;
-import static de.kiezatlas.website.WebsiteService.OEFFNUNGSZEITEN_FACET;
-import static de.kiezatlas.website.WebsiteService.WEBSITE_FACET;
+import static de.kiezatlas.etl.KiezatlasETLService.BESCHREIBUNG;
+import static de.kiezatlas.etl.KiezatlasETLService.BESCHREIBUNG_FACET;
+import static de.kiezatlas.etl.KiezatlasETLService.OEFFNUNGSZEITEN;
+import static de.kiezatlas.etl.KiezatlasETLService.OEFFNUNGSZEITEN_FACET;
 import de.kiezatlas.website.model.BezirkView;
 import de.kiezatlas.website.model.EinrichtungView;
 import de.kiezatlas.website.model.GeoDetailView;
@@ -88,6 +88,21 @@ import de.kiezatlas.angebote.AssignedAngebotListener;
 import de.kiezatlas.angebote.ContactAnbieterListener;
 import de.kiezatlas.angebote.RemovedAngebotListener;
 import de.kiezatlas.comments.CommentsService;
+import static de.kiezatlas.etl.KiezatlasETLService.ANGEBOT_FACET;
+import static de.kiezatlas.etl.KiezatlasETLService.BEZIRK;
+import static de.kiezatlas.etl.KiezatlasETLService.BEZIRK_FACET;
+import static de.kiezatlas.etl.KiezatlasETLService.KONTAKT;
+import static de.kiezatlas.etl.KiezatlasETLService.KONTAKT_ANSPRECHPARTNER;
+import static de.kiezatlas.etl.KiezatlasETLService.KONTAKT_FACET;
+import static de.kiezatlas.etl.KiezatlasETLService.KONTAKT_FAX;
+import static de.kiezatlas.etl.KiezatlasETLService.KONTAKT_MAIL;
+import static de.kiezatlas.etl.KiezatlasETLService.KONTAKT_TEL;
+import static de.kiezatlas.etl.KiezatlasETLService.LOR_FACET;
+import static de.kiezatlas.etl.KiezatlasETLService.STICHWORTE_FACET;
+import static de.kiezatlas.etl.KiezatlasETLService.THEMA_CRIT;
+import static de.kiezatlas.etl.KiezatlasETLService.THEMA_FACET;
+import static de.kiezatlas.etl.KiezatlasETLService.ZIELGRUPPE_CRIT;
+import static de.kiezatlas.etl.KiezatlasETLService.ZIELGRUPPE_FACET;
 import de.kiezatlas.website.model.BezirksregionView;
 import de.kiezatlas.website.model.CommentView;
 import de.kiezatlas.website.model.SearchResultList;
@@ -450,7 +465,11 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         Topic geoObject = dm4.getTopic(topicId);
         GeoDetailView geoDetailsView = null;
         if (isGeoObjectTopic(geoObject)) {
-            geoDetailsView = new GeoDetailView(dm4.getTopic(topicId), geomaps, angebote);
+            geoDetailsView = new GeoDetailView(geoObject, geomaps, angebote);
+            Topic region = getRelatedBezirksregion(geoObject);
+            if (region != null) {
+                geoDetailsView.setBezirksregion(region.getSimpleValue().toString());
+            }
             if (!geoDetailsView.hasLorNumber()) { // Use geospatial shapefile layer to supplement for non-existing lor-id facet
                 GeoMapView geoView = geoDetailsView.getGeoViewModel();
                 String lor = geospatial.getGeometryFeatureNameByCoordinate(geoView.getGeoCoordinateLatValue()
@@ -2834,7 +2853,8 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         facets.updateFacet(address, "dm4.geomaps.geo_coordinate_facet", value);
     }
 
-    private List<RelatedTopic> getAllCategories(Topic geoObject) {
+    @Override
+    public List<RelatedTopic> getAllCategories(Topic geoObject) {
         List<RelatedTopic> cats = new ArrayList<RelatedTopic>();
         List<RelatedTopic> themen = facets.getFacets(geoObject, THEMA_FACET);
         List<RelatedTopic> zielgruppen = facets.getFacets(geoObject, ZIELGRUPPE_FACET);
@@ -2901,8 +2921,8 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
 
     private void writeBezirksFacet(Topic geoObject, long bezirksTopicId) {
         if (bezirksTopicId > NEW_TOPIC_ID) {
-            facets.updateFacet(geoObject.getId(), WebsiteService.BEZIRK_FACET,
-                mf.newFacetValueModel(WebsiteService.BEZIRK).putRef(bezirksTopicId));
+            facets.updateFacet(geoObject.getId(), BEZIRK_FACET,
+                mf.newFacetValueModel(BEZIRK).putRef(bezirksTopicId));
         } else {
             throw new RuntimeException("Writing bezirks facet failed because of invalid bezirks topic id=" + bezirksTopicId);
         }

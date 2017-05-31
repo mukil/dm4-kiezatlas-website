@@ -30,7 +30,7 @@
         <dependency>
             <groupId>de.kiezatlas</groupId>
             <artifactId>dm48-kiezatlas-etl</artifactId>
-            <version>0.6.2</version>
+            <version>0.6.3-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>de.kiezatlas</groupId>

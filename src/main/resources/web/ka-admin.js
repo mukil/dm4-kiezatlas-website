@@ -19,6 +19,8 @@ var list = (function($) {
     var usernames = []
     // selected geo object
     var selected_geo = undefined
+    var view_permissions = undefined
+    var geo_object = undefined
 
     api.init_page = function() {
         /** var districtId = parseInt(window.location.href.slice(window.location.href.lastIndexOf("/") +1))
@@ -35,14 +37,13 @@ var list = (function($) {
         // console.log("Rendered user assignment page...", window.document.location.hash)
         // Init with 1) geo object id 2) search term or 3) blank
         var pageId = window.document.location.hash
+        var placeId = -1
         if (pageId.indexOf("id") !== -1) {
             // initalize geo object and assignees..
-            var id = pageId.substr(4)
-            api.show_assigned_usernames(id)
+            placeId = pageId.substr(4)
         } else if (pageId.indexOf("query") !== -1) {
             // initialize search...
             var query = pageId.substr(7)
-            var districtId = undefined
             if (query.indexOf(";bezirk=") !== -1) {
                 // set district filter
                 var values = query.split(";bezirk=")
@@ -50,9 +51,7 @@ var list = (function($) {
                 $('#district-filter').val(values[1])
                 $("#name-search").val(query)
                 set_search_district_filter()
-                console.log("Show Search", query, "District", districtId)
             } else {
-                console.log("Show Search", query)
                 $("#name-search").val(query)
                 do_search_geo_objects_by_name(render_geo_object_search_results) // calls render function in 'edit-angebote.js'   
             }
@@ -65,9 +64,11 @@ var list = (function($) {
             placeholder: "Benutzer auswählen"
         })
         $sidebarUi = $('.ui.sidebar').sidebar('setting', 'dimPage', false)
-        /** restc.load_view_permissions(function(info) {
-            // console.log("User has permissions on", info)
-        }) **/
+        restc.load_view_permissions(function(info) {
+            console.log("User has permissions on", info)
+            view_permissions = info
+            api.show_assigned_usernames(placeId)
+        })
     }
 
     api.handle_name_search_input = function (e) {
@@ -78,9 +79,21 @@ var list = (function($) {
 
     api.show_current_name = function(topicId) {
         restc.load_geo_object_detail(topicId, function(response) {
-            $('h3 .angebot-name').text(response.name)
-            // console.log("Loaded", response)
+            geo_object = response
+            if (api.topic_list_contains_value(view_permissions.bezirksregionen, response.bezirksregion)
+             || api.topic_list_contains_value(view_permissions.bezirke, response.bezirk)) {
+                $('h3 .angebot-name').text(response.name)
+            } else {
+                $('h3 .angebot-name').text('Sie haben keine Berechtigung diese Informationen einzusehen.')
+            }
         })
+    }
+
+    api.topic_list_contains_value = function(list, value) {
+        for (var el in list) {
+            if (list[el].value === value) return true
+        }
+        return false
     }
 
     api.assignment_geo_object_search = function(callback) {
