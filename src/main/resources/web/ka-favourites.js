@@ -1,6 +1,6 @@
 
 var favourites = (function($, PouchDB) {
-    console.log("Favourites API Script loaded", PouchDB)
+    console.log("Favourites API Script loaded...")
 
     var api = {}
 
