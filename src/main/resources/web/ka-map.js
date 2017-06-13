@@ -32,7 +32,7 @@ var leafletMap = (function($, L) {
         // console.log("Set up Leaflet Map #"+ elementId + ", mouseWheelZoom", mouseWheelZoom)
         map.map = new L.Map(elementId, {
             dragging: true, touchZoom: true, scrollWheelZoom: (!mouseWheelZoom) ? false : mouseWheelZoom, doubleClickZoom: true,
-            zoomControl: false, minZoom: 9, max_bounds: mapping.max_bounds,
+            zoomControl: false, minZoom: 9, max_bounds: mapping.max_bounds
         })
         map.zoom = L.control.zoom({ position: "topright" })
         map.zoom.addTo(map.map)
@@ -389,8 +389,24 @@ var leafletMap = (function($, L) {
         return mapping.circle_search_control.getBounds()
     }
 
+    map.set_map_center = function(coordinate) {
+        return map.map.setView(coordinate)
+    }
+
+    map.pan_to = function(coordinate) {
+        return map.map.panTo(coordinate)
+    }
+
     map.get_map_center = function() {
         return map.map.getCenter()
+    }
+
+    map.get_map_viewport = function() {
+        return {
+            bounds: map.map.getBounds(),
+            zoom: map.map.getZoom(),
+            center: map.map.getCenter()
+        }
     }
 
     map.set_map_fit_bounds = function(boundingBox) {

@@ -29,7 +29,6 @@ var angebote = (function($) {
             },
             success: function(response) {
                 angebote_items = response
-                console.log('Loaded Angebote', angebote_items)
             }
         })
     }

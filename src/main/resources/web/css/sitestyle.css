@@ -1832,6 +1832,7 @@ div.legende a.lock-control {
     position: absolute;
     right: 1.5em;
     bottom: 18px;
+    cursor: pointer;
 }
 
 div.link-area {

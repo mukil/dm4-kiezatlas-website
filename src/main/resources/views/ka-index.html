@@ -62,6 +62,7 @@
                 kiezatlas.render_page(undefined) // ($('#karte').css("display") !== "none")
                 // add click and touch handlers on our "three near by options"
                 kiezatlas.add_page_input_handler()
+                kiezatlas.init_page_navigation()
             })
         /*]]>*/
         </script>
@@ -151,7 +152,7 @@
                             <input id="fulltext-do" onclick="search_fulltext_geo_objects()" type="submit" class="btn" value="Suchen" />
                         </form>
                     </div>
-                    <a href="javascript:kiezatlas.toggle_circle_search_lock_button()" class="lock-control">Umkreissuche</a>
+                    <a onclick="javascript:kiezatlas.toggle_circle_search_lock_button()" class="lock-control">Umkreissuche</a>
                 </div>
 
             </div>

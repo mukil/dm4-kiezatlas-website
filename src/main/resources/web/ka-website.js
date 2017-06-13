@@ -2,15 +2,35 @@
 
 /** --- ka-website.js --- **/
 
-// Register Fulltext Search Handler
+/**
+ * - Different Color Palette for Angebote Marker
+ * - Permalinks for Selected Marker
+ * - Include Category Names in Fulltext Search
+ * + Show Place Labels on mouseover
+ * + Encode Map Viewport into the URL
+ * + Enable deep links into fulltext searches on map
+ */
+
+var settings = {
+    "webapp_title" : "Kiezatlas 2 Website",
+    "history_api_supported" : window.history.pushState
+}
+var updateURL = true            // If false, updating the url using replaceState is defunct (see text search requests)
+var query = undefined           // Search User Input
+var parameter = {               // View/Page Parameter
+    page: undefined, viewport: undefined
+}
+var selected_marker = undefined // geoobject or marker id
+
+// Map Input Search
 function search_fulltext_geo_objects() {
-    var query = kiezatlas.get_fulltext_search_input()
+    query = kiezatlas.get_fulltext_search_input()
     if (query.length >= 1) {
         query = encodeURIComponent(query, "UTF-8")
         if (kiezatlas.is_angebote_mode()) {
-            kiezatlas.do_text_search_angebotsinfos(query)
+            kiezatlas.do_text_search_angebotsinfos(query, true)
         } else {
-            kiezatlas.do_text_search_geo_objects(query)
+            kiezatlas.do_text_search_geo_objects(query, undefined, true)
         }
     }
 }
@@ -21,20 +41,14 @@ function handle_fulltext_search_input(event) {
     }
 }
 
+// Navigation Bar Search
 function do_fulltext_search() {
-    var query = kiezatlas.get_top_search_input()
+    query = kiezatlas.get_top_search_input()
     if (query.length >= 1) {
         $('#fulltext-search').val(query)
-        query = encodeURIComponent(query, "UTF-8")
         kiezatlas.hide_sidebar()
-        // ### TODO: Enable fulltext search for angebotsinfos on frontpage, too
-        /** if (kiezatlas.is_angebote_mode()) {
-            kiezatlas.do_text_search_angebotsinfos(query)
-        } else { **/
-            kiezatlas.do_text_search_geo_objects(query)
-        // }
+        kiezatlas.do_text_search_geo_objects(query, undefined, true)
     }
-    // hide_search_options()
 }
 
 /** function show_search_options() {
@@ -103,11 +117,6 @@ var colors = {
     "grey": "#868686"           // unused
 }
 
-var settings = {
-    "webapp_title" : "Kiezatlas 2 Website",
-    "history_api_supported" : window.history.pushState
-}
-
 var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
 
     // Website Application Model
@@ -139,8 +148,21 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
     }
     // 
     this.set_angebotsfilter = function(value) { model.view_angebote = value }
-    this.set_mapcontrol_mode_results = function() { model.map_controls_results = true }
-    this.set_mapcontrol_mode_query = function() { model.map_controls_results = false }
+    this.set_mapcontrol_mode_results = function() {
+        model.map_controls_results = true
+        leafletMap.deactivate_circle_control()
+        leafletMap.remove_circle_search_control()
+    }
+    this.set_mapcontrol_mode_query = function(fitBounds) {
+        model.map_controls_results = false
+        if (!leafletMap.is_circle_query_active()) {
+            leafletMap.activate_circle_control()
+            leafletMap.render_circle_search_control(fitBounds)
+            console.log("Activating circle query control...")
+        } else {
+            leafletMap.render_circle_search_control(fitBounds)
+        }
+    }
     // 
     this.is_kiezatlas_site = function() { return (model.siteId) }
     this.is_map_result_control = function() { return model.map_controls_results }
@@ -154,32 +176,134 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
         window.document.location.reload()
     }
 
+    this.init_page_navigation = function() {
+        if (settings.history_api_supported) {
+            window.onpopstate = function(e) {
+                if (e.state) {
+                    parameter = e.state
+                    if (parameter.page === "#gesamt") {
+                        parameter.viewport = e.state.viewport
+                        // ### _self.render_gesamtstadtplan() ?
+                    } else if (e.state.page === "#angebote") {
+                        // ### render angebote page?
+                    } else {
+                        console.log("Pop Render Districts or Citymap Page", e.state)
+                    }
+                    // Currently we only pan the map if map is in "query" mode
+                    if (parameter.viewport) {
+                        var coords = L.latLng(parameter.viewport.center)
+                        leafletMap.set_zoom(parameter.viewport.zoom)
+                        leafletMap.pan_to(coords)
+                        if (kiezatlas.is_map_query_control()) {
+                            leafletMap.set_current_location_coords(coords)
+                            leafletMap.render_circle_search_control()
+                            _self.do_circle_search()
+                            _self.do_reverse_geocode()
+                        }
+                    } else {
+                        console.log("No Viewport Parameter")
+                    }
+                }
+            }
+        }
+    }
+
+    this.push_page_view = function(viewportState) {
+        if (settings.history_api_supported) {
+            if (parameter) {
+                var url = viewportState + parameter.page
+                window.history.replaceState(parameter, settings.webapp_title, url)
+            }
+        } else {
+            console.warn("window.history manipulation not supported", window.navigator)
+        }
+    }
+
+    this.create_viewport_parameter = function () {
+        var mapView = leafletMap.get_map_viewport()
+        var viewportState = "?koordinate=" + mapView.center.lat.toFixed(5) + "," + mapView.center.lng.toFixed(5) + "&zoomstufe=" + mapView.zoom
+        return viewportState
+    }
+
+    this.update_page_parameter = function () {
+        if (_self.is_kiezatlas_site()) {
+            console.log("Kiezatlas Citymap", _self.get_site_id(), _self.get_site_info())
+        } else if (_self.get_site_id()) {
+            console.log("Kiezatlas Website Mode", _self.get_site_id(), _self.get_site_info().value)
+        } else if (_self.is_map_result_control && query) {
+            console.log("Kiezatlas Search Result Mode", query, "Angebote Mode", _self.is_angebote_mode())
+            if (_self.is_angebote_mode()) {
+                parameter.page = "#angebotssuche=" + query
+            } else {
+                parameter.page = "#ortssuche=" + query
+            }
+        }/**  else {
+            console.log("Default Gesamtstadtplan / Umkreissuche View", kiezatlas)
+        } **/
+        var viewportState = _self.create_viewport_parameter()
+        _self.push_page_view(viewportState)
+    }
+
+    this.get_map_viewport_from_url = function() {
+        var zoomStart = window.location.search.indexOf('&zoomstufe=')
+        var zoomstufe = undefined
+        if (zoomStart !== -1) {
+            zoomstufe = window.location.search.slice(zoomStart + '&zoomstufe='.length)
+        }
+        var koordStart = window.location.search.indexOf('?koordinate=')
+        var mapCenter = undefined
+        if (koordStart !== -1) {
+            var koordinate = window.location.search.slice(koordStart + '?koordinate='.length, zoomStart)
+            mapCenter = L.latLng(koordinate.split(','))
+        }
+        if (!mapCenter && !zoomstufe) return undefined
+        return { center: mapCenter, zoom: zoomstufe }
+    }
+
+    this.get_page_parameter_from_url = function() {
+        var viewport = _self.get_map_viewport_from_url()
+        var locationHash = window.location.hash
+        var hashStart = 0, questStart = -1
+        if (window.location.hash.indexOf("?") !== -1) { // Correcting Hash
+            hashStart = window.location.hash.indexOf("#")
+            questStart = window.location.hash.indexOf("?")
+            locationHash = window.location.hash.slice(hashStart, questStart)
+        }
+        return {
+            page: locationHash, viewport: viewport
+        }
+    }
+
     /** Renders either the
      *  - Standard Frontpage (Berlin wide) with Einrichtungen or Angeboten
      *  - District Frontpage (District Infos, District Fulltext search)
      *  - Kiezatlas Website
      **/
     this.render_page = function(name) {
-        // 1) Render Bezirks-Gesamtstadtplan
+
+        // 1) Render Bezirks-Gesamtstadtplan, Citymap (with specific Frontpage State)
         if (!name) { // get current page alias
-            var locationHash = window.location.hash
+            parameter = _self.get_page_parameter_from_url()
             var subdomain_mitte = (window.location.host.indexOf("mitte.") !== -1 || window.location.hostname.indexOf("mitte.") !== -1) ? true : false
             var bezirksTopic = undefined
-            if (locationHash) {
-                if (locationHash === "#gesamt") {
-                    _self.render_gesamtstadtplan()
-                } else if (locationHash === "#angebote") {
+            // RENDER SPECIFIC PAGE
+            if (parameter.page) {
+                if (parameter.page === "#gesamt") {
+                    _self.render_gesamtstadtplan() // Renders GESAMTSTADTPLAN
+                } else if (parameter.page === "#angebote") {
                     _self.load_district_topics(function() {
-                        _self.show_angebote_page()
+                        _self.show_angebote_page() // Renders ANGEBOTE_STADTPLAN
                     })
+                } else if (parameter.page.indexOf("ssuche") !== -1) {
+                    _self.render_search_page() // Renders SEARCH RESULTS STADTPLAN
                 } else {
                     _self.load_district_topics(function() {
-                        bezirksTopic = _self.get_bezirks_topic_by_hash(locationHash)
-                        if (bezirksTopic) {
+                        bezirksTopic = _self.get_bezirks_topic_by_hash(parameter.page)
+                        if (bezirksTopic) { // Renders BEZIRKSPAGE
                             _self.render_bezirkspage(bezirksTopic)
                         } else {
-                            _self.render_gesamtstadtplan()
-                            console.warn("Entschudligung, die Seite "+locationHash+" konnte nicht geladen werden. ")
+                            _self.render_gesamtstadtplan() // Renders GESAMTSTADTPLAN
+                            console.warn("Entschudligung, die Seite "+parameter.page+" konnte nicht geladen werden. ")
                         }
                      })
                 }
@@ -187,15 +311,16 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
                  if (subdomain_mitte) {
                     _self.load_district_topics(function(e) {
                         bezirksTopic = _self.get_bezirks_topic_by_hash("#mitte")
-                        _self.render_bezirkspage(bezirksTopic)
+                        _self.render_bezirkspage(bezirksTopic)  // Renders BEZIRKSPAGE
                     })
                  } else {
                     console.log("Fallback to render Gesamtstadtplan caused by Page Name",
-                        name,"Anchor", locationHash, "and unspecific Subdomain")
-                    _self.render_gesamtstadtplan()
+                        name,"Anchor", parameter.page, "and unspecific Subdomain")
+                    _self.render_gesamtstadtplan() // Renders GESAMTSTADTPLAN
                  }
             }
-        // 2) Render Berlin-Gesamtstadtplan
+
+        // 2) Render Berlin-Gesamtstadtplan (with specific Frontpage State)
         } else {
             _self.render_gesamtstadtplan()
         }
@@ -203,11 +328,47 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
 
     this.render_gesamtstadtplan = function() {
         // render main kiezatlas page
-        _self.render_map(true, undefined, false) // detectLocation=true
+        parameter.page = "#gesamt"
+        if (parameter.viewport)  {
+            leafletMap.set_current_location_coords(parameter.viewport.center)
+            _self.render_map(true, { zoom: parameter.viewport.zoom, center: parameter.viewport.center }, false) // detectLocation=true
+        } else {
+            _self.render_map(true, undefined, false) // detectLocation=true
+        }
         // ### re-use our set of client-side cacehd bezirks topics
         _self.load_district_topics(function(e) {
             _self.render_district_menu() // should do "Gesamtstadtplan"
         })
+    }
+
+    this.render_search_page = function() {
+        var hashParam = window.location.hash
+        _self.render_map(false, { zoom: parameter.viewport.zoom, center: parameter.viewport.center }, false) // detectLocation=true
+        // ### re-use our set of client-side cacehd bezirks topics
+        _self.load_district_topics(function(e) {
+            _self.render_district_menu() // should do "Gesamtstadtplan"
+        })
+        if (parameter.page.indexOf("#angebotssuche") !== -1) { // RENDER ANGEBOTE SEARCH RESULT
+            var searchParam = undefined
+            if (hashParam.indexOf("?") !== -1) {
+                searchParam = hashParam.slice("#angebotssuche=".length, hashParam.indexOf("?"))
+            } else {
+                searchParam = hashParam.slice("#angebotssuche=".length)
+            }
+            $('#fulltext-search').val(searchParam)
+            _self.set_angebotsfilter(true)
+        } else if (parameter.page.indexOf("#ortssuche") !== -1) { // RENDER PLACE SEARCH RESULT
+            var searchParam = undefined
+            if (hashParam.indexOf("?") !== -1) {
+                searchParam = hashParam.slice("#ortssuche=".length, hashParam.indexOf("?"))
+            } else {
+                searchParam = hashParam.slice("#ortssuche=".length)
+            }
+            $('#fulltext-search').val(searchParam)
+            _self.set_angebotsfilter(false)
+        }
+        _self.set_mapcontrol_mode_results()
+        search_fulltext_geo_objects()
     }
 
     this.void = function() {
@@ -219,7 +380,7 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
             _self.set_site_info(bezirksTopic)
             _self.set_site_id(bezirksTopic.id)
             _self.load_marker_cluster_scripts()
-            _self.render_map(false, undefined, false, false) // detectLocation=false
+            _self.render_map(false, parameter.viewport, false, false) // detectLocation=false
             // sets district filter
             _self.show_district_page(_self.get_site_info().id)
             _self.render_district_menu(bezirksTopic)
@@ -247,7 +408,7 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
         mapping.do_cluster_marker = true
     }
 
-    this.render_map = function(ask_location, zoom_to, jump_to_map, mousewheelzoom) {
+    this.render_map = function(ask_location, viewport, jump_to_map, mousewheelzoom) {
         if (!leafletMap.is_initialized()) {
             _self.setup_map_area('map', mousewheelzoom)
         }
@@ -257,8 +418,13 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
         if (ask_location) {
             _self.get_browser_location()
         }
-        if (zoom_to) {
-            leafletMap.set_zoom(zoom_to)
+        if (viewport) {
+            if (viewport.zoom) {
+                leafletMap.set_zoom(viewport.zoom)
+            }
+            if (viewport.center) {
+                leafletMap.pan_to(viewport.center)
+            }
         }
     }
 
@@ -322,8 +488,7 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
         $('a.district-control').hide()
         $('span.angebote-btn').addClass('bold')
         $('span.einrichtungen-btn').removeClass('bold')
-        leafletMap.deactivate_circle_control()
-        leafletMap.remove_circle_search_control()
+        _self.set_mapcontrol_mode_results()
         //
         restc.load_current_angebotsinfos(function(offers) {
             _self.render_map(false, undefined, false)
@@ -339,13 +504,11 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
         $('span.einrichtungen-btn').addClass('bold')
         $('span.angebote-btn').removeClass('bold')
         _self.set_fulltext_search_placeholder("Volltextsuche Berlinweit")
-        _self.set_mapcontrol_mode_query()
+        _self.set_mapcontrol_mode_query(true)
         $('a.circle-control').hide()
         $('a.district-control').hide()
         $('a.lock-control').show()
-        leafletMap.activate_circle_control()
         leafletMap.set_current_location_coords(leafletMap.get_map_center())
-        leafletMap.render_circle_search_control(true)
         _self.do_circle_search(undefined, undefined)
         _self.do_reverse_geocode()
     }
@@ -370,8 +533,7 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
         $('#site-area .content-area').html(bezirk_html + '<br/>'
             + '<a href="'+_self.get_site_info().imprint+'">Impressum</a>')
         leafletMap.scroll_into_view()
-        leafletMap.deactivate_circle_control()
-        leafletMap.remove_circle_search_control()
+        _self.set_mapcontrol_mode_results()
         _self.show_message("Die Volltextsuche liefert ab jetzt nur Ergebnisse aus dem Bezirk <em>"
             + bezirk_name + "</em>. W&auml;hlen sie <em>Bezirksfilter aufheben</em> um wieder Berlinweit"
             + " Einrichtungen zu finden.", 7000)
@@ -384,7 +546,11 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
             leafletMap.clear_marker()
             _self.hide_spinning_wheel()
             leafletMap.set_items(response)
-            leafletMap.render_geo_objects(true)
+            if (parameter.viewport) {
+                leafletMap.render_geo_objects(false)
+            } else {
+                leafletMap.render_geo_objects(true)
+            }
         })
     }
 
@@ -412,12 +578,10 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
 
     this.clear_district_page = function() {
         $('#site-area').hide()
-        _self.set_mapcontrol_mode_query()
         _self.clear_district_filter()
         mapping.do_cluster_marker = false
-        leafletMap.activate_circle_control()
         leafletMap.set_current_location_coords(leafletMap.get_map_center())
-        leafletMap.render_circle_search_control(false) // fitBounds=false
+        _self.set_mapcontrol_mode_query(true)
         leafletMap.set_zoom(mapping.zoom_kiez)
         _self.do_circle_search(undefined, undefined)
         _self.do_reverse_geocode()
@@ -444,6 +608,7 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
     }
 
     this.setup_map_area = function(dom_el_id, mouseWheelZoom) {
+        var mapMovedSkipLocating = false // a local var to influence the outcome of the "browser locating" query
         var $map = $('#map')
             $map.empty()
             $map.show()
@@ -475,17 +640,23 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
                     _self.do_reverse_geocode()
                 }
             }
+            mapMovedSkipLocating = true
+            _self.update_page_parameter()
         })
         leafletMap.listen_to('marker_select', function(e) {
             _self.clear_details_area()
             _self.show_selected_geo_details(e.detail)
+            mapMovedSkipLocating = true
+            selected_marker = e
         })
         leafletMap.listen_to('angebot_marker_select', function(e) {
             _self.clear_details_area()
             _self.show_selected_angebot_detail(e.detail)
+            mapMovedSkipLocating = true
+            selected_marker = e
         })
         leafletMap.listen_to('marker_mouseover', function(e) {
-            var geo_objects_under_marker = leafletMap.find_all_geo_objects(e.detail.target.options['location_id'])
+            var geo_objects_under_marker = leafletMap.find_all_geo_objects(e.detail.target.options['address_id'])
             _self.show_marker_name_info(geo_objects_under_marker)
         })
         leafletMap.listen_to('marker_mouseout', function(e) {
@@ -494,22 +665,35 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
         leafletMap.listen_to('circle_control_edit', function(e) {
             // ### on small screens (here, after dragging) our current center should be the mapcenter (fitBounds..)
             // ### TODO: dont query if given location and given radius "equals" our latest "query settings"
+            leafletMap.set_circle_control_radius(e.detail)
             _self.do_circle_search(leafletMap.get_current_location_coords(), e.detail)
             _self.do_reverse_geocode()
+            mapMovedSkipLocating = true
         })
         leafletMap.listen_to('locating_success', function(e) {
-            leafletMap.set_current_location_coords(new L.latLng(e.detail.latitude, e.detail.longitude))
-            leafletMap.activate_circle_control()
-            leafletMap.render_circle_search_control(true)
-            _self.do_circle_search(leafletMap.get_current_location_coords(), undefined)
-            leafletMap.map.fitBounds(leafletMap.get_circle_control_bounds())
-            _self.do_reverse_geocode()
+            console.info("location success by browser", window.navigator)
+            if (!mapMovedSkipLocating) {
+                leafletMap.set_current_location_coords(new L.latLng(e.detail.latitude, e.detail.longitude))
+                leafletMap.activate_circle_control()
+                leafletMap.render_circle_search_control()
+                _self.do_circle_search(leafletMap.get_current_location_coords(), undefined)
+                // leafletMap.map.fitBounds(leafletMap.get_circle_control_bounds())
+                _self.do_reverse_geocode()
+                _self.update_page_parameter()
+            } else {
+                console.log("Skip locatiing_error as user already interacted with the map", e)
+            }
         })
         leafletMap.listen_to('locating_error', function(e) {
-            leafletMap.render_circle_search_control()
-            _self.render_current_location_label()
-            _self.do_circle_search(undefined, undefined)
-            _self.do_reverse_geocode()
+            if (!mapMovedSkipLocating) {
+                console.warn("locating error detected by browser", window.navigator)
+                leafletMap.render_circle_search_control()
+                _self.render_current_location_label()
+                _self.do_circle_search(undefined, undefined)
+                _self.do_reverse_geocode()
+            } else {
+                console.log("Skip locatiing_error as user already interacted with the map", e)
+            }
         })
         _self.render_browser_location_button()
         _self.render_current_location_label()
@@ -602,7 +786,10 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
                 // $star_button.button("enable")
             }
         }
-        _self.update_document_title(leafletMap.get_current_location_name())
+        var newPageTitle = leafletMap.get_current_location_name()
+        if (newPageTitle.indexOf("Ihr Standort liegt") === -1) {
+            _self.update_document_title(leafletMap.get_current_location_name())
+        }
     }
 
     this.show_selected_geo_details = function(result_list) {
@@ -615,7 +802,7 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
                 _self.render_selected_details_card(result)
             })
         }
-        angebote.load_geo_objects_angebote(list_of_marker_ids)
+        // ### TODO: angebote.load_geo_objects_angebote(list_of_marker_ids)
     }
 
     this.show_selected_angebot_detail = function(marker) {
@@ -738,7 +925,7 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
     this.do_circle_search = function(location, radius) {
         _self.show_spinning_wheel()
         _self.set_mapcontrol_mode_query()
-        var location_string = kiezatlas.create_location_string(location)
+        var location_string = _self.create_location_string(location)
         var radius_value = radius
         if (!radius) radius_value = leafletMap.get_circle_control_radius()
         $.getJSON('/website/search/'+encodeURIComponent(location_string)+'/' + (radius_value / 1000),
@@ -754,7 +941,7 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
         })
     }
 
-    this.do_text_search_geo_objects = function(text, callback) {
+    this.do_text_search_geo_objects = function(text, callback, fitBounds) {
         _self.set_mapcontrol_mode_results()
         var queryUrl = '/website/search/?search='+text
         if (_self.get_site_id()) {
@@ -770,7 +957,11 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
                 // ### Todo: for resultsets bigger than 100 implement an incremental rendering method
                 leafletMap.set_items(geo_objects)
                 leafletMap.clear_marker()
-                leafletMap.render_geo_objects(true)
+                if (fitBounds) {
+                    leafletMap.render_geo_objects(true) // fit bounds
+                } else {
+                    leafletMap.render_geo_objects(false)
+                }
                 _self.hide_spinning_wheel()
                 _self.hide_searching_indicator()
             } else {
@@ -780,26 +971,36 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
             }
             if (callback) callback(geo_objects)
         })
+        if (updateURL) {
+            _self.update_page_parameter()
+        }
     }
 
-    this.do_text_search_angebotsinfos = function(text) { // Remove Duplicate Lines
+    this.do_text_search_angebotsinfos = function(text, fitBounds) { // Remove Duplicate Lines
         var queryUrl = '/website/search/angebote?search=' + text
         // _self.clear_details_area()
+        _self.set_mapcontrol_mode_results()
         _self.show_spinning_wheel()
         $.getJSON(queryUrl, function (geo_objects) {
-                console.log("> Text based Angebotsinfo Search returned", geo_objects)
-                // TODO: If search results are zero
-                if (geo_objects.length > 0) {
-                    // ### for resultsets bigger than 100 implement an incremental rendering method
-                    leafletMap.set_items(geo_objects)
-                    leafletMap.clear_marker()
-                    leafletMap.render_geo_objects(true)
-                    _self.hide_spinning_wheel()
+            // TODO: If search results are zero
+            if (geo_objects.length > 0) {
+                // ### for resultsets bigger than 100 implement an incremental rendering method
+                leafletMap.set_items(geo_objects)
+                leafletMap.clear_marker()
+                if (fitBounds) {
+                    leafletMap.render_geo_objects(true) // fit bounds
                 } else {
-                    _self.hide_spinning_wheel()
-                    _self.show_message('Keine Treffer f&uuml;r diese Suche')
+                    leafletMap.render_geo_objects(false)
                 }
-            })
+                _self.hide_spinning_wheel()
+            } else {
+                _self.hide_spinning_wheel()
+                _self.show_message('Keine Treffer f&uuml;r diese Suche')
+            }
+        })
+        if (updateURL) {
+            _self.update_page_parameter()
+        }
     }
 
     this.do_reverse_geocode = function(e) {
@@ -813,12 +1014,11 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
         var state = (leafletMap.is_circle_control_fixed()) ? false : true
         leafletMap.set_circle_control_fixed(state)
         if (state) {
-            _self.clear_angebote_page()
+            if (_self.is_angebote_mode()) {
+                _self.clear_angebote_page()
+            }
             $('.lock-control').text('Umkreissuche')
             $('.leaflet-editing-icon').hide()
-            /** leafletMap.set_current_location_coords(leafletMap.get_map_center())
-            leafletMap.set_circle_control_radius(leafletMap.get_circle_control_radius())
-            leafletMap.render_circle_search_control() **/
         } else {
             $('.leaflet-editing-icon').show()
             $('.lock-control').text('Kreis fixieren')
@@ -848,19 +1048,19 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
 
         function handle_option_a (e) {
             // initialize map on browser location
-            _self.render_map(true, null, true, false)
+            _self.render_map(true, undefined, true, false)
         }
 
     }
 
     this.handle_option_c = function(e) {
         // initiate map with edible circle control
-        _self.render_map(false, mapping.zoom_kiez, true, false)
+        _self.render_map(false, { zoom: mapping.zoom_kiez }, true, false)
     }
 
     this.handle_option_b = function(e) {
         // initiate map with edible circle control but focus on street
-        _self.render_map(false, mapping.zoom_street, true, false)
+        _self.render_map(false, { zoom: mapping.zoom_street }, true, false)
     }
 
     // --- GUI Manipulation Utility Methods
@@ -896,6 +1096,7 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
             $marker_name = $('<div id="marker-name">')
             $marker_name.html(names_html)
             $('#map').append($marker_name)
+            $marker_name.show()
         }
     }
 
