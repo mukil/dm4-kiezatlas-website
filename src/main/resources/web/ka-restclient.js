@@ -104,8 +104,12 @@ var restc = (function($) {
         })
     }
 
-    restc.load_search_keywords = function(callback) {
-        $.getJSON('/website/search-keywords', function(results) {
+    restc.load_search_keywords = function(query, callback) {
+        var resource = '/website/search-keywords'
+        if (query) {
+            resource += '?query=' + query
+        }
+        $.getJSON(resource, function(results) {
             // results.sort(value_sort_asc)
             callback(results)
         })

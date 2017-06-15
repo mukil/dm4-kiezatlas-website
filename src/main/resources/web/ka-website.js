@@ -208,9 +208,9 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
         }
     }
 
-    this.init_search_autocomplete = function() {
-        restc.load_search_keywords(function(els) {
-            console.log("Loaded Search Keywords for Autocomplete...", els)
+    this.get_search_keywords = function(query) {
+        restc.load_search_keywords(query, function(els) {
+            console.log("Loaded Search Keywords for ", query, "...", els)
         })
     }
 
