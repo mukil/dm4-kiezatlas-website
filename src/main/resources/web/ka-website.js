@@ -208,6 +208,12 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
         }
     }
 
+    this.init_search_autocomplete = function() {
+        restc.load_search_keywords(function(els) {
+            console.log("Loaded Search Keywords for Autocomplete...", els)
+        })
+    }
+
     this.push_page_view = function(viewportState) {
         if (settings.history_api_supported) {
             if (parameter) {

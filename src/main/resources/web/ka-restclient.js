@@ -104,6 +104,13 @@ var restc = (function($) {
         })
     }
 
+    restc.load_search_keywords = function(callback) {
+        $.getJSON('/website/search-keywords', function(results) {
+            // results.sort(value_sort_asc)
+            callback(results)
+        })
+    }
+
     restc.load_district_topics = function(id, callback) {
         if (id && !isNaN(id)) {
             $.getJSON('/website/bezirk/' + id, function(results) {

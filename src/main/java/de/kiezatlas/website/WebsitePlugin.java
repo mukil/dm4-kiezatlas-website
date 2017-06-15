@@ -106,6 +106,7 @@ import static de.kiezatlas.etl.KiezatlasETLService.ZIELGRUPPE_CRIT;
 import static de.kiezatlas.etl.KiezatlasETLService.ZIELGRUPPE_FACET;
 import de.kiezatlas.website.model.BezirksregionView;
 import de.kiezatlas.website.model.CommentView;
+import de.kiezatlas.website.model.SearchKeywords;
 import de.kiezatlas.website.model.SearchResultList;
 import de.kiezatlas.website.model.SearchResult;
 import de.kiezatlas.website.model.UsernameView;
@@ -803,6 +804,24 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         }
         Topic geoObject = dm4.getTopic(geoObjectId);
         return getAssignedUsernames(geoObject);
+    }
+
+    @GET
+    @Path("/search-keywords")
+    @Produces(MediaType.APPLICATION_JSON)
+    public SearchKeywords getSearchKeywords(@HeaderParam("Referer") String referer, @QueryParam("query") String query) {
+        SearchKeywords keywords = new SearchKeywords();
+        List<Topic> categories = null;
+        if (query == null) {
+            categories = etl.searchCategoryNames(referer, "*");
+        } else {
+            categories = etl.searchCategoryNames(referer, query);
+        }
+        for (Topic category : categories) {
+            keywords.addKeyword(category.getTypeUri(), category.getSimpleValue().toString());
+        }
+        log.info("Build up list of " + keywords.size() + " search-keywords");
+        return keywords;
     }
 
     /**
