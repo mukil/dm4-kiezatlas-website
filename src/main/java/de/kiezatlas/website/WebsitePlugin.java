@@ -88,6 +88,7 @@ import de.kiezatlas.angebote.AssignedAngebotListener;
 import de.kiezatlas.angebote.ContactAnbieterListener;
 import de.kiezatlas.angebote.RemovedAngebotListener;
 import de.kiezatlas.comments.CommentsService;
+import de.kiezatlas.etl.KiezatlasETLService;
 import static de.kiezatlas.etl.KiezatlasETLService.ANGEBOT_FACET;
 import static de.kiezatlas.etl.KiezatlasETLService.BEZIRK;
 import static de.kiezatlas.etl.KiezatlasETLService.BEZIRK_FACET;
@@ -141,6 +142,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     @Inject private CommentsService comments;
     @Inject private SignupPluginService signup;
     @Inject private TimeService time;
+    @Inject private KiezatlasETLService etl;
 
     // Application Cache of District Overview Resultsets
     HashMap<Long, List<GeoMapView>> citymapCache = new HashMap<Long, List<GeoMapView>>();
@@ -1407,6 +1409,8 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
             if (isInvalidSearchQuery(queryValue)) return results;
             // 2) Fetch unique geo object topics by text query string (leading AND ending ASTERISK)
             List<Topic> geoObjects = searchFulltextInGeoObjectChilds(queryValue, false, true, false, true);
+            List<Topic> relatedGeoObjects = etl.searchFulltextInCategories(referer, query);
+            geoObjects.addAll(relatedGeoObjects);
             // 3) Process saerch results and create DTS for map display
             for (Topic topic : geoObjects) {
                 if (isGeoObjectTopic(topic)) {
@@ -1473,6 +1477,8 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
             if (isInvalidSearchQuery(queryValue)) return results;
             // DO fulltext saerch with simple ASTERISK at the END
             List<Topic> geoObjects = searchFulltextInGeoObjectChilds(queryValue, false, true, false, true);
+            List<Topic> relatedGeoObjects = etl.searchFulltextInCategories(referer, query);
+            geoObjects.addAll(relatedGeoObjects);
             log.info("Start building response for " + geoObjects.size() + " and FILTER by CONTEXT");
             for (Topic geoObject: geoObjects) {
                 // checks for district OR site relation
@@ -3150,16 +3156,16 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
             // 3) remove (potential "?", introduced as trigger for exact search), quote query input and append fuzzy command
             queryPhrase = userQuery.trim().replaceAll("\\?", "");
             queryPhrase = "\"" + queryPhrase + "\"~0.9";
+        } else if (!doSplitWildcards && !appendWildcard && !leadingWildcard) {
+            // 4) if none, return trimmed user query input
+            queryPhrase = userQuery.trim();
+        } else if (appendWildcard && leadingWildcard && !doSplitWildcards) {
+            queryPhrase = "*" + userQuery.trim() + "*";
         } else if (appendWildcard && !doSplitWildcards) {
             // 2) trim and append a wildcard to the query input
             queryPhrase = userQuery.trim() + "*";
         } else if (leadingWildcard && !doSplitWildcards) {
             queryPhrase = "*" + userQuery.trim();
-        } else if (appendWildcard && leadingWildcard && !doSplitWildcards) {
-            queryPhrase = "*" + userQuery.trim() + "*";
-        } else if (!doSplitWildcards && !appendWildcard && !appendWildcard && !leadingWildcard) {
-            // 4) if none, return trimmed user query input
-            queryPhrase = userQuery.trim();
         }
         log.info("Prepared Query Phrase \""+userQuery+"\" => \""+queryPhrase+"\" (doSplitWildcards: "
             + doSplitWildcards + ", appendWildcard: " + appendWildcard + ", leadingWildcard: "
