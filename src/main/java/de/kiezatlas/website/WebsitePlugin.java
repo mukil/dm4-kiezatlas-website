@@ -2560,26 +2560,34 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
             log.warning("Can not calculate LOR and Bezirksregion Name when geo object is NULL");
             return;
         }
-        // try new way of getting LOR number
-        String lor = geospatial.getGeometryFeatureNameByCoordinate(geoCoordinate.lat + ", " + geoCoordinate.lon);
-        if (lor != null) { // if successfull, calculate Bezirksregion name for this LOR
-            String lorIdValue = cleanUpShapefileFeatureName(lor);
-            einrichtung.setLORId(lorIdValue);
-            if (internalLORs.containsKey(lorIdValue)) {
-                Topic lorId = internalLORs.get(lorIdValue);
-                Topic bezirksregion = getBezirksregionUtilName(lorId);
-                if (bezirksregion != null) {
-                    log.info("ENRICHED geo object \"" + geoObject.getSimpleValue() + "\" with Bezirksregion Name \"" + bezirksregion.getSimpleValue() + "\"");
-                    einrichtung.setBezirksregionName(bezirksregion.getSimpleValue().toString());
-                    einrichtung.setBezirksregionId(bezirksregion.getId());
-                }
-            }
-        } else { // old school way
-            Topic lorTopic = facets.getFacet(geoObject, LOR_FACET);
+        // fetch lor and bezirksregion facet
+        Topic lorTopic = facets.getFacet(geoObject, LOR_FACET);
+        Topic bezirksregionTopic = facets.getFacet(geoObject, BEZIRKSREGION_NAME_FACET);
+        if (bezirksregionTopic != null && lorTopic != null) {
+            log.info("Using LOR \"" + lorTopic.getSimpleValue() + "\", Bezirksregion Name \""
+                    + bezirksregionTopic.getSimpleValue() + "\" Facet for geo object \"" + geoObject.getSimpleValue() + "\"");
+            // give manual (existing assignment) priority over geometrical lookup
             einrichtung.setLORId(lorTopic.getSimpleValue().toString());
-            Topic bezirksregionTopic = facets.getFacet(geoObject, BEZIRKSREGION_NAME_FACET);
             einrichtung.setBezirksregionName(bezirksregionTopic.getSimpleValue().toString());
             einrichtung.setBezirksregionId(bezirksregionTopic.getId());
+        } else {
+            // alternatively, try new way of getting LOR number
+            String lor = geospatial.getGeometryFeatureNameByCoordinate(geoCoordinate.lat + ", " + geoCoordinate.lon);
+            if (lor != null) { // if successfull, calculate Bezirksregion name for this LOR
+                String lorIdValue = cleanUpShapefileFeatureName(lor);
+                einrichtung.setLORId(lorIdValue);
+                if (internalLORs.containsKey(lorIdValue)) {
+                    Topic lorId = internalLORs.get(lorIdValue);
+                    Topic bezirksregion = getBezirksregionUtilName(lorId);
+                    if (bezirksregion != null) {
+                        log.info("ENRICHED geo object \"" + geoObject.getSimpleValue() + "\" in LOR \""
+                                + lorIdValue + "\" (as LOR Facet="+lorTopic+") and (as BZR="+bezirksregionTopic+")"
+                                + "Bezirksregion Name \"" + bezirksregion.getSimpleValue() + "\"");
+                        einrichtung.setBezirksregionName(bezirksregion.getSimpleValue().toString());
+                        einrichtung.setBezirksregionId(bezirksregion.getId());
+                    }
+                }
+            }
         }
     }
 
