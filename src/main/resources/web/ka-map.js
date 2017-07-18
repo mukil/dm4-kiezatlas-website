@@ -496,21 +496,13 @@ var leafletMap = (function($, L) {
 
     map.exist_marker_in_listing = function(marker, listing) {
         if (listing) {
-            if (!mapping.angebote_mode) {
-                for (var i in listing) {
-                    if (listing[i].options.id === marker.id) {
+            for (var i in listing) {
+                if (!marker.location_id) {
+                    console.error('marker has no location_id', marker)
+                    return false
+                } else {
+                    if (listing[i].options.location_id === marker.location_id) {
                         return true
-                    }
-                }
-            } else {
-                for (var i in listing) {
-                    if (!marker.location_id) {
-                        console.error('marker has no location_id', marker)
-                        return false
-                    } else {
-                        if (listing[i].options.location_id === marker.location_id) {
-                            return true
-                        }
                     }
                 }
             }

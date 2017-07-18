@@ -247,7 +247,6 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
         } else if (_self.get_site_id()) {
             console.log("Kiezatlas Website Mode", _self.get_site_id(), _self.get_site_info().value)
         } else if (_self.is_map_result_control && query) {
-            console.log("Kiezatlas Search Result Mode", query, "Angebote Mode", _self.is_angebote_mode())
             if (_self.is_angebote_mode()) {
                 parameter.page = "#angebotssuche=" + query
             } else {
@@ -309,9 +308,7 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
                 if (parameter.page === "#gesamt") {
                     _self.render_gesamtstadtplan() // Renders GESAMTSTADTPLAN
                 } else if (parameter.page === "#angebote") {
-                    _self.load_district_topics(function() {
-                        _self.show_angebote_page() // Renders ANGEBOTE_STADTPLAN
-                    })
+                    _self.show_angebote_page() // Renders ANGEBOTE_STADTPLAN
                 } else if (parameter.page.indexOf("ssuche") !== -1) {
                     _self.render_search_page() // Renders SEARCH RESULTS STADTPLAN
                 } else {
@@ -492,6 +489,10 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
     }
 
     this.show_angebote_page = function() {
+        if (_self.is_angebote_mode()) {
+            query = undefined
+            $('#fulltext-search').val()
+        }
         _self.set_angebotsfilter(true)
         _self.render_map(false, undefined, false, true)
         leafletMap.set_angebote_mode(true)
@@ -515,6 +516,10 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
             leafletMap.clear_marker()
             leafletMap.set_items(offers)
             leafletMap.render_geo_objects(true)
+        })
+        // ### re-use our set of client-side cacehd bezirks topics
+        _self.load_district_topics(function(e) {
+            _self.render_district_menu() // should do "Gesamtstadtplan"
         })
     }
 
@@ -679,7 +684,8 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
         })
         leafletMap.listen_to('angebot_marker_select', function(e) {
             _self.clear_details_area()
-            _self.show_selected_angebot_detail(e.detail)
+            var geo_objects_under_marker = leafletMap.find_all_geo_objects(e.detail.options['address_id'])
+            _self.show_selected_angebot_detail(e.detail, geo_objects_under_marker)
             mapMovedSkipLocating = true
             selected_marker = e
         })
@@ -833,7 +839,7 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
         // ### TODO: angebote.load_geo_objects_angebote(list_of_marker_ids)
     }
 
-    this.show_selected_angebot_detail = function(marker) {
+    this.show_selected_angebot_detail = function(marker, geo_objects) {
         var model = marker.options
         var einrichtung = {id: model['location_id'], name: model['name'], address: model['address'] }
         restc.load_related_angebotsinfos(model['location_id'], function(results) {
