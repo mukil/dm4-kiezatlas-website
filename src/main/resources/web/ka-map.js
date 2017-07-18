@@ -19,7 +19,8 @@ var mapping = {
     "marker_group": undefined,
     "control_group": L.featureGroup(),
     "do_cluster_marker" : false,
-    "fit_bounds_padding": 30
+    "fit_bounds_padding": 30,
+    "angebote_mode": false
 }
 
 var leafletMap = (function($, L) {
@@ -31,7 +32,7 @@ var leafletMap = (function($, L) {
         map.elementId = elementId
         // console.log("Set up Leaflet Map #"+ elementId + ", mouseWheelZoom", mouseWheelZoom)
         map.map = new L.Map(elementId, {
-            dragging: true, touchZoom: true, scrollWheelZoom: (!mouseWheelZoom) ? false : mouseWheelZoom, doubleClickZoom: true,
+            dragging: true, touchZoom: true, scrollWheelZoom: (!mouseWheelZoom) ? true : mouseWheelZoom, doubleClickZoom: true,
             zoomControl: false, minZoom: 9, max_bounds: mapping.max_bounds
         })
         map.zoom = L.control.zoom({ position: "topright" })
@@ -69,6 +70,7 @@ var leafletMap = (function($, L) {
                 mapping.marker_radius_selected = 15
             }
             map.update_geo_object_marker_radius()
+            map.fire_zoom_end(e)
         })
     }
 
@@ -134,7 +136,7 @@ var leafletMap = (function($, L) {
                 console.warn("Skipping Geo Object View Model [" + el+ "]", geo_object)
             } else {
                 // preventing circle marker duplicates (in result set, e.g. Angebotsinfos)
-                if (!map.exist_marker_in_listing(geo_object.id, list_of_markers)) {
+                if (!map.exist_marker_in_listing(geo_object, list_of_markers)) {
                     var geo_marker = map.create_geo_object_marker(geo_object)
                     if (geo_marker) {
                         list_of_markers.push(geo_marker)
@@ -146,7 +148,7 @@ var leafletMap = (function($, L) {
         if (mapping.marker_group) {
             mapping.marker_group.eachLayer(function (marker) {
                 // preventing circle marker duplicates (during merge of result sets)
-                if (!map.exist_marker_in_listing(marker.options.id, list_of_markers)) {
+                if (!map.exist_marker_in_listing(marker.options, list_of_markers)) {
                     list_of_markers.push(marker)
                 }
             })
@@ -252,7 +254,8 @@ var leafletMap = (function($, L) {
                 var geo_object_view_model = {
                     "name": el.options.name, "bezirksregion_uri": el.options.bezirksregion_uri, "uri": el.options.uri,
                     "angebote_count": el.options.angebote_count, "angebots_id": el.options.angebots_id,
-                    "id": marker_id, "address_id": el.options.address_id
+                    "id": marker_id, "address_id": el.options.address_id, location_id: el.options.location_id,
+                    "address": el.options.address
                 }
                 el.setStyle(map.calculate_default_circle_options(geo_object_view_model))
                 el.setRadius(mapping.marker_radius)
@@ -268,7 +271,8 @@ var leafletMap = (function($, L) {
                 var geo_object_view_model = {
                     "name": el.options.name, "bezirksregion_uri": el.options.bezirksregion_uri, "uri": el.options.uri,
                     "angebote_count": el.options.angebote_count, "angebots_id": el.options.angebots_id,
-                    "id": marker_id, "address_id": el.options.address_id
+                    "id": marker_id, "address_id": el.options.address_id, location_id: el.options.location_id,
+                    "address": el.options.address
                 }
                 el.setStyle(map.calculate_default_circle_options(geo_object_view_model))
                 el.setRadius(mapping.marker_radius)
@@ -291,6 +295,7 @@ var leafletMap = (function($, L) {
 
     /** TODO: Visually differentiate between geo object and angebot markers */
     map.calculate_default_circle_options = function(marker_topic) {
+        // console.log("creating marker for ", marker_topic["name"], "with location_id", marker_topic["location_id"])
         var hasAngebote = (marker_topic["angebote_count"] > 0) ? true : false
         var angeboteDashArray = map.calculate_geo_object_dash_array(marker_topic)
         var angeboteId = (marker_topic.hasOwnProperty("angebots_id")) ? marker_topic["angebots_id"] : undefined
@@ -301,8 +306,8 @@ var leafletMap = (function($, L) {
             alt: "Markierung von " + marker_topic["name"], bezirk_uri: marker_topic["bezirk_uri"],
             uri: marker_topic["uri"], name: marker_topic["name"],// riseOnHover: true,
             bezirksregion_uri: marker_topic["bezirksregion_uri"], z_indexOffset: 1001, uri: marker_topic["uri"],
-            angebote_count: marker_topic["angebote_count"], angebots_id: angeboteId,
-            id: marker_topic["id"], address_id: marker_topic["address_id"]
+            angebote_count: marker_topic["angebote_count"], angebots_id: angeboteId, address: marker_topic["address"],
+            id: marker_topic["id"], address_id: marker_topic["address_id"], location_id: marker_topic["location_id"]
         }
     }
 
@@ -350,6 +355,14 @@ var leafletMap = (function($, L) {
 
     map.is_circle_query_active = function() {
         return mapping.circle_query
+    }
+
+    map.set_angebote_mode = function(val) {
+        mapping.angebote_mode = val
+    }
+
+    map.is_angebote_mode = function() {
+        return mapping.angebote_mode
     }
 
     map.scroll_into_view = function(custom_anchor) {
@@ -402,6 +415,7 @@ var leafletMap = (function($, L) {
     }
 
     map.get_map_viewport = function() {
+        if (!map.map) return undefined
         return {
             bounds: map.map.getBounds(),
             zoom: map.map.getZoom(),
@@ -472,17 +486,32 @@ var leafletMap = (function($, L) {
 
     map.find_all_geo_objects = function(address_id) {
         var results = []
-        mapping.marker_group.eachLayer(function (el) {
-            if (el.options.address_id === address_id) results.push(el)
-        })
+        if (address_id) {
+            mapping.marker_group.eachLayer(function (el) {
+                if (el.options.address_id === address_id) results.push(el)
+            })
+        }
         return results
     }
 
-    map.exist_marker_in_listing = function(marker_id, listing) {
+    map.exist_marker_in_listing = function(marker, listing) {
         if (listing) {
-            for (var i in listing) {
-                if (listing[i].options.id === marker_id) {
-                    return true
+            if (!mapping.angebote_mode) {
+                for (var i in listing) {
+                    if (listing[i].options.id === marker.id) {
+                        return true
+                    }
+                }
+            } else {
+                for (var i in listing) {
+                    if (!marker.location_id) {
+                        console.error('marker has no location_id', marker)
+                        return false
+                    } else {
+                        if (listing[i].options.location_id === marker.location_id) {
+                            return true
+                        }
+                    }
                 }
             }
         }
@@ -500,6 +529,11 @@ var leafletMap = (function($, L) {
         var domElement = document.getElementById(map.elementId)
         // domElement.dispatchEvent(new CustomEvent('drag_end'))
         fire_custom_event(domElement, 'drag_end', e.distance)
+    }
+
+    map.fire_zoom_end = function(e) {
+        var domElement = document.getElementById(map.elementId)
+        fire_custom_event(domElement, 'zoom_end', e)
     }
 
     map.fire_drag = function() {

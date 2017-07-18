@@ -272,6 +272,10 @@ body.pushable > .pusher {
     text-decoration-color: #8f1414;
 }
 
+.entry-card .angebote a:hover {
+    text-decoration: none;
+}
+
 #navigation .comments,
 #navigation .confirm,
 #navigation .account,

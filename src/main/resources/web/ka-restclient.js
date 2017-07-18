@@ -85,6 +85,12 @@ var restc = (function($) {
         })
     }
 
+    restc.load_related_angebotsinfos = function(geoObjectId, callback) {
+        $.getJSON('/angebote/list/assignments/geo/' + geoObjectId, function(results) {
+            callback(results)
+        })
+    }
+
     restc.load_view_permissions = function(callback) {
         $.getJSON('/website/menu', function(results) {
             callback(results)
