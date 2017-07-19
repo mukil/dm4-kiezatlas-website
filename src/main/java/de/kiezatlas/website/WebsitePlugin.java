@@ -489,13 +489,14 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     @GET
     @Path("/geo/delete/{topicId}")
     @Produces(MediaType.TEXT_HTML)
+    @Transactional
     public Viewable processGeoObjectDeletion(@PathParam("topicId") String topicId) {
         // Check Authorization
         Topic geoObject = getGeoObjectById(topicId);
         String name = geoObject.getSimpleValue().toString();
-        if (geoObject != null && hasUserWritePermission(geoObject, accesscl.getUsernameTopic())) {
+        if (geoObject != null && isGeoObjectEditable(geoObject, accesscl.getUsernameTopic())) {
             log.info("DELETING Geo Object " + geoObject);
-            if (deleteCompleteGeoObject(geoObject)) {
+            if (deleteCompleteGeoObjectInWorkspace(geoObject)) {
                 viewData("message", "Der Kiezatlas Ort wurde erfolgreich gelöscht.");
                 log.info("Topic \"" + name + "\", id=" + topicId
                     + " deleted successfully by \"" + accesscl.getUsername() + "\"");
@@ -1908,7 +1909,8 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         // geo object auth
         viewData("is_published", isTopicInStandardWorkspace(geoObject));
         viewData("editable", isGeoObjectEditable(geoObject, username));
-        viewData("deletable", hasUserWritePermission(geoObject, username));
+        // ### is viewData("deletable", hasUserWritePermission(geoObject, username));
+        viewData("deletable", isDeletionWorkspaceMember());
         viewData("workspace", getAssignedWorkspace(geoObject));
         return view("detail");
     }
@@ -2285,8 +2287,19 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         }
         boolean hasWritePermission = dm4.getAccessControl().hasWritePermission(usernameValue, workspace.getId());
         String logMessage = (hasWritePermission) ? "GRANTED" : "DENIED";
-        log.info("Write Permission " + logMessage + " for \"" + usernameValue + "\" - Object in \"" + workspace.getSimpleValue() + "\"");
+        log.info("Write Permission " + logMessage + " for \"" + usernameValue + "\" - in \"" + workspace.getSimpleValue() + "\"");
         return hasWritePermission;
+    }
+
+    private boolean isDeletionWorkspaceMember() {
+        String username = accesscl.getUsername();
+        boolean wsMember = false;
+        if (username != null) {
+            Topic deletionWs = workspaces.getWorkspace(DELETION_WORKSPACE_URI);
+            wsMember = (accesscl.isMember(username, deletionWs.getId())
+                || accesscl.getWorkspaceOwner(deletionWs.getId()).equals(username));
+        }
+        return wsMember;
     }
 
     private boolean isTopicInStandardWorkspace(Topic topic) {
@@ -2656,6 +2669,20 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
             });
         } catch (Exception e) {
             throw new RuntimeException("Creating User Assignment to Geo Object FAILED", e);
+        }
+    }
+
+    private boolean deleteCompleteGeoObjectInWorkspace(Topic geoObject) {
+        if (!geoObject.getTypeUri().equals(KiezatlasService.GEO_OBJECT)) return false;
+        try {
+            Topic deletionWs = workspaces.getWorkspace(DELETION_WORKSPACE_URI);
+            moveGeoObjecToWorkspace(geoObject, deletionWs);
+            // moveGeoObjecFacetsToWorkspace(geoObject, deletionWs);
+            return true;
+        } catch (RuntimeException re) {
+            log.severe("Geo Object could not be deleted  ("+geoObject+"), RuntimeException Message: " + re.getMessage()
+                + " caused by \"" + re.getCause().getMessage() + "\"");
+            throw new RuntimeException("Geo object could not be deleted", re);
         }
     }
 
@@ -3495,6 +3522,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     private void moveGeoObjecFacetsToWorkspace(Topic geoObject, Topic workspace) {
         Topic addressObject = geoObject.getChildTopics().getTopic("dm4.contacts.address");
         moveSingleFacetToWorkspace(addressObject, "dm4.geomaps.geo_coordinate_facet", workspace.getId());
+        // ## Move Kontakt
         moveSingleFacetToWorkspace(geoObject, BESCHREIBUNG_FACET, workspace.getId());
         moveSingleFacetToWorkspace(geoObject, OEFFNUNGSZEITEN_FACET, workspace.getId());
         moveSingleFacetToWorkspace(geoObject, BEZIRK_FACET, workspace.getId());

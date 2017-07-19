@@ -246,7 +246,7 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
             console.log("Kiezatlas Citymap", _self.get_site_id(), _self.get_site_info())
         } else if (_self.get_site_id()) {
             console.log("Kiezatlas Website Mode", _self.get_site_id(), _self.get_site_info().value)
-        } else if (_self.is_map_result_control && query) {
+        } else if (_self.is_map_result_control() && query) {
             if (_self.is_angebote_mode()) {
                 parameter.page = "#angebotssuche=" + query
             } else {

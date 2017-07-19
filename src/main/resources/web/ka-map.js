@@ -128,6 +128,8 @@ var leafletMap = (function($, L) {
     map.render_geo_objects = function(set_view_to_bounds) {
         // Note: Here we decide to not render any duplicates
         var list_of_markers = []
+        var identifierProp = "id"
+        if (map.is_angebote_mode()) identifierProp = "location_id"
         // pre-process results
         var elements = map.get_items()
         for (var el in elements) {
@@ -136,7 +138,7 @@ var leafletMap = (function($, L) {
                 console.warn("Skipping Geo Object View Model [" + el+ "]", geo_object)
             } else {
                 // preventing circle marker duplicates (in result set, e.g. Angebotsinfos)
-                if (!map.exist_marker_in_listing(geo_object, list_of_markers)) {
+                if (!map.exist_marker_in_listing(geo_object, list_of_markers, identifierProp)) {
                     var geo_marker = map.create_geo_object_marker(geo_object)
                     if (geo_marker) {
                         list_of_markers.push(geo_marker)
@@ -148,7 +150,7 @@ var leafletMap = (function($, L) {
         if (mapping.marker_group) {
             mapping.marker_group.eachLayer(function (marker) {
                 // preventing circle marker duplicates (during merge of result sets)
-                if (!map.exist_marker_in_listing(marker.options, list_of_markers)) {
+                if (!map.exist_marker_in_listing(marker.options, list_of_markers, identifierProp)) {
                     list_of_markers.push(marker)
                 }
             })
@@ -494,14 +496,14 @@ var leafletMap = (function($, L) {
         return results
     }
 
-    map.exist_marker_in_listing = function(marker, listing) {
+    map.exist_marker_in_listing = function(marker, listing, identifier) {
         if (listing) {
             for (var i in listing) {
-                if (!marker.location_id) {
-                    console.error('marker has no location_id', marker)
+                if (!marker[identifier]) {
+                    console.error('marker has no', identifier, 'property', marker)
                     return false
                 } else {
-                    if (listing[i].options.location_id === marker.location_id) {
+                    if (listing[i].options[identifier] === marker[identifier]) {
                         return true
                     }
                 }

@@ -31,6 +31,9 @@ public interface WebsiteService {
     static final String KA1_GEO_OBJECT_URI_PREFIX = "de.kiezatlas.topic.";
     static final String BEZIRKSREGION_SHAPEFILE_NAME_PREFIX = "Flaeche ";
 
+    static final String DELETION_WORKSPACE_URI = "de.kiezatlas.del_workspace";
+    static final String DELETION_WORKSPACE_NAME = "Papierkorb";
+
     /**
      * Searching in four child topic types of geo object, returning topics of type "ka2.geo_object".
      * @param searchTerm    User given phrase with one or many search term/s
