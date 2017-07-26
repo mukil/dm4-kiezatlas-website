@@ -1,0 +1,2655 @@
+
+
+/** -- New Semantic UI Styles - 2.2 Release -- **/
+@import url('/de.kiezatlas.website/css/semantic-ui/2.2/components/ka-website-custom.min.css');
+
+@-o-viewport {
+    width: device-width;
+    zoom: 1;
+}
+
+/**
+em, rems
+margins
+paddings
+colors
+positions?
+background-colors?
+colors:
+border-boxing?
+*/
+
+body {
+    padding: 0;
+    margin: 0;
+    height: 100%;
+    font: 16px "Helvetica Neue", Arial, Helvetica, sans-serif;
+}
+
+html, body {
+    height: 100%;
+    background-color: #EAEAEA;
+}
+
+body.pushable > .pusher {
+    background-color: #EAEAEA;
+}
+
+/** ----- Helpers ------ **/
+.visible-ib {
+    display: inline-block !important;
+}
+
+/** ---- Special Elements -------- **/
+.search-option {
+    display: inline-block;
+    max-width: 400px;
+    min-width: 250px;
+    padding: 20px;
+    padding-right: 1em;
+    padding-left: 60px;
+    vertical-align: top;
+    margin: 1em;
+    text-align: left;
+    color: #000;
+    background-color: #fff;
+    position: relative;
+    border: 1px solid #a9a9a9;
+    margin-top: 30px;
+}
+
+#places {
+    display: none;
+    position: absolute;
+    right: 8px;
+    top: 8px;
+    z-index: 1001;
+    border: 1px solid transparent;
+    padding-left: 0px;
+    background: transparent;
+    z-index: 112;
+}
+
+#places li {
+    position: absolute;
+    right: 0px;
+    cursor: pointer;
+    list-style-type: none;
+    text-align: right;
+    padding: 2px .4em;
+}
+
+#places li.ui-menu-item a {
+    text-decoration: none;
+    line-height: 1.5em;
+}
+
+.ui-menu .ui-menu-icon {
+    position: absolute;
+    left: 1em;
+}
+
+#places li.submenu-item {
+    position: relative;
+    width: 210px;
+    font-size: 16px;
+}
+
+#places li.ui-menu-item:hover,
+#places li.ui-menu-item:hover a[aria-haspopup="true"],
+#places li.submenu-item:hover a,
+#places li.submenu-item:hover {
+    background-color: #27638C;
+    color: #fff;
+}
+
+#notification {
+    padding: 20px; padding-bottom: 50px;
+    position: fixed; bottom: 100px; left: 0px;
+    color: #343434; padding: 10px;
+    font-size: 1em;
+    line-height: 1.4; font-weight: bold;
+    z-index: 1002; display: none;
+    background: linear-gradient(rgb(252, 237, 167), rgb(251, 239, 126)) repeat scroll 0% 0% rgb(250, 219, 78);
+    max-width: 370px;
+}
+
+/** Unused */
+#notification a {
+    text-decoration: none;
+    color: #8f1414;
+    display: block;
+}
+
+#close {
+    margin: 10px;
+}
+
+#pages,
+#bottom,
+#filter-container,
+#header,
+#main-menu,
+#detail-area {
+    font-size: 1.2em;
+    text-align: center;
+}
+
+#header {
+    padding-top: 3em;
+}
+
+.mobile-logo {
+    display: inline-block;
+    padding: 0.5em 1em 0.5em 1em;
+    border-left: 0px solid transparent;
+}
+
+.top-menu .ui.menu.top.fixed {
+    z-index: 3010;
+}
+
+.warning {
+    padding: 1em;
+    color: #8F1414;
+}
+
+.kiezatlas.topic.edit .warning {
+    font-size: 0.8em;
+}
+
+#pages,
+#bottom,
+#filter-container,
+#main-menu,
+#detail-area,
+.footer {
+    position: relative;
+    top: 2em;
+}
+
+.frontpage #bottom {
+    padding-bottom: 2em;
+}
+
+#site-area {
+    flex-direction: row;
+    display: none; /** set to "flex" by ka-website.js */
+    /** font-size: 1.2em; **/
+    margin: auto auto;
+    padding: 1em;
+    /* Permalink - use to edit and share this gradient: http://colorzilla.com/gradient-editor/#ffffff+1,ffffff+100&1+0,0.91+100 */
+    border-top: 1px solid #FC3;
+    border-bottom: 1px solid #FC3;
+    background: -moz-linear-gradient(top, rgba(255,255,255,1) 0%, rgba(255,255,255,1) 1%, rgba(255,255,255,0.91) 100%); /* FF3.6-15 */
+    background: -webkit-linear-gradient(top, rgba(255,255,255,1) 0%,rgba(255,255,255,1) 1%,rgba(255,255,255,0.91) 100%); /* Chrome10-25,Safari5.1-6 */
+    background: linear-gradient(to bottom, rgba(255,255,255,1) 0%,rgba(255,255,255,1) 1%,rgba(255,255,255,0.91) 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', endColorstr='#e8ffffff',GradientType=0 ); /* IE6-9 */
+}
+
+#site-area .news-item h3 a {
+    color: #8f1414;
+    font-size: .8em;
+    font-weight: normal;
+}
+
+#site-area .news-item .label.date {
+    font-style: italic;
+    color: #a9a9a9;
+}
+
+#site-area .content-area {
+    flex: 0 0 64%;
+    width: 60%;
+    display: inline-block;
+    vertical-align: top;
+    padding: 1em;
+    padding-left: 2em;
+}
+
+#site-area .news-area {
+    flex: 0 0 30%;
+    width: 30%;
+    display: inline-block;
+    vertical-align: top;
+    padding: 1em;
+    border-left: 1px solid RGBA(0, 40, 86, 0.26);
+}
+
+.citymap #detail-area h2,
+#site-area h2 {
+    margin-top: 0px;
+    color: #343434;
+}
+
+.citymap #detail-area h2 {
+    margin-top: .5em;
+    text-align: left;
+    font-size: 1.2em;
+}
+
+#pages {
+    text-align: left;
+    width: 90%;
+    margin: auto;
+    padding: 1em;
+    text-align: center;
+}
+
+#navigation ul {
+    margin-top: 0px;
+}
+
+#navigation ul,
+#pages ul {
+    list-style-type: none;
+}
+
+#navigation ul li,
+#pages ul li {
+    background-color: #fff;
+    display: inline-block;
+    padding: .45em;
+    padding-left: 10px;
+    padding-right: 10px;
+    margin-right: 1em;
+}
+
+#pages ul li {
+    margin-top: 1em;
+}
+
+#navigation ul li a,
+.entry-card a,
+#pages ul li a {
+    text-decoration: none;
+}
+
+#navigation ul li:hover a,
+.entry-card a:hover,
+#pages ul li:hover a {
+    text-decoration: underline;
+    text-decoration-color: #8f1414;
+}
+
+#navigation .comments,
+#navigation .confirm,
+#navigation .account,
+#navigation .logout {
+    display: none;
+}
+
+#navigation .logout {
+    float: right; /** use display: absolute; right: 0px; instead */
+}
+
+#main-menu {
+    width: 100%;
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+#nearby-area h3,
+#main-menu h3 {
+    font-weight: normal;
+}
+
+#nearby-area h3 a,
+#main-menu h3 a {
+    cursor: pointer;
+    padding: 10px;
+    border: 1px solid #EACA8F;
+    background-color: #fff;
+}
+
+#nearby-area {
+    display: block;
+    text-align: center;
+    position: relative;
+    top: 2em;
+}
+
+#nearby-area .options {
+    /** display: none; **/
+    font-size: 1.2em;
+}
+
+#nearby-area .options p {
+    padding: 0em 2em;
+}
+
+.sidebar .menu-header {
+    height: 4.5em;
+}
+
+#karte {
+    position: relative;
+    padding-bottom: 3px;
+    /** background-color: #fff; **/
+}
+
+#karte h3 {
+    margin-left: 1em;
+    margin-right: 100px;
+    display: inline-block;
+    margin-bottom: 0.5em;
+}
+
+#karte h3 small {
+    color: #666;
+    font-size: 0.8em;
+}
+
+.sites .title {
+    color: #002856;
+    padding-top: 1em;
+}
+
+.sites .results,
+.sites .geoobjects {
+    padding-left: 0px;
+    list-style-type: none;
+}
+
+.sites .webalias {
+    background-color: #fff;
+    padding: 5px;
+    padding-left: .5em;
+    padding-right: .5em;
+}
+
+.sites .editor .geoobjects li {
+    margin-bottom: .5em;
+}
+
+.kiezatlas.facet-editor .facet-editor,
+.sites .editor {
+    margin: 2em;
+    margin-top: 5em;
+}
+
+/** Footer Style Copy and Adaptation from dm4-webpages... */
+
+.footer {
+    position: relative;
+    background-image: url("/de.kiezatlas.website/images/website_pattern_dg.jpg");
+    background-color: rgb(52, 52, 52);
+    color: rgb(169, 169, 169);
+    min-height: 100px;
+    box-shadow: 0px -3px 25px 1px #a9a9a9;
+    -moz-box-shadow: 0px -3px 25px 1px #a9a9a9;
+    -webkit-box-shadow: 0px -3px 25px 1px #a9a9a9;
+    font-size: .9em;
+}
+
+.footer h4 {
+    font-weight: normal;
+}
+
+.footer .provider,
+.footer .ba {
+    padding: 2em;
+}
+
+.footer .provider {
+    padding-top: .5em;
+    padding-bottom: .5em;
+    display: flex;
+    flex-flow: row wrap;
+    overflow: auto;
+    flex: 1;
+    margin: auto;
+    max-width: 1127px;
+}
+
+.footer h3 {
+    color: #efefef;
+    margin-bottom: 0.5em;
+}
+
+.footer .block {
+    display: inline-flex;
+    flex: 1 0 200px;
+    margin: 1em;
+    position: relative;
+}
+
+.footer .block ul {
+    list-style-type: none;
+    padding-left: 0em;
+    margin-top: 0em;
+}
+
+.footer .powered-by p,
+.footer .about p,
+.footer .block ul li {
+    line-height: 1.5em;
+}
+
+.footer a {
+    color: rgb(169, 169, 169);
+    text-decoration: none;
+}
+
+.footer .powered-by {
+    max-width: 1100px;
+    margin: auto;
+    padding: 1em 3em;
+}
+
+.footer .powered-by a,
+.footer a:hover {
+    color: #27638C;
+}
+
+.footer .powered-by a {
+    text-decoration: underline;
+}
+
+.footer .logos img {
+    vertical-align: top;
+    margin-right: 2em;
+    margin-top: .5em;
+    border: 1px solid #e9e9e9;
+    text-align: left;
+    /** max-height: 140px;
+    width: auto; **/
+}
+
+.footer .ba {
+    background-color: #fff;
+    color: #343434;
+}
+
+.citymap .citymap-title {
+    padding-left: 1em;
+}
+
+.citymap .welcome .title {
+    display: block;
+}
+
+.right.menu .category.search .results a {
+    text-decoration: none;
+}
+
+.right.menu .category.search .results a.action {
+    font-weight: 400;
+}
+
+.right.menu .ui.category.search .results .category .result {
+    margin-left: 130px;
+}
+
+.kiezatlas.confirm .right.menu .ui.search,
+.facet-editor .right.menu .ui.search,
+.sites .right.menu .ui.search {
+    display: none;
+}
+
+form .invalid {
+    border-color: #8F1414;
+    border-width: 2px;
+}
+
+.facet-editor form label {
+    display: block;
+    color: #666;
+    margin-bottom: 1.5em;
+}
+
+.facet-editor form label .ui.input {
+    display: block;
+    margin-bottom: .5em;
+}
+
+.facet-editor form label select[multiple="true"] {
+    min-height: 225px;
+}
+
+.facet-editor form label select {
+    padding: .5em;
+    cursor: pointer;
+}
+
+.sites .flex-container .selector {
+    margin-top: 1em;
+}
+
+.sites .flex-container,
+.citymap .flex-container {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    width: 100%; height: 100%;
+    display: flex;
+    align-items: stretch;
+    justify-content: space-between;
+}
+
+.sites .assigned,
+.sites .selector {
+    flex: 0 0 calc(50% - 2em);
+}
+
+.ui.menu .item,
+.citymap .ui.menu .item {
+    padding: .5em 1em;
+}
+
+.citymap #karte {
+    flex: 0 0 65%;
+    margin-top: 0em;
+    padding-top: 0em;
+    vertical-align: top;
+}
+
+.citymap #sidebar {
+    flex: 0 0 35%;
+    height: 100%;
+    background-color: #fff;
+    padding: 0em;
+    padding-bottom: 0em;
+    padding-top: 2em;
+    overflow-y: scroll;
+}
+
+.citymap #map {
+    margin-top: 60px;
+}
+
+.citymap #sidebar .welcome {
+    margin-top: 2em;
+    padding-left: 2em;
+    padding-right: 2em;
+}
+
+.citymap #sidebar h3 {
+    display: inline-block;
+    margin-bottom: 0em;
+}
+
+.citymap #sidebar .news-item h3 {
+    margin-top: 0.5em;
+    margin-bottom: 1.5em;
+}
+
+.citymap #sidebar .criterias {
+    position: relative;
+    display: inline-block;
+    margin-bottom: 1em;
+    top: -1.5em;
+    left: 1.5em;
+}
+
+.citymap #sidebar .criterias ul {
+    list-style-type: none;
+    line-height: 1.5em;
+    padding: 0em;
+    margin: 0em;
+}
+
+.citymap #sidebar .criterias li {
+    padding: 0.5em;
+    background-color: #fff;
+}
+
+.citymap #sidebar .criterias ul li a {
+    text-decoration: none;
+}
+
+.citymap #sidebar .criterias ul li a:hover,
+#category-area li .label:hover {
+    text-decoration: underline;
+    cursor: pointer;
+    color: #27638C;
+}
+
+#category-area {
+    margin: 2em;
+    width: 85%;
+}
+
+#category-area .results.cats,
+#search-area .results {
+    list-style-type: none;
+    padding-left: 0em;
+}
+
+#category-area .results {
+    margin-top: .5em;
+}
+
+#category-area .results .status {
+    padding-left: .5em;
+    font-size: .9em;
+    color: #666;
+}
+
+#category-area .results .item {
+    cursor: pointer;
+}
+
+#category-area .title.criteria {
+    font-weight: bold;
+}
+
+#category-area .title.criteria:hover {
+    text-decoration: underline;
+    color: #0078A8;
+    cursor: pointer;
+}
+
+#category-area li .label {
+    color: #002856;
+    line-height: 1.5em;
+}
+
+.citymap #detail-area {
+    background-color: #fff;
+    padding: 0em;
+    top: 0em;
+    margin-top: 0em;
+    text-align: left;
+    font-size: 1em;
+    padding-left: 2em;
+    width: 90%;
+}
+
+.citymap #sidebar .logo {
+    max-height: 200px;
+    padding-bottom: 1em;
+    padding-top: 1em;
+}
+
+.citymap #detail-area .entry-card .mobile-more,
+.citymap #detail-area .entry-card .imprint {
+    display: none;
+}
+
+.citymap #sidebar .imprint {
+    padding-left: 2em;
+    padding-bottom: 1em;
+}
+
+/** .citymap #sidebar .news-area h2 {
+    display: none;
+} **/
+
+.kiezatlas.topic .right.menu .ui.category.search .results a.action {
+    display: none;
+}
+
+.kiezatlas .right.menu .ui.category.search .my.search.icon {
+    display: none;
+    position: absolute;
+    top: 11px; left: 210px;
+}
+
+.sign-up .ui.search,
+.citymap .welcome .ui.search {
+    display: none;
+}
+
+.citymap #search-area {
+    width: 85%;
+    margin-left: 1.5em;
+}
+
+.citymap #search-area .results {
+    padding-left: 0em;
+}
+
+.citymap #category-area .results .anschrift,
+.sites .editor .results .anschrift,
+.citymap #search-area .results .anschrift {
+    color: #666;
+}
+
+.citymap #category-area .results .anschrift,
+.sites .editor .results .anschrift,
+.citymap #search-area .results a,
+.citymap #search-area .results .anschrift {
+    font-weight: normal;
+}
+
+.citymap #detail-area {
+    width: 85%;
+}
+
+.citymap .mobile-load {
+    display: none;
+}
+
+#listing .sites li,
+.citymap #detail-area .entry-card {
+    width: 100%; max-width: 100%;
+    background-color: #fff;
+    border-bottom: 1px solid #eaeaea;
+    margin: 0em 0em 1em 0em;
+    padding-bottom: 1em;
+}
+
+.citymap #detail-area .entry-card h3,
+.citymap #detail-area .entry-card .details {
+    box-shadow: none;
+    padding: 0em;
+}
+
+.citymap #detail-area .facet {
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.citymap #detail-area .facet .facet-values {
+    font-weight: normal;
+}
+
+.citymap #detail-area .facet .facet-values ul {
+    margin-top: .3em;
+    padding-left: 1.3em;
+}
+
+.citymap #detail-area .entry-card .lor-link {
+    bottom: 1em; right: 1em; left: auto;
+}
+
+.citymap #detail-area .search-option.d {
+    background-color: #eaeaea;
+    padding: 1em;
+}
+
+.citymap #site-area {
+    display: block;
+    flex-direction: row;
+    padding: 0em;
+    border-bottom: 0px solid transparent;
+    margin-top: 0px;
+    border-top: 0px solid transparent;
+}
+
+.citymap #site-area .content-area,
+.citymap #site-area .news-area {
+    width: 90%;
+    border: 0px solid transparent;
+    padding: 0em;
+    flex: 0 0 100%;
+    margin: 0em;
+    margin-top: 1em;
+    padding-left: 2em;
+}
+
+.citymap #spinning-wheel {
+    top: 55px;
+    width: 55px;
+    height: 50px;
+    z-index: 2002;
+    border-radius: 5px;
+    left: -2px;
+}
+
+.citymap .ui.search {
+    display: inline-block;
+    top: 10px;
+}
+
+#options-menu {
+    display: none;
+    position: fixed;
+    top: 3.5em;
+    width: 1127px;
+    left: 360px;
+    z-index: 2017;
+}
+
+#options-spacer {
+    height: 150px;
+    display: none;
+    position: relative;
+    max-width: 1127px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.search.options {
+    position: absolute;
+    right: 0em;
+    text-align: right;
+}
+
+.search.options .fields {
+    padding: 1em;
+    text-align: left;
+    border: 1px solid rgba(34,36,38,.15);
+    max-width: 300px;
+    background-color: #fff;
+}
+
+.search.options .fields div.ui {
+    padding-top: 0.2em;
+}
+
+#map.outlined  {
+    border-bottom: 1px solid #FC3;
+    border-top: 1px solid #FC3; /** #0078A8;*/
+    -webkit-box-shadow: 3px 0px 11px 0px rgba(50, 50, 50, 0.75);
+    -moz-box-shadow:    3px 0px 11px 0px rgba(50, 50, 50, 0.75);
+    box-shadow:         3px 0px 11px 0px rgba(50, 50, 50, 0.75);
+}
+
+#map {
+    font-size: 1em;
+    display: none;
+    z-index: 10;
+    height: 550px;
+}
+
+#map.fullsize {
+    width: 100%;
+    position: relative; bottom: 0px;
+    text-align: center;
+    background: #fff;
+}
+
+#spinning-wheel {
+    position: absolute; top: 0px;
+    width: 100%; height: 100%;
+    text-align: center;
+    display: none;
+    background-color: rgba(255, 255, 255, 0.9);
+}
+
+#spinning-wheel img {
+    margin: .5em;
+}
+
+#marker-name {
+    display: none;
+    border-radius: 2px;
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: #fff;
+    z-index: 2000;
+    max-width: 300px;
+    padding: 10px;
+    text-align: left;
+}
+
+#location-input .spinning-wheel {
+    position: absolute; top: 3px; right: 8px;
+    width: 40px; height: 40px;
+    text-align: center;
+    display: none;
+    background-color: rgba(255, 255, 255, 0.5);
+}
+
+#location-input .location-search-info {
+    display: none;
+    margin-top: 10px;
+    color: #ff0000;
+}
+
+#loading-area {
+    margin-right: auto; margin-left: auto;
+    width: 110px; height: 50px; z-index: 106; padding: 1em;
+    position: absolute; top: 35%;  left: 45%; color: #fff;
+    font-weight: bold; font-size: 11px; font-family: sans-serif;
+}
+
+#loading-area img.loading {
+    padding: 0px; margin: 0px; z-index: 101;
+    position: relative; left: -100px; top: 10px;
+    background: transparent;
+}
+
+/** ----------- Basic Font Styles & Colors ---------*/
+
+.edit .detail-area h2,
+#marker-name b,
+h3 {
+    color: #002856;
+}
+
+.leaflet-container a {
+    color: #002856;
+}
+
+.leaflet-container a:hover {
+    color: #8F1414;
+}
+
+#detail-area .entry-card .angebote-link .button,
+a {
+    color: #002856;
+    text-decoration: underline;
+    text-decoration-color: #8f1414;
+}
+
+.sidebar .menu a {
+    text-decoration: none;
+}
+
+.ui.vertical.menu .menu .item {
+    font-size: 1em;
+}
+
+.sidebar.ui.vertical.menu .item .menu .active.item {
+    font-weight: 400;
+}
+
+.search-option h1 {
+    position: absolute; top: -10px; left: 10px;
+}
+
+.search-option.a h1 {
+    color: #eaca8f;
+}
+
+.search-option.b h1 {
+    color: #0078A8;
+}
+
+.search-option.c h1 {
+    color: #8f1414;
+}
+
+.search-option.a:hover {
+    cursor: pointer;
+    border: 1px solid #EACA8F;
+}
+
+.search-option.b:hover {
+    cursor: pointer;
+    border: 1px solid #0078A8;
+}
+
+.search-option.c:hover {
+    cursor: pointer;
+    border: 1px solid #8F1414;
+}
+
+.search-option.d {
+    display: none;
+}
+
+h3.location-label {
+    color: #8f1414;
+}
+
+/** #places li .entries[aria-expanded="true"] {
+    display: inline-block !important;
+    left: 0px !important;
+    top: 0px !important;
+    background: transparent;
+}
+
+#places li .entries.submenu[aria-expanded="true"] {
+    display: inline-block !important;
+    left: 1em !important;
+    top: 0px !important;
+    border: 0px solid transparent;
+}
+
+#places li .entries[aria-expanded="true"] .submenu-item {
+    width: 240px;
+    background-color: #fff;
+    background: #fff;
+    padding: 5px;
+} **/
+
+#header ol {
+    text-align: left;
+    width: 75%;
+    margin: auto;
+}
+
+#main-menu p,
+#header .welcome {
+    max-width: 800px;
+    margin: auto;
+}
+
+#header .welcome {
+    margin-top: 3em;
+}
+
+#header .welcome img {
+    display: inline-block;
+    vertical-align: middle;
+}
+
+#header .welcome h3 {
+    display: inline-block;
+    vertical-align: middle;
+    margin-left: 1em;
+    text-align: left;
+}
+
+#header .welcome .small {
+    font-size: .7em;
+    font-weight: normal;
+    color: #343434;
+}
+
+#header .welcome p {
+    text-align: center;
+}
+
+.confirm #header .welcome {
+    text-align: left;
+}
+
+#bottom {
+    padding: 1em;
+    background-color: #fff;
+}
+
+
+/** -------- Buttons and ### Overrides jquery ui 1.9.2 flick theme --------- */
+
+/** .ui-menu-item a.ui-state-active,
+.ui-menu-item a.ui-state-focus {
+    color: #8F1414;
+    background-color: transparent;
+    background: transparent;
+    border: 0px solid transparent;
+    font-weight: normal;
+} **/
+
+.ui-menu .ui-menu-item {
+    width: 110px;
+}
+
+.ui-button-text-only .ui-button-text {
+    padding: 0px 3px;
+}
+
+button.star {
+    display: none;
+    cursor: pointer;
+    position: relative;
+    top: 2px;
+}
+
+button.star img {
+    position: relative;
+    top: 2px;
+}
+
+a.next-location:hover,
+a.prev-location:hover,
+button.star.ui-state-hover,
+button.star.ui-state-focus,
+.ui-widget-content .ui-state-hover,
+.ui-widget-content .ui-state-focus {
+    border: 1px solid #002856;
+    background: #002856;
+    color: #fff;
+}
+
+a.next-location.defused:hover,
+a.prev-location.defused:hover {
+    background-color: #fff;
+    border: 1px solid transparent;
+}
+
+/** #places {
+    display: inline-block;
+} **/
+
+img.more {
+    padding: 4px;
+}
+
+h1.my-title {
+    margin: 10px 10px;
+}
+
+/** ------- ### Kiezatlas Standards? --------- */
+
+.kiezatlas .info-area a.button {
+    margin-left: 10px;
+}
+
+.kiezatlas .info-area .right-side a.button {
+    margin: 0px;
+    font-size: .8em;
+}
+
+.kiezatlas .info-area .right-side .button.reset {
+    color: #ff0000;
+}
+
+.kiezatlas a.button,
+span.einrichtungen-btn,
+span.angebote-btn,
+#do-nearby {
+    cursor: pointer;
+}
+
+span.einrichtungen-btn:hover,
+span.angebote-btn:hover {
+    text-decoration: underline;
+    color: #0078A8;
+}
+
+span.bold {
+    font-weight: 700;
+}
+
+/**-------- ##### District Listing ----------------- */
+.district-area {
+    margin-top: 100px;
+    margin-bottom: 100px;
+    font-size: 1.2em;
+    /** padding-left: 75px;
+    padding-right: 75px;
+    padding-top: 30px; padding-bottom: 30px; **/
+    background: #eaeaea;
+    text-align: center;
+    color: #343434;
+}
+
+.district-area ul.bezirke li.ka2\.bezirk\.reinickendorf,
+.district-area ul.bezirke li.ka2\.bezirk\.marzahn-hellersdorf {
+    display: none;
+}
+
+.task-info .shortcuts {
+    padding: 0px;
+}
+
+.task-info .shortcuts a,
+.district-area ul.bezirke li {
+    color: #002856;
+    margin: 1em;
+    display: inline-block;
+    margin-left: 0px;
+    padding: 5px;
+    padding-left: 8px;
+    padding-right: 8px;
+    vertical-align: top;
+    text-align: left;
+}
+
+.district-area ul.bezirke li a {
+    text-decoration: none;
+    margin-left: .45em;
+    padding: .45em;
+    background-color: #fff;
+}
+
+.district-area ul.bezirke li a.district-button:hover {
+    background-color: #fff;
+    color: #8F1414;
+}
+
+.district-area li ul.bezirksregionen {
+    border-top: 1px solid #8F1414;
+}
+
+.district-area li ul.bezirksregionen {
+    text-align: left;
+    font-size: 0.9em;
+    margin-top: .45em;
+}
+
+.district-area li ul.bezirksregionen li {
+    margin: 5px 0px 0px 0px;
+    display: block;
+    margin-left: 0px;
+    font-size: .8em;
+    color: #343434;
+    padding: 5px;
+    padding-left: .45em;
+    padding-right: .45em;
+    border-bottom: 0px solid transparent;
+}
+
+.district-area li ul.bezirksregionen li a {
+    text-decoration: none;
+    margin-left: 0px;
+    color: #343434;
+    opacity: .2;
+}
+
+.district-area ul li:hover {
+    cursor: pointer;
+    /** background: #fff; **/
+}
+
+/** .district-area li ul.bezirksregionen li:hover {
+    background: #fff;
+    background-color: #fff;
+} **/
+
+.district-area ul.bezirke,
+.district-area ul.bezirksregionen {
+    list-style-type: none;
+    padding-left: 0px;
+}
+
+
+
+
+/** ------------------- Website Frontpage Orte Display ---------------- */
+
+#detail-area {
+    /** margin-top: 1em; **/
+    padding: 1em;
+    padding-top: 0px;
+    background-color: #EAEAEA;
+    display: none;
+    top: 0em;
+    margin-top: 0em;
+    /** min-height: 150px; */
+    /** margin-bottom: 2em **/
+}
+
+#detail-area .entry-card {
+    display: inline-block;
+    vertical-align: top;
+    min-width: 320px;
+    max-width: 370px;
+    text-align: left;
+    margin: 0em 1em 2em 1em;
+    font-size: 1em;
+    position: relative;
+}
+
+#detail-area .entry-card.unconfirmed {
+    background-color: #ACC;
+}
+
+#detail-area .entry-card h3 {
+    padding-left: 1em; padding-right: 10px;
+    padding-top: 10px; padding-bottom: 10px;
+    margin-bottom: 0px;
+}
+
+#detail-area .entry-card .imprint {
+    position: absolute;
+    bottom: -30px;
+    right: 1em;
+}
+
+#detail-area .entry-card .angebote-link {
+    padding-bottom: 1em;
+    padding-top: 10px;
+}
+
+#detail-area .entry-card .angebote-listing {
+    margin-top: 5px;
+}
+
+#detail-area .entry-card .lor-link {
+    position: absolute;
+    bottom: -30px;
+    left: 1em;
+}
+
+#detail-area .details {
+    background-color: #fff;
+    box-shadow: 1px 2px 3px 0px #666;
+    padding: 1em;
+}
+
+#detail-area .details p {
+    margin-bottom: 10px;
+    margin-top: 5px;
+}
+
+#detail-area a img {
+    padding-left: 10px;
+    padding-right: 10px;
+    padding-top: 0px;
+}
+
+
+
+/** -------------------- Frontpage Website Elements --------------------- **/
+
+#fulltext-search-form {
+    margin-left: auto;
+    margin-right: auto;
+    display: inline-block;
+    margin: 8px;
+    margin-top: 5px;
+}
+
+.list form {
+    display: inline-block;
+    padding-left: 1em;
+    padding-right: 1em;
+}
+
+.list .commands {
+    display: block;
+}
+
+.list .list-item h3,
+.list .ui.search.dropdown {
+    display: inline;
+}
+
+.list .ui.search.dropdown .text {
+    min-width: 150px;
+}
+
+#fulltext-do {
+    cursor: pointer;
+}
+
+#fulltext-input {
+    padding: 1em;
+}
+
+#fulltext-search-form input,
+#fulltext-input,
+#location-input {
+    display: inline-block;
+    position: relative;
+}
+
+#location-input input[type="text"],
+#fulltext-search-form input[type="text"] {
+    margin-left: 1em;
+    width: 360px;
+    margin-right: 5px;
+    border: #eaeaea solid 1px;
+    color: #343434;
+}
+
+#location-input input[type="submit"],
+#fulltext-search-form input[type="submit"] {
+    padding: 3px;
+}
+
+#fulltext-search-form input,
+#fulltext-input input,
+#location-input input {
+    padding: 5px;
+    padding-left: .45em;
+    font-size: 1em;
+}
+
+#location-input input[type="text"] {
+    width: 60%;
+    margin-left: 0px;
+}
+
+#location-input {
+    margin-top: 10px;
+    display: inline-block;
+}
+
+#street-alternatives {
+    display: none;
+}
+
+.prev-location,
+.next-location {
+    margin: 10px;
+    background-color: #fff;
+    padding: 3px;
+    cursor: pointer;
+    border: 1px solid transparent;
+}
+
+.prev-location {
+    margin-right: 5px;
+    padding-right: .45em;
+    padding-left: .45em;
+}
+
+.next-location {
+    padding-right: .45em;
+    padding-left: .45em;
+    margin-left: 5px;
+}
+
+.prev-location.defused,
+.next-location.defused {
+    cursor: auto;
+    opacity: .3;
+    text-decoration: none;
+}
+
+
+
+/** --------------------------- Geo Object Details ---------------------- **/
+
+.kiezatlas.topic #detail-area {
+    background-color: #e3e3e3;
+    padding: 5px;
+    display: inline-block;
+    text-decoration: none;
+    display: block;
+    color: #222;
+    max-width: 1140px;
+    margin: auto;
+    position: relative;
+}
+
+.kiezatlas.topic #detail-area .commands {
+    padding: 10px;
+    padding-bottom: 3em;
+    text-align: center;
+}
+
+.kiezatlas.topic #detail-area .commands a.ui.button {
+    margin-left: 1em;
+    margin-right: 1em;
+}
+
+.kiezatlas.comments .comment,
+.kiezatlas.confirm .comment {
+    margin-left: 5px;
+    margin-top: -5px;
+    z-index: -1;
+}
+
+.kiezatlas .commands h3 {
+    display: inline-block;
+    margin-right: .5em;
+}
+
+.comments .comment,
+.confirm .comment,
+.kiezatlas.topic .comment {
+    display: inline-block;
+    background-color: #fff;
+    padding: 1em;
+    margin-top: 0em;
+}
+
+.kiezatlas.topic #map {
+    width: 100%;
+    height: 340px;
+    max-height: 60%;
+    border: 1px solid #FC3;
+    display: inline-block;
+}
+
+.kiezatlas.topic .infos h3,
+.kiezatlas.topic .assigned-offers h3 {
+    margin-top: 5px;
+}
+
+.kiezatlas.topic #angebote h3.label {
+    color: #343434;
+    text-align: left;
+    margin-left: 5px;
+    margin-top: 5px;
+    margin-bottom: 10px;
+}
+
+.kiezatlas.topic .infos {
+    background-color: #fff;
+    display: inline-block;
+    text-align: left;
+    width: 100%;
+}
+
+.kiezatlas.topic .infos .bild img {
+    max-width: 400px;
+    height: auto;
+}
+
+.kiezatlas.topic .infos span.required {
+    font-size: 1.2em;
+    color: #8F1414;
+}
+
+.kiezatlas.topic #geoname,
+.kiezatlas.topic #email-address {
+    display: inline-block;
+}
+
+.kiezatlas.topic .assigned-offers {
+    background: #fff;
+    padding: 1em;
+    border: 1px solid #e9e9e9;
+    cursor: pointer;
+    margin: 10px;
+    margin-left: 0px;
+    text-align: left;
+    width: 85%;
+}
+
+.kiezatlas.topic .assigned-offers h3,
+.kiezatlas.topic .assigned-offers p {
+    margin-top: 0px;
+    margin-bottom: 0px;
+}
+
+.kiezatlas.topic .bold {
+    font-weight: bold;
+}
+
+.kiezatlas .italic,
+.kiezatlas.topic .italic {
+    font-style: italic;
+}
+
+.kiezatlas.topic .assigned-offers:hover {
+    box-shadow: 2px 2px 2px 0px #a9a9a9;
+    border: 1px solid #002856;
+}
+
+.kiezatlas.topic .assigned-offers.selected {
+    box-shadow: 3px 3px 2px 0px #a9a9a9;
+    border: 1px solid #002856;
+}
+
+.kiezatlas.topic .info-area {
+    background-color: #fff;
+    padding: 10px;
+    flex-direction: row;
+    display: flex;
+}
+
+.kiezatlas.topic .info-area .right-side,
+.kiezatlas.topic .info-area .left-side {
+    flex: 0 0 50%;
+}
+
+.kiezatlas.topic .info-area input[type="submit"] {
+    max-width: 50px;
+    cursor: pointer;
+}
+
+.kiezatlas.topic #detail-area.angebotsinfos .infos {
+    width: 49%;
+}
+
+.kiezatlas.topic #angebote {
+    /** overflow-y: scroll; */
+    height: 100%; width: 50%;
+    display: inline-block;
+    vertical-align: top;
+    background-color: #fff;
+}
+
+.kiezatlas.topic .infos .beschreibung {
+    max-width: 740px;
+}
+
+.kiezatlas.topic .infos .beschreibung p,
+.kiezatlas.topic .infos .opening p {
+    margin: 0px;
+    margin-bottom: 1em;
+}
+
+.kiezatlas.topic .infos .data-features,
+.kiezatlas.topic .infos .imprint {
+    float: right;
+}
+
+.kiezatlas.topic .infos .data-features {
+    font-size: .8em;
+    max-width: 280px;
+}
+
+.kiezatlas.topic .infos .data-features .ui.selection.dropdown {
+    min-height: 1em;
+}
+
+.kiezatlas.topic .infos .data-features .comment-input-fields .ui.input {
+    min-width: 200px;
+    display: block;
+}
+
+.kiezatlas.topic .infos label {
+    display: block;
+}
+
+.kiezatlas.topic .infos .label,
+.kiezatlas.topic .infos label,
+.kiezatlas.topic form label {
+    color: #a9a9a9;
+    font-size: .8em;
+}
+
+.kiezatlas.topic form textarea {
+    height: 95px;
+}
+
+.kiezatlas.topic form input[type="text"].plz,
+.kiezatlas.topic form select.city,
+.kiezatlas.topic form input.coordinates {
+    max-width: 150px;
+    display: inline-block;
+}
+
+.kiezatlas.topic form input[type="text"] {
+    display: block;
+    width: 90%;
+}
+
+.kiezatlas.topic form .cke_textarea_inline {
+    border: 1px solid #a9a9a9;
+    border-radius: 4px;
+    padding-left: 5px;
+    margin-bottom: 10px;
+    margin-top: 1px;
+    font-size: .8em;
+}
+
+.kiezatlas.topic form .cke_textarea_inline p {
+    margin: 5px;
+}
+
+.kiezatlas.topic form div.cke_textarea_inline,
+.kiezatlas.topic form textarea,
+.kiezatlas.topic form select,
+.kiezatlas.topic form input[type="number"],
+.kiezatlas.topic form input[type="text"] {
+    color: #343434;
+    margin-bottom: 10px;
+    padding: 5px;
+}
+
+.kiezatlas.topic form select#angebote-crit,
+.kiezatlas.topic form select#thema,
+.kiezatlas.topic form select#zielgruppen {
+    width: 95%;
+    height: 145px;
+}
+
+.kiezatlas.topic .categories {
+    text-align: left;
+}
+
+.kiezatlas.topic .categories .related-topics {
+    display: inline-block;
+    margin: 10px;
+    margin-left: 0px;
+}
+
+.kiezatlas.topic .categories .related-topics span {
+    background-color: #fff; /** #eaeaea; **/
+    padding: 4px;
+    padding-left: 8px;
+    padding-right: 8px;
+}
+
+.kiezatlas.topic #detail-area .metadata {
+    font-size: .8em;
+    padding: .5em;
+    color: #9a9999;
+    text-align: left;
+}
+
+.kiezatlas.topic #detail-area .metadata span,
+.kiezatlas.topic #detail-area .metadata a {
+    color: #9a9999;
+    font-style: italic;
+    font-weight: normal;
+}
+
+#navigation {
+    /** #D3D3D3; opacity: 0.8; be-link blue #2D509A **/
+    /** position: absolute; top: 0px; left: 0px; **/
+    z-index: 100;
+    /** padding: 10px; **/
+    /* padding-left: 1em; background-color: #fff; */
+    margin-left: auto;
+    margin-right: auto;
+    /** border-bottom: 1px solid #FC3; */
+}
+
+/* #navigation a {
+    text-decoration: none;
+    padding-top: 10px; padding-bottom: 9px;
+    padding-left: 10px; padding-right: 10px;
+}
+
+#navigation a.active:hover {
+    color: #fff;
+} **/
+
+.fahrinfo {
+    background-color: #fff;
+    padding: 4px;
+}
+
+
+
+/** ----------------------------------------------### Leaflet Overrides --- **/
+
+.leaflet-popup-content-wrapper .item {
+    border-bottom: 2px solid #e9e9e9; padding: 5px;
+    cursor: pointer; margin-top: 2px;
+}
+
+.leaflet-control-zoom a {
+    background-color: #fff;
+    padding: 3px;
+    border-radius: 0px;
+    -webkit-border-radius: 0px;
+    -moz-border-radius: 0px;
+}
+
+.leaflet-control-zoom {
+    /* background-color: #388fd0; **/
+    background: none;
+    border-radius: 0px;
+    -webkit-border-radius: 0px;
+    -moz-border-radius: 0px;
+}
+
+.leaflet-editing-icon.leaflet-move {
+    cursor: move;
+}
+
+.leaflet-editing-icon.leaflet-radius {
+    cursor: ew-resize;
+}
+
+.leaflet-control-zoom-loc {
+    background-image: url(/de.kiezatlas.website/images/locate.png);
+    margin-top: 0px; margin-bottom: 5px;
+}
+
+.leaflet-search-control {
+    cursor: auto;
+}
+
+.citymap .leaflet-top {
+    top: 50px;
+}
+
+.leaflet-tile {
+    filter: blur(3px);
+}
+.leaflet-tile.leaflet-tile-loaded {
+    filter: blur(0);
+    transition: .3s all ease-in;
+}
+
+.leaflet-control-zoom.leaflet-control {
+    margin-top: 1em;
+    z-index: 98;
+}
+
+.leaflet-container g path {
+    transition: fill .75s;
+}
+
+.leaflet-div-icon.leaflet-move {
+    /* background-color: transparent;
+    background-image: url('/de.kiezatlas.website/images/four-arrows.png');
+    background-repeat: no-repeat;
+    background-position: 0px 0px;
+    border: 0px solid transparent;**/
+}
+
+.leaflet-div-icon.leaflet-radius {
+    background-color: transparent;
+    background-image: url('/de.kiezatlas.website/images/sideways-resize-grey.png');
+    background-repeat: no-repeat;
+    background-position: 0px 0px;
+    border: 0px solid transparent;
+    width: 28px !important;
+    height: 23px !important;
+    margin-left: -14px !important;
+    margin-top: -10px !important;
+}
+
+.leaflet-div-icon.leaflet-move.extend-icon-medium {
+    width: 12px !important;
+    height: 12px !important;
+    margin-left: -6px !important;
+    margin-top: -6px !important;
+}
+
+div.legende {
+    display: none;
+    margin-left: auto;
+    margin-right: auto;
+    color: #343434;
+    background: #fff;
+    text-align: center;
+}
+
+div.legende .text-search-control {
+    display: inline-block;
+    margin: auto;
+    margin-right: 100px;
+}
+
+div.legende .text-search-control img {
+    display: inline-block;
+    position: relative;
+    top: 5px;
+    margin-left: 5px;
+}
+
+div.legende a.circle-control,
+div.legende a.district-control,
+div.legende a.lock-control {
+    position: absolute;
+    right: 1.5em;
+    bottom: 18px;
+}
+
+div.link-area {
+    display: inline-block;
+    margin: 30px;
+}
+
+.sozialraumdaten p {
+    max-width: 890px;
+    margin: auto;
+}
+
+#dialog-confirm {
+    display: none;
+}
+
+/** Kiezatlas Administrative Listing **/
+
+#listing {
+    position: relative;
+    top: 30px;
+    padding-bottom: 250px;
+}
+
+.filter.list .status,
+.filter.list .dataTables_wrapper {
+    padding-left: 5em;
+    padding-right: 5em;
+}
+
+.filter.list .display.dataTable {
+    border-left: 1px solid #434343;
+    border-right: 1px solid #434343;
+    /** font-size: 0.9em; **/
+}
+
+table.dataTable.display tbody tr.no-coordinates td:first-child,
+table.dataTable.display tbody tr.no-email td:first-child {
+    border-left: 4px solid #8F1414;
+}
+
+table.dataTable.display tbody tr.unconfirmed {
+    opacity: .3;
+}
+
+.filter.list select,
+.filter.list input {
+    padding: .5em;
+}
+
+.filter.list .dataTables_info {
+    padding-left: 1.2em;
+}
+
+.list .status {
+    padding-left: 1em;
+}
+
+.soziale-einrichtungen {
+    max-width: 70%;
+    padding-left: 1em;
+}
+
+ul.soziale-einrichtungen li {
+    list-style-type: none;
+}
+
+.soziale-einrichtungen a .list-item {
+    text-decoration: none;
+}
+
+.soziale-einrichtungen .list-item {
+    background: #fff;
+    padding: 1em;
+    border: 1px solid #002856;
+    margin: 5px;
+}
+
+.soziale-einrichtung a .list-item {
+    cursor: pointer;
+}
+
+.soziale-einrichtungen .list-item h3,
+.soziale-einrichtungen .list-item p {
+    margin-top: 0px;
+    margin-bottom: 0px;
+}
+
+.soziale-einrichtungen .einrichtungen {
+    margin-top: 1em;
+    padding: 0em;
+}
+
+.soziale-einrichtungen .einrichtungen .label:hover {
+    color: #343434;
+}
+
+ul.soziale-einrichtungen .einrichtungen ul {
+    padding: 1.5em;
+    padding-top: .5em;
+}
+
+ul.soziale-einrichtungen .einrichtungen li {
+    list-style-type: circle;
+    color: #a9a9a9;
+    line-height: 1.5em;
+}
+
+.soziale-einrichtungen p.meta {
+    color: #a9a9a9;
+    font-style: italic;
+}
+
+.soziale-einrichtungen .value {
+    color: #000;
+    /** font-style: normal; **/
+}
+
+.soziale-einrichtungen .label {
+    color: #a9a9a9;
+}
+
+.label.clickable {
+    cursor: pointer;
+}
+
+.kiezatlas.topic .data-features .comment-input-fields.hidden,
+.soziale-einrichtungen .einrichtungen .items.hidden {
+    display: none;
+}
+
+.soziale-einrichtungen .list-item:hover {
+    box-shadow: 2px 2px 2px 0px #a9a9a9;
+}
+.soziale-einrichtungen .list-item.selected {
+    box-shadow: 3px 3px 2px 0px #a9a9a9;
+}
+
+.soziale-einrichtungen .list-item.no-email {
+    background-color: #ef9713;
+}
+
+.soziale-einrichtungen .list-item.no-coordinates,
+.soziale-einrichtungen .list-item.no-email.no-coordinates,
+.soziale-einrichtungen .list-item.no-bezirksregion.no-coordinates,
+.soziale-einrichtungen .list-item.no-email.no-bezirksregion.no-coordinates {
+    background-color: #f00 !important;
+}
+
+.soziale-einrichtungen .list-item.unconfirmed {
+    opacity: .4;
+}
+
+.soziale-einrichtungen .list-item.no-bezirksregion,
+.soziale-einrichtungen .list-item.no-email.no-bezirksregion {
+    background-color: #eaef13;
+}
+
+.soziale-einrichtungen .list-item.no-email .label {
+    color: #fff;
+}
+
+.list-item .ansprechpartner {
+    margin-top: .5em;
+    color: #a9a9a9;
+    font-style: italic;
+}
+
+.list-item .ansprechpartner .remove {
+    display: inline-block;
+    margin-left: .5em;
+}
+
+.soziale-einrichtungen .list-item .ansprechpartner {
+    margin-top: 0em;
+}
+
+.list-item .managers {
+    margin-bottom: 1em;
+}
+
+/** --------------------------------------- Overrides for Sign-up Dialog --- */
+
+body.sign-up {
+    margin-top: 3em;
+    max-width: 1170px;
+    margin: auto;
+}
+
+.custom-ws-up, .sign-up {
+    font-family: serif;
+    color: rgba(39, 99, 140, 1.0);
+    font-size: 16px;
+}
+
+/** .sign-up {
+    margin: 20px;
+}*/
+
+.sign-up label {
+    margin-left: 5px;
+    color: #343434;
+    padding-left: 5px;
+}
+
+.sign-up p {
+    line-height: 1.2em;
+}
+
+.sign-up #receipt-view p {
+    margin-left: 1em;
+}
+
+.sign-up #account-info,
+.sign-up #custom-ws-info,
+.sign-up #private-info {
+    display: none;
+}
+
+.sign-up #custom-ws-text,
+.sign-up #pre-text {
+    margin: 30px;
+}
+
+.sign-up #custom-ws-text label p {
+    display: inline-block;
+    margin: 0px;
+    margin-right: 1em;
+}
+
+.sign-up #pre-text {
+    font-size: small;
+}
+
+.sign-up .logout-form,
+.sign-up.account-page .dialog-body,
+.sign-up #page-header {
+    text-align: left;
+    margin: 2em;
+}
+
+.sign-up #page-header a {
+    text-decoration: none;
+}
+
+.sign-up #page-footer {
+    font-size: small;
+    color: #a9a9a9;
+    text-align: left;
+    position: relative;
+    margin: 30px;
+}
+
+.sign-up #pre-text a,
+.sign-up #page-footer a {
+    text-decoration: none;
+}
+
+.sign-up #page-header img.webapp-logo {
+    margin-top: 5em;
+    margin-bottom: 2em;
+}
+
+.sign-up #page-header .project-title {
+    margin-top: 20px;
+    font-size: 2.5em;
+    font-weight: bold;
+    color: #27638C;
+}
+
+.sign-up #page-footer .plus {
+    font-size: 3em;
+    font-weight: bold;
+    color: #a9a9a9;
+    position: relative;
+    top: -60px;
+    margin-right: 10px;
+}
+
+.sign-up #account-view,
+.sign-up #receipt-view,
+.sign-up #sign-up-view,
+.sign-up #log-in-view {
+    padding: 0px 30px 30px 1em;
+    border-radius: 3px;
+    text-align: left;
+    max-width: 610px; /** 30px Margin */
+}
+
+.sign-up #receipt-view h2,
+.sign-up #sign-up-view h2,
+.sign-up #log-in-view h2 {
+    margin-left: .7em;
+}
+
+.sign-up #sign-up-view form,
+.sign-up #log-in-view form {
+    padding: 1em;
+    position: relative;
+}
+
+.sign-up #log-in-view form {
+    text-align: left;
+}
+
+#log-in-view form input[type="text"],
+#log-in-view form input[type="password"] {
+    width: 90%;
+}
+
+#sign-up-view form input[type="text"],
+#sign-up-view form input[type="password"] {
+    width: 90%;
+}
+
+#sign-up-view form input[type="checkbox"] {
+    cursor: pointer;
+}
+
+/** #receipt-view h2,
+#sign-up-view h2,
+#log-in-view h2 {
+ text-align: center;
+ color: #666;
+ margin: 0 0 30px 0;
+ position: relative;
+ /** font: normal 26px/1 Verdana, Helvetica;
+} **/
+
+.sign-up input.ok,
+.sign-up input.log-in,
+.sign-up input.custom-ws-up,
+.sign-up input.sign-up {
+    font-size: 20px;
+    padding: 10px 1em 10px 1em;
+    margin: 0 0 1em 0;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    color: #555;
+    -moz-box-shadow: 0 1px 1px #ccc inset, 0 1px 0 #fff;
+    -webkit-box-shadow: 0 1px 1px #ccc inset, 0 1px 0 #fff;
+    box-shadow: 0 1px 1px #ccc inset, 0 1px 0 #fff;
+}
+
+.sign-up .logout-form input.ok,
+.sign-up input.log-in.ok,
+.sign-up input.custom-ws-up,
+.sign-up input.sign-up.ok {
+    margin-top: 20px;
+    background-color: rgba(39, 99, 140, 1.0);
+    color: rgba(255, 255, 255, 1.0);
+    cursor: pointer;
+    display: inline-block;
+}
+
+.sign-up input[disabled] {
+    background-color: rgba(99, 99, 99, 1.0);
+}
+
+.sign-up input.sign-up.ok[disabled],
+.sign-up input[type="text"][disabled] {
+    color: #999;
+    background-color: #fff;
+    cursor: auto;
+}
+
+.sign-up .label {
+    color: #a9a9a9;
+}
+
+.sign-up .value {
+    margin-bottom: 1em;
+}
+
+.sign-up #message {
+    color: rgba(200, 0, 0, 1.0);
+    line-height: 1.8em;
+}
+
+.sign-up #message-view {
+    padding-left: 0em;
+    margin-bottom: 10px;
+    color: rgba(39, 99, 140, 1.0);
+}
+
+.sign-up.account-page .logout-form {
+    margin-left: 0em;
+    margin-bottom: 0em;
+}
+
+.sign-up.account-page #page-header {
+    margin-top: 5em;
+    margin-bottom: 0em;
+}
+
+.sign-up.account-page .dialog-body {
+    margin-top: 0em;
+}
+
+.sign-up.logout-page #message-view {
+    padding-left: 2em;
+}
+
+.sign-up .password-reset a {
+    font-size: 0.9em;
+}
+
+/** Webclient specific styles */
+
+#sign-up-button {
+ margin-right: 1em;
+}
+
+
+
+/** 
+  margin-top: 5px; width: 45px; height: 20px;
+  childish.. => z-index: 100; position: absolute; top: 10px; left: 10px; 
+}
+**/
+
+/** .leaflet-control-zoom-out {
+  position: relative; top: -25px; left: 25px;
+} **/
+
+.citymap .ui.tabular.menu {
+    border-bottom: 1px solid #FC3;
+    margin-top: 0em;
+    padding-left: 2em;
+    width: 93%;
+}
+
+.ui.tabular.menu .item {
+    cursor: pointer;
+}
+
+.top-menu .right .circular {
+    margin-left: .5em;
+    background-color: #EAEAEA;
+}
+
+/** --------------------- Media Specific Style Overrides ------------------ **/
+
+@media(min-width: 1600px) {
+    #karte {
+        max-width: 70%;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    #district-area {
+        padding-left: 1em;
+        padding-right: 1em;
+    }
+}
+
+@media(max-width: 1600px) {
+    .filter.list .status,
+    .filter.list .dataTables_wrapper {
+        padding-left: 2em;
+        padding-right: 2em;
+    }
+    .filter.list td.lat-col,
+    .filter.list td.lon-col {
+        display: none;
+    }
+}
+
+@media(max-width: 1400px) {
+    .citymap-title {
+        display: none;
+    }
+    .citymap .welcome .title {
+        display: block;
+    }
+    .citymap .mobile-logo {
+        display: inline-block;
+        padding: 0.5em 1em 0.5em 1em;
+        border-left: 0px solid transparent;
+    }
+}
+
+@media(max-width: 1200px) {
+    div.legende {
+        text-align: left;
+    }
+    #fulltext-search-form input[type="text"] {
+        width: 230px;
+    }
+    .kiezatlas.topic #detail-area {
+        margin: 30px;
+    }
+    .citymap #karte {
+        flex: 0 0 60%;
+    }
+    .citymap #sidebar {
+        flex: 0 0 40%;
+    }
+    .citymap .ui.tabular.menu {
+        width: 98%;
+        padding-left: 0.5em;
+    }
+    .filter.list td.comment-col,
+    .filter.list td.author-col {
+        display: none;
+    }
+    .filter.list .status,
+    .filter.list .dataTables_wrapper {
+        padding-left: 1em;
+        padding-right: 1em;
+    }
+}
+
+@media (max-width: 1024px) {
+    .top-menu .ui.menu .dropdown.item,
+    .top-menu .ui.menu .angebote.item,
+    .top-menu .ui.menu .logout.item,
+    .top-menu .ui.menu .login.item {
+        display: none !important;
+    }
+}
+
+@media(max-width:900px) {
+    .filter.list td.mail-col {
+        display: none;
+    }
+    #site-area {
+        flex-direction: column;
+    }
+    #site-area .news-area {
+        border-left: 1px solid transparent;
+        /** border-top: 1px solid RGBA(0, 40, 86, 0.26); **/
+        width: 95%;
+    }
+    #site-area .content-area {
+        padding-left: 1em;
+        width: 95%;
+    }
+    #main-menu h3 {
+        border: 1px solid #EACA8F;
+        background-color: #fff;
+        padding: 1em;
+    }
+    #main-menu h3 a {
+        border: 1px solid #fff;
+        padding: .45em;
+    }
+    .search-option {
+        margin-left: 0px;
+        margin-right: 0px;
+        max-width: 100%;
+        margin-bottom: 20px;
+        border-left-color: #fff;
+        border-right-color: #fff;
+    }
+    .search-option.c:hover,
+    .search-option.b:hover,
+    .search-option.a:hover {
+        border-left-color: #fff;
+        border-right-color: #fff;
+    }
+    .search-option.d {
+        border-left-color: #a9a9a9;
+        border-right-color: #a9a9a9;
+    }
+    #street-alternatives {
+        margin-left: 1em;
+    }
+    #map p,
+    #main-menu p,
+    #header .welcome p {
+        width: 75%;
+        margin: auto;
+        margin-bottom: 25px;
+        margin-top: 1em;
+    }
+    .leaflet-div-icon.leaflet-move {
+        width: 1.5em;
+        height: 1.5em;
+        margin-top: -8px;
+        margin-left: -8px;
+    }
+    div.link-area {
+        margin: 0px;
+        text-align: center;
+        max-width: 100%;
+    }
+    div.link-area img {
+        width: 100%;
+    }
+    .district-area ul.bezirksregionen li,
+    .district-area ul.bezirke li {
+        margin: 5px;
+    }
+    .kiezatlas.topic .infos .beschreibung,
+    .sozialraumdaten p {
+        max-width: 90%;
+    }
+    .kiezatlas.topic #angebote,
+    .kiezatlas.topic #detail-area.angebotsinfos .infos {
+        width: 100%;
+        overflow-y: hidden;
+    }
+}
+
+@media (max-width:767px) {
+    .top-menu .ui.menu .gesamt.item,
+    .top-menu .ui.menu .angebote.item,
+    .top-menu .ui.menu .create.item,
+    .top-menu .ui.menu .logout.item,
+    .top-menu .ui.menu .login.item {
+        display: none !important;
+    }
+}
+
+@media (max-width:600px), (max-width:720px) {
+    #header {
+        margin-top: 1em;
+        text-align: left;
+    }
+    .frontpage #header .welcome img,
+    .frontpage #header .welcome h3 {
+        display: none;
+    }
+    .mobile-logo {
+        display: inline-block;
+        padding: 0.5em 1em 0.5em 1em;
+        border-left: 0px solid transparent;
+    }
+    .citymap .right.menu .ui.search {
+        display: none;
+    }
+    .citymap .welcome .ui.search {
+        display: inline-block;
+        top: -20px;
+    }
+    .citymap .mobile-load {
+        padding: 1em;
+        display: block;
+    }
+    .citymap #sidebar #detail-area .search-option.d,
+    .citymap #karte {
+        display: none !important;
+    }
+    .citymap #sidebar {
+        flex: 0 0 100%;
+    }
+    .citymap .welcome {
+        width: 90%;
+        padding-left: 0em;
+        padding-top: 1em;
+    }
+    .citymap .ui.tabular.menu {
+        width: 97%;
+        padding-left: 1em;
+    }
+    .citymap #detail-area,
+    .citymap #notification,
+    .citymap #site-area{
+        width: 100%;
+        padding-left: 0em;
+    }
+    #header .welcome p {
+        display: inline-block;
+        width: 100%;
+        margin-bottom: 0px;
+        text-align: center;
+    }
+    #filter-container {
+        display: none;
+    }
+    #karte button.star.no-favs {
+        right: 10px;
+    }
+    #karte {
+        margin-top: 4em;
+    }
+    #karte .location-label {
+        font-size: 1em;
+        margin: 0.5em 160px 0.5em 1em;
+    }
+    #karte button.star {
+        position: absolute;
+        right: 125px;
+        top: 5px;
+    }
+    #places {
+        right: .45em;
+        top: -4px;
+    }
+    #detail-area {
+        padding: 0px;
+        margin-top: 0px;
+        min-height: 0px;
+        margin-bottom: 1em;
+    }
+    #detail-area h3 {
+        display: none;
+    }
+    #detail-area #angebote h3,
+    #detail-area .assigned-offers h3,
+    #detail-area .infos h3 {
+        display: block;
+    }
+    #detail-area .entry-card {
+        font-size: .8em;
+        min-width: 150px;
+        margin: 1em;
+    }
+    .citymap #detail-area .entry-card {
+        font-size: 1em;
+        margin: 1em;
+        width: 90%;
+    }
+    .citymap #detail-area .entry-card .mobile-more {
+        display: inline-block;
+    }
+    .citymap #category-area,
+    .citymap #search-area {
+        margin-left: 1em;
+    }
+    .citymap #sidebar .content-area,
+    .citymap #sidebar .imprint {
+        padding-left: 1em;
+    }
+    #detail-area .entry-card h3 {
+        display: inline-block;
+        margin: 0px;
+    }
+    .legende .elements {
+        display: none;
+    }
+    #navigation ul {
+        margin-left: 0px;
+    }
+    .kiezatlas.topic #detail-area {
+        margin: 10px;
+    }
+    .kiezatlas.topic .info-area {
+        flex-direction: column;
+    }
+}
+
+@media (max-width:500px) {
+    div.legende a.circle-control,
+    div.legende a.district-control {
+        width: 110px;
+        bottom: 10px;
+        right: 0px;
+    }
+    div.legende a.lock-control {
+        width: 110px;
+        bottom: 1.2em;
+        right: 0px;
+    }
+    #fulltext-search-form input[type="text"] {
+        width: 50%;
+        margin-left: 0px;
+    }
+    #nearby-area .finde-infos,
+    #nearby-area a {
+        display: block;
+    }
+}
+
+
+/**  ------- Screen Height Related Style Rules ---- */
+
+@media (min-height:1201px) {
+    #map {
+        height: 650px
+    }
+    #notification {
+        bottom: 250px;
+    }
+}
+
+@media (max-height:1200px) {
+    #map {
+        height: 550px;
+    }
+    #notification {
+        bottom: 150px;
+    }
+}
+
+@media (max-height:1100px) {
+    #map {
+        height: 450px;
+    }
+}
+
+@media (max-height:810px) {
+    #map {
+        height: 350px;
+    }
+    .comments #header,
+    .confirm #header {
+        display: block;
+    }
+    .frontpage #detail-area {
+        top: 0em;
+        margin-top: 0px;
+    }
+}
+
+@media (max-height: 750px) {
+    .frontpage #header {
+        display: none;
+    }
+    .mobile-logo {
+        display: inline-block;
+        padding: 0.5em 1em 0.5em 1em;
+        border-left: 0px solid transparent;
+    }
+    #karte {
+        margin-top: 6em;
+    }
+    /** .frontpage #filter-container {
+        margin-top: 4em;
+    } */
+}

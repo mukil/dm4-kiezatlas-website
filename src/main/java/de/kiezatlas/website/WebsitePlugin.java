@@ -110,6 +110,8 @@ import de.kiezatlas.website.model.SearchKeywords;
 import de.kiezatlas.website.model.SearchResultList;
 import de.kiezatlas.website.model.SearchResult;
 import de.kiezatlas.website.model.UsernameView;
+import java.net.URI;
+import java.net.URISyntaxException;
 import javax.ws.rs.DELETE;
 
 /**
@@ -599,7 +601,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         }
         Topic geoObject = dm4.getTopic(topicId);
         if (isGeoObjectTopic(geoObject)) {
-            moveGeoObjecToWorkspace(geoObject, getStandardWorkspace());
+            moveGeoObjecToWorkspace(geoObject, getStandardWorkspace(), false);
             moveGeoObjecFacetsToWorkspace(geoObject, getStandardWorkspace());
             viewData("message", "Der Eintrag \"" + geoObject.getSimpleValue() + "\" erfolgreich freigeschaltet.");
             List<String> mailboxes = getAssignedUserMailboxes(geoObject);
@@ -616,15 +618,16 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     @GET
     @Path("/list")
     @Produces(MediaType.TEXT_HTML)
-    public Viewable prepareEinrichtungsListing() {
-        if (!isAuthenticated()) return getUnauthorizedPage();
-        // ### Use: isEligibleForListView()
+    public Response prepareEinrichtungsListing() throws URISyntaxException {
+        if (!isAuthenticated()) return Response.status(Status.UNAUTHORIZED).build();
         List<RelatedTopic> usersDistricts = getUserDistrictTopics();
         long districtId = -1;
+        String newListLocation = "/list/filter";
         if (usersDistricts != null && usersDistricts.size() > 0) {
             districtId = usersDistricts.get(0).getId();
+            newListLocation += "/" + districtId;
         }
-        return prepareEinrichtungsListing(districtId);
+        return Response.seeOther(new URI(newListLocation)).build();
     }
 
     @GET
@@ -656,25 +659,6 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         }
         log.info("Initializing filter LIST for districtId=\"" + region + "\"");
         return preparePublicFilterList(region);
-    }
-
-    @GET
-    @Path("/list/{districtId}")
-    @Produces(MediaType.TEXT_HTML)
-    public Viewable prepareEinrichtungsListing(@PathParam("districtId") long districtId) {
-        if (!isAuthenticated()) return getUnauthorizedPage();
-        // ## Allow guests to view district listings, too?
-        if (isUserAssociatedWithBezirk(districtId)) {
-            log.info("Initializing LIST for districtId=\"" + districtId + "\"");
-            List<EinrichtungView> results = getEinrichtungList(districtId);
-            viewData("districtId", districtId);
-            viewData("name", "Einrichtungen");
-            return getListTemplate(results);
-        }
-        viewData("name", "Listenansicht");
-        viewData("message", "Ihr Account scheint noch nicht als Bezirk-Administrator_in eingerichtet zu sein. "
-            + "Wenden Sie sich bitte an die Administrator_innen.");
-        return getSimpleMessagePage();
     }
 
     /**
@@ -2676,8 +2660,9 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         if (!geoObject.getTypeUri().equals(KiezatlasService.GEO_OBJECT)) return false;
         try {
             Topic deletionWs = workspaces.getWorkspace(DELETION_WORKSPACE_URI);
-            moveGeoObjecToWorkspace(geoObject, deletionWs);
-            // moveGeoObjecFacetsToWorkspace(geoObject, deletionWs);
+            moveGeoObjecToWorkspace(geoObject, deletionWs, true);
+            // notfies system mailbox account (for now)
+            sendGeoObjectDeletionNotice("Datensatz zur Löschung vorgeschlagen", geoObject, accesscl.getUsernameTopic());
             return true;
         } catch (RuntimeException re) {
             log.severe("Geo Object could not be deleted  ("+geoObject+"), RuntimeException Message: " + re.getMessage()
@@ -3148,6 +3133,18 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
                 + "<a href=\""+url+"\">Link zum Eintrag</a><br/><br/>Vielen Dank f&uuml;r deine Unterst&uuml;tzung<br/><br/>Ciao!");
     }
 
+    private void sendGeoObjectDeletionNotice(String subject, Topic geoObject, Topic username) {
+        // String recipients = collectDistrictAdministrativeRecipients(geoObject, false);
+        String detailsPage = SignupPlugin.DM4_HOST_URL+"website/geo/" + geoObject.getId();
+        String loginPage = SignupPlugin.DM4_HOST_URL + "sign-up/login";
+        signup.sendUserMailboxNotification(SYSTEM_MAINTENANCE_MAILBOX, subject, "<br/>Liebe/r Super-Administrator_in,<br/><br/>"
+            + "ein Einrichtungsdatensatz wurde von \""+username.getSimpleValue().toString()+"\" zur L&ouml;schung vorgeschlagen. "
+            + "Bitte schaue mal ob Du diesen nicht gleich richtig l&ouml;schen kannst.<br/><br/>"
+            + "Name des neuen Eintrags: \"" + geoObject.getSimpleValue().toString() + "\"<br/>"
+            + "<a href=\""+detailsPage+"\">Link zum gel&ouml;schten Datensatz</a> bzw. zum <a href=\""+loginPage+"\">Kiezatlas-Login</a><br/>"
+            + "<br/><br/>Ok, das war's schon.<br/><br/>Danke + Ciao!");
+    }
+
     private void sendGeoObjectCreationNotice(String subject, Topic geoObject, Topic username) {
         String recipients = collectDistrictAdministrativeRecipients(geoObject, false);
         String detailsPage = SignupPlugin.DM4_HOST_URL+"website/geo/" + geoObject.getId();
@@ -3260,7 +3257,14 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     }
 
     private Topic getParentGeoObjectTopic(Topic entry) {
-        Topic result = entry.getRelatedTopic(null, CHILD_ROLE, PARENT_ROLE, KiezatlasService.GEO_OBJECT);
+        Topic result = null;
+        try {
+            result = entry.getRelatedTopic(null, CHILD_ROLE, PARENT_ROLE, KiezatlasService.GEO_OBJECT);
+        } catch (RuntimeException ex) {
+            log.warning("Exception loading parent geo object topic " + ex.getLocalizedMessage()
+                    + " Caused by " + ex.getCause().getLocalizedMessage()); // AccessControlException...
+            return result;
+        }
         if (result == null) log.warning("Search Result Entry: " +entry.getTypeUri()
             + ", " +entry.getId() +" has no Geo Object as PARENT"); // fulltext searches also "abandoned" facet topics
         return result;
@@ -3492,7 +3496,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     }
 
     /** ### FIXME: Move user_assignment edge to new workspace too! */
-    private void moveGeoObjecToWorkspace(Topic geoObject, Topic workspace) {
+    private void moveGeoObjecToWorkspace(Topic geoObject, Topic workspace, boolean deletion) {
         ChildTopics geoObjectChilds = geoObject.loadChildTopics().getChildTopics();
         Topic addressObject = geoObjectChilds.getTopic("dm4.contacts.address");
         ChildTopics addressChilds = addressObject.loadChildTopics().getChildTopics();
@@ -3500,21 +3504,23 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         coordinateTopic.loadChildTopics();
         workspaces.assignToWorkspace(geoObject, workspace.getId());
         workspaces.assignToWorkspace(geoObjectChilds.getTopic("ka2.geo_object.name"), workspace.getId());
-        workspaces.assignToWorkspace(coordinateTopic, workspace.getId());
-        workspaces.assignToWorkspace(coordinateTopic.getChildTopics().getTopic("dm4.geomaps.longitude"), workspace.getId());
-        workspaces.assignToWorkspace(coordinateTopic.getChildTopics().getTopic("dm4.geomaps.latitude"), workspace.getId());
-        workspaces.assignToWorkspace(addressObject, workspace.getId());
-        Topic streetNr = addressChilds.getTopicOrNull("dm4.contacts.street");
-        if (streetNr != null) {
-            log.info("Moving street to workspace" + workspace);
-            workspaces.assignToWorkspace(streetNr, workspace.getId());
-        }
-        workspaces.assignToWorkspace(addressChilds.getTopic("dm4.contacts.postal_code"), workspace.getId());
-        workspaces.assignToWorkspace(addressChilds.getTopic("dm4.contacts.city"), workspace.getId());
-        Topic addressCountry = addressChilds.getTopicOrNull("dm4.contacts.country");
-        if (addressCountry != null) {
-            log.info("Moving address to workspace" + workspace);
-            workspaces.assignToWorkspace(addressCountry, workspace.getId());
+        if (!deletion) { // in case of confirmation, move everything, in case of deletion, just the geo object
+            workspaces.assignToWorkspace(coordinateTopic, workspace.getId());
+            workspaces.assignToWorkspace(coordinateTopic.getChildTopics().getTopic("dm4.geomaps.longitude"), workspace.getId());
+            workspaces.assignToWorkspace(coordinateTopic.getChildTopics().getTopic("dm4.geomaps.latitude"), workspace.getId());
+            workspaces.assignToWorkspace(addressObject, workspace.getId());
+            Topic streetNr = addressChilds.getTopicOrNull("dm4.contacts.street");
+            if (streetNr != null) {
+                log.info("Moving street to workspace" + workspace);
+                workspaces.assignToWorkspace(streetNr, workspace.getId());
+            }
+            workspaces.assignToWorkspace(addressChilds.getTopic("dm4.contacts.postal_code"), workspace.getId());
+            workspaces.assignToWorkspace(addressChilds.getTopic("dm4.contacts.city"), workspace.getId());
+            Topic addressCountry = addressChilds.getTopicOrNull("dm4.contacts.country");
+            if (addressCountry != null) {
+                log.info("Moving address to workspace" + workspace);
+                workspaces.assignToWorkspace(addressCountry, workspace.getId());
+            }
         }
         log.info("Basic Geo Object, Address and Coordinate Facet moved to Workspace \"" + workspace.getSimpleValue() + "\"");
     }

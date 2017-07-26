@@ -95,7 +95,8 @@ public class EinrichtungView implements JSONEnabled {
             json.put("anschrift", address.getSimpleValue().toString()); // Utility
             setStrasse(address.getChildTopics().getStringOrNull("dm4.contacts.street"));
             setPLZ(address.getChildTopics().getStringOrNull("dm4.contacts.postal_code"));
-            setCity(address.getChildTopics().getString("dm4.contacts.city"));
+            Topic city = address.getChildTopics().getTopicOrNull("dm4.contacts.city");
+            if (city != null) setCity(city.getSimpleValue().toString()); // Workaround: City deletion (wrong workspace) bug
         } catch (JSONException ex) {
             log.log(Level.SEVERE, null, ex);
         }
