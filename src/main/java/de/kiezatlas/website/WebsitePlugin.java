@@ -24,6 +24,7 @@ import de.deepamehta.core.service.Inject;
 import de.deepamehta.core.service.Transactional;
 import de.deepamehta.accesscontrol.AccessControlService;
 import de.deepamehta.core.model.facets.FacetValueModel;
+import de.deepamehta.core.service.accesscontrol.AccessControlException;
 import de.deepamehta.core.service.accesscontrol.Operation;
 import de.deepamehta.core.service.event.PostUpdateTopicListener;
 import de.deepamehta.core.storage.spi.DeepaMehtaTransaction;
@@ -499,10 +500,13 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         if (geoObject != null && isGeoObjectEditable(geoObject, accesscl.getUsernameTopic())) {
             log.info("DELETING Geo Object " + geoObject);
             if (deleteCompleteGeoObjectInWorkspace(geoObject)) {
-                viewData("message", "Der Kiezatlas Ort wurde erfolgreich gelöscht.");
+                // viewData("message", "Danke, der Datensatz</a> wurde aktualisiert.");
+                viewData("message", "Der Datensatz <a href=\"/" + GEO_OBJECT_RESOURCE + geoObject.getId()
+                    + "\" title=\"Anzeigen\">"+geoObject.getSimpleValue()+"</a> wurde erfolgreich zur Löschung vorgeschlagen und "
+                        + "ist somit vorerst nicht mehr öffentlich sichtbar.");
                 log.info("Topic \"" + name + "\", id=" + topicId
-                    + " deleted successfully by \"" + accesscl.getUsername() + "\"");
-                log.info("DELETED: " + dm4.getTopic(Long.parseLong(topicId)));
+                    + " moved into Papierkorb successfully by \"" + accesscl.getUsername() + "\"");
+                log.info("TRASHED: " + dm4.getTopic(Long.parseLong(topicId)));
                 return getSimpleMessagePage();
             } else {
                 viewData("message", "Der Datensatz konnte nicht gelöscht werden da ein Fehler aufgetreten ist.");
@@ -515,7 +519,27 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         return prepareGeoObjectInfoPage("" + topicId);
     }
 
-     private Viewable prepareBezirksregionListingPage(@PathParam("districtId") long districtId) {
+    @GET
+    @Path("/geo/delete/final/{topicId}")
+    @Produces(MediaType.TEXT_HTML)
+    @Transactional
+    public Viewable processFinalGeoObjectDeletion(@PathParam("topicId") String topicId) {
+        if (!isAuthenticated()) return getUnauthorizedPage();
+        Topic geoObject = getGeoObjectById(topicId);
+        String name = geoObject.getSimpleValue().toString();
+        if (geoObject != null && isGeoObjectEditable(geoObject, accesscl.getUsernameTopic()) && isTopicInDeletionWorkspace(geoObject)) {
+            log.info("Final DELETION of Geo Object " + geoObject);
+            geoObject.delete();
+            viewData("message", "<p>Der Ort <b>"+name+"</b> wurde erfolgreich aus dem Kiezatlas entfernt.</p>"
+                    + "<p><a href=\"/angebote/my\">Zur&uuml;ck zu meinen Eintr&auml;gen</a></p>");
+            log.info("The geo object \"" + name + "\" is now GONE");
+            return getSimpleMessagePage();
+        }
+        viewData("message", "Der Datensatz konnte nicht gelöscht werden, da Sie dazu nicht die nötigen Berechtigungen haben.");
+        return prepareGeoObjectInfoPage("" + topicId);
+    }
+
+    private Viewable prepareBezirksregionListingPage(@PathParam("districtId") long districtId) {
         if (!isAuthenticated()) return getUnauthorizedPage();
         List<BezirksregionView> bezirksregionen = null;
         viewData("name", "Bezirksregionen");
@@ -622,7 +646,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         if (!isAuthenticated()) return Response.status(Status.UNAUTHORIZED).build();
         List<RelatedTopic> usersDistricts = getUserDistrictTopics();
         long districtId = -1;
-        String newListLocation = "/list/filter";
+        String newListLocation = "/website/list/filter";
         if (usersDistricts != null && usersDistricts.size() > 0) {
             districtId = usersDistricts.get(0).getId();
             newListLocation += "/" + districtId;
@@ -920,6 +944,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         List<Topic> my = new ArrayList<Topic>();
         Topic username = accesscl.getUsernameTopic();
         if (username != null) {
+            // ### assembleEinrichtungsDetails // assembleEinrichtungsListItem
             my.addAll(username.getRelatedTopics(USER_ASSIGNMENT, null, null, KiezatlasService.GEO_OBJECT));
         }
         return my;
@@ -1891,6 +1916,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         // user auth
         prepatePageTemplate("detail");
         // geo object auth
+        viewData("is_trashed", isTopicInDeletionWorkspace(geoObject));
         viewData("is_published", isTopicInStandardWorkspace(geoObject));
         viewData("editable", isGeoObjectEditable(geoObject, username));
         // ### is viewData("deletable", hasUserWritePermission(geoObject, username));
@@ -2122,6 +2148,10 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         return (dm4.getAccessControl().getAssignedWorkspaceId(object.getId()) == getConfirmationWorkspace().getId());
     }
 
+    private boolean isPendingForDeletion(DeepaMehtaObject object) {
+        return (dm4.getAccessControl().getAssignedWorkspaceId(object.getId()) == getDeletionWorkspace().getId());
+    }
+
     private void privilegedAssignToWorkspace(DeepaMehtaObject object, long workspaceId) {
         if (object != null) {
             if (!hasWorkspaceAssignment(object)) {
@@ -2286,6 +2316,10 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         return wsMember;
     }
 
+    private boolean isTopicInDeletionWorkspace(Topic topic) {
+        Topic workspace = workspaces.getAssignedWorkspace(topic.getId());
+        return (workspace.getUri().equals(DELETION_WORKSPACE_URI));
+    }
     private boolean isTopicInStandardWorkspace(Topic topic) {
         Topic workspace = workspaces.getAssignedWorkspace(topic.getId());
         return (workspace.getUri().equals(WorkspacesService.DEEPAMEHTA_WORKSPACE_URI));
@@ -2454,6 +2488,10 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         }
         // Assigned Username
         listItem.setCreator(accesscl.getCreator(geoObject.getId()));
+        // Currently residing in "Trashed" workspace
+        if (isPendingForDeletion(geoObject)) {
+            listItem.addClassName("in-trash");
+        }
         // Timestamps
         listItem.setCreated(time.getCreationTime(geoObject.getId()));
         listItem.setLastModified(time.getModificationTime(geoObject.getId()));
@@ -2534,6 +2572,10 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
             List<RelatedTopic> commentTopics = comments.getComments(geoObject.getId());
             if (commentTopics != null) {
                 detail.setComments(assembleCommentViews(commentTopics));
+            }
+            // Currently residing in "Trashed" workspace
+            if (isPendingForDeletion(geoObject)) {
+                detail.addClassName("in-trash");
             }
         } catch (Exception ex) {
             throw new RuntimeException("Could not assemble EinrichtungsInfo", ex);
@@ -3247,6 +3289,11 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         return dm4.getAccessControl().getWorkspace(CONFIRMATION_WS_URI);
     }
 
+    @Override
+    public Topic getDeletionWorkspace() {
+        return dm4.getAccessControl().getWorkspace(DELETION_WORKSPACE_URI);
+    }
+
     private Topic getUsernameTopic() {
         String username = accesscl.getUsername();
         if (username != null && !username.isEmpty()) {
@@ -3261,8 +3308,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         try {
             result = entry.getRelatedTopic(null, CHILD_ROLE, PARENT_ROLE, KiezatlasService.GEO_OBJECT);
         } catch (RuntimeException ex) {
-            log.warning("Exception loading parent geo object topic " + ex.getLocalizedMessage()
-                    + " Caused by " + ex.getCause().getLocalizedMessage()); // AccessControlException...
+            log.warning("Exception loading parent geo object topic cause \"" + ex.getLocalizedMessage() + "\"");
             return result;
         }
         if (result == null) log.warning("Search Result Entry: " +entry.getTypeUri()

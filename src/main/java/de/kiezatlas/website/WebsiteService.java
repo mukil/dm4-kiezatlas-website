@@ -67,4 +67,6 @@ public interface WebsiteService {
 
     Topic getConfirmationWorkspace();
 
+    Topic getDeletionWorkspace();
+
 }
