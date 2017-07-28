@@ -13,21 +13,13 @@ var list = (function($) {
     
     var api = {} 
     
-    /** Model: */
+    // Page Model
     var objects =  []
     var district = { id: 7275 }
     var usernames = []
-    // selected geo object
     var selected_geo = undefined
     var view_permissions = undefined
     var geo_object = undefined
-
-    api.init_page = function() {
-        /** var districtId = parseInt(window.location.href.slice(window.location.href.lastIndexOf("/") +1))
-        restc.load_district_regions(districtId, function(results) {
-            console.log("Loaded list of bezirskregionen", results)
-        }) **/
-    }
 
     api.void = function() {
         // void

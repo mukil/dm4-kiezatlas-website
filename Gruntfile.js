@@ -31,8 +31,8 @@ module.exports = function(grunt) {
                         'src/main/resources/web/ka-citymap.js',
                         'src/main/resources/web/css/semantic-ui/2.2/sidebar.min.js',
                         'src/main/resources/web/css/semantic-ui/2.2/checkbox.min.js',
-			'src/main/resources/web/css/semantic-ui/2.2/api.min.js',
-			'src/main/resources/web/css/semantic-ui/2.2/search.min.js'
+                        'src/main/resources/web/css/semantic-ui/2.2/api.min.js',
+                        'src/main/resources/web/css/semantic-ui/2.2/search.min.js'
                     ]
                 }
             },

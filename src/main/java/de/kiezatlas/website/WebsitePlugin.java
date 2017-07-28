@@ -515,7 +515,8 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         } else {
             log.info("Geo Object could not be loaded by topicId=\"" + topicId + "\"");
         }
-        viewData("message", "Der Datensatz konnte nicht gelöscht werden, da Sie dazu nicht die nötigen Berechtigungen haben.");
+        viewData("message", "<p>Der Datensatz konnte nicht gelöscht werden, da Sie dazu nicht die nötigen Berechtigungen haben.</p>"
+                + "<p><a href=\"/angebote/my\">Zur&uuml;ck zu meinen Eintr&auml;gen</a></p>");
         return prepareGeoObjectInfoPage("" + topicId);
     }
 
@@ -940,12 +941,15 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     @GET
     @Path("/geo/my/json")
     @Produces(MediaType.APPLICATION_JSON)
-    public List<Topic> getGeoObjectsByUser() {
-        List<Topic> my = new ArrayList<Topic>();
+    public List<EinrichtungView> getGeoObjectsByUser() {
+        List<EinrichtungView> my = new ArrayList<EinrichtungView>();
         Topic username = accesscl.getUsernameTopic();
         if (username != null) {
-            // ### assembleEinrichtungsDetails // assembleEinrichtungsListItem
-            my.addAll(username.getRelatedTopics(USER_ASSIGNMENT, null, null, KiezatlasService.GEO_OBJECT));
+            List<RelatedTopic> objects = username.getRelatedTopics(USER_ASSIGNMENT, null, null, KiezatlasService.GEO_OBJECT);
+            for (RelatedTopic object : objects) {
+                EinrichtungView viewModel = assembleEinrichtungListElement(object, false);
+                my.add(viewModel);
+            }
         }
         return my;
     }

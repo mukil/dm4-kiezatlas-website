@@ -1261,6 +1261,7 @@ span.bold {
     position: relative;
 }
 
+#detail-area .entry-card.in-trash,
 #detail-area .entry-card.unconfirmed {
     background-color: #ACC;
 }
@@ -1880,6 +1881,11 @@ table.dataTable.display tbody tr.no-email td:first-child {
 
 table.dataTable.display tbody tr.invaid-coordinates td:first-child {
     border-left: 4px solid #0078A8;
+}
+
+table.dataTable.display tbody tr.in-trash {
+    text-decoration: line-through;
+    opacity: .6;
 }
 
 table.dataTable.display tbody tr.unconfirmed {

@@ -2,6 +2,11 @@
 /** --- ka-restclient.js --- **/
 
 var restc = (function($) {
+
+    jQuery.ajaxSetup({
+        'cache': false
+    })
+
     // console.log("REST Client Module (jQuery based) Loaded")
     
     function value_sort_asc(a, b) {

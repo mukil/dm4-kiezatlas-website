@@ -8,10 +8,7 @@
         <link rel="stylesheet" href="/de.kiezatlas.website/vendor/leaflet/leaflet.css"/>
         <link rel="stylesheet" href="/de.kiezatlas.website/css/sitestyle.css"/>
         <link rel="stylesheet" href="/de.kiezatlas.angebote/dist/vendor/jquery-ui-1.12.1-kiezatlas.min.css"/>
-        <link rel="stylesheet" href="/de.kiezatlas.website/css/semantic-ui/2.2/components/button.min.css"/>
         <link rel="stylesheet" href="/de.kiezatlas.website/css/semantic-ui/2.2/components/search.min.css"/>
-        <!--link rel="stylesheet" href="/de.kiezatlas.website/css/semantic-ui/2.2/components/dropdown.min.css"/>
-        <link rel="stylesheet" href="/de.kiezatlas.website/css/semantic-ui/2.2/components/transition.min.css"/-->
 
         <script src="/de.kiezatlas.angebote/dist/vendor/jquery-1.9.1-and-1.12.1-ui-custom.min.js"></script>
         <script src="/de.kiezatlas.website/dist/vendor/dm4-webclient-utils.min.js"></script>
@@ -90,7 +87,7 @@
                 $("#dialog-confirm").dialog({
                     resizable: false, height: "auto", width: 340, modal: true,
                     title: "Kiezatlas Standort löschen", buttons: {
-                        "In den Papierkorb verschieben": function() {
+                        "Ja": function() {
                             $( this ).dialog( "close" );
                             window.document.location.href = GEO_OBJECT_DELETE_URI + id
                         },
@@ -181,7 +178,7 @@
                 <div class="commands">
                     <p th:if="${!#strings.isEmpty(message)}" th:text="${message}"></p>
                     <a class="ui button olive edit" th:if="${authenticated} and ${editable}" th:href="'/website/geo/edit/' + ${geoobject.id}">Ortseintrag bearbeiten</a>
-                    <a class="ui button red delete" th:if="${authenticated} and ${deletable} and ${!is_trashed}" th:href="'javascript:delete_geo_object(' + ${geoobject.id} + ')'">Zur L&ouml;schung vorschlagen</a>
+                    <a class="ui button red delete" th:if="${authenticated} and ${deletable} and ${!is_trashed}" th:href="'javascript:delete_geo_object(' + ${geoobject.id} + ')'">In den Papierkorb</a>
                     <a class="ui button red delete" th:if="${authenticated} and ${is_trashed} and ${deletable}" th:href="'/website/geo/delete/final/' + ${geoobject.id}">Endg&uuml;ltig l&ouml;schen</a>
                     <a class="ui button olive publish" th:if="${is_publisher} and ${!is_published}" th:href="'/website/geo/confirm/' + ${geoobject.id}">Ver&ouml;ffentlichen</a>
                 </div>
@@ -306,7 +303,7 @@
             </div>
         </div>
 
-        <div id="dialog-confirm" title="Eintrag löschen?">Willst du diesen Standort wirklich aus dem Kiezatlas entfernen?</div>
+        <div id="dialog-confirm" title="Eintrag löschen?">Willst du diesen Standort in den Papierkorb verschieben so dass dieser vorerst nicht mehr &ouml;ffentlich sichtbar ist?</div>
 
         <p>&nbsp;</p>
 
