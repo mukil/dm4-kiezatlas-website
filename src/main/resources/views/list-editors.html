@@ -53,33 +53,31 @@
         <div class="pusher">
 
             <div id="header">
-                <p>&nbsp;</p>
-                <h3 th:if="${is_publisher}">
-                    <form>
-                        <label>Bezirksregionen des Bezirks</label>
+                <h2>AnsprechpartnerInnen in den Bezirkrsregionen</h2>
+                <form class="filter-form" th:if="${is_publisher}">
+                    <label class="filter" for="districts">Bezirk
                         <select id="districts" class="ui dropdown basic" onchange="refresh_regionen_list()">
                             <option th:each="district: ${userDistricts}" th:selected="${districtId == district.id} ? true : false"
                                     th:value="${district.id}" th:text="${district.simpleValue}">
                             </option>
                         </select>
-                    </form>
-                </h3>
+                    </label>
+                </form>
+                <div class="commands buttons ui">
+                    <a class="button ui" href="/website/list/freischalten">Neue Orte freischalten</a>
+                    <a th:if="${is_district_admin}" class="button ui green active" href="/website/list/bezirksregionen">StadtteilkoordinatorInnen</a>
+                    <a class="button ui" href="/website/list/hinweise">Kommentare</a>
+                    <a class="button ui" href="/website/list/ansprechpartner">AnsprechpartnerInnen</a>
+                    <a class="button ui" href="/website/list/filter">Gro&szlig;e Listenansicht</a>
+                </div>
                 <p th:if="${not is_publisher}"><b>Sorry!</b><br/>Sie haben aktuell nicht die n&ouml;tigen Berechtigungen um neue Einrichtungen im Kiezatlas freizuschalten.</p>
             </div>
 
             <!-- Details Area -->
             <div th:if="${is_publisher}" class="ui container">
-                <div class="commands buttons ui">
-                    <a class="button ui" href="/website/list/filter">Alle Orte</a>
-                    <a class="button ui" href="/website/list/freischalten">Neue Orte freischalten</a>
-                    <a class="button ui" href="/website/list/hinweise">Bearbeitungshinweise</a>
-                    <a class="button ui" href="/website/list/ansprechpartner">EinrichtungsinhaberInnen</a>
-                    <!--div class="item" data-tab="third">Newsbereich</div-->
-                    <a th:if="${is_district_admin}" class="button ui green active" href="/website/list/bezirksregionen">StadtteilkoordinatorInnen</a>
-                </div>
-                <p>
-                    Auf dieser Seite kannst du die Ansprechpartner_innen f&uuml;r die folgenden Bezirksregionen festlegen.
-                    Die hier gelisteten Nutzer_innen d&uuml;rfen dann neue Orte freischalten, Ortsdaten aktualisieren und Angebotsinfos reviedieren.
+                <p class="info">
+                    Auf dieser Seite kannst du die AnsprechpartnerInnen f&uuml;r die folgenden Bezirksregionen festlegen.
+                    Die hier gelisteten NutzerInnen d&uuml;rfen dann neue Orte freischalten, Ortsdaten aktualisieren und Angebotsinfos revidieren.
                 </p>
                 <div id="listing">
                     <ul class="soziale-einrichtungen bezirksregion add-assignment">

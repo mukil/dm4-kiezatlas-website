@@ -24,7 +24,6 @@ import de.deepamehta.core.service.Inject;
 import de.deepamehta.core.service.Transactional;
 import de.deepamehta.accesscontrol.AccessControlService;
 import de.deepamehta.core.model.facets.FacetValueModel;
-import de.deepamehta.core.service.accesscontrol.AccessControlException;
 import de.deepamehta.core.service.accesscontrol.Operation;
 import de.deepamehta.core.service.event.PostUpdateTopicListener;
 import de.deepamehta.core.storage.spi.DeepaMehtaTransaction;
@@ -218,6 +217,14 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     public Viewable prepareFrontpage() {
         prepatePageTemplate("ka-index");
         return view("ka-index");
+    }
+
+    /** Responds witha a Viewable, the new frontpage of the Kiezatlas Website. */
+    @GET
+    @Path("/startseite")
+    @Produces(MediaType.TEXT_HTML)
+    public Viewable prepareNewFrontpage() {
+        return getFrontpage();
     }
 
     @GET
@@ -1700,7 +1707,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
             log.info("NO USER ASSIGNED to Angebots location informing regional administrators"
                 + "(and " + SYSTEM_MAINTENANCE_MAILBOX + ")");
             // Informing AnsprechpartnerIn and System Mailbox about missing User Assignment
-            recipients.append(collectDistrictAdministrativeRecipients(geoObject, true));
+            recipients.append(buildEditorialNotificationRecipients(geoObject, true, false, true));
             recipients.append(SYSTEM_MAINTENANCE_MAILBOX);
         }
         // Create revision key
@@ -1947,6 +1954,11 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         return getFilterListTemplate(results);
     }
 
+    private Viewable getFrontpage() {
+        prepatePageTemplate("frontpage");
+        return view("website-front");
+    }
+
     private Viewable getFilterListTemplate(List<EinrichtungView> results) {
         prepatePageTemplate("list-filter");
         prepareEditorListing();
@@ -1986,7 +1998,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     private Viewable getAssignmentTemplate() {
         prepatePageTemplate("assignments");
         viewData("name", "AnsprechpartnerInnen");
-        return view("user-assignments");
+        return view("list-user-assignments");
     }
 
     private Viewable getCommentsTemplate(List<EinrichtungView> results) {
@@ -2708,7 +2720,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
             Topic deletionWs = workspaces.getWorkspace(DELETION_WORKSPACE_URI);
             moveGeoObjecToWorkspace(geoObject, deletionWs, true);
             // notfies system mailbox account (for now)
-            sendGeoObjectDeletionNotice("Datensatz zur Löschung vorgeschlagen", geoObject, accesscl.getUsernameTopic());
+            sendGeoObjectDeletionNotice("Datensatz in den Papierkorb verschoben", geoObject, accesscl.getUsernameTopic());
             return true;
         } catch (RuntimeException re) {
             log.severe("Geo Object could not be deleted  ("+geoObject+"), RuntimeException Message: " + re.getMessage()
@@ -3180,10 +3192,10 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     }
 
     private void sendGeoObjectDeletionNotice(String subject, Topic geoObject, Topic username) {
-        // String recipients = collectDistrictAdministrativeRecipients(geoObject, false);
+        String recipients = buildEditorialNotificationRecipients(geoObject, false, true, true);
         String detailsPage = SignupPlugin.DM4_HOST_URL+"website/geo/" + geoObject.getId();
         String loginPage = SignupPlugin.DM4_HOST_URL + "sign-up/login";
-        signup.sendUserMailboxNotification(SYSTEM_MAINTENANCE_MAILBOX, subject, "<br/>Liebe/r Super-Administrator_in,<br/><br/>"
+        signup.sendUserMailboxNotification(recipients, subject, "<br/>Liebe/r Super-Administrator_in,<br/><br/>"
             + "ein Einrichtungsdatensatz wurde von \""+username.getSimpleValue().toString()+"\" zur L&ouml;schung vorgeschlagen. "
             + "Bitte schaue mal ob Du diesen nicht gleich richtig l&ouml;schen kannst.<br/><br/>"
             + "Name des neuen Eintrags: \"" + geoObject.getSimpleValue().toString() + "\"<br/>"
@@ -3192,7 +3204,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     }
 
     private void sendGeoObjectCreationNotice(String subject, Topic geoObject, Topic username) {
-        String recipients = collectDistrictAdministrativeRecipients(geoObject, false);
+        String recipients = buildEditorialNotificationRecipients(geoObject, false, false, false);
         String detailsPage = SignupPlugin.DM4_HOST_URL+"website/geo/" + geoObject.getId();
         String loginPage = SignupPlugin.DM4_HOST_URL + "sign-up/login";
         signup.sendUserMailboxNotification(recipients, subject, "<br/>Liebe/r Bezirk-Administrator_in,<br/><br/>"
@@ -3203,11 +3215,12 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
             + "<br/><br/>Ok, das war's schon.<br/><br/>Danke + Ciao!");
     }
 
-    private String collectDistrictAdministrativeRecipients(Topic geoObject, boolean regionalOnly) {
-        log.info("Collecting Bezirks-Administrative Notification Recipients...");
+    private String buildEditorialNotificationRecipients(Topic geoObject, boolean regionalOnly,
+            boolean districtOnly, boolean addSystemMailbox) {
         Topic bezirk = getRelatedBezirk(geoObject);
         Topic bezirksregion = getRelatedBezirksregion(geoObject);
-        List<String> mailboxes = getAssignedAdministrativeMailboxes(bezirk, bezirksregion, regionalOnly);
+        List<String> mailboxes = getAssignedAdministrativeMailboxes(bezirk, bezirksregion, regionalOnly,
+                districtOnly, addSystemMailbox);
         StringBuilder recipients = new StringBuilder();
         if (mailboxes != null && mailboxes.size() > 0) {
             recipients = new StringBuilder(buildRecipientsString(mailboxes));
@@ -3355,18 +3368,20 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         }
     }
 
-    private List<String> getAssignedAdministrativeMailboxes(Topic bezirk, Topic bezirksregion, boolean skipDistrict) {
+    private List<String> getAssignedAdministrativeMailboxes(Topic bezirk, Topic bezirksregion, boolean onlyRegional,
+            boolean onlyDistrict, boolean addSystemMailbox) {
         List<String> mailboxes = new ArrayList<String>();
-        if (bezirk != null && !skipDistrict) {
+        if (bezirk != null && (!onlyRegional || onlyDistrict)) {
             List<RelatedTopic> usernames = bezirk.getRelatedTopics("dm4.core.association", DEFAULT_ROLE,
                 DEFAULT_ROLE, "dm4.accesscontrol.username");
             collectMailBoxes(mailboxes, usernames);
         }
-        if (bezirksregion != null) {
+        if (bezirksregion != null && !onlyDistrict) {
             List<RelatedTopic> regionals = bezirksregion.getRelatedTopics(USER_ASSIGNMENT, DEFAULT_ROLE,
                 DEFAULT_ROLE, "dm4.accesscontrol.username");
             collectMailBoxes(mailboxes, regionals);
         }
+        if (addSystemMailbox) mailboxes.add(SYSTEM_MAINTENANCE_MAILBOX);
         return mailboxes;
     }
 

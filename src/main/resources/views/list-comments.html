@@ -47,30 +47,34 @@
         <div class="pusher">
 
             <div id="header">
-                <p>&nbsp;</p>
-                <h3 th:if="${is_publisher}">
-                    <form>
-                        <label>Kiez-Redaktion im Bezirk</label>
-                        <select id="districts" class="ui dropdown button" onchange="refresh_comment_list()">
+                <h2>Bearbeitungshinweise zu Ortseintr&auml;gen</h2>
+                <form th:if="${is_publisher}" class="filter-form">
+                    <label>Region
+                        <select id="districts" class="ui dropdown basic" onchange="refresh_comment_list()">
                             <option th:each="district: ${userDistricts}" th:selected="${districtId == district.id} ? true : false"
                                     th:value="${district.id}" th:text="${district.simpleValue}">
                             </option>
                         </select>
-                    </form>
-                </h3>
+                    </label>
+                </form>
+                <div class="commands buttons ui">
+                    <a class="button ui" href="/website/list/freischalten">Neue Orte freischalten</a>
+                    <a th:if="${is_district_admin}" class="button ui" href="/website/list/bezirksregionen">StadtteilkoordinatorInnen</a>
+                    <a class="button ui green active" href="/website/list/hinweise">Kommentare</a>
+                    <a class="button ui" href="/website/list/ansprechpartner">AnsprechpartnerInnen</a>
+                    <a class="button ui" href="/website/list/filter">Gro&szlig;e Listenansicht</a>
+                </div>
                 <p th:if="${not is_publisher}"><b>Sorry!</b><br/>Sie haben aktuell nicht die n&ouml;tigen Berechtigungen um neue Einrichtungen im Kiezatlas freizuschalten.</p>
             </div>
 
             <!-- Details Area -->
             <div th:if="${is_publisher}" class="ui container">
-                <div class="commands buttons ui">
-                    <a class="button ui" href="/website/list/filter">Alle Orte</a>
-                    <a class="button ui" href="/website/list/freischalten">Unver&ouml;ffentlichte Orte</a>
-                    <a class="button ui green active" href="/website/list/hinweise">Bearbeitungshinweise</a>
-                    <a class="button ui" href="/website/list/ansprechpartner">EinrichtungsinhaberInnen</a>
-                    <!--div class="item" data-tab="third">Newsbereich</div-->
-                    <a th:if="${is_district_admin}" class="button ui" href="/website/list/bezirksregionen">StadtteilkoordinatorInnen</a>
-                </div>
+                <p class="info">
+                    Auf dieser Seite findest du Bearbeitungshinweise zu Ortsdatens&auml;tzen die uns Website-BesucherInnen geschickt haben.<br/><br/>
+                    <span class="no-entries" th:if="${#lists.isEmpty(geoobjects)}">
+                        F&uuml;r Datens&auml;tze in dieser Region <em>liegen aktuell keine Bearbeitungshinweise vor</em>.
+                    </span>
+                </p>
                 <div id="listing">
                     <ul class="soziale-einrichtungen">
                         <li th:each="geoobject : ${geoobjects}">

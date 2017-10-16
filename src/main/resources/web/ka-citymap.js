@@ -221,9 +221,10 @@ var citymap = {
         })
     },
 
-    clear_details_area: function() {
+    clear_details_area: function() { // remove duplicate, see ka-website.js
         $('.search-option.d').remove()
-        $('.entry-card').hide(200, "linear", function (e) { this.remove() })
+        var $entryCards = $('.entry-card')
+        $entryCards.hide(200, "linear", function () { $entryCards.remove() })
     },
 
     render_selected_detail: function(object) {

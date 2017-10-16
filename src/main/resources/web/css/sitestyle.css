@@ -137,6 +137,11 @@ body.pushable > .pusher {
 
 #header {
     padding-top: 3em;
+    padding-bottom: 1em;
+}
+
+.list #header h2 {
+    display: inline-block;
 }
 
 .mobile-logo {
@@ -1341,6 +1346,41 @@ span.bold {
     min-width: 150px;
 }
 
+.list .filter-form {
+    position: absolute;
+    right: 0px;
+    top: 60px;
+    opacity: .8;
+}
+
+.list .no-entries,
+.list p.info {
+    max-width: 90%;
+    margin: auto;
+}
+
+.filter #header {
+    margin-top: 3em;
+}
+
+.list #header {
+    margin-top: 1em;
+}
+
+.no-entries,
+.filter-form {
+    background-color: #fff;
+    color: #343434;
+    padding: .5em;
+    font-weight: normal;
+    display: inline-block;
+}
+
+.filter-form label,
+.filter-form select {
+    vertical-align: middle;
+}
+
 #fulltext-do {
     cursor: pointer;
 }
@@ -1592,12 +1632,14 @@ span.bold {
 }
 
 .kiezatlas.topic .infos .data-features {
-    font-size: .8em;
     max-width: 280px;
 }
 
-.kiezatlas.topic .infos .data-features .ui.selection.dropdown {
+.kiezatlas.topic .infos .data-features select {
     min-height: 1em;
+    margin-bottom: 1em;
+    margin-top: .5em;
+    padding: .5em;
 }
 
 .kiezatlas.topic .infos .data-features .comment-input-fields .ui.input {
@@ -1860,6 +1902,10 @@ div.link-area {
     position: relative;
     top: 30px;
     padding-bottom: 250px;
+}
+
+.citymap #listing {
+    padding-bottom: 0px;
 }
 
 .filter.list .status,

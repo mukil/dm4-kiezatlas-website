@@ -60,7 +60,8 @@ module.exports = function(grunt) {
             all: {
                 files: {
                     'src/main/resources/web/dist/ka-website-frontpage.min.js': ['src/main/resources/web/dist/ka-website-frontpage.js'],
-                    'src/main/resources/web/dist/vendor/dm4-webclient-utils.min.js': ['src/main/resources/web/dist/vendor/dm4-webclient-utils.js']
+                    'src/main/resources/web/dist/vendor/dm4-webclient-utils.min.js': ['src/main/resources/web/dist/vendor/dm4-webclient-utils.js'],
+                    'src/main/resources/web/dist/ka-startseite.min.js': ['src/main/resources/web/ka-startseite.js']
                 }
             }
         }

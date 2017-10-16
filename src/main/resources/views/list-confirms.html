@@ -47,33 +47,38 @@
         <div class="pusher">
 
             <div id="header">
-                <p>&nbsp;</p>
-                <h3 th:if="${is_publisher}">
-                    <form th:if="${#strings.equals(viewtype, 'bezirk')}">
-                        <label>Kiez-Redaktion im Bezirk</label>
-                        <select id="districts" class="ui dropdown button" onchange="refresh_confirmation_list()">
+                <h2>Neue Ortseintr&auml;ge zur Freischaltung</h2>
+                <form th:if="${#strings.equals(viewtype, 'bezirk') and is_publisher}" class="filter-form">
+                    <label>Region
+                        <select id="districts" class="ui dropdown basic" onchange="refresh_confirmation_list()">
                             <option th:each="district: ${userDistricts}" th:selected="${districtId == district.id} ? true : false"
                                     th:value="${district.id}" th:text="${district.simpleValue}">
                             </option>
                         </select>
-                    </form>
-                </h3>
+                    </label>
+                </form>
+                <div class="commands ui buttons">
+                    <a class="button ui green active" href="/website/list/freischalten">Neue Orte freischalten</a>
+                    <a th:if="${is_district_admin}" class="button ui" href="/website/list/bezirksregionen">StadtteilkoordinatorInnen</a>
+                    <a class="button ui" href="/website/list/hinweise">Kommentare</a>
+                    <a class="button ui" href="/website/list/ansprechpartner">AnsprechpartnerInnen</a>
+                    <a class="button ui" href="/website/list/filter">Gro&szlig;e Listenansicht</a>
+                </div>
                 <p th:if="${not is_publisher}"><b>Sorry!</b><br/>Sie haben aktuell nicht die n&ouml;tigen Berechtigungen um neue Einrichtungen im Kiezatlas freizuschalten.</p>
             </div>
 
             <!-- Details Area -->
             <div th:if="${is_publisher}" class="ui container">
-                <div class="commands ui buttons">
-                    <a class="button ui" href="/website/list/filter">Alle Orte</a>
-                    <a class="button ui green active" href="/website/list/freischalten">Neue Orte freischalten</a>
-                    <a class="button ui" href="/website/list/hinweise">Kommentare</a>
-                    <a class="button ui" href="/website/list/ansprechpartner">EinrichtungsinhaberInnen</a>
-                    <!--div class="item" data-tab="third">Newsbereich</div-->
-                    <a th:if="${is_district_admin}" class="button ui" href="/website/list/bezirksregionen">StadtteilkoordinatorInnen</a>>
-                </div>
 
                 <!-- Bezirks-wide confirmation list -->
                 <div id="listing" th:if="${#strings.equals(viewtype, 'bezirk')}">
+                    <p class="info">
+                        Auf dieser Seite findest du neu eingetragene Ortsdaten zur Freischaltung.<br/><br/>
+                        <span class="no-entries" th:if="${#lists.isEmpty(geoobjects)}">
+                            In dieser Region sind aktuell <em>alle</em> Ortsdatens&auml;tze <em>freigeschaltet</em>.
+                        </span>
+                    </p>
+
                     <ul class="soziale-einrichtungen">
                         <li th:each="geoobject : ${geoobjects}">
                             <div class="list-item">

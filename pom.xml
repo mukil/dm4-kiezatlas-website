@@ -16,9 +16,9 @@
         <version>4.8.3</version>
     </parent>
 
-    <!--properties>
-        <dm4.deploy.dir>/home/malted/source/mikro/deepamehta/bundle-deploy</dm4.deploy.dir>
-    </properties-->
+    <properties>
+        <dm4.deploy.dir>/Users/malt/source/deepamehta/bundle-deploy</dm4.deploy.dir>
+    </properties>
 
     <dependencies>
         <!-- Kiezatlas 2 Modules -->
@@ -87,7 +87,7 @@
         <dependency>
             <groupId>de.mikromedia</groupId>
             <artifactId>dm48-webpages</artifactId>
-            <version>0.4.4-SNAPSHOT</version>
+            <version>0.4.5-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.deepamehta</groupId>

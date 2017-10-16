@@ -8,7 +8,7 @@ var mapping = {
     "zoom_district" : 12,
     "zoom_city": 11,
     "marker_radius_fixed": false,
-    "marker_radius": 5,
+    "marker_radius": 10,
     "marker_radius_selected": 15, // max
     "circle_search_radius": 750,
     "circle_search_control": undefined,
@@ -32,7 +32,7 @@ var leafletMap = (function($, L) {
         map.elementId = elementId
         // console.log("Set up Leaflet Map #"+ elementId + ", mouseWheelZoom", mouseWheelZoom)
         map.map = new L.Map(elementId, {
-            dragging: true, touchZoom: true, scrollWheelZoom: (!mouseWheelZoom) ? true : mouseWheelZoom, doubleClickZoom: true,
+            dragging: true, touchZoom: true, scrollWheelZoom: false, doubleClickZoom: true,
             zoomControl: false, minZoom: 9, max_bounds: mapping.max_bounds
         })
         map.zoom = L.control.zoom({ position: "topright" })
@@ -54,20 +54,20 @@ var leafletMap = (function($, L) {
         map.map.on('zoomend', function(e) {
             if (mapping.marker_radius_fixed) return;
             if (map.map.getZoom() <= 12) {
-                mapping.marker_radius = 3
-                mapping.marker_radius_selected = 7
-            } else if (map.map.getZoom() === 13) {
-                mapping.marker_radius = 5
-                mapping.marker_radius_selected = 9
-            } else if (map.map.getZoom() === 14) {
                 mapping.marker_radius = 7
                 mapping.marker_radius_selected = 11
-            } else if (map.map.getZoom() === 15) {
-                mapping.marker_radius = 8
+            } else if (map.map.getZoom() === 13) {
+                mapping.marker_radius = 9
                 mapping.marker_radius_selected = 13
-            } else if (map.map.getZoom() >= 16) {
-                mapping.marker_radius = 10
+            } else if (map.map.getZoom() === 14) {
+                mapping.marker_radius = 11
                 mapping.marker_radius_selected = 15
+            } else if (map.map.getZoom() === 15) {
+                mapping.marker_radius = 12
+                mapping.marker_radius_selected = 17
+            } else if (map.map.getZoom() >= 16) {
+                mapping.marker_radius = 14
+                mapping.marker_radius_selected = 19
             }
             map.update_geo_object_marker_radius()
             map.fire_zoom_end(e)
@@ -185,6 +185,7 @@ var leafletMap = (function($, L) {
     map.create_geo_object_marker = function(geo_object) {
         if (geo_object.hasOwnProperty("latitude")
             && geo_object.hasOwnProperty("longitude")) {
+            console.log('creating geo object marker')
             // 0) pre-process: geo object has geo coordinate
             var result = geo_object
             // 1) pre-processing: do worldwide coordinate check & log
@@ -213,15 +214,14 @@ var leafletMap = (function($, L) {
             })
             circle.on('mouseover', function(e) {
                 circle.setRadius(mapping.marker_radius + 5)
-                circle.setStyle({
-                    color: colors.ka_gold, weight: 3, opacity: 1,
-                    fillColor: colors.ka_red, fillOpacity: 1, className: "selected"
-                })
+                circle.setStyle(map.calculate_hover_circle_options())
                 map.fire_marker_mouseover(e)
             })
             circle.on('mouseout', function(e) {
-                circle.setRadius(mapping.marker_radius)
-                circle.setStyle(map.calculate_default_circle_options(result))
+                if (e.target.options.className !== 'selected') {
+                    circle.setRadius(mapping.marker_radius)
+                    circle.setStyle(map.calculate_default_circle_options(result))
+                }
                 map.fire_marker_mouseout(e)
             })
             return circle
@@ -317,6 +317,13 @@ var leafletMap = (function($, L) {
         return {
             color: colors.ka_gold, weight: 3, opacity: 1,
             fillColor: colors.ka_red, fillOpacity: 1, className: "selected"
+        }
+    }
+
+    map.calculate_hover_circle_options = function() {
+        return {
+            color: colors.ka_gold, weight: 3, opacity: 1,
+            fillColor: colors.ka_red, fillOpacity: 1, className: "hover"
         }
     }
 

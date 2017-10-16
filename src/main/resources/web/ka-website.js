@@ -1200,7 +1200,8 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
 
     this.clear_details_area = function() {
         $('.search-option.d').remove()
-        $('.entry-card').hide(200, "linear", function (e) { this.remove() })
+        var $entryCards = $('.entry-card')
+        $entryCards.hide(200, "linear", function () { $entryCards.remove() })
     }
 
     // Location based service helper
@@ -1238,7 +1239,7 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
     this.get_lor_link = function(entry) {
         if (!entry.hasOwnProperty("lor_id")) return ""
         var html = '<div class="lor-link">'
-            + '<a href="http://sozialraumdaten.kiezatlas.de/seiten/2016/06/?lor=' + entry.lor_id
+            + '<a href="http://sozialraumdaten.kiezatlas.de/seiten/2017/06/?lor=' + entry.lor_id
             + '" title="zur Einwohnerstatistik des Raums (LOR Nr. ' + entry.lor_id +')">Sozialraumdaten</a></div>'
         return html
     }

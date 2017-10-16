@@ -29,8 +29,7 @@
             $(document).ready(function(e) {
                 $sidebarUi = $('.ui.sidebar').sidebar('setting', 'dimPage', false)
                 init_quick_search()
-                // init_comments_menu()
-                // init
+                // init map
                 var latitude = /*[[${geoobject.latitude}]]*/ undefined;
                 var longitude = /*[[${geoobject.longitude}]]*/ undefined;
                 var lCoordinate = L.latLng(latitude, longitude)
@@ -122,22 +121,6 @@
                 })
             }
 
-            function init_comments_menu() {
-                $('#add-comment').dropdown({
-                    action: 'hide',
-                    placeholder: 'Daten aktuell?',
-                    onChange: function(value, text, $selectedItem) {
-                        console.log("onChange selectedItem", $selectedItem)
-                        $('#add-comment').dropdown('set selected', value)
-                        $('.comment-input-fields').removeClass("hidden")
-                        // custom action
-                        add_editorial_note(text, value)
-                        // $selectedItem.addClass("selected")
-                        // $selectedItem.addAttr("selected")
-                    }
-                })
-            }
-
             function logout() {
                 restc.logout()
                 window.document.location.reload()
@@ -145,6 +128,11 @@
 
             function do_fulltext_search() { // to be implemented
                 console.log("Do fulltext search on detail window...")
+            }
+
+            function user_note_select() {
+                console.log('user note select')
+                add_editorial_note()
             }
 
             function add_editorial_note(text, value) {
@@ -202,17 +190,22 @@
                         </div>
                     </div>
                     <div class="infos">
-                        <h3 th:text='${geoobject.name}'>Name</h3>
+                        <h3>
+                            <span th:text='${geoobject.name}'>Name</span>
+                            <a class="fahrinfo-link"
+                               th:href="@{https://fahrinfo.bvg.de/Fahrinfo/bin/query.bin/dn(Z=${geoobject.address},REQ0JourneyStopsZA1=2,start=1,pk_campaign='kiezatlas.de')}">
+                               <img src="/de.kiezatlas.website/images/fahrinfo.gif"/>
+                            </a>
+                        </h3>
                         <div class="data-features">
-                            <!--select class="ui dropdown small" name="bearbeitungshinweis" id="add-comment">
-                                <option value="">Bearbeitungshinweis geben...</option>
-                                <option value="ka2.util.outdated_contact">Neuer Ansprechpartner*in...</option>
-                                <option value="ka2.util.outdated_address">Anschrift veraltet...</option>
-                                <option value="ka2.util.outdated_contact">Email-Adresse veraltet...</option>
-                                <option value="ka2.util.outdated_contact">Telefonnummer veraltet...</option>
-                                <option value="ka2.util.missing_webpage">Webseite hinzufügen...</option>
-                                <option value="ka2.util.missing_fb_link">Facebook Page hinzufügen...</option>
-                            </select><br/>
+                            <label for="add-comment">Hinweis geben</label>
+                            <select name="bearbeitungshinweis" id="add-comment" onchange="user_note_select">
+                                <option value="ka2.util.outdated_address">Neue Anschrift</option>
+                                <option value="ka2.util.outdated_contact">Neue Email-Adresse</option>
+                                <option value="ka2.util.outdated_contact">Neue Telefonnummer</option>
+                                <option value="ka2.util.outdated_contact">Neue/r AnsprechpartnerIn</option>
+                                <option value="ka2.util.missing_webpage">Website hinzufügen</option>
+                            </select>
                             <div class="comment-input-fields ui input hidden">
                                 <div class="ui input">
                                     <input name="hinweis" class="ui input message" type="text" placeholder="Anmerkung"/>
@@ -223,11 +216,7 @@
                                 <div class="ui input">
                                     <button class="ok ui button default" type="button">Absenden</button>
                                 </div>
-                            </div-->
-                            <a class="fahrinfo-link"
-                               th:href="@{https://fahrinfo.bvg.de/Fahrinfo/bin/query.bin/dn(Z=${geoobject.address},REQ0JourneyStopsZA1=2,start=1,pk_campaign='kiezatlas.de')}">
-                               <img src="/de.kiezatlas.website/images/fahrinfo.gif"/>
-                            </a>
+                            </div>
                         </div>
                         <p class="anschrift" th:if="${!#strings.isEmpty(geoobject.address)}">
                             <span th:utext='${geoobject.address}'>Anschrift</span>
@@ -270,7 +259,7 @@
                         </p>
                         <p class="sozialraumdaten" th:if="${!#strings.isEmpty(geoobject.LORId)}">
                             <label>Statistische Informationen zur Bev&ouml;lkerungsstruktur in der Umgebung dieses Ortes</label>
-                            <a th:href="@{http://sozialraumdaten.kiezatlas.de/seiten/2016/06/(lor=${geoobject.LORId})}">Sozialraumdaten anzeigen</a>
+                            <a th:href="@{http://sozialraumdaten.kiezatlas.de/seiten/2017/06/(lor=${geoobject.LORId})}">Sozialraumdaten anzeigen</a>
                         </p>
                         <p class="regionen" th:if="${!#strings.isEmpty(geoobject.bezirk)}">
                             <label>Bezirk</label>

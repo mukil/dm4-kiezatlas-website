@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Startseite - Kiezatlas 2</title>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+        <link rel="stylesheet" type="text/css" href="/de.kiezatlas.website/dist/semantic.min.css" />
+        <link rel="stylesheet" type="text/css" href="/de.kiezatlas.website/dist/leaflet-1.2/leaflet.css" />
+        <link rel="stylesheet" type="text/css" href="/de.kiezatlas.website/css/kiezatlas-web.css" />
+
+        <script defer="true" src="https://code.jquery.com/jquery-3.1.1.min.js"
+          integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8="
+          crossorigin="anonymous"></script>
+        <script defer="true" src="/de.kiezatlas.website/dist/semantic.min.js"></script>
+        <script defer="true" src="/de.kiezatlas.website/dist/leaflet-1.2/leaflet.js"></script>
+        <script defer="true" src="/de.kiezatlas.website/dist/ka-startseite.min.js"></script>
+
+    </head>
+    <body class="ka front">
+
+        <div class="header">
+            <div class="top-menu" th:include="fragments/navigation :: top (publisher=${is_publisher})"></div>
+        </div>
+
+        <div class="ui container pusher">
+
+            <div class="ui map-panel">
+                <!--h3>Kartenansicht</h3-->
+                <div id="map"></div>
+            </div>
+
+            <div class="ui side-panel">
+                <div class="section">
+                    <a class="item" href="#angebote"><div class="icon red"></div>Aktuelle Angebote</a>
+                    <a class="item" href="#orte"><div class="icon blue"></div>Einrichtungen &amp; Orte</a>
+                    <br/>
+                </div>
+                <div class="section">
+                    <form method="GET" action="/website/front" class="ui form">
+                        <div class="grouped fields">
+                            <div class="ui icon input spacing">
+                                <input type="text" placeholder="Search..."></input>
+                                <i class="circular search link icon"></i>
+                            </div>
+                            <div class="options ui">
+                                <label class="item">
+                                    <input type="radio" name="mode" checked="true" value="name"></input>
+                                    Namenssuche
+                                </label>
+                                <label class="item">
+                                    <input type="radio" name="mode" value="fulltext"></input>
+                                    Volltextsuche
+                                </label>
+                                <label class="item">
+                                    <input type="radio" name="mode" value="radius"></input>
+                                    Umkreissuche
+                                </label>
+                                <a class="item" href="#clear-district">Bezirksfilter aufheben</a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="section">
+                    <a class="item" href="#kategorien">Kategorien</a>
+                </div>
+                <div class="section">
+                    <a class="item" href="#stichworte">Stichworte</a>
+                </div>
+                <div class="section">
+                    <a class="item" href="#ansprechpartner">AnsprechpartnerInnen</a>
+                </div>
+                <div class="section">
+                    <a class="item" href="#bezirksregionen">Bezirksregionen</a>
+                </div>
+                <div class="section">
+                    <a class="item" href="#lor">Planungsr&auml;ume</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer"></div>
+
+    </body>
+</html>
