@@ -150,11 +150,9 @@
                 var $email = $('#email-address')
                 if ($email.val().indexOf("@") === -1 || $email.val().indexOf(".") === -1) {
                     if (!$email.hasClass('invalid')) $email.addClass("invalid")
-                    $("#save").attr("disabled", true)
                     return false
                 } else {
                     $email.removeClass("invalid")
-                    $("#save").removeAttr("disabled")
                     return true
                 }
             }
@@ -163,11 +161,9 @@
                 var $plz = $('#postal-code')
                 if ($plz.val().length !== 5) {
                     if (!$plz.hasClass('invalid')) $plz.addClass("invalid")
-                    $("#save").attr("disabled", true)
                     return false
                 } else {
                     $plz.removeClass("invalid")
-                    $("#save").removeAttr("disabled")
                     return true
                 }
             }
@@ -176,11 +172,9 @@
                 var $district = $('#district')
                 if ($district.val() === "-1") {
                     if (!$district.hasClass('invalid')) $district.addClass("invalid")
-                    $("#save").attr("disabled", true)
                     return false
                 } else {
                     $district.removeClass("invalid")
-                    $("#save").removeAttr("disabled")
                     return true
                 }
             }
@@ -189,7 +183,6 @@
                 var $lat = $('#latitude-val')
                 var $lon = $('#longitude-val')
                 if($lat.val() === "52.5" && $lon.val() === "13.4") {
-                    $("#save").attr("disabled", true)
                     if (!$lat.hasClass('invalid')) $lat.addClass("invalid")
                     if (!$lon.hasClass('invalid')) $lon.addClass("invalid")
                     return true
@@ -200,9 +193,22 @@
             function submit_form() {
                 if (!is_valid_district() || !is_valid_email() || !is_valid_zip_code() || is_default_coordinate_pair()) {
                     console.warn("Form could not be submitted cause of missing input")
+                    if (!is_valid_district()) {
+                        show_input_warning('Bitte w&auml;hle einene Bezirk aus')
+                    } else if (!is_valid_email()) {
+                        show_input_warning('Bitte gib eine Email Adresse an')
+                    } else if (!is_valid_zip_code()) {
+                        show_input_warning('Bitte gib eine Postleitzahl an')
+                    } else if (is_default_coordinate_pair()) {
+                        show_input_warning('Bitte korrigiere den Standort auf der Karte‚')
+                    }
                 } else {
                     $("#geoobject-form").submit()
                 }
+            }
+
+            function show_input_warning(warning) {
+                $('#duplicates').html(warning)
             }
 
             function search_for_duplicates() {
@@ -223,7 +229,7 @@
                                     $area.append(html)
                                 }
                             }
-                            $area.append("<br/>Sind Sie sich sicher das Sie einen neuen Ort anlegen m&ouml;chten?")
+                            $area.append("<br/>Sind Sie sich sicher das Sie dies als neuen Ort anlegen m&ouml;chten?")
                         } else if (results.length === 0) {
                             $area.empty()
                         } else if (results.length > 30) {
@@ -313,6 +319,11 @@
             </p>
             <!-- -->
             <div id="map"></div>
+            <div class="info-area">
+                <button onclick="submit_form()" id="save" class="ui button olive">Speichern</button>
+                <a class="button ui" th:if="${geoobject.id} != -1" th:href="'/website/geo/' + ${geoobject.id}">Abbrechen</a>
+                <a class="button ui" th:if="${geoobject.id} == -1" href="/angebote/my">Abbrechen</a>
+            </div>
             <div class="warning" id="duplicates"></div>
             <div th:if="${!#strings.isEmpty(warning)}" th:utext="${warning}" class="warning message"></div>
             <form class="infos" id="geoobject-form" action="/website/geo/save" method="POST">
@@ -410,11 +421,6 @@
                     <!--
                     <p class="sozialraumdaten" th:if="${!#strings.isEmpty(geoobject.lor)}"><a th:href="@{http://sozialraumdaten.kiezatlas.de/seiten/2014/12/(lor=${geoobject.lor})}">Sozialraumdaten</a></p>
                     <a class="imprint" th:href="${geoobject.imprint}">Impressum</a-->
-                </div>
-                <div class="info-area">
-                    <button onclick="submit_form()" id="save" class="ui button olive">Ok</button>
-                    <a class="button ui" th:if="${geoobject.id} != -1" th:href="'/website/geo/' + ${geoobject.id}">Cancel</a>
-                    <a class="button ui" th:if="${geoobject.id} == -1" href="/angebote/my">Cancel</a>
                 </div>
             </form>
             <div th:if="${!simple}">

@@ -87,7 +87,7 @@
         <dependency>
             <groupId>de.mikromedia</groupId>
             <artifactId>dm48-webpages</artifactId>
-            <version>0.4.5-SNAPSHOT</version>
+            <version>0.4.6</version>
         </dependency>
         <dependency>
             <groupId>org.deepamehta</groupId>

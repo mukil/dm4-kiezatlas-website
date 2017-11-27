@@ -57,9 +57,9 @@ import de.kiezatlas.website.model.GeoMapView;
 import de.kiezatlas.website.model.CitymapView;
 import de.kiezatlas.website.model.CoordinatesView;
 import de.kiezatlas.website.util.NewsFeedClient;
-import de.mikromedia.webpages.Webpage;
+import de.mikromedia.webpages.model.Webpage;
 import de.mikromedia.webpages.WebpageService;
-import de.mikromedia.webpages.Website;
+import de.mikromedia.webpages.model.Website;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.math.RoundingMode;
@@ -110,6 +110,8 @@ import de.kiezatlas.website.model.SearchKeywords;
 import de.kiezatlas.website.model.SearchResultList;
 import de.kiezatlas.website.model.SearchResult;
 import de.kiezatlas.website.model.UsernameView;
+import de.mikromedia.webpages.events.FrontpageRequestedListener;
+import de.mikromedia.webpages.events.WebpageRequestedListener;
 import java.net.URI;
 import java.net.URISyntaxException;
 import javax.ws.rs.DELETE;
@@ -129,7 +131,9 @@ import javax.ws.rs.DELETE;
 public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, AssignedAngebotListener,
                                                                               RemovedAngebotListener,
                                                                               ContactAnbieterListener,
-                                                                              PostUpdateTopicListener {
+                                                                              PostUpdateTopicListener,
+                                                                              WebpageRequestedListener,
+                                                                              FrontpageRequestedListener {
 
     private final Logger log = Logger.getLogger(getClass().getName());
 
@@ -3700,6 +3704,16 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         if (topic.getTypeUri().equals("ka2.website.web_alias")) {
             initializeCityMapWebAliasResources();
         }
+    }
+
+    @Override
+    public void webpageRequested(Webpage webpage, String sitePrefix) {
+        log.info("Kiezatlas Website received webpage requested: /" + sitePrefix + "/" + webpage.getWebAlias());
+    }
+
+    @Override
+    public void frontpageRequested(Topic website, String location) {
+        log.info("Kiezatlas Website received frontpage of website requested " + location + " " + website);
     }
 
 }
