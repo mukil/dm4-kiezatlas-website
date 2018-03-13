@@ -219,7 +219,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     @GET
     @Produces(MediaType.TEXT_HTML)
     public Viewable prepareFrontpage() {
-        prepatePageTemplate("ka-index");
+        preparePageTemplate("ka-index");
         return view("ka-index");
     }
 
@@ -238,7 +238,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         if (!isAuthenticated() || !isSiteEditor()) return getUnauthorizedPage();
         viewData("page", "site-listing");
         viewData("sites", getSites());
-        prepatePageTemplate("sites");
+        preparePageTemplate("sites");
         return view("sites");
     }
 
@@ -252,7 +252,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         List<RelatedTopic> websites = kiezatlas.getGeoObjectsBySite(topicId);
         sortBySimpleValueDescending(websites);
         viewData("geoobjects", websites);
-        prepatePageTemplate("sites");
+        preparePageTemplate("sites");
         return view("sites");
     }
 
@@ -266,10 +266,10 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
             viewData("site", dm4.getTopic(siteId));
             viewData("geoobject", kiezatlas.enrichWithFacets(object, siteId));
             viewData("facets", kiezatlas.getFacetTypes(siteId));
-            prepatePageTemplate("facet-editor");
+            preparePageTemplate("facet-editor");
             return view("facet-editor");
         } else {
-            prepatePageTemplate("facet-editor");
+            preparePageTemplate("facet-editor");
             return getNotFoundPage("Der angeforderte Datensatz ist kein Geoobjekt, so funktioniert das nicht.");
         }
     }
@@ -412,7 +412,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         viewData("zielgruppen", new ArrayList<RelatedTopic>());
         viewData("angebote", new ArrayList<RelatedTopic>());
         populateGeoObjectFormTemplate();
-        prepatePageTemplate("edit");
+        preparePageTemplate("edit");
         viewData("workspace", getConfirmationWorkspace());
         return view("edit");
     }
@@ -445,7 +445,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
             return getNotFoundPage("Eine Einrichtung mit dieser ID ist uns nicht bekannt.");
         }
         populateGeoObjectFormTemplate();
-        prepatePageTemplate("edit");
+        preparePageTemplate("edit");
         // this makes sure we keep all (potentially new) child topics in the same workspace its parent is while editing
         viewData("workspace", getAssignedWorkspace(geoObject));
         viewData("editable", isEditable);
@@ -1453,8 +1453,8 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
             if (isInvalidSearchQuery(queryValue)) return results;
             // 2) Fetch unique geo object topics by text query string (leading AND ending ASTERISK)
             List<Topic> geoObjects = searchFulltextInGeoObjectChilds(queryValue, false, true, false, true);
-            List<Topic> relatedGeoObjects = etl.searchFulltextInCategories(referer, query);
-            geoObjects.addAll(relatedGeoObjects);
+            /** List<Topic> relatedGeoObjects = etl.searchFulltextInCategories(referer, query);
+            geoObjects.addAll(relatedGeoObjects); **/
             // 3) Process saerch results and create DTS for map display
             for (Topic topic : geoObjects) {
                 if (isGeoObjectTopic(topic)) {
@@ -1521,8 +1521,8 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
             if (isInvalidSearchQuery(queryValue)) return results;
             // DO fulltext saerch with simple ASTERISK at the END
             List<Topic> geoObjects = searchFulltextInGeoObjectChilds(queryValue, false, true, false, true);
-            List<Topic> relatedGeoObjects = etl.searchFulltextInCategories(referer, query);
-            geoObjects.addAll(relatedGeoObjects);
+            /** List<Topic> relatedGeoObjects = etl.searchFulltextInCategories(referer, query);
+            geoObjects.addAll(relatedGeoObjects); **/
             log.info("Start building response for " + geoObjects.size() + " and FILTER by CONTEXT");
             for (Topic geoObject: geoObjects) {
                 // checks for district OR site relation
@@ -1929,7 +1929,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         List<AngebotsinfosAssigned> angebotsInfos = angebote.getActiveAngebotsinfosAssigned(geoObject, true);
         if (angebotsInfos.size() > 0) viewData("angebotsinfos", angebotsInfos);
         // user auth
-        prepatePageTemplate("detail");
+        preparePageTemplate("detail");
         // geo object auth
         viewData("is_trashed", isTopicInDeletionWorkspace(geoObject));
         viewData("is_published", isTopicInStandardWorkspace(geoObject));
@@ -1943,7 +1943,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     private Viewable prepareBezirksregionenTemplate(List<BezirksregionView> results) {
         // Optimize: Loads district topic twice (see earlier calls to isAssociatedDistrictMember())
         viewData("userDistricts", getUserDistrictTopics());
-        prepatePageTemplate("editors");
+        preparePageTemplate("editors");
         viewData("geoobjects", results);
         viewData("geoobjectsCount", results.size());
         // prepareGeoObjectListing(results);
@@ -1959,12 +1959,12 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     }
 
     private Viewable getFrontpage() {
-        prepatePageTemplate("frontpage");
+        preparePageTemplate("frontpage");
         return view("website-front");
     }
 
     private Viewable getFilterListTemplate(List<EinrichtungView> results) {
-        prepatePageTemplate("list-filter");
+        preparePageTemplate("list-filter");
         prepareEditorListing();
         viewData("geoobjects", results);
         viewData("geoobjectsCount", results.size());
@@ -1973,7 +1973,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     }
 
     private Viewable getListTemplate(List<EinrichtungView> results) {
-        prepatePageTemplate("list");
+        preparePageTemplate("list");
         prepareEditorListing();
         viewData("geoobjects", results);
         viewData("geoobjectsCount", results.size());
@@ -1982,7 +1982,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     }
 
     private Viewable getConfirmationBezirkTemplate(List<EinrichtungView> results) {
-        prepatePageTemplate("confirmation");
+        preparePageTemplate("confirmation");
         prepareEditorListing();
         viewData("viewtype", "bezirk");
         viewData("geoobjects", results);
@@ -1991,7 +1991,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     }
 
     private Viewable getConfirmationBezirksregionTemplate(List<BezirksregionView> results) {
-        prepatePageTemplate("confirmation");
+        preparePageTemplate("confirmation");
         prepareEditorListing();
         viewData("viewtype", "bezirksregion");
         viewData("bezirksregionen", results);
@@ -2000,13 +2000,13 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     }
 
     private Viewable getAssignmentTemplate() {
-        prepatePageTemplate("assignments");
+        preparePageTemplate("assignments");
         viewData("name", "AnsprechpartnerInnen");
         return view("list-user-assignments");
     }
 
     private Viewable getCommentsTemplate(List<EinrichtungView> results) {
-        prepatePageTemplate("comments");
+        preparePageTemplate("comments");
         prepareEditorListing();
         viewData("geoobjects", results);
         viewData("geoobjectsCount", results.size());
@@ -2014,7 +2014,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     }
 
     private Viewable getSimpleMessagePage() {
-        prepatePageTemplate("page");
+        preparePageTemplate("page");
         return view("message");
     }
 
@@ -2029,7 +2029,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     private Viewable getNotFoundPage(String message, String backLinkUrl) {
         if (message != null) viewData("message", message);
         if (backLinkUrl != null) viewData("originated", backLinkUrl);
-        prepatePageTemplate("page");
+        preparePageTemplate("page");
         return view("404");
     }
 
@@ -2042,7 +2042,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     }
 
     private Viewable getUnauthorizedPage(String message, String backLinkUrl) {
-        prepatePageTemplate("page");
+        preparePageTemplate("page");
         if (message != null) viewData("message", message);
         if (backLinkUrl != null) viewData("originated", backLinkUrl);
         return view("401");
@@ -2059,7 +2059,11 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         viewData("availableZielgruppen", getZielgruppeCriteriaTopics());
     }
 
-    private void prepatePageTemplate(String templateName) {
+    private void preparePageTemplate(String templateName) {
+        preparePageTemplate(templateName, null);
+    }
+
+    private void preparePageTemplate(String templateName, String href) {
         boolean isAuthenticated = isAuthenticated();
         boolean isConfirmationMember = isConfirmationWorkspaceMember();
         boolean isSiteManager = isSiteEditor();
@@ -2068,6 +2072,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         viewData("is_district_admin", (getUserDistrictTopics() != null));
         viewData("is_site_manager", isSiteManager);
         viewData("template", templateName);
+        viewData("location", (href == null) ? "" : href);
         Topic standardwebsite = webpages.getStandardWebsite();
         viewData("website", "standard");
         prepareCityMapSite(standardwebsite);
@@ -2262,7 +2267,8 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
 
     private boolean isValidReferer(String ref) {
         if (ref == null) return false;
-        if (ref.contains(".kiezatlas.de/") || ref.contains("localhost:8080")) {
+        if (ref.contains(".kiezatlas.de/") || ref.contains("localhost:8080")
+            || ref.contains("localhost:8182") || ref.contains("kiezatlas.berlin")) {
             return true;
         } else {
             log.warning("Invalid Request Referer \"" + ref + "\"");
