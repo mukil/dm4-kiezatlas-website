@@ -1,0 +1,39 @@
+/*******************************
+        Global Overrides
+*******************************/
+
+@font-face {
+    font-family: 'Titillium';
+    src: url('themes/kiezatlas/assets/fonts/Titillium-Bold.eot');
+    src: url('themes/kiezatlas/assets/fonts/Titillium-Bold.eot?#iefix') format('embedded-opentype'),
+        url('themes/kiezatlas/assets/fonts/Titillium-Bold.woff2') format('woff2'),
+        url('themes/kiezatlas/assets/fonts/Titillium-Bold.woff') format('woff'),
+        url('themes/kiezatlas/assets/fonts/Titillium-Bold.ttf') format('truetype'),
+        url('themes/kiezatlas/assets/fonts/Titillium-Bold.svg#Titillium-Bold') format('svg');
+    font-weight: bold;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Titillium';
+    src: url('themes/kiezatlas/assets/fonts/Titillium-ThinUpright.eot');
+    src: url('themes/kiezatlas/assets/fonts/Titillium-ThinUpright.eot?#iefix') format('embedded-opentype'),
+        url('themes/kiezatlas/assets/fonts/Titillium-ThinUpright.woff2') format('woff2'),
+        url('themes/kiezatlas/assets/fonts/Titillium-ThinUpright.woff') format('woff'),
+        url('themes/kiezatlas/assets/fonts/Titillium-ThinUpright.ttf') format('truetype'),
+        url('themes/kiezatlas/assets/fonts/Titillium-ThinUpright.svg#Titillium-ThinUpright') format('svg');
+    font-weight: 100;
+    font-style: italic;
+}
+
+@font-face {
+    font-family: 'Titillium';
+    src: url('themes/kiezatlas/assets/fonts/Titillium-LightUpright.eot');
+    src: url('themes/kiezatlas/assets/fonts/Titillium-LightUpright.eot?#iefix') format('embedded-opentype'),
+        url('themes/kiezatlas/assets/fonts/Titillium-LightUpright.woff2') format('woff2'),
+        url('themes/kiezatlas/assets/fonts/Titillium-LightUpright.woff') format('woff'),
+        url('themes/kiezatlas/assets/fonts/Titillium-LightUpright.ttf') format('truetype'),
+        url('themes/kiezatlas/assets/fonts/Titillium-LightUpright.svg#Titillium-LightUpright') format('svg');
+    font-weight: 300;
+    font-style: normal;
+}

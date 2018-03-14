@@ -6,3 +6,4 @@ src/main/resources/web/images/unused/
 src/main/resources/web/vendor/leaflet/markercluster/
 *flick
 *flick.zip
+.DS_Store

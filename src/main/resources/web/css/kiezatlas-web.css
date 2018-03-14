@@ -1,19 +1,142 @@
 
-body.page {
-    margin-top: 4em;
+/** --- Re-design custom styles --- **/
+
+.ui .navigation {
+    height: 138px;
+    border-bottom: 1px solid #3787ab;
 }
 
-body .container {
+.ui.segment.teaser {
+    height: 338px;
+    border-bottom: 1px solid #3787ab;
+}
+
+.ui.teaser .header {
+    width: 25%;
+}
+
+.ui.teaser .subline,
+.ui.teaser .header,
+.ui .search,
+.ui .search-results,
+.ui .search-criteria,
+.ui .content,
+.ui .footer {
+    padding: .5em;
+}
+
+/** Typography related Styles **/
+
+.ui .header.thin {
+    font-style: italic;
+}
+
+.ui .header.thin b {
+    font-style: normal;
+}
+
+.white {
+    color: #fff;
+}
+
+.page .ui.header,
+.page,
+.blue1 {
+    color: #193441;
+}
+
+.blue1bg {
+    background-color: #193441;
+    font-smooth: antialised;
+    -webkit-font-smoothing: antialiased;
+}
+
+.blue2 {
+    color: #9ec8d6;
+}
+
+.blue2bg {
+    background-color: #9ec8d6;
+    font-smooth: antialised;
+    -webkit-font-smoothing: antialiased;
+}
+
+.blue3 {
+    color: #3787ab;
+}
+
+.blue3bg {
+    background-color: #3787ab;
+    font-smooth: antialised;
+    -webkit-font-smoothing: antialiased;
+}
+
+.blue4 {
+    color: #ecf4f7;
+}
+
+.blue4bg {
+    background-color: #ecf4f7;
+}
+
+.blue5 {
+    color: #3e606f;
+}
+
+.yellow {
+    color #f8f6e9;
+}
+
+.yellowbg {
+    background-color: #f8f6e9;
+}
+
+/** Footer specific overrides **/
+.ui .footer.segment {
+    padding-top: 2em;
+    border-top: 1px solid #3787ab;
+}
+
+.ui .footer .your-data img {
+    margin-bottom: 1em;
+}
+
+.ui .footer .your-data div {
+    margin-left: .85em;
+}
+
+.ui .bottomline {
+    font-size: .9em;
+}
+
+/** -- Utils -- **/
+
+.hidden {
+    display: none
+}
+
+.page #map {
+    height: 500px;
+}
+
+.ui.search .input {
+    width: 100%;
+    height: 40px;
+}
+
+.ui.inverted.dimmer .ui.loader {
+    padding-left: 1em;
+    padding-top: 3em;
+}
+
+/** -- Map Fullscreen Related Styles -- **/
+
+.map .container {
     display: flex;
 }
 
-h3 {
-    padding-top: .5em;
-    padding-left: .5em;
-}
-
-.footer,
-.header {
+.map .footer,
+.map .header {
     position: fixed;
     left: 0px;
     width: 100%;
@@ -24,26 +147,26 @@ h3 {
     height: 100%;
 }
 
-.header {
+.map.header {
     top: 0px; 
 }
 
-.footer {
+.map .footer {
     bottom: 0px; 
 }
 
-.spacing {
+.map .spacing {
     padding: .5em;
 }
 
-.map-panel {
+.map .map-panel {
     position: fixed;
     top: 45px; left: 0px;
     height: 100%;
     width: 70%;
 }
 
-.side-panel {
+.map .side-panel {
     position: fixed;
     top: 45px; right: 0px;
     height: 100%;
@@ -53,18 +176,18 @@ h3 {
     padding-top: 0px;
 }
 
-.side-panel .section {
+.map .side-panel .section {
     border-bottom: 1px solid grey;
 }
 
-.item .icon {
+.map .item .icon {
     width: 15px; height: 15px;
     display: inline-block;
     vertical-align: sub;
     margin-right: 5px;
 }
 
-.side-panel .item {
+.map .side-panel .item {
     display: block;
     cursor: pointer;
     padding: .5em;
@@ -72,14 +195,14 @@ h3 {
     padding-right: 1em;
 }
 
-.side-panel .item:hover {
+.map .side-panel .item:hover {
     background-color: rgba(0,0,0,0.2);
 }
 
-.icon.red {
+.map .icon.red {
     background-color: #ff0000;
 }
 
-.icon.blue {
+.map .icon.blue {
     background-color: #00f;
 }

@@ -225,6 +225,14 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
 
     /** Responds witha a Viewable, the new frontpage of the Kiezatlas Website. */
     @GET
+    @Path("/map")
+    @Produces(MediaType.TEXT_HTML)
+    public Viewable prepareCityMap() {
+        return getWebsiteMap();
+    }
+
+    /** Responds witha a Viewable, the new frontpage of the Kiezatlas Website. */
+    @GET
     @Path("/startseite")
     @Produces(MediaType.TEXT_HTML)
     public Viewable prepareNewFrontpage() {
@@ -1958,9 +1966,14 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         return getFilterListTemplate(results);
     }
 
-    private Viewable getFrontpage() {
+    private Viewable getWebsiteMap() {
         preparePageTemplate("frontpage");
         return view("website-front");
+    }
+
+    private Viewable getFrontpage() {
+        preparePageTemplate("frontpage");
+        return view("website-grid");
     }
 
     private Viewable getFilterListTemplate(List<EinrichtungView> results) {
