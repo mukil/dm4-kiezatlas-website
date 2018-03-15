@@ -2550,18 +2550,20 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
             detail.setName(geoObject.getChildTopics().getString(KiezatlasService.GEO_OBJECT_NAME));
             // Sets Street, Postal Code, City and Address
             Topic addressTopic = geoObject.getChildTopics().getTopic(KiezatlasService.GEO_OBJECT_ADDRESS);
-            if (addressTopic == null) {
-                log.warning("\""+addressTopic.getSimpleValue()+"\") has NO ADDRESS set");
-                return null;
+            if (addressTopic != null) {
+                detail.setAddress(addressTopic);
             }
-            detail.setAddress(addressTopic);
             // Sets Latitude and Longitude
             GeoCoordinate geoCoordinate = geomaps.getGeoCoordinate(addressTopic);
             if (geoCoordinate == null) {
-                log.warning("\""+geoObject.getSimpleValue()+"\") has NO GEO COORDINATES set");
-                return null;
+                log.severe("\""+geoObject.getSimpleValue()+"\" has NO GEO COORDINATES set");
+                // Continuing to allow frontend and users to correct the missing data manually.
+                // ### Double check input form(uses JavaScript) and backend for validating geo coordinates.
+            } else {
+                detail.setCoordinates(geoCoordinate);
+                // Note: Base on coordinates we enrich einrichtungs infos about "LOR ID" and "Bezirksregion Nme" on-the-fly
+                enrichWithBezirksregionAndLOR(geoObject, geoCoordinate, detail);
             }
-            detail.setCoordinates(geoCoordinate);
             // Sets Kontakt Facet
             Topic kontakt = getContactFacet(geoObject);
             if (kontakt != null) {
@@ -2574,9 +2576,8 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
             // Calculates Imprint Value
             Topic bezirk = getRelatedBezirk(geoObject);
             if (bezirk == null) {
-                log.warning("No BEZIRK assigned to Geo Object!");
-                log.warning("EinrichtungsInfos Bezirk has NO IMPRINT value set, ID:" + geoObject.getId());
-                detail.setImprintUrl("http://pax.spinnenwerk.de/~kiezatlas/index.php?id=6");
+                log.warning("Geo Object has NO SPECIFIC IMPRINT (" + geoObject.getId() + ")");
+                detail.setImprintUrl(FALLBACK_IMPRINT);
             } else {
                 detail.setBezirk(bezirk.getSimpleValue().toString());
                 detail.setBezirkId(bezirk.getId());
@@ -2601,8 +2602,6 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
             // Stichworte Facet
             Topic stichworte = facets.getFacet(geoObject, STICHWORTE_FACET);
             if (stichworte != null) detail.setStichworte(stichworte.getSimpleValue().toString());
-            // Note: We enrich EinrichtungsDetails about "LOR ID" and "Bezirksregion Nme" on-the-fly
-            enrichWithBezirksregionAndLOR(geoObject, geoCoordinate, detail);
             // Website Facet
             Topic website = facets.getFacet(geoObject, WEBSITE_FACET);
             if (website != null) detail.setWebpage(website.getSimpleValue().toString());
