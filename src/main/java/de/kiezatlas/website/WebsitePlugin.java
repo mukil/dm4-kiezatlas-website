@@ -3009,21 +3009,24 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     }
 
     private void writeSimpleKeyCompositeFacet(Topic geoObject, String facetTypeUri, String childTypeUri, String value) {
+        // check if new value is empty
+        if (value.trim().isEmpty()) {
+            log.info("Passed empty value as new simple key composite facet - doing nothing");
+            return;
+        }
         // check if a former value was already assigned and we're updating
         Topic oldFacetTopic = facets.getFacet(geoObject.getId(), facetTypeUri);
         // check if value already exist in a topic/db and if so, reference that
         try { // and if it exists, we might need to catch an AccessControlException...
             Topic keyTopic = dm4.getTopicByValue(childTypeUri, new SimpleValue(value.trim()));
-            if (!value.trim().isEmpty()) {
-                if (oldFacetTopic != null && !oldFacetTopic.getSimpleValue().toString().equals(value.trim())) {
-                    // old value is existent and same as new value, do nothing
-                } else if (keyTopic != null) { // reference existing topic
-                    facets.updateFacet(geoObject.getId(), facetTypeUri,
-                        mf.newFacetValueModel(childTypeUri).putRef(keyTopic.getId()));
-                } else { // create new topic with new value
-                    facets.updateFacet(geoObject.getId(), facetTypeUri,
-                        mf.newFacetValueModel(childTypeUri).put(value.trim()));
-                }
+            if (oldFacetTopic != null && oldFacetTopic.getSimpleValue().toString().equals(value.trim())) {
+                // old value is existent and same as new value, do nothing
+            } else if (keyTopic != null) { // reference existing topic
+                facets.updateFacet(geoObject.getId(), facetTypeUri,
+                    mf.newFacetValueModel(childTypeUri).putRef(keyTopic.getId()));
+            } else { // create new topic with new value
+                facets.updateFacet(geoObject.getId(), facetTypeUri,
+                    mf.newFacetValueModel(childTypeUri).put(value.trim()));
             }
         } catch (RuntimeException re) { // If fetching an existing value fails, eg. ACL we def. create a new one
             facets.updateFacet(geoObject.getId(), facetTypeUri,
