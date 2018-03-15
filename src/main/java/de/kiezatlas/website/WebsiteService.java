@@ -34,6 +34,8 @@ public interface WebsiteService {
     static final String DELETION_WORKSPACE_URI = "de.kiezatlas.del_workspace";
     static final String DELETION_WORKSPACE_NAME = "Papierkorb";
 
+    static final String FALLBACK_IMPRINT = "http://pax.spinnenwerk.de/~kiezatlas/index.php?id=6";
+
     /**
      * Searching in four child topic types of geo object, returning topics of type "ka2.geo_object".
      * @param searchTerm    User given phrase with one or many search term/s
