@@ -1072,6 +1072,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
                     return Response.ok(assoc.getId()).build();
                 }
             }
+            log.warning("Did not create user_assignment cause the user has no association to corresponding region");
             return Response.serverError().build();
         } else {
             log.warning("Unauthorized attempt to create a user assignment between topicId=" + topicId
@@ -2814,8 +2815,8 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
                             mf.newTopicRoleModel(username.getId(), DEFAULT_ROLE)));
                         log.info("Created Kiezatlas User Assignment ("+username.getSimpleValue()+") for Topic \""
                                 + topic.getSimpleValue() + "\" without Workspace Assignment");
-                        if (assignToWorkspace) { // Place into "Kiezatlas" Workspace
-                            workspaces.assignToWorkspace(assignment, kiezatlas.getStandardWorkspaceId());
+                        if (assignToWorkspace) { // Place in "Confirmation" Workspace
+                            workspaces.assignToWorkspace(assignment, getConfirmationWorkspace().getId());
                         }
                         return assignment;
                     }
