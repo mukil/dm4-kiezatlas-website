@@ -20,7 +20,7 @@
     <body class="ui page">
 
         <div class="navigation">
-            <div class="top-menu" th:include="fragments/navigation :: top (publisher=${is_publisher})"></div>
+            <div class="top-menu" th:include="fragments/navigation :: top2 (publisher=${is_publisher})"></div>
         </div>
 
         <div class="ui vertical left menu sidebar" th:include="fragments/navigation :: vertical (publisher=${is_publisher})"></div>
@@ -30,11 +30,11 @@
             <!-- Teaser Area -->
             <div class="ui vertical segment teaser">
                 <div class="ui container">
-                    <h2 class="header blue3bg white thin">
+                    <h2 class="header blue5bg white thin">
                         Unser Kiezatlas f&uuml;r<br/>
                         <b>Mitte</b>
                     </h2>
-                    <p class="subline blue1">Massive copytext on massive image text</p>
+                    <div class="header subline blue1">Massive copytext on massive image text</div>
                 </div>
             </div>
 
@@ -43,12 +43,17 @@
                 <div class="ui container">
                     <div class="ui left icon action input">
                         <i class="search icon"></i>
-                        <input class="prompt" type="text" placeholder="Geben Sie hier Ihre Suchanfrage ein..." />
-                        <select class="ui compact selection dropdown">
-                            <option selected="" value="places">Einrichtungen</option>
-                            <option value="events">Angebote</option>
-                        </select>
-                        <div class="ui button">Suchen</div>
+                        <input id="query" class="prompt" type="text" placeholder="Geben Sie hier Ihre Suchanfrage ein..." />
+                        <!--div class="ui simple dropdown blue1">
+                            <input type="hidden" name="type" />
+                            <i class="dropdown icon"></i>
+                            <div class="default text">Einrichtungen</div>
+                            <div class="menu">
+                                <div class="item active" data-value="places">Einrichtungen</div>
+                                <div class="item" data-value="events">Angebote</div>
+                            </div>
+                        </div-->
+                        <div class="ui ka button">Suchen</div>
                     </div>
                 </div>
             </div>
@@ -64,84 +69,100 @@
             <!-- Search Criterias Area -->
             <div class="ui vertical segment">
                 <div class="ui container search-criterias">
-                    <h2 class="header thin" onclick="toggleSearchCriteria()">Suchkriterien <i class="icon caret down"></i></h2>
-                    <div class="ui grid">
-                        <div class="two column">
-                            
-                            <div class="ui form">
-                                <div class="grouped fields">
-                                    <div class="field">
-                                        <div class="ui radio checkbox">
-                                            <input type="radio" name="type" id="places" checked="checked" />
-                                            <label for="places">Einrichtungen</label>
+                    <h3 class="header thin" onclick="toggleSearchCriteria()">Suchkriterien <i class="icon caret up"></i></h3>
+                    <div class="ui two column grid">
+                        <div class="column">
+                            <div class="ui three column grid">
+                                <div class="column">
+                                    <div class="ui form">
+                                        <div class="grouped fields">
+                                            <div class="field">
+                                                <div class="ui radio checkbox">
+                                                    <input type="radio" name="type" id="places" checked="checked" />
+                                                    <label for="places">Einrichtungen</label>
+                                                </div>
+                                            </div>
+                                            <div class="field">
+                                                <div class="ui radio checkbox">
+                                                    <input type="radio" name="type" id="events" />
+                                                    <label for="events">Angebote</label>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
-                                    <div class="field">
-                                        <div class="ui radio checkbox">
-                                            <input type="radio" name="type" id="events" />
-                                            <label for="events">Angebote</label>
+
+                                    <!--div class="ui checkbox">
+                                        <input type="checkbox" id="check-places" name="places" />
+                                        <label for="check-places">Einrichtungen</label>
+                                    </div>
+                                    <div class="ui checkbox">
+                                        <input id="check-events" type="checkbox" name="events" />
+                                        <label for="check-events">Angebote</label>
+                                    </div-->
+
+                                </div>
+                                <div class="column search-type">
+                                    <div class="ui form">
+                                        <div class="grouped fields">
+                                            <div class="field">
+                                                <div class="ui radio checkbox">
+                                                    <input type="radio" name="method" id="quick" checked="checked" />
+                                                    <label for="quick">Schnellsuche</label>
+                                                </div>
+                                            </div>
+                                            <div class="field">
+                                                <div class="ui radio checkbox">
+                                                    <input type="radio" name="method" id="fulltext" />
+                                                    <label for="fulltext">Volltextsuche</label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="column area">
+                                    <div class="ui form">
+                                        <div class="grouped fields">
+                                            <div class="field">
+                                                <div class="ui radio checkbox">
+                                                    <input type="radio" name="area" id="berlin" checked="checked" />
+                                                    <label for="berlin">Gesamtberlin</label>
+                                                </div>
+                                            </div>
+                                            <div class="field">
+                                                <div class="ui radio checkbox">
+                                                    <input type="radio" name="area" id="circle" />
+                                                    <label for="circle">Umkreissuche</label>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            
-                            <!--div class="ui checkbox">
-                                <input type="checkbox" id="check-places" name="places" />
-                                <label for="check-places">Einrichtungen</label>
-                            </div>
-                            <div class="ui checkbox">
-                                <input id="check-events" type="checkbox" name="events" />
-                                <label for="check-events">Angebote</label>
-                            </div-->
-
                         </div>
-
-                        <div class="two column">
-                            <div class="ui checkbox">
-                                <label>
-                                    Schnellsuche
-                                    <input type="checkbox" name="quick" checked="checked"/>
-                                </label>
-                            </div>
-                            <div class="ui checkbox">
-                                <label>
-                                    Volltextsuche
-                                    <input type="checkbox" name="fulltext" />
-                                </label>
-                            </div>
-                        </div>
-                        <div class="two column">
-                            <div class="ui checkbox">
-                                <label>
-                                    Gesamtberlin
-                                    <input type="checkbox" name="berlin" checked="checked"/>
-                                </label>
-                            </div>
-                            <div class="ui checkbox">
-                                <label>
-                                    Umkreissuche
-                                    <input type="checkbox" name="circle" />
-                                </label>
-                            </div>
-                        </div>
-                        <div class="eight column">
-                            <div class="ui checkbox">
-                                <label>
-                                    Charlottenburg-Wilmersdorf
-                                    <input type="checkbox" name="berlin" />
-                                </label>
-                            </div>
-                            <div class="ui checkbox hidden">
-                                <label>
-                                    Friedrichshain-Kreuzberg
-                                    <input type="checkbox" name="district" />
-                                </label>
-                            </div>
-                            <div class="ui checkbox">
-                                <label>
-                                    Lichtenberg
-                                    <input type="checkbox" name="circle" />
-                                </label>
+                        <div class="column">
+                            <div class="column attributes">
+                                <div class="ui form">
+                                    <div class="grouped fields">
+                                        <div class="field">
+                                            <div class="ui radio checkbox">
+                                                <input type="radio" name="area" id="cw" />
+                                                <label for="cw">Charlottenburg-Wilmersdorf</label>
+                                            </div>
+                                        </div>
+                                        <div class="field">
+                                            <div class="ui radio checkbox">
+                                                <input type="radio" name="area" id="fk" />
+                                                <label for="fk">Friedrichshain-Kreuzberg</label>
+                                            </div>
+                                        </div>
+                                        <div class="field">
+                                            <div class="ui radio checkbox">
+                                                <input type="radio" name="area" id="xyz" />
+                                                <label for="xyz">...</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -150,27 +171,46 @@
 
             <!-- Content Segment Area -->
             <div class="ui vertical container segment content">
-                <div class="ui celled equal width stackable grid">
-                    <div class="stretched row">
+                <div class="ui equal width stackable grid">
+                    <div class="first row">
                         <!-- Aktuelles Tile -->
-                        <div class="eight wide column blue4bg">Aktuelles</div>
+                        <div class="eight wide column blue4bg aktuelles">
+                            <div class="headline blue5bg white">
+                                 <h3>Aktuelles</h3>
+                            </div>
+                            <div class="news-item">
+                                <div class="date">Datum</div>
+                                <div class="headline">
+                                    Headline<br/>
+                                    <a><i class="icon caret right"></i>mehr Infos</a>
+                                </div>
+                            </div>
+                        </div>
                         <!-- Umreissuche Tile -->
-                        <div class="column yellowbg">Umkreissuche</div>
+                        <div class="column yellowbg">
+                            <h3>Verwenden der Umkreissuche</h3>
+                        </div>
                         <!-- Call-to-Action Tile -->
-                        <div class="column yellowbg">Call-to-Action</div>
+                        <div class="column yellowbg">
+                            <h3>Stellen Sie Angebote oder Einrichtungen in den Kiezatlas</h3>
+                        </div>
                     </div>
-                    <div class="stretched row">
+                    <div class="second row">
                         <!-- Citymaps Tile -->
-                        <div class="four wide column yellowbg">Weitere Stadtpl&auml;ne</div>
+                        <div class="four wide column yellowbg">
+                            <h3>Entdecken Sie unsere weiteren Stadtpl&auml;ne</h3>
+                        </div>
                         <!-- LOR Datenbank Tile -->
-                        <div class="column yellowbg">Datenbank LOR</div>
+                        <div class="column yellowbg">
+                            <h3>Sozialraumdaten zu lebensweltlich orientierten R&auml;umen (LOR)</h3>
+                        </div>
                     </div>
-                    <div class="row">
-                        <div class="column active inverted segment dimmer">
+                    <div class="row third">
+                        <div class="column active inverted segment map dimmer">
+                            <h3>Angebote und Einrichtungen auf einem Blick</h3>
                             <!-- Map Segment -->
                             <div class="ui vertical active inverted segment dimmer">
                                 <div id="map">
-                                    Interactive Leaflet Map
                                     <div class="ui text loader">Lade Stadtplan...</div>
                                 </div>
                             </div>

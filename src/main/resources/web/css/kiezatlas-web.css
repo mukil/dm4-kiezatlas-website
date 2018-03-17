@@ -17,12 +17,31 @@
 
 .ui.teaser .subline,
 .ui.teaser .header,
-.ui .search,
+.ui .search.segment,
 .ui .search-results,
 .ui .search-criteria,
 .ui .content,
 .ui .footer {
     padding: .5em;
+}
+
+.ui .navigation .top-menu {
+    position: relative;
+    top: 40px;
+}
+
+.ui .navigation .top-menu .menu {
+    float: right;
+}
+
+.ui.secondary.menu .item:hover {
+    font-weight: bold;
+}
+
+.ui .navigation .mobile-logo {
+    height: 75px;
+    position: relative;
+    top: -15px;
 }
 
 /** Typography related Styles **/
@@ -83,8 +102,15 @@
     color: #3e606f;
 }
 
+.blue5bg {
+    background-color: #3e606f;
+    font-smooth: antialised;
+    -webkit-font-smoothing: antialiased;
+    color: #fff;
+}
+
 .yellow {
-    color #f8f6e9;
+    color: #f8f6e9;
 }
 
 .yellowbg {
@@ -93,6 +119,7 @@
 
 /** Footer specific overrides **/
 .ui .footer.segment {
+    margin-top: 4em;
     padding-top: 2em;
     border-top: 1px solid #3787ab;
 }
@@ -119,14 +146,122 @@
     height: 500px;
 }
 
+.ui.button {
+    font-smooth: antialiased;
+    -webkit-font-smoothing: antialiased;
+}
+
 .ui.search .input {
     width: 100%;
     height: 40px;
 }
 
+.ui.search input {
+    padding-top: 1em;
+    font-size: 18px;
+}
+
+.ui.search .input:hover {
+    background-color: transparent;
+}
+
+.ui.menu .dropdown.item .menu,
+.ui.menu {
+    font-size: 1em;
+    border: 0px !important;
+    -webkit-box-shadow: 0px 0px transparent;
+    box-shadow: 0px 0px transparent;
+}
+
+.ui.dropdown .menu > .item,
+.ui.ka.button {
+    font-size: 18px;
+    padding: .5em !important;
+    padding-top: .7em !important;
+}
+
+.ui.search .ka.button {
+    padding-bottom: .5em !important;
+    padding-top: .7em !important;
+    padding-right: 19% !important;
+    padding-left: 1em !important;
+    border-top-right-radius: 500rem !important;
+    border-bottom-right-radius: 500rem !important;
+}
+
+.ui.dropdown > .dropdown.icon {
+    margin-right: .3em;
+}
+
+.ui.search .ui.dropdown:not(.button)>.default.text,
+.ui.search .ui.dropdown:not(.button)>.text {
+    font-weight: bold;
+    color: #193441;
+}
+
+.ui.search .ui.dropdown {
+    background: #e0e1e2 none;
+    padding: .5em;
+    padding-left: 0em;
+    padding-right: .8em;
+}
+
 .ui.inverted.dimmer .ui.loader {
     padding-left: 1em;
     padding-top: 3em;
+}
+
+/** -- Content Grid Columns -- **/
+
+.ui.segment.content .grid .first.row {
+    margin-top: .75em;
+}
+
+.ui.segment.content .grid .second.row,
+.ui.segment.content .grid .third.row {
+    padding-top: 0em;
+}
+
+.ui.segment.content .grid .column {
+    margin-right: .5em;
+    margin-left: .5em;
+}
+
+.ui.grid .row .column.aktuelles {
+    padding: 0em !important;
+}
+
+.content .ui.grid .column.aktuelles h3 {
+    padding-top: .5em;
+    padding-left: .7em;
+    padding-bottom: .3em;
+}
+
+.content .ui.grid .column h3 {
+    padding-top: .5em;
+    padding-bottom: .5em;
+}
+
+.ui.grid .column .news-item {
+    font-size: 16px;
+    padding-top: .5em;
+    padding-left: .9em;
+}
+
+.ui.grid .column .news-item a {
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.ui.grid .map.column {
+    border: 1px solid #ecf4f7;
+}
+
+/** -- Search Criterias -- **/
+
+.ui.page .segment .search-criterias {
+    padding: 1em;
+    border-bottom: 1px solid #ecf4f7;
 }
 
 /** -- Map Fullscreen Related Styles -- **/
