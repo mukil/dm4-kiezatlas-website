@@ -14,6 +14,7 @@
           crossorigin="anonymous"></script>
         <script defer="true" src="/de.kiezatlas.website/css/semantic-ui/2.3/dist/semantic.min.js"></script>
         <script defer="true" src="/de.kiezatlas.website/dist/leaflet-1.2/leaflet.js"></script>
+        <script defer="true" src="/de.kiezatlas.website/ka-restclient.js"></script>
         <script defer="true" src="/de.kiezatlas.website/ka-startseite.js" onload="init()"></script>
 
     </head>
@@ -34,26 +35,21 @@
                         Unser Kiezatlas f&uuml;r<br/>
                         <b>Mitte</b>
                     </h2>
-                    <div class="header subline blue1">Massive copytext on massive image text</div>
+                    <div class="header subline blue1">
+                        <div class="bold title">Einleitungstext Kiezatlas 2.0</div>
+                        Massive copytext on massive image text
+                    </div>
                 </div>
             </div>
 
             <!-- Search Area -->
-            <div class="ui vertical segment search blue4bg">
+            <div class="ui vertical segment search blue2bg">
                 <div class="ui container">
                     <div class="ui left icon action input">
                         <i class="search icon"></i>
-                        <input id="query" class="prompt" type="text" placeholder="Geben Sie hier Ihre Suchanfrage ein..." />
-                        <!--div class="ui simple dropdown blue1">
-                            <input type="hidden" name="type" />
-                            <i class="dropdown icon"></i>
-                            <div class="default text">Einrichtungen</div>
-                            <div class="menu">
-                                <div class="item active" data-value="places">Einrichtungen</div>
-                                <div class="item" data-value="events">Angebote</div>
-                            </div>
-                        </div-->
-                        <div class="ui ka button">Suchen</div>
+                        <input id="query" onkeyup="handle_search_input()"
+                            class="prompt" type="text" placeholder="Geben Sie hier Ihre Suchanfrage ein..." />
+                        <div class="ui ka button" onclick="search()">Suchen</div>
                     </div>
                 </div>
             </div>
@@ -61,8 +57,16 @@
             <!-- Search Results Area -->
             <div class="ui vertical segment search-results hidden">
                 <div class="ui container">
-                    <h2 class="ui header thin hidden">Ihre Suchergebnisse</h2>
-                    <div class="result">Search result one..</div>
+                    <h3 class="ui header thin hidden">Ihre Suchergebnisse</h3>
+                </div>
+            </div>
+            <div class="ui vertical segment blue4bg result-list hidden">
+                <div class="ui container">
+                    <div class="item">
+                        <h3 class="thin">Search result one..</h3>
+                        <div class="subline"></div>
+                        <a href="/">mehr Infos</a>
+                    </div>
                 </div>
             </div>
 
@@ -70,7 +74,7 @@
             <div class="ui vertical segment">
                 <div class="ui container search-criterias">
                     <h3 class="header thin" onclick="toggleSearchCriteria()">Suchkriterien <i class="icon caret up"></i></h3>
-                    <div class="ui two column grid">
+                    <div class="ui two column grid filter">
                         <div class="column">
                             <div class="ui three column grid">
                                 <div class="column">
@@ -90,16 +94,6 @@
                                             </div>
                                         </div>
                                     </div>
-
-                                    <!--div class="ui checkbox">
-                                        <input type="checkbox" id="check-places" name="places" />
-                                        <label for="check-places">Einrichtungen</label>
-                                    </div>
-                                    <div class="ui checkbox">
-                                        <input id="check-events" type="checkbox" name="events" />
-                                        <label for="check-events">Angebote</label>
-                                    </div-->
-
                                 </div>
                                 <div class="column search-type">
                                     <div class="ui form">
@@ -146,13 +140,13 @@
                                         <div class="field">
                                             <div class="ui radio checkbox">
                                                 <input type="radio" name="area" id="cw" />
-                                                <label for="cw">Charlottenburg-Wilmersdorf</label>
+                                                <label for="cw">Kriterium 1</label>
                                             </div>
                                         </div>
                                         <div class="field">
                                             <div class="ui radio checkbox">
                                                 <input type="radio" name="area" id="fk" />
-                                                <label for="fk">Friedrichshain-Kreuzberg</label>
+                                                <label for="fk">Kriterium 2</label>
                                             </div>
                                         </div>
                                         <div class="field">
@@ -179,30 +173,51 @@
                                  <h3>Aktuelles</h3>
                             </div>
                             <div class="news-item">
-                                <div class="date">Datum</div>
+                                <div class="date bold">18. M&auml;rz 2018, 15:30 Uhr</div>
                                 <div class="headline">
                                     Headline<br/>
-                                    <a><i class="icon caret right"></i>mehr Infos</a>
+                                    <a href="/"><i class="icon caret right"></i>mehr Infos</a>
                                 </div>
                             </div>
                         </div>
                         <!-- Umreissuche Tile -->
-                        <div class="column yellowbg">
+                        <div class="column yellowbg circle-search">
                             <h3>Verwenden der Umkreissuche</h3>
+                            <div class="subline">
+                                Lorem ipsum tra lala hicks.
+                            </div>
+                             <img src="/de.kiezatlas.website/images/Umkreissuche-75.jpg"
+                                 title="Zur Registrierung und Eingabe neuer Orte" alt="Grafik als Eingabeaufforderung"/>
                         </div>
                         <!-- Call-to-Action Tile -->
-                        <div class="column yellowbg">
+                        <div class="column yellowbg action">
+                            <img src="/de.kiezatlas.website/images/einrichtung_dummy-75.jpg"
+                                 title="Zur Registrierung und Eingabe neuer Orte" alt="Grafik als Eingabeaufforderung"/>
                             <h3>Stellen Sie Angebote oder Einrichtungen in den Kiezatlas</h3>
+                            <div class="subline">
+                                Lorem ipsum tra lala hicks.
+                            </div>
                         </div>
                     </div>
                     <div class="second row">
                         <!-- Citymaps Tile -->
-                        <div class="four wide column yellowbg">
+                        <div class="four wide column yellowbg citymaps">
                             <h3>Entdecken Sie unsere weiteren Stadtpl&auml;ne</h3>
+                            <div class="subline">
+                                Lorem ipsum tra lala hicks.
+                                Familienportal Stadtplan<br/>
+                                VskA Stadtteilzentren<br/>
+                                <a href="/weitere-stadplaene"><i class="icon caret right"></i>weitere Stadtpl&auml;ne</a>
+                            </div>
                         </div>
                         <!-- LOR Datenbank Tile -->
-                        <div class="column yellowbg">
+                        <div class="column yellowbg lor-area action">
+                            <img src="/de.kiezatlas.website/images/Bild_LOR-75.jpg"
+                                 title="Link zu den Sozialraumdaten - Datenbank LOR" alt="Kartengrafik als Link zu den Sozialraumdaten"/>
                             <h3>Sozialraumdaten zu lebensweltlich orientierten R&auml;umen (LOR)</h3>
+                            <div class="subline">
+                                Lorem ipsum tra lala hicks.
+                            </div>
                         </div>
                     </div>
                     <div class="row third">

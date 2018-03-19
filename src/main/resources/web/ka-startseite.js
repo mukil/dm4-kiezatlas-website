@@ -4,16 +4,73 @@
  * and open the template in the editor.
  */
 
+var results = []
+
 function init() {
     $('.ui.checkbox').checkbox()
-    console.log("initialized all checkboxes on the page...")
     $('.ui.dropdown').dropdown()
-    console.log("initialized all dropdown elements on the page...")
+}
 
+function handle_search_input() {
+    if (event.keyCode === 13) {
+        search(render_results)
+    }
+}
+
+function render_results() {
+    var $container = $('.result-list .container')
+        $container.empty()
+    if (results.length > 0) {
+        show_results_container()
+        for (var r in results) {
+            var el = results[r]
+            var anschrift = (el.anschrift) ? el.anschrift.replace('Berlin Deutschland', '') + ', ' : ''
+            $container.append('<div class="item"><h3 class="thin">' + el.name + '</h3>'
+                + '<div class="subline">' + anschrift + el.bezirk +'<br/>'
+                + '<a href="/website/geo/'+ el.id +'"><i class="icon caret right"></i>mehr Infos</a></div></div>')
+        }
+    }
+}
+
+function search() {
+    var text = get_search_input()
+    var queryUrl = '/website/search/?search='+text
+    /** if (_self.get_site_id()) {
+        queryUrl = '/website/search/' + _self.get_site_id() + '/?search=' + text
+    } **/
+    $.getJSON(queryUrl, function (geo_objects) {
+        results = geo_objects
+        console.log("results found", results)
+        render_results()
+    })
+}
+
+function get_search_input() {
+    return $('#query').val()
 }
 
 function toggleSearchCriteria() {
-    console.log("toogle search criteria div...")
+    $('.ui.grid.filter').toggle()
+    var $headerIcon = $('.search-criterias .header .caret')
+    if ($headerIcon[0].className.indexOf('down') != -1) {
+        $headerIcon.addClass('up')
+        $headerIcon.removeClass('down')
+    } else {
+        $headerIcon.addClass('down')
+        $headerIcon.removeClass('up')
+    }
+}
+
+function show_results_container () {
+    $('.search-results').removeClass('hidden')
+    $('.result-list').removeClass('hidden')
+    $('.search-results .header').removeClass('hidden')
+}
+
+function hide_results_container () {
+    $('.search-results').addClass('hidden')
+    $('.result-list').addClass('hidden')
+    $('.search-results .header').addClass('hidden')
 }
 
 function loadMap() {

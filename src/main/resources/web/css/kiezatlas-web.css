@@ -9,10 +9,21 @@
 .ui.segment.teaser {
     height: 338px;
     border-bottom: 1px solid #3787ab;
+    background-image: url('/de.kiezatlas.website/images/header_visual_dummy75.jpg');
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: cover;
+    background-attachment: scroll;
 }
 
 .ui.teaser .header {
     width: 25%;
+    margin-bottom: 0px;
+}
+
+.ui.teaser .subline {
+    background-color: #fff;
+    padding: .9em;
 }
 
 .ui.teaser .subline,
@@ -34,6 +45,7 @@
     float: right;
 }
 
+.ui .bold,
 .ui.secondary.menu .item:hover {
     font-weight: bold;
 }
@@ -151,6 +163,10 @@
     -webkit-font-smoothing: antialiased;
 }
 
+.ui.search {
+    margin-top: 1em;
+}
+
 .ui.search .input {
     width: 100%;
     height: 40px;
@@ -161,8 +177,16 @@
     font-size: 18px;
 }
 
+.ui.checkbox label {
+    font-size: 18px;
+}
+
 .ui.search .input:hover {
     background-color: transparent;
+}
+
+.ui.radio.checkbox {
+    height: 21px;
 }
 
 .ui.menu .dropdown.item .menu,
@@ -227,27 +251,46 @@
     margin-left: .5em;
 }
 
-.ui.grid .row .column.aktuelles {
-    padding: 0em !important;
+.ui.grid .row .column.action h3 {
+   margin-top: 0em;
 }
 
-.content .ui.grid .column.aktuelles h3 {
-    padding-top: .5em;
-    padding-left: .7em;
+.ui.grid .row .column.action .subline {
+    padding-top: 0em;
+    padding-bottom: 1em;
+}
+
+.content .ui.grid .column.action h3 {
     padding-bottom: .3em;
+}
+
+.ui.grid .row .column {
+    padding: 0em !important;
 }
 
 .content .ui.grid .column h3 {
     padding-top: .5em;
+    padding-left: .7em;
+    margin-bottom: 0em;
+}
+
+.content .ui.grid .column h3 {
+    padding-top: .5em;
+}
+
+.ui.grid .column .subline,
+.ui.grid .column .news-item {
+    padding-top: .5em;
+    padding-left: .9em;
+    padding-right: .9em;
+}
+
+.ui.grid .row .column.circle-search .subline {
     padding-bottom: .5em;
 }
 
-.ui.grid .column .news-item {
-    font-size: 16px;
-    padding-top: .5em;
-    padding-left: .9em;
-}
-
+.result-list .item a,
+.content .ui.grid .row .column a,
 .ui.grid .column .news-item a {
     text-decoration: none;
     font-weight: bold;
@@ -257,11 +300,48 @@
     border: 1px solid #ecf4f7;
 }
 
+.result-list .item i.icon,
+.ui.grid .row .column a i.icon {
+    margin-right: 0em;
+    margin-left: -5px;
+}
+
+/** -- Search Results -- **/
+
+.ui .search-results {
+    margin-top: .5em;
+    padding: 1em;
+}
+
+.ui .result-list {
+    padding-top: 1.5em;
+    padding-bottom: 1.5em;
+}
+
+.ui .result-list .item {
+    margin-bottom: 1em;
+}
+
+.ui .result-list h3 {
+    margin-bottom: 0em;
+}
+
+.ui.checkbox label,
+.result-list .item .subline {
+    font-size: 18px;
+    line-height: 1.2em;
+}
+
 /** -- Search Criterias -- **/
 
 .ui.page .segment .search-criterias {
-    padding: 1em;
+    padding-top: 1em;
     border-bottom: 1px solid #ecf4f7;
+    padding-bottom: 1em;
+}
+
+.ui.search-criterias .header {
+    cursor: pointer;
 }
 
 /** -- Map Fullscreen Related Styles -- **/

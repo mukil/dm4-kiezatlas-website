@@ -192,7 +192,7 @@
                     <div class="item">VskA Stadtteilzentren</div>
                 </div>
             </div>
-            <div class="menu item">LOR</div>
+            <a href="https://sozialraumdaten.kiezatlas.de/seiten/" class="item">Sozialraumdaten</a>
             <a th:if="!${authenticated}" href="/sign-up/login"
                th:class="${#strings.contains(template, 'login')} ? 'active item login' : 'item login'">Login / Registrieren</a>
             <a th:if="${authenticated}" href="/sign-up/login"
