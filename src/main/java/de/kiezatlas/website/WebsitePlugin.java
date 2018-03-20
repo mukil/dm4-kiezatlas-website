@@ -2924,10 +2924,8 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     }
 
     private void updateSimpleCompositeFacet(Topic geoObject, String facetTypeUri, String childTypeUri, String value) {
-        Topic oldFacetTopic = facets.getFacet(geoObject.getId(), facetTypeUri);
         if (!value.trim().isEmpty()) {
             facets.updateFacet(geoObject.getId(), facetTypeUri, mf.newFacetValueModel(childTypeUri).put(value.trim()));
-            if (oldFacetTopic != null) oldFacetTopic.delete();
         }
     }
 
