@@ -185,23 +185,20 @@
                                 <label>Tags:</label>
                                 <span th:utext='${geoobject.stichworte}'>Stichworte</span>
                             </div>
-                            <div>
+                            <div class="related-topics">
                                 <label th:if="${!#lists.isEmpty(zielgruppen)}">Zielgruppe: </label>
-                                <div class="related-topics" th:each="audience : ${zielgruppen}">
-                                    <span class="zielgruppe" th:text='${audience.simpleValue}'>Name der Zielgruppe</span>
-                                </div>
+                                <span class="zielgruppe" th:each="audience : ${zielgruppen}"
+                                      th:text='${audience.simpleValue}'>Name der Zielgruppe</span>
                             </div>
-                            <div>
+                            <div class="related-topics">
                                 <label th:if="${!#lists.isEmpty(angebote)}">Angebote:</label>
-                                <div class="related-topics" th:each="service : ${angebote}">
-                                    <span class="angebot" th:text='${service.simpleValue}'>Name der Angebote</span>
-                                </div>
+                                <span class="angebot" th:each="service : ${angebote}"
+                                      th:text='${service.simpleValue}'>Name der Angebote</span>
                             </div>
-                            <div>
+                            <div class="related-topics">
                                 <label th:if="${!#lists.isEmpty(themen)}">Themen:</label>
-                                <div class="related-topics" th:each="topic : ${themen}">
-                                    <span class="thema" th:text='${topic.simpleValue}'>Name des Themas</span>
-                                </div>
+                                <span class="thema" th:each="topic : ${themen}"
+                                      th:text='${topic.simpleValue}'>Name des Themas</span>
                             </div>
                         </div>
                         <div class="column">
@@ -210,9 +207,6 @@
                             </p>
                         </div>
                     </div>
-                    <p>
-                        <a class="imprint" th:href="${geoobject.imprint}">Impressum</a>
-                    </p>
                 </div>
                 <div th:if="${authenticated}" class="ui container debug metadata">
                     <div class="creator">
@@ -220,6 +214,10 @@
                         in Workspace <span class="workspace" th:text="${#strings.contains(workspace.simpleValue, 'DeepaMehta')} ? 'Standard' : ${workspace.simpleValue}"></span>.
                     </div>
                 </div>
+            </div>
+
+            <div class="ui vertical segment container imprint">
+                <a class="imprint" th:href="${geoobject.imprint}">Impressum</a>
             </div>
 
             <!-- Footer Segment -->
