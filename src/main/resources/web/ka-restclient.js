@@ -3,11 +3,7 @@
 
 var restc = (function($) {
 
-    jQuery.ajaxSetup({
-        'cache': false
-    })
-
-    // console.log("REST Client Module (jQuery based) Loaded")
+    console.log("REST Client Module (jQuery based) Loaded")
     
     function value_sort_asc(a, b) {
         var nameA = a.value

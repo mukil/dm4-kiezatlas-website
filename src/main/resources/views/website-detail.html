@@ -1,0 +1,196 @@
+<html>
+    <head>
+        <title th:text="${geoobject.name} + ' - Kiezatlas'"></title>
+        
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+        <link rel="stylesheet" type="text/css" href="/de.kiezatlas.website/css/semantic-ui/2.3/dist/semantic.min.css" />
+        <link rel="stylesheet" type="text/css" href="/de.kiezatlas.website/dist/leaflet-1.2/leaflet.css" />
+        <link rel="stylesheet" type="text/css" href="/de.kiezatlas.website/css/kiezatlas-web.css" />
+
+        <script defer="true" src="/de.kiezatlas.website/vendor/jquery/jquery-3.2.1.slim.min.js"></script>
+        <script defer="true" src="/de.kiezatlas.website/css/semantic-ui/2.3/dist/semantic.min.js"></script>
+        <script defer="true" src="/de.kiezatlas.website/dist/leaflet-1.2/leaflet.js"></script>
+        <script defer="true" src="/de.kiezatlas.website/ka-restclient.js"></script>
+        <script defer="true" src="/de.kiezatlas.website/ka-startseite.js" onload="init()"></script>
+
+    </head>
+    <body class="ui page detail">
+
+        <div class="navigation">
+            <div class="top-menu" th:include="fragments/navigation :: top2 (publisher=${is_publisher})"></div>
+        </div>
+
+        <div class="ui vertical left menu sidebar" th:include="fragments/navigation :: vertical (publisher=${is_publisher})"></div>
+
+        <div class="ui pusher">
+
+            <!-- Teaser Area -->
+            <div class="ui vertical segment teaser">
+                <div class="ui container">
+                    <h2 class="header blue5bg white thin">
+                        Unser Kiezatlas f&uuml;r<br/>
+                        <b th:text='${geoobject.bezirk}'>Mitte</b>
+                    </h2>
+                </div>
+            </div>
+
+            <div th:replace="fragments/search :: dialog (false)"></div>
+
+            <!-- Name, Description Area -->
+            <div class="ui vertical container segment entry">
+                <!-- TODO: Icon -->
+                <h3 th:text='${geoobject.name}'></h3>
+                <div class="ui grid equal width fluid stackable">
+                    <div class="column description" th:if="${!#strings.isEmpty(geoobject.beschreibung)}">
+                        <div th:utext='${geoobject.beschreibung}'>Beschreibung</div>
+                    </div>
+                    <div class="column opening" th:if="${!#strings.isEmpty(geoobject.oeffnungszeiten)}">
+                        <label>&Ouml;ffnungszeiten</label>
+                        <span th:utext='${geoobject.oeffnungszeiten}'>&Ouml;ffnungszeiten</span>
+                    </div>
+                </div>
+            </div>
+
+            <!--div class="commands">
+                <p th:if="${!#strings.isEmpty(message)}" th:text="${message}"></p>
+                <a class="ui button olive edit" th:if="${authenticated} and ${editable}" th:href="'/website/geo/edit/' + ${geoobject.id}">Ortseintrag bearbeiten</a>
+                <a class="ui button red delete" th:if="${authenticated} and ${deletable} and ${!is_trashed}" th:href="'javascript:delete_geo_object(' + ${geoobject.id} + ')'">In den Papierkorb</a>
+                <a class="ui button red delete" th:if="${authenticated} and ${is_trashed} and ${deletable}" th:href="'/website/geo/delete/final/' + ${geoobject.id}">Endg&uuml;ltig l&ouml;schen</a>
+                <a class="ui button olive publish" th:if="${is_publisher} and ${!is_published}" th:href="'/website/geo/confirm/' + ${geoobject.id}">Ver&ouml;ffentlichen</a>
+            </div>
+            <p class="comment" th:each="comment : ${geoobject.comments}">
+                <span class="message" th:text="${comment.message}"></span>
+                <span class="contact" th:if="${comment.contact}" th:text="'(' + ${comment.contact} + ')'"></span>
+            </p-->
+
+            <!-- Details Map Area -->
+            <div class="ui vertical segment map inverted active dimmer">
+                <!-- Map Segment -->
+                <div id="map">
+                    <div class="ui container">
+                        <br/>Lade Stadtplan...
+                    </div>
+                </div>
+            </div>
+
+            <!-- Detailed Info Area -->
+            <div class="ui vertical segment blue5bg info">
+                <div class="info-area ui container">
+                    <div id="angebote" th:if="${angebotsinfos}">
+                        <!--h3 class="label">Aktuelle Angebote dieser Einrichtung</h3-->
+                        <div class="assigned-offers" th:each="angebotsinfo : ${angebotsinfos}">
+                            <h3 th:text="${angebotsinfo.angebotsName}">Name des Angebots</h3>
+                            <!--div th:utext="${angebotsinfo.description}"></div-->
+                            <div th:if="${!#strings.isEmpty(angebotsinfo.additionalInfo)}"><span th:utext="${angebotsinfo.additionalInfo}"></span></div>
+                            <div th:if="${!#strings.isEmpty(angebotsinfo.additionalContact)}"><span th:text="${angebotsinfo.additionalContact}"></span></div>
+                            <p>
+                                <span class="italic" th:text="${angebotsinfo.startDate} + ' &ndash; ' + ${angebotsinfo.endDate}">,</span>
+                                <a class="read-more" th:href="'/angebote/' + ${angebotsinfo.angebotsId}">weitere Infos</a>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="infos">
+                        <!--div class="data-features">
+                            <label for="add-comment">Hinweis geben</label>
+                            <select name="bearbeitungshinweis" id="add-comment" onchange="user_note_select">
+                                <option value="ka2.util.outdated_address">Neue Anschrift</option>
+                                <option value="ka2.util.outdated_contact">Neue Email-Adresse</option>
+                                <option value="ka2.util.outdated_contact">Neue Telefonnummer</option>
+                                <option value="ka2.util.outdated_contact">Neue/r AnsprechpartnerIn</option>
+                                <option value="ka2.util.missing_webpage">Website hinzufügen</option>
+                            </select>
+                            <div class="comment-input-fields ui input hidden">
+                                <div class="ui input">
+                                    <input name="hinweis" class="ui input message" type="text" placeholder="Anmerkung"/>
+                                </div>
+                                <div class="ui input">
+                                    <input name="kontakt" class="ui input contact" type="text" placeholder="Kontakt (Email, Name)"/>
+                                </div>
+                                <div class="ui input">
+                                    <button class="ok ui button default" type="button">Absenden</button>
+                                </div>
+                            </div>
+                        </div-->
+                        <p class="anschrift" th:if="${!#strings.isEmpty(geoobject.address)}">
+                            <span th:utext='${geoobject.address}'>Anschrift:</span>
+                        </p>
+                        <h3>
+                            <a class="fahrinfo-link"
+                               th:href="@{https://fahrinfo.bvg.de/Fahrinfo/bin/query.bin/dn(Z=${geoobject.address},REQ0JourneyStopsZA1=2,start=1,pk_campaign='kiezatlas.de')}">
+                               <img src="/de.kiezatlas.website/images/fahrinfo.gif"/>
+                            </a>
+                        </h3>
+                        <p class="bild" th:if="${!#strings.isEmpty(geoobject.imageUrl)}">
+                            <img th:src='${geoobject.imageUrl}' alt="Abbildung, Foto der Einrichtung" />
+                        </p>
+                        <p class="ansprechpartner" th:if="${!#strings.isEmpty(geoobject.ansprechpartner)}">
+                            <label>AnsprechpartnerIn:</label>
+                            <span th:utext='${geoobject.ansprechpartner}'>Ansprechpartner</span>
+                        </p>
+                        <p class="email" th:if="${!#strings.isEmpty(geoobject.email)}">
+                            <label>Email:</label>
+                            <span th:utext='${geoobject.email}'>Email</span>
+                        </p>
+                        <p class="telefon" th:if="${!#strings.isEmpty(geoobject.telefon)}">
+                            <label>Telefon:</label>
+                            <span th:utext='${geoobject.telefon}'>Telefon</span>
+                        </p>
+                        <p class="fax" th:if="${!#strings.isEmpty(geoobject.fax)}">
+                            <label>Fax:</label>
+                            <span th:utext='${geoobject.fax}'>Fax</span>
+                        </p>
+                        <p class="stichworte" th:if="${!#strings.isEmpty(geoobject.stichworte)}">
+                            <label>Stichworte:</label>
+                            <span th:utext='${geoobject.stichworte}'>Stichworte</span>
+                        </p>
+                        <p class="website" th:if="${!#strings.isEmpty(geoobject.webpage)}">
+                            <label>Website:</label>
+                            <a target="_blank" th:if="!${geoobject.webpage.contains('http')}" th:href="'http://' + ${geoobject.webpage}" th:text="${geoobject.webpage}">Website</a>
+                            <a target="_blank" th:if="${geoobject.webpage.contains('http')}" th:href="${geoobject.webpage}" th:text="${geoobject.webpage}">Website</a>
+                        </p>
+                        <p class="sozialraumdaten" th:if="${!#strings.isEmpty(geoobject.LORId)}">
+                            <a th:href="@{http://sozialraumdaten.kiezatlas.de/seiten/2017/06/(lor=${geoobject.LORId})}">
+                                Statistische Informationen zur Bev&ouml;lkerungsstruktur in der Umgebung dieses Ortes
+                            </a>
+                        </p>
+                        <p class="regionen" th:if="${!#strings.isEmpty(geoobject.bezirk)}">
+                            <label>Bezirk:</label>
+                            <span th:utext='${geoobject.bezirk}'>Bezirk</span>
+                        </p>
+                        <p class="regionen" th:if="${!#strings.isEmpty(geoobject.bezirksregionName)}">
+                            <label>Bezirksregion:</label>
+                            <span th:utext='${geoobject.bezirksregionName}'>Bezirk</span>
+                        </p>
+                        <a class="imprint" th:href="${geoobject.imprint}">Impressum</a>
+                    </div>
+                    <div class="categories">
+                        <div class="related-topics" th:each="audience : ${zielgruppen}">
+                            <span class="thema" th:text='${audience.simpleValue}'>Name der Zielgruppe</span>
+                        </div>
+                        <div class="related-topics" th:each="service : ${angebote}">
+                            <span class="angebot" th:text='${service.simpleValue}'>Name der Angebote</span>
+                        </div>
+                        <div class="related-topics" th:each="topic : ${themen}">
+                            <span class="zielgruppe" th:text='${topic.simpleValue}'>Name des Themas</span>
+                        </div>
+                    </div>
+                </div>
+                <div th:if="${authenticated}" class="ui container debug metadata">
+                    <div class="creator">
+                        Ein Eintrag von <a href="#creator" th:text="${geoobject.creator}" title="Benutzername"></a>
+                        in Workspace <span class="workspace" th:text="${#strings.contains(workspace.simpleValue, 'DeepaMehta')} ? 'Standard' : ${workspace.simpleValue}"></span>.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer Segment -->
+            <div class="ui vertical segment footer blue4bg">
+                <div th:replace="fragments/footer :: footer-new "></div>
+            </div>
+
+        </div>
+
+    </body>
+</html>

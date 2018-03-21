@@ -1,6 +1,6 @@
 <html>
     <head>
-        <title>Kiezatlas 2 Frontpage</title>
+        <title>Kiezatlas 2 - Startseite</title>
         
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -9,9 +9,7 @@
         <link rel="stylesheet" type="text/css" href="/de.kiezatlas.website/dist/leaflet-1.2/leaflet.css" />
         <link rel="stylesheet" type="text/css" href="/de.kiezatlas.website/css/kiezatlas-web.css" />
 
-        <script defer="true" src="https://code.jquery.com/jquery-3.1.1.min.js"
-          integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8="
-          crossorigin="anonymous"></script>
+        <script defer="true" src="/de.kiezatlas.website/vendor/jquery/jquery-3.2.1.min.js"></script>
         <script defer="true" src="/de.kiezatlas.website/css/semantic-ui/2.3/dist/semantic.min.js"></script>
         <script defer="true" src="/de.kiezatlas.website/dist/leaflet-1.2/leaflet.js"></script>
         <script defer="true" src="/de.kiezatlas.website/ka-restclient.js"></script>
@@ -42,126 +40,7 @@
                 </div>
             </div>
 
-            <!-- Search Area -->
-            <div class="ui vertical segment search blue2bg">
-                <div class="ui container">
-                    <div class="ui left icon action input">
-                        <i class="search icon"></i>
-                        <input id="query" onkeyup="handle_search_input()"
-                            class="prompt" type="text" placeholder="Geben Sie hier Ihre Suchanfrage ein..." />
-                        <div class="ui ka button" onclick="search()">Suchen</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Search Results Area -->
-            <div class="ui vertical segment search-results hidden">
-                <div class="ui container">
-                    <h3 class="ui header thin hidden">Ihre Suchergebnisse</h3>
-                </div>
-            </div>
-            <div class="ui vertical segment blue4bg result-list hidden">
-                <div class="ui container">
-                    <div class="item">
-                        <h3 class="thin">Search result one..</h3>
-                        <div class="subline"></div>
-                        <a href="/">mehr Infos</a>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Search Criterias Area -->
-            <div class="ui vertical segment">
-                <div class="ui container search-criterias">
-                    <h3 class="header thin" onclick="toggleSearchCriteria()">Suchkriterien <i class="icon caret up"></i></h3>
-                    <div class="ui two column grid filter">
-                        <div class="column">
-                            <div class="ui three column grid">
-                                <div class="column">
-                                    <div class="ui form">
-                                        <div class="grouped fields">
-                                            <div class="field">
-                                                <div class="ui radio checkbox">
-                                                    <input type="radio" name="type" id="places" checked="checked" />
-                                                    <label for="places">Einrichtungen</label>
-                                                </div>
-                                            </div>
-                                            <div class="field">
-                                                <div class="ui radio checkbox">
-                                                    <input type="radio" name="type" id="events" />
-                                                    <label for="events">Angebote</label>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="column search-type">
-                                    <div class="ui form">
-                                        <div class="grouped fields">
-                                            <div class="field">
-                                                <div class="ui radio checkbox">
-                                                    <input type="radio" name="method" id="quick" checked="checked" />
-                                                    <label for="quick">Schnellsuche</label>
-                                                </div>
-                                            </div>
-                                            <div class="field">
-                                                <div class="ui radio checkbox">
-                                                    <input type="radio" name="method" id="fulltext" />
-                                                    <label for="fulltext">Volltextsuche</label>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="column area">
-                                    <div class="ui form">
-                                        <div class="grouped fields">
-                                            <div class="field">
-                                                <div class="ui radio checkbox">
-                                                    <input type="radio" name="area" id="berlin" checked="checked" />
-                                                    <label for="berlin">Gesamtberlin</label>
-                                                </div>
-                                            </div>
-                                            <div class="field">
-                                                <div class="ui radio checkbox">
-                                                    <input type="radio" name="area" id="circle" />
-                                                    <label for="circle">Umkreissuche</label>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="column">
-                            <div class="column attributes">
-                                <div class="ui form">
-                                    <div class="grouped fields">
-                                        <div class="field">
-                                            <div class="ui radio checkbox">
-                                                <input type="radio" name="area" id="cw" />
-                                                <label for="cw">Kriterium 1</label>
-                                            </div>
-                                        </div>
-                                        <div class="field">
-                                            <div class="ui radio checkbox">
-                                                <input type="radio" name="area" id="fk" />
-                                                <label for="fk">Kriterium 2</label>
-                                            </div>
-                                        </div>
-                                        <div class="field">
-                                            <div class="ui radio checkbox">
-                                                <input type="radio" name="area" id="xyz" />
-                                                <label for="xyz">...</label>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <div th:replace="fragments/search :: dialog (true)"></div>
 
             <!-- Content Segment Area -->
             <div class="ui vertical container segment content">

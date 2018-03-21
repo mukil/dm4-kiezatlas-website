@@ -1938,7 +1938,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         List<AngebotsinfosAssigned> angebotsInfos = angebote.getActiveAngebotsinfosAssigned(geoObject, true);
         if (angebotsInfos.size() > 0) viewData("angebotsinfos", angebotsInfos);
         // user auth
-        preparePageTemplate("detail");
+        preparePageTemplate("website-detail");
         // geo object auth
         viewData("is_trashed", isTopicInDeletionWorkspace(geoObject));
         viewData("is_published", isTopicInStandardWorkspace(geoObject));
@@ -1946,7 +1946,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         // ### is viewData("deletable", hasUserWritePermission(geoObject, username));
         viewData("deletable", isDeletionWorkspaceMember());
         viewData("workspace", getAssignedWorkspace(geoObject));
-        return view("detail");
+        return view("website-detail");
     }
 
     private Viewable prepareBezirksregionenTemplate(List<BezirksregionView> results) {
