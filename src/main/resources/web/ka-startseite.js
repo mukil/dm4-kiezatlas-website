@@ -6,9 +6,10 @@
 
 var results = []
 
-function init() {
+function init(map) {
     $('.ui.checkbox').checkbox()
     $('.ui.dropdown').dropdown()
+    if (map) init_map_segment()
 }
 
 function handle_search_input() {
@@ -24,10 +25,10 @@ function render_results() {
         show_results_container()
         for (var r in results) {
             var el = results[r]
-            var anschrift = (el.anschrift) ? el.anschrift.replace('Berlin Deutschland', '') + ', ' : ''
+            var anschrift = (el.anschrift) ? el.anschrift.replace(' Deutschland', '') + ', ' : ''
             $container.append('<div class="item"><h3 class="thin">' + el.name + '</h3>'
                 + '<div class="subline">' + anschrift + el.bezirk +'<br/>'
-                + '<a href="/website/geo/'+ el.id +'"><i class="icon caret right"></i>mehr Infos</a></div></div>')
+                + '<a href="/website/geo/redesign/'+ el.id +'"><i class="icon caret right"></i>mehr Infos</a></div></div>')
         }
     }
 }
@@ -73,11 +74,8 @@ function hide_results_container () {
     $('.search-results .header').addClass('hidden')
 }
 
-function loadMap() {
-    var map = L.map('map').setView([52.484948, 13.344442], 13)
-        /**L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
-        }).addTo(map) **/
+function loadMap(lat, lng) {
+    var map = L.map('map', { center: [lat, lng], zoom: 13})
         L.tileLayer('https://api.tiles.mapbox.com/v4/kiezatlas.pd8lkp64/{z}/{x}/{y}.png?' // old style id="kiezatlas.map-feifsq6f"
             + 'access_token=pk.eyJ1Ijoia2llemF0bGFzIiwiYSI6ImNpa3BndjU2ODAwYm53MGxzM3JtOXFmb2IifQ._PcBhOcfLYDD8RP3BS0U_g', {
             attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors,'

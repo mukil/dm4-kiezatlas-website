@@ -275,6 +275,7 @@
 
 .page.detail .info-area {
     padding-top: 2em;
+    padding-bottom: 1.5em;
 }
 
 .page.detail .info-area a {
@@ -335,6 +336,7 @@
     padding-bottom: .5em;
 }
 
+.page.detail .info-area label,
 .result-list .item a,
 .content .ui.grid .row .column a,
 .ui.grid .column .news-item a {

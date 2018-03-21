@@ -475,6 +475,20 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     }
 
     /**
+     * Renders details about a Kiezatlas Geo Object into HTML.
+     *
+     * @param topicId
+     * @return
+     */
+    @GET
+    @Path("/geo/redesign/{topicId}")
+    @Produces(MediaType.TEXT_HTML)
+    public Viewable prepareNewGeoObjectInfoPage(@PathParam("topicId") String topicId) {
+        Topic geoObject = getGeoObjectById(topicId);
+        return (geoObject != null) ? prepareNewGeoObjectTemplate(geoObject.getId()) : getNotFoundPage();
+    }
+
+    /**
      * Fetches details about a Kiezatlas Geo Object.
      * @param referer
      * @param topicId
@@ -1921,6 +1935,35 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     }
 
     private Viewable prepareGeoObjectTemplate(@PathParam("topicId") long topicId) {
+        // ### redirect if user has no READ permission on this topic
+        Topic username = getUsernameTopic();
+        Topic geoObject = dm4.getTopic(topicId);
+        if (!isGeoObjectTopic(geoObject)) return getNotFoundPage();
+        // Assemble Generic Einrichtungs Infos
+        EinrichtungView einrichtung = assembleEinrichtungsDetails(geoObject);
+        // ### Yet Missing: Träger und Stichworte
+        // Eventually show: Bezirk, Bezirksregion and Sonstiges (Administrator Infos)
+        viewData("geoobject", einrichtung);
+        // Assemble Category Assignments for Einrichtung;
+        viewData("zielgruppen", facets.getFacets(geoObject, ZIELGRUPPE_FACET));
+        viewData("themen", facets.getFacets(geoObject, THEMA_FACET));
+        viewData("angebote", facets.getFacets(geoObject, ANGEBOT_FACET));
+        // fetch related angebote, includeFutureOnes=true
+        List<AngebotsinfosAssigned> angebotsInfos = angebote.getActiveAngebotsinfosAssigned(geoObject, true);
+        if (angebotsInfos.size() > 0) viewData("angebotsinfos", angebotsInfos);
+        // user auth
+        preparePageTemplate("detail");
+        // geo object auth
+        viewData("is_trashed", isTopicInDeletionWorkspace(geoObject));
+        viewData("is_published", isTopicInStandardWorkspace(geoObject));
+        viewData("editable", isGeoObjectEditable(geoObject, username));
+        // ### is viewData("deletable", hasUserWritePermission(geoObject, username));
+        viewData("deletable", isDeletionWorkspaceMember());
+        viewData("workspace", getAssignedWorkspace(geoObject));
+        return view("detail");
+    }
+
+    private Viewable prepareNewGeoObjectTemplate(@PathParam("topicId") long topicId) {
         // ### redirect if user has no READ permission on this topic
         Topic username = getUsernameTopic();
         Topic geoObject = dm4.getTopic(topicId);
