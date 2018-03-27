@@ -40,8 +40,10 @@
 
             <!-- Name, Description Area -->
             <div class="ui vertical container segment entry">
-                <!-- TODO: Icon -->
-                <h3 th:text='${geoobject.name}'></h3>
+                <h3>
+                    <img src="/de.kiezatlas.website/images/g4208.png" class="marker" alt="Icon für Datensätze"/>
+                    <span th:text='${geoobject.name}'></span>
+                </h3>
                 <div class="ui grid equal width fluid stackable">
                     <div class="column description" th:if="${!#strings.isEmpty(geoobject.beschreibung)}">
                         <div th:utext='${geoobject.beschreibung}'>Beschreibung</div>
@@ -50,6 +52,28 @@
                         <label>&Ouml;ffnungszeiten</label>
                         <span th:utext='${geoobject.oeffnungszeiten}'>&Ouml;ffnungszeiten</span>
                     </div-->
+                </div>
+            </div>
+            <!-- Angebote Area -->
+            <div th:if="${angebotsinfos}" class="ui vertical angebote blue4bg segment">
+                <div class="ui container">
+                    <div class="ui grid stackable">
+                        <!--h3 class="label">Aktuelle Angebote dieser Einrichtung</h3-->
+                        <div class="four wide column" th:each="angebotsinfo : ${angebotsinfos}">
+                            <div class="whitebg">
+                                <h3 th:text="${angebotsinfo.angebotsName}">Name des Angebots</h3>
+                                <!--div th:utext="${angebotsinfo.description}"></div-->
+                                <div th:if="${!#strings.isEmpty(angebotsinfo.additionalInfo)}"><span th:utext="${angebotsinfo.additionalInfo}"></span></div>
+                                <div th:if="${!#strings.isEmpty(angebotsinfo.additionalContact)}"><span th:text="${angebotsinfo.additionalContact}"></span></div>
+                                <p>
+                                    <span class="italic" th:text="${angebotsinfo.startDate} + ' &ndash; ' + ${angebotsinfo.endDate}"></span><br/>
+                                    <a class="read-more" th:href="'/angebote/' + ${angebotsinfo.angebotsId}">
+                                        <i class="icon caret right"></i>mehr Infos
+                                    </a>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -72,13 +96,19 @@
                     function init_map_segment() {
                         var latitude = /*[[${geoobject.latitude}]]*/ undefined;
                         var longitude = /*[[${geoobject.longitude}]]*/ undefined;
+                        var corner1 = L.latLng(52.716749, 12.965609),
+                            corner2 = L.latLng(52.304296, 13.797459),
+                            bounds = L.latLngBounds(corner1, corner2);
+                        var map = undefined
                         if (L) {
+                            map = L.map('map', { center: [ latitude, longitude ], zoom: 16, minZoom: 10, maxBounds: bounds, zoomSnap: 0.5 })
                             L.tileLayer('https://api.tiles.mapbox.com/v4/kiezatlas.pd8lkp64/{z}/{x}/{y}.png?' // old style id="kiezatlas.map-feifsq6f"
                                + 'access_token=pk.eyJ1Ijoia2llemF0bGFzIiwiYSI6ImNpa3BndjU2ODAwYm53MGxzM3JtOXFmb2IifQ._PcBhOcfLYDD8RP3BS0U_g', {
                                attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors,'
                                + '<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery &#169; <a href="http://mapbox.com">Mapbox</a>',
-                               id: 'kiezatlas.m7222ia5'}).addTo(L.map('map', { center: [ latitude, longitude ], zoom: 13 }))
+                               id: 'kiezatlas.m7222ia5'}).addTo(map)
                            console.log("Lat", latitude, "Lng", longitude)
+                           L.circleMarker([latitude, longitude],).addTo(map);
                         } else {
                             console.log("Leaflet not loaded yet")
                         }
@@ -94,19 +124,6 @@
             <!-- Detailed Info Area -->
             <div class="ui vertical segment blue5bg info">
                 <div class="info-area ui container">
-                    <!--div id="angebote" th:if="${angebotsinfos}">
-                        <h3 class="label">Aktuelle Angebote dieser Einrichtung</h3>
-                        <div class="assigned-offers" th:each="angebotsinfo : ${angebotsinfos}">
-                            <h3 th:text="${angebotsinfo.angebotsName}">Name des Angebots</h3>
-                            <div th:utext="${angebotsinfo.description}"></div>
-                            <div th:if="${!#strings.isEmpty(angebotsinfo.additionalInfo)}"><span th:utext="${angebotsinfo.additionalInfo}"></span></div>
-                            <div th:if="${!#strings.isEmpty(angebotsinfo.additionalContact)}"><span th:text="${angebotsinfo.additionalContact}"></span></div>
-                            <p>
-                                <span class="italic" th:text="${angebotsinfo.startDate} + ' &ndash; ' + ${angebotsinfo.endDate}">,</span>
-                                <a class="read-more" th:href="'/angebote/' + ${angebotsinfo.angebotsId}">weitere Infos</a>
-                            </p>
-                        </div>
-                    </div-->
                     <!--div class="data-features">
                         <label for="add-comment">Hinweis geben</label>
                         <select name="bearbeitungshinweis" id="add-comment" onchange="user_note_select">
@@ -157,7 +174,7 @@
                             <h3>
                                 <a class="fahrinfo-link"
                                    th:href="@{https://fahrinfo.bvg.de/Fahrinfo/bin/query.bin/dn(Z=${geoobject.address},REQ0JourneyStopsZA1=2,start=1,pk_campaign='kiezatlas.de')}">
-                                   <img src="/de.kiezatlas.website/images/fahrinfo.gif"/>
+                                   <img src="/de.kiezatlas.website/images/rect4350.png"/>
                                 </a>
                             </h3>
                         </div>
@@ -181,25 +198,6 @@
                                 <label>Bezirksregion:</label>
                                 <span th:utext='${geoobject.bezirksregionName}'>Bezirk</span>
                             </div>
-                            <div class="stichworte" th:if="${!#strings.isEmpty(geoobject.stichworte)}">
-                                <label>Tags:</label>
-                                <span th:utext='${geoobject.stichworte}'>Stichworte</span>
-                            </div>
-                            <div class="related-topics">
-                                <label th:if="${!#lists.isEmpty(zielgruppen)}">Zielgruppe: </label>
-                                <span class="zielgruppe" th:each="audience : ${zielgruppen}"
-                                      th:text='${audience.simpleValue}'>Name der Zielgruppe</span>
-                            </div>
-                            <div class="related-topics">
-                                <label th:if="${!#lists.isEmpty(angebote)}">Angebote:</label>
-                                <span class="angebot" th:each="service : ${angebote}"
-                                      th:text='${service.simpleValue}'>Name der Angebote</span>
-                            </div>
-                            <div class="related-topics">
-                                <label th:if="${!#lists.isEmpty(themen)}">Themen:</label>
-                                <span class="thema" th:each="topic : ${themen}"
-                                      th:text='${topic.simpleValue}'>Name des Themas</span>
-                            </div>
                         </div>
                         <div class="column">
                             <p class="bild" th:if="${!#strings.isEmpty(geoobject.imageUrl)}">
@@ -217,7 +215,28 @@
             </div>
 
             <div class="ui vertical segment container imprint">
-                <a class="imprint" th:href="${geoobject.imprint}">Impressum</a>
+                <div class="related-topics" th:if="${!#lists.isEmpty(zielgruppen)}">
+                    <label>Zielgruppen: </label>
+                    <span class="zielgruppe" th:each="audience : ${zielgruppen}"
+                          th:text='${audience.simpleValue}'>Name der Zielgruppe</span>
+                </div>
+                <div class="related-topics" th:if="${!#lists.isEmpty(angebote)}">
+                    <label>Angebote:</label>
+                    <span class="angebot" th:each="service : ${angebote}"
+                          th:text='${service.simpleValue}'>Name der Angebote</span>
+                </div>
+                <div class="related-topics" th:if="${!#lists.isEmpty(themen)}">
+                    <label>Themen:</label>
+                    <span class="thema" th:each="topic : ${themen}"
+                          th:text='${topic.simpleValue}'>Name des Themas</span>
+                </div>
+                <div class="stichworte" th:if="${!#strings.isEmpty(geoobject.stichworte)}">
+                    <label>Tags:</label>
+                    <span th:utext='${geoobject.stichworte}'>Stichworte</span>
+                </div>
+                <div class="imprint">
+                     <a th:href="${geoobject.imprint}">Impressum</a>
+                </div>
             </div>
 
             <!-- Footer Segment -->

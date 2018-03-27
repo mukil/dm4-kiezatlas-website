@@ -40,7 +40,7 @@
                 </div>
             </div>
 
-            <div th:replace="fragments/search :: dialog (true)"></div>
+            <div th:replace="fragments/search :: dialog (true, ${districts}, ${tags})"></div>
 
             <!-- Content Segment Area -->
             <div class="ui vertical container segment content">

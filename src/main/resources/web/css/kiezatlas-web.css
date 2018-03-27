@@ -41,6 +41,12 @@
     top: 40px;
 }
 
+.ui .navigation .mobile-logo {
+    height: auto;
+    width: 155px;
+    top: -20px;
+}
+
 .ui .navigation .top-menu .menu {
     float: right;
 }
@@ -48,12 +54,6 @@
 .ui .bold,
 .ui.secondary.menu .item:hover {
     font-weight: bold;
-}
-
-.ui .navigation .mobile-logo {
-    height: 75px;
-    position: relative;
-    top: -15px;
 }
 
 /** Navigation on Sub-Pages **/
@@ -66,9 +66,23 @@
     top: 0px;
 }
 
-.ui .navigation .mobile-logo {
-    height: 50px;
-    top: 5px;
+.page.detail img.marker {
+    display: inline-block;
+    vertical-align: sub;
+    height: 25px;
+    width: auto;
+    margin-right: .3em;
+}
+
+.fahrinfo-link img {
+    width: 98px;
+    height: auto;
+}
+
+.page.detail .navigation .mobile-logo {
+    height: 65px;
+    width: auto;
+    top: 0px;
 }
 
 .page.detail .container.entry {
@@ -92,6 +106,10 @@
 
 .white {
     color: #fff;
+}
+
+.whitebg {
+    background-color: #fff;
 }
 
 .page .ui.header,
@@ -153,6 +171,14 @@
     background-color: #f8f6e9;
 }
 
+.page.detail .segment.map {
+    border-top: 1px solid #3787ab;
+}
+
+.page.detail .grid.infos {
+    padding-bottom: 8em;
+}
+
 /** Footer specific overrides **/
 .ui .footer.segment {
     margin-top: 4em;
@@ -174,6 +200,7 @@
 
 /** -- Utils -- **/
 
+.ui.grid.filter .angebote-tags.hidden,
 .ui.grid.filter.hidden,
 .hidden {
     display: none
@@ -238,6 +265,19 @@
     border-bottom-right-radius: 500rem !important;
 }
 
+.ui.search .ka.button:active {
+    background-color: #3787ab;
+}
+
+.ui.search .ka.button:hover {
+    background-color: #ecf4f7;
+}
+
+/** 
+green: #9cc300
+red: #ce0000
+**/
+
 .ui.dropdown > .dropdown.icon {
     margin-right: .3em;
 }
@@ -283,7 +323,7 @@
 }
 
 .page.detail .imprint {
-    padding-top: 1em;
+    margin-top: 2em;
 }
 
 .page.detail .metadata a,
@@ -312,6 +352,15 @@
     margin-left: .5em;
 }
 
+.ui.segment.angebote {
+    margin-bottom: 2em;
+    padding-top: 2em;
+    padding-bottom: 2em;
+}
+.ui.segment.angebote .grid .column .whitebg {
+    padding: 1em;
+}
+
 .ui.grid .row .column.action h3 {
    margin-top: 0em;
 }
@@ -327,6 +376,33 @@
 
 .ui.grid .row .column {
     padding: 0em !important;
+}
+
+.page.detail .stichworte label,
+.page.detail .related-topics label {
+    font-weight: bold;
+}
+
+.page .angebote-tags .tag,
+.page.detail .stichworte span,
+.page.detail .related-topics span {
+    border-radius: 8.5px;
+    height: 30px;
+    padding: .2em;
+    padding-right: .5em;
+    padding-left: .5em;
+    background-color: #ecf4f7;
+    display: inline-block;
+    color: #193441;
+}
+
+.page .column.district.attributes {
+    padding-bottom: 0em;
+}
+
+.page .angebote-tags .tag {
+    margin-right: .25em;
+    margin-bottom: .5em;
 }
 
 .content .ui.grid .column h3 {
@@ -350,6 +426,7 @@
     padding-bottom: .5em;
 }
 
+.page.detail .angebote a,
 .page.detail .info-area label,
 .result-list .item a,
 .content .ui.grid .row .column a,
@@ -363,6 +440,7 @@
     border: 1px solid #ecf4f7;
 }
 
+.page.detail .angebote a i.icon,
 .result-list .item i.icon,
 .ui.grid .row .column a i.icon {
     margin-right: 0em;
@@ -397,13 +475,21 @@
 
 /** -- Search Criterias -- **/
 
+.ui.page .segment.more-button,
 .ui.page .segment .search-criterias {
     padding-top: 1em;
     border-bottom: 1px solid #ecf4f7;
 }
 
+.ui.page .segment.more-button,
 .search-criterias .ui.grid.filter {
     padding-bottom: 1em;
+}
+
+.ui.page .more-results {
+    position: relative;
+    left: -8px;
+    cursor: pointer;
 }
 
 .ui.search-criterias .header {

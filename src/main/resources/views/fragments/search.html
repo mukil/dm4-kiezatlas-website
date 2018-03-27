@@ -1,12 +1,12 @@
 
-<div class="search-dialog" th:fragment="dialog (expanded)">
+<div class="search-dialog" th:fragment="dialog (expanded, districts, tags)">
 
     <!-- Search Area -->
     <div class="ui vertical segment search blue2bg">
         <div class="ui container">
             <div class="ui left icon action input">
                 <i class="search icon"></i>
-                <input id="query" onkeyup="handle_search_input()"
+                <input id="query" name="search" onkeyup="handle_search_input()"
                     class="prompt" type="text" placeholder="Geben Sie hier Ihre Suchanfrage ein..." />
                 <div class="ui ka button" onclick="search()">Suchen</div>
             </div>
@@ -16,7 +16,7 @@
     <!-- Search Results Area -->
     <div class="ui vertical segment search-results hidden">
         <div class="ui container">
-            <h3 class="ui header thin hidden">Ihre Suchergebnisse</h3>
+            <h3 class="ui header thin hidden">Ihre Suchergebnisse (<span class="count"></span>)</h3>
         </div>
     </div>
     <div class="ui vertical segment blue4bg result-list hidden">
@@ -26,6 +26,14 @@
                 <div class="subline"></div>
                 <a href="/">mehr Infos</a>
             </div>
+        </div>
+    </div>
+
+    <div class="ui vertical segment more-button hidden">
+        <div class="more-results ui container" onclick="render_results()" data-result-from="0">
+            <h3 class="header thin">
+                <i class="icon caret down"></i>Weitere 7 von <span class="count"></span> Suchergebnissen anzeigen
+            </h3>
         </div>
     </div>
 
@@ -41,13 +49,13 @@
                                 <div class="grouped fields">
                                     <div class="field">
                                         <div class="ui radio checkbox">
-                                            <input type="radio" name="type" id="places" checked="checked" />
+                                            <input type="radio" name="type" id="places" onchange="einrichtungenChecked()" checked="checked" />
                                             <label for="places">Einrichtungen</label>
                                         </div>
                                     </div>
                                     <div class="field">
                                         <div class="ui radio checkbox">
-                                            <input disabled="true" type="radio" name="type" id="events" />
+                                            <input type="radio" name="type" id="events" onchange="angeboteChecked()"/>
                                             <label for="events">Angebote</label>
                                         </div>
                                     </div>
@@ -92,30 +100,115 @@
                         </div>
                     </div>
                 </div>
-                <div class="column">
-                    <div class="column attributes">
+                <div class="ui eight column grid">
+                    <div class="seven wide column district attributes">
                         <div class="ui form">
                             <div class="grouped fields">
                                 <div class="field">
                                     <div class="ui radio checkbox">
-                                        <input disabled="true" type="radio" name="area" id="cw" />
-                                        <label for="cw">Kriterium 1</label>
+                                        <input type="radio" name="area" id="7293" tabindex="0" class="hidden"/>
+                                        <label for="7293">Charlottenburg-Wilmersdorf</label>
                                     </div>
                                 </div>
                                 <div class="field">
                                     <div class="ui radio checkbox">
-                                        <input disabled="true" type="radio" name="area" id="fk" />
-                                        <label for="fk">Kriterium 2</label>
+                                        <input type="radio" name="area" id="7278" tabindex="0" class="hidden"/>
+                                        <label for="7278">Friedrichshain-Kreuzberg</label>
                                     </div>
                                 </div>
                                 <div class="field">
                                     <div class="ui radio checkbox">
-                                        <input disabled="true" type="radio" name="area" id="xyz" />
-                                        <label for="xyz">...</label>
+                                        <input type="radio" name="area" id="7302" tabindex="0" class="hidden"/>
+                                        <label for="7302">Lichtenberg</label>
                                     </div>
                                 </div>
                             </div>
                         </div>
+                    </div>
+                    <div class="seven wide column district attributes">
+                        <div class="ui form">
+                            <div class="grouped fields">
+                                <div class="field">
+                                    <div class="ui radio checkbox">
+                                        <input type="radio" name="area" id="1707925" tabindex="0" class="hidden"/>
+                                        <label for="1707925">Marzahn-Hellersdorf</label>
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <div class="ui radio checkbox checked">
+                                        <input type="radio" name="area" id="7275" tabindex="0" class="hidden"/>
+                                        <label for="7275">Mitte</label>
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <div class="ui radio checkbox">
+                                        <input type="radio" name="area" id="7287" tabindex="0" class="hidden"/>
+                                        <label for="7287">Neukölln</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="seven wide column district attributes">
+                        <div class="ui form">
+                            <div class="grouped fields">
+                                <div class="field">
+                                    <div class="ui radio checkbox">
+                                        <input type="radio" name="area" id="7296" tabindex="0" class="hidden"/>
+                                        <label for="7296">Spandau</label>
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <div class="ui radio checkbox">
+                                        <input type="radio" name="area" id="7299" tabindex="0" class="hidden"/>
+                                        <label for="7299">Steglitz-Zehlendorf</label>
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <div class="ui radio checkbox">
+                                        <input type="radio" name="area" id="7281" tabindex="0" class="hidden"/>
+                                        <label for="7281">Tempelhof-Schöneberg</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="seven wide column district attributes">
+                        <div class="ui form">
+                            <div class="grouped fields">
+                                <div class="field">
+                                    <div class="ui radio checkbox">
+                                        <input type="radio" name="area" id="7284" tabindex="0" class="hidden"/>
+                                        <label for="7284">Treptow-Köpenick</label>
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <div class="ui radio checkbox">
+                                        <input disabled="true" type="radio" name="area" id="7290" tabindex="0" class="hidden"/>
+                                        <label for="7290">Pankow</label>
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <div class="ui radio checkbox">
+                                        <input disabled="true" type="radio" name="area" id="1707928" tabindex="0" class="hidden"/>
+                                        <label for="1707928">Reinickendorf</label>
+                                    </div>
+                                </div>
+                            </div>
+                                <!--div class="field" th:each="district : ${districts}">
+                                    <div class="ui radio checkbox">
+                                        <input type="radio" name="area" th:id="${district.id}" />
+                                        <label th:for="${district.id}" th:text="${district.simpleValue}"></label>
+                                    </div>
+                                </div-->
+                        </div>
+                    </div>
+                </div>
+                <div class="column sixteen wide angebote-tags hidden">
+                    <h4 class="header thin">Schlagworte f&uuml;r Angebote</h4>
+                    <div class="column attributes">
+                        <div class="tag" th:each="tag : ${tags}"
+                             th:text="${tag.simpleValue}" th:id="${tag.id}">Stichwort 1</div>
                     </div>
                 </div>
             </div>

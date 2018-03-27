@@ -235,8 +235,20 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     @GET
     @Path("/startseite")
     @Produces(MediaType.TEXT_HTML)
-    public Viewable prepareNewFrontpage() {
+    public Viewable prepareNewFrontpage(@QueryParam("site") String site, @QueryParam("search") String search,
+            @QueryParam("koordinate") String koordinate, @QueryParam("zoomstufe") String zoomstufe,
+            @QueryParam("searchtype") String searchtype) {
+        viewData("districts", getAvailableDistrictTopics());
+        viewData("tags", getAllTagTopics());
+        viewData("site", site);
+        viewData("search", search);
+        viewData("koordinate", koordinate);
+        viewData("zoomstufe", zoomstufe);
         return getFrontpage();
+    }
+
+    private List<Topic> getAllTagTopics() {
+        return dm4.getTopicsByType("dm4.tags.tag");
     }
 
     @GET
@@ -1425,7 +1437,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
             queryValue = prepareLuceneQueryString(query, false, true, false, true);
             log.log(Level.INFO, "> autoCompleteQuery=\"{0}\"", queryValue);
             List<Topic> singleTopics = dm4.searchTopics(queryValue, "ka2.geo_object.name");
-            int max = 7;
+            int max = 50;
             int count = 0;
             for (Topic topic : singleTopics) {
                 Topic geoObject = getParentGeoObjectTopic(topic);
