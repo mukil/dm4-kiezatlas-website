@@ -298,15 +298,14 @@ var leafletMap = (function($, L) {
     /** TODO: Visually differentiate between geo object and angebot markers */
     map.calculate_default_circle_options = function(marker_topic) {
         // console.log("creating marker for ", marker_topic["name"], "with location_id", marker_topic["location_id"])
-        var hasAngebote = (marker_topic["angebote_count"] > 0) ? true : false
+        // var hasAngebote = (marker_topic["angebote_count"] > 0) ? true : false
         var angeboteDashArray = map.calculate_geo_object_dash_array(marker_topic)
         var angeboteId = (marker_topic.hasOwnProperty("angebots_id")) ? marker_topic["angebots_id"] : undefined
         return { // ### improve new colors for angebote rendering
-            weight: (hasAngebote) ? 3 : 2, opacity: (hasAngebote) ? 1 : 0.6, fillColor: (hasAngebote) ? colors.ka_red : colors.bright_grey,
-            fillOpacity: (hasAngebote) ? 0.6 : 0.2, lineCap: 'square', dashArray: angeboteDashArray,
-            color : (hasAngebote) ? colors.ka_gold : colors.ka_red, title: marker_topic["name"],
-            alt: "Markierung von " + marker_topic["name"], bezirk_uri: marker_topic["bezirk_uri"],
-            uri: marker_topic["uri"], name: marker_topic["name"],// riseOnHover: true,
+            fillColor: model.colors.ka_yellow, color : model.colors.blue3, fillOpacity: 0.4, 
+            lineCap: 'square', dashArray: angeboteDashArray, weight: 2,
+            title: marker_topic["name"], name: marker_topic["name"], alt: "Markierung von " + marker_topic["name"],
+            bezirk_uri: marker_topic["bezirk_uri"], uri: marker_topic["uri"], // riseOnHover: true,
             bezirksregion_uri: marker_topic["bezirksregion_uri"], z_indexOffset: 1001, uri: marker_topic["uri"],
             angebote_count: marker_topic["angebote_count"], angebots_id: angeboteId, address: marker_topic["address"],
             id: marker_topic["id"], address_id: marker_topic["address_id"], location_id: marker_topic["location_id"]
@@ -315,15 +314,15 @@ var leafletMap = (function($, L) {
 
     map.calculate_selected_circle_options = function() {
         return {
-            color: colors.ka_gold, weight: 3, opacity: 1,
-            fillColor: colors.ka_red, fillOpacity: 1, className: "selected"
+            color: model.colors.blue3, weight: 3, opacity: 1,
+            fillColor: model.colors.blue2, fillOpacity: 1, className: "selected"
         }
     }
 
     map.calculate_hover_circle_options = function() {
         return {
-            color: colors.ka_gold, weight: 3, opacity: 1,
-            fillColor: colors.ka_red, fillOpacity: 1, className: "hover"
+            color: model.colors.blue3, weight: 3, opacity: 1,
+            fillColor: model.colors.ka_yellow, fillOpacity: 1, className: "hover"
         }
     }
 

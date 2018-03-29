@@ -123,7 +123,7 @@ var colors = {
     "grey": "#868686"           // unused
 }
 
-var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
+var kiezatlas = (function($, leafletMap, restc, favourites) {
 
     // Website Application Model
     var model = {
@@ -309,7 +309,7 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
                     _self.render_gesamtstadtplan() // Renders GESAMTSTADTPLAN
                 } else if (parameter.page === "#angebote") {
                     _self.show_angebote_page() // Renders ANGEBOTE_STADTPLAN
-                } else if (parameter.page.indexOf("ssuche") !== -1) {
+                } else if (parameter.page.indexOf("suche") !== -1) {
                     _self.render_search_page() // Renders SEARCH RESULTS STADTPLAN
                 } else {
                     _self.load_district_topics(function() {
@@ -836,7 +836,6 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
                 _self.render_selected_details_card(result)
             })
         }
-        // ### TODO: angebote.load_geo_objects_angebote(list_of_marker_ids)
     }
 
     this.show_selected_angebot_detail = function(marker, geo_objects) {
@@ -1319,4 +1318,4 @@ var kiezatlas = (function($, angebote, leafletMap, restc, favourites) {
 
     return this
 
-})($, angebote, leafletMap, restc, favourites)
+})($, leafletMap, restc, favourites)

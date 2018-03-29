@@ -1,37 +1,81 @@
 
+// --- Frontpage State --- //
+
 var results = [],
     MAX_RESULTS = 7,
     from = undefined,
     to = 0,
     searchType = "places", // or "events"
-    searchContext = 0 // 0=berlin-wide, otherwise long district or site id
+    searchContext = 0, // 0=berlin-wide, otherwise number (ID) of district or site topic
+    updateURL = true, // If false, updating the url using replaceState is defunct (see text search requests)
+    query = undefined, // Search User Input
+    parameter = {               // View/Page Parameter
+        page: undefined, viewport: undefined
+    },
+    settings = {
+        "webapp_title" : "Kiezatlas 2 Website",
+        "history_api_supported" : window.history.pushState
+    },
+    selected_marker = undefined, // geoobject or marker id
+    month_names_de = [ "Januar", "Februar", "März", "April", "Mai", "Juni",
+        "Juli", "August", "September", "Oktober", "November", "Dezember" ],
+    colors = {                  // kiezatlas hex colors
+        "ka_blue": "#3e606f",       // circle control
+        "ka_red": "#ce0000",        // districs layer polygon outline
+        "ka_green": "#9cc300",      // ...
+        "m_blue": "#9ec8d6",        // marker: medium blue outline and fill-in (selected)
+        "ka_gold": "#EACA8F",       // marker: yellow fill-ine and outline (selected)
+        "bright_grey": "#a9a9a9",   // circlemarker: fill-in
+        "yellow": "#f8f6e9",        // circle control
+        "darkgrey": "#343434",      // unused
+        "dark_blue": "#193441",     // unused
+        "bright_blue": "#ecf4f7",   // unused
+        "ka_water": "#ccdddd",      // unused
+        "grey": "#868686"           // unused
+    }
 
-function init_detail_page() {
-    init_detail_map() // defined in "website-detail" template
-}
+
+// --- Page Methods -- //
 
 function init_page() {
     $('.ui.checkbox').checkbox()
     $('.ui.dropdown').dropdown()
+    // init_map_segment()
+    kiezatlas.render_page()
 }
 
+function init_einrichtungs_page() {
+    init_detail_map() // defined in "website-detail" template
+}
+
+function do_logout() {
+    throw new Error("Logout not yet migrated...")
+    restc.logout()
+    window.document.location.reload()
+}
+
+// --- Leaflet Map Dialog Functionality -- //
+
 function init_map_segment() {
-    // fetch and set items to render
-    // leafletMap.set_items()
+    // ### get page parameter
+    // enable circle search
+    kiezatlas.render_map(false, false, true, true, false)
+    kiezatlas.do_circle_search(undefined, undefined)
+    kiezatlas.render_current_location_label()
+    var radiusM = leafletMap.get_circle_control_radius()
+    console.log("Im Umkreis von", radiusM, " Metern")
     // hide loading indicator
     // use heatmap visualization first
     // set map mode "angebote" oder "einrichtungen"
-    // enable circle search
 }
+
+// --- Search Dialog Functionality --- //
 
 function render_search_results() {
     var $container = $('.result-list .container')
     var count = results.length
-    // New from
     from = $('.more-results').data("result-from")
-    // New to
     to += MAX_RESULTS
-    console.log("render results", from, to)
     if (from === 0) {
         $container.empty()
     }
@@ -72,7 +116,6 @@ function search() {
     } **/
     $.getJSON(queryUrl, function (geo_objects) {
         results = geo_objects.results.cat1.results // Einrichtungen
-        console.log("Found", results, "Einrichtungen")
         render_search_results()
     })
     // ### update query parameter

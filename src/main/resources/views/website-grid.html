@@ -6,14 +6,19 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
         <link rel="stylesheet" type="text/css" href="/de.kiezatlas.website/css/semantic-ui/2.3/dist/semantic.min.css" />
-        <link rel="stylesheet" type="text/css" href="/de.kiezatlas.website/dist/leaflet-1.2/leaflet.css" />
+        <link rel="stylesheet" type="text/css" href="/de.kiezatlas.website/vendor/leaflet-1.3.1/leaflet.css" />
         <link rel="stylesheet" type="text/css" href="/de.kiezatlas.website/css/kiezatlas-web.css" />
 
         <script defer="true" src="/de.kiezatlas.website/vendor/jquery/jquery-3.2.1.min.js"></script>
         <script defer="true" src="/de.kiezatlas.website/css/semantic-ui/2.3/dist/semantic.min.js"></script>
-        <script defer="true" src="/de.kiezatlas.website/dist/leaflet-1.2/leaflet.js"></script>
+        <script defer="true" src="/de.kiezatlas.website/vendor/leaflet-1.3.1/leaflet.js"></script>
+        <script defer="true" src="/de.kiezatlas.website/vendor/leaflet-1.3.1/L.CircleEditor.js"></script>
+        <script defer="true" src="/de.kiezatlas.website/vendor/pouchdb/pouchdb-6.2.0.min.js"></script>
         <script defer="true" src="/de.kiezatlas.website/ka-restclient.js"></script>
-        <!--script defer="true" src="/de.kiezatlas.website/ka-map.js"></script-->
+        <script defer="true" src="/de.kiezatlas.website/ka-model.js"></script>
+        <script defer="true" src="/de.kiezatlas.website/ka-map.js"></script>
+        <script defer="true" src="/de.kiezatlas.website/ka-favourites.js"></script>
+        <script defer="true" src="/de.kiezatlas.website/ka-website.js"></script>
         <script defer="true" src="/de.kiezatlas.website/ka-startseite.js" onload="init_page(false)"></script>
 
     </head>
@@ -37,6 +42,7 @@
                     <div class="header subline blue1">
                         <div class="bold title">Einleitungstext Kiezatlas 2.0</div>
                         Massive copytext on massive image text
+                        <div class="content-area"></div>
                     </div>
                 </div>
             </div>
@@ -59,6 +65,7 @@
                                     <a href="/"><i class="icon caret right"></i>mehr Infos</a>
                                 </div>
                             </div>
+                            <div class="news-area"></div>
                         </div>
                         <!-- Umreissuche Tile -->
                         <div class="column yellowbg circle-search">
@@ -103,11 +110,33 @@
                     <div class="row third">
                         <div class="column active inverted segment map dimmer">
                             <h3>Angebote und Einrichtungen auf einem Blick</h3>
+                            <!-- Map Location Header -->
+                            <div class="map-location">
+                                <div class="location-label blue5">
+                                    <h3>
+                                        <span class="text"></span>
+                                        <!--button class="ui button"><i class="icon star outline"></i></button-->
+                                    </h3>
+                                </div>
+                                <!-- Location detection by text delivers alternatives -->
+                                <div id="street-alternatives" class="blue5"></div>
+                                <ul id="places" class="blue2">
+                                    <li class="ui-menu-item ui-corner-all ui-widget-content">
+                                        <a href="#">Favoriten</a>
+                                        <ul class="entries submenu"></ul>
+                                    </li>
+                                </ul>
+                            </div>
                             <!-- Map Segment -->
                             <div class="ui vertical active inverted segment dimmer">
                                 <div id="map">
                                     <div class="ui text loader">Lade Stadtplan...</div>
                                 </div>
+                            </div>
+                            <!-- Notification area -->
+                            <div id="notification" class="blue4bg thin" onclick="kiezatlas.close_message_window()">
+                                <span class="message">Hi!</span>
+                                <!-- a href="javascript:kiezatlas.close_message_window()">(x)</a-->
                             </div>
                         </div>
                     </div>

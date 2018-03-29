@@ -551,10 +551,6 @@ form .invalid {
     overflow-y: scroll;
 }
 
-.citymap #map {
-    margin-top: 60px;
-}
-
 .citymap #sidebar .welcome {
     margin-top: 2em;
     padding-left: 2em;

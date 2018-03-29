@@ -237,10 +237,6 @@
     background-color: transparent;
 }
 
-.ui.radio.checkbox {
-    height: 21px;
-}
-
 .ui.menu .dropdown.item .menu,
 .ui.menu {
     font-size: 1em;
@@ -265,12 +261,24 @@
     border-bottom-right-radius: 500rem !important;
 }
 
+.ui .button:active,
 .ui.search .ka.button:active {
     background-color: #3787ab;
 }
 
+.ui .button:hover,
 .ui.search .ka.button:hover {
     background-color: #ecf4f7;
+}
+
+.ui .location-label .button {
+    padding: .4em;
+}
+
+.ui .location-label .button .icon {
+    margin: 0em !important;
+    padding: 0em;
+    height: 17px;
 }
 
 /** 
@@ -435,9 +443,91 @@ red: #ce0000
     font-weight: bold;
 }
 
-.ui.page.detail #map,
-.ui.grid .map.column {
+.content .ui.grid .row .column .leaflet-control-attribution a {
+    font-weight: normal;
+}
+
+.ui.page.detail #map {
     border: 1px solid #ecf4f7;
+}
+
+/** Legacy Frontpage Elements **/
+
+.ui.page .map #marker-name {
+    display: none;
+    border-radius: 2px;
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: #fff;
+    z-index: 2000;
+    max-width: 300px;
+    padding: 10px;
+    text-align: left;
+    font-style: normal;
+    font-size: 18px;
+}
+
+#places {
+    display: none;
+    position: absolute;
+    right: 8px;
+    top: 8px;
+    z-index: 1001;
+    border: 1px solid transparent;
+    padding-left: 0px;
+    background: transparent;
+    z-index: 112;
+}
+
+#places li {
+    position: absolute;
+    right: 0px;
+    cursor: pointer;
+    list-style-type: none;
+    text-align: right;
+    padding: 2px .4em;
+}
+
+#places li.ui-menu-item a {
+    text-decoration: none;
+    line-height: 1.5em;
+}
+
+#places li.submenu-item {
+    position: relative;
+    width: 210px;
+    font-size: 16px;
+}
+
+#places li.ui-menu-item:hover,
+#places li.ui-menu-item:hover a[aria-haspopup="true"],
+#places li.submenu-item:hover a,
+#places li.submenu-item:hover {
+    background-color: #27638C;
+    color: #fff;
+}
+
+#notification {
+    padding: 20px; padding-bottom: 50px;
+    position: fixed; bottom: 100px; left: 0px;
+    padding: 10px;
+    font-size: 1em;
+    line-height: 1.4; font-weight: bold;
+    z-index: 1002; display: none;
+    /** background: linear-gradient(rgb(252, 237, 167), rgb(251, 239, 126)) repeat scroll 0% 0% rgb(250, 219, 78); **/
+    max-width: 370px;
+}
+
+div.location-label {
+    display: inline-block;
+    margin-bottom: .3em;
+}
+
+.content .ui.grid .column .location-label .text {
+    padding-bottom: 0em;
+    display: inline-block;
+    font-style: italic;
 }
 
 .page.detail .angebote a i.icon,
@@ -574,3 +664,4 @@ red: #ce0000
 .map .icon.blue {
     background-color: #00f;
 }
+
