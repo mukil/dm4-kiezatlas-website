@@ -1,5 +1,4 @@
 
-
 var results = [],
     MAX_RESULTS = 7,
     from = undefined,
@@ -7,19 +6,25 @@ var results = [],
     searchType = "places", // or "events"
     searchContext = 0 // 0=berlin-wide, otherwise long district or site id
 
-function init(map) {
+function init_detail_page() {
+    init_detail_map() // defined in "website-detail" template
+}
+
+function init_page() {
     $('.ui.checkbox').checkbox()
     $('.ui.dropdown').dropdown()
-    if (map) init_map_segment()
 }
 
-function handle_search_input() {
-    if (event.keyCode === 13) {
-        search(render_results)
-    }
+function init_map_segment() {
+    // fetch and set items to render
+    // leafletMap.set_items()
+    // hide loading indicator
+    // use heatmap visualization first
+    // set map mode "angebote" oder "einrichtungen"
+    // enable circle search
 }
 
-function render_results() {
+function render_search_results() {
     var $container = $('.result-list .container')
     var count = results.length
     // New from
@@ -68,37 +73,13 @@ function search() {
     $.getJSON(queryUrl, function (geo_objects) {
         results = geo_objects.results.cat1.results // Einrichtungen
         console.log("Found", results, "Einrichtungen")
-        render_results()
+        render_search_results()
     })
     // ### update query parameter
 }
 
 function get_search_input() {
     return $('#query').val()
-}
-
-function einrichtungenChecked() {
-    console.log("einrichtungenChecked")
-    $('.ui.grid.filter .column.angebote-tags').addClass('hidden')
-    searchType = "places"
-}
-
-function angeboteChecked() {
-    console.log("angeboteChecked")
-    $('.ui.grid.filter .column.angebote-tags').removeClass('hidden')
-    searchType = "events"
-}
-
-function toggleSearchCriteria() {
-    $('.ui.grid.filter').toggle()
-    var $headerIcon = $('.search-criterias .header .caret')
-    if ($headerIcon[0].className.indexOf('down') !== -1) {
-        $headerIcon.addClass('up')
-        $headerIcon.removeClass('down')
-    } else {
-        $headerIcon.addClass('down')
-        $headerIcon.removeClass('up')
-    }
 }
 
 function show_results_container() {
@@ -124,11 +105,34 @@ function hide_more_results_button(count) {
     $('.more-results .count').text(count)
 }
 
-function loadMap(lat, lng) {
-    var map = L.map('map', { center: [lat, lng], zoom: 13})
-        L.tileLayer('https://api.tiles.mapbox.com/v4/kiezatlas.pd8lkp64/{z}/{x}/{y}.png?' // old style id="kiezatlas.map-feifsq6f"
-            + 'access_token=pk.eyJ1Ijoia2llemF0bGFzIiwiYSI6ImNpa3BndjU2ODAwYm53MGxzM3JtOXFmb2IifQ._PcBhOcfLYDD8RP3BS0U_g', {
-            attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors,'
-            + '<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery &#169; <a href="http://mapbox.com">Mapbox</a>',
-            id: 'kiezatlas.m7222ia5'}).addTo(map)
+/** -- UI Handlers -- **/
+
+function einrichtungenChecked() {
+    console.log("einrichtungenChecked")
+    $('.ui.grid.filter .column.angebote-tags').addClass('hidden')
+    searchType = "places"
+}
+
+function angeboteChecked() {
+    console.log("angeboteChecked")
+    $('.ui.grid.filter .column.angebote-tags').removeClass('hidden')
+    searchType = "events"
+}
+
+function toggleSearchCriteria() {
+    $('.ui.grid.filter').toggle()
+    var $headerIcon = $('.search-criterias .header .caret')
+    if ($headerIcon[0].className.indexOf('down') !== -1) {
+        $headerIcon.addClass('up')
+        $headerIcon.removeClass('down')
+    } else {
+        $headerIcon.addClass('down')
+        $headerIcon.removeClass('up')
+    }
+}
+
+function handleSearchInput() {
+    if (event.keyCode === 13) {
+        search(render_search_results)
+    }
 }

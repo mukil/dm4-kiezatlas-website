@@ -13,7 +13,7 @@
         <script defer="true" src="/de.kiezatlas.website/css/semantic-ui/2.3/dist/semantic.min.js"></script>
         <script defer="true" src="/de.kiezatlas.website/dist/leaflet-1.2/leaflet.js"></script>
         <script defer="true" src="/de.kiezatlas.website/ka-restclient.js"></script>
-        <script defer="true" src="/de.kiezatlas.website/ka-startseite.js" onload="init(true)"></script>
+        <script defer="true" src="/de.kiezatlas.website/ka-startseite.js" onload="init_detail_page(true)"></script>
 
     </head>
     <body class="ui page detail">
@@ -93,7 +93,7 @@
             <div class="ui vertical segment map inverted active dimmer">
                 <!-- Map Segment -->
                 <script defer="true" type="text/javascript" th:inline="javascript">
-                    function init_map_segment() {
+                    function init_detail_map() {
                         var latitude = /*[[${geoobject.latitude}]]*/ undefined;
                         var longitude = /*[[${geoobject.longitude}]]*/ undefined;
                         var corner1 = L.latLng(52.716749, 12.965609),

@@ -182,7 +182,8 @@
             <div class="ui simple dropdown item">
                 <span>Bezirksseiten</span> <i class="dropdown icon"></i>
                 <div class="menu">
-                    <div class="item">Mitte</div>
+                    <div class="item" th:each="district : ${districts}" th:id="${district.id}"
+                         th:text="${district.simpleValue}">Mitte</div>
                 </div>
             </div>
             <div class="ui simple dropdown item">

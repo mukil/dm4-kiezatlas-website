@@ -481,6 +481,7 @@ red: #ce0000
     border-bottom: 1px solid #ecf4f7;
 }
 
+.ui.page .segment .search-criterias,
 .ui.page .segment.more-button,
 .search-criterias .ui.grid.filter {
     padding-bottom: 1em;
