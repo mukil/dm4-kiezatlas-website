@@ -24,6 +24,7 @@ module.exports = function(grunt) {
                 files: {
                     'src/main/resources/web/dist/ka-website-frontpage.js': [
                         'src/main/resources/web/ka-restclient.js',
+			'src/main/resources/web/ka-model.js',
                         'src/main/resources/web/ka-map.js',
                         'src/main/resources/web/ka-favourites.js',
                         'src/main/resources/web/ka-website-angebote.js',

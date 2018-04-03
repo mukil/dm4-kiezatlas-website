@@ -1,4 +1,7 @@
 
+/** -- New Semantic UI Custom Styled 2.3 Release -- **/
+@import url('/de.kiezatlas.website/css/semantic-ui/2.3/dist/semantic.min.css');
+
 /** --- Re-design custom styles --- **/
 
 .ui .navigation {
@@ -31,9 +34,22 @@
 .ui .search.segment,
 .ui .search-results,
 .ui .search-criteria,
-.ui .content,
-.ui .footer {
+.ui .content {
     padding: .5em;
+}
+
+.ui.footer .site-link .caption {
+    margin-bottom: 2em;
+}
+
+.ui.footer .site-link .logo {
+    max-width: 160px;
+    height: auto;
+    margin-bottom: 1em;
+}
+
+.ui.footer .your-data .list.webpages {
+    padding-left: 1em;
 }
 
 .ui .navigation .top-menu {
@@ -112,7 +128,6 @@
     background-color: #fff;
 }
 
-.page .ui.header,
 .page,
 .blue1 {
     color: #193441;
@@ -148,6 +163,7 @@
     color: #ecf4f7;
 }
 
+.page .ui.segment.footer.blue4bg,
 .blue4bg {
     background-color: #ecf4f7;
 }
@@ -188,10 +204,6 @@
 
 .ui .footer .your-data img {
     margin-bottom: 1em;
-}
-
-.ui .footer .your-data div {
-    margin-left: .85em;
 }
 
 .ui .bottomline {
@@ -237,6 +249,19 @@
     background-color: transparent;
 }
 
+nav .large.top.fixed.menu {
+    height: 55px;
+}
+
+header .large.menu h3.caption,
+.ui.top.menu.fixed h3.caption {
+    display: none;
+}
+
+.ui.top.fixed .right.search.item {
+    margin-top: 0em;
+}
+
 .ui.menu .dropdown.item .menu,
 .ui.menu {
     font-size: 1em;
@@ -280,11 +305,6 @@
     padding: 0em;
     height: 17px;
 }
-
-/** 
-green: #9cc300
-red: #ce0000
-**/
 
 .ui.dropdown > .dropdown.icon {
     margin-right: .3em;
@@ -386,6 +406,11 @@ red: #ce0000
     padding: 0em !important;
 }
 
+.page.detail .stichworte,
+.page.detail .related-topics {
+    margin-top: .5em;
+}
+
 .page.detail .stichworte label,
 .page.detail .related-topics label {
     font-weight: bold;
@@ -423,6 +448,10 @@ red: #ce0000
     padding-top: .5em;
 }
 
+.content .ui.grid .column.aktuelles h3 {
+    padding-bottom: .3em;
+}
+
 .ui.grid .column .subline,
 .ui.grid .column .news-item {
     padding-top: .5em;
@@ -449,6 +478,90 @@ red: #ce0000
 
 .ui.page.detail #map {
     border: 1px solid #ecf4f7;
+}
+
+/** --- Sign-up Dialog Overrides --- **/
+
+.sign-up.logout-page .ui.segment.padded {
+    padding-bottom: 1em;
+}
+
+.sign-up .ui.segment.padded {
+    padding-top: 1em;
+}
+
+.sign-up .ui.segment.padded.first {
+    padding-top: 0em;
+    padding-bottom: 1em;
+}
+
+.sign-up .dialog-body .ui.form {
+    padding-bottom: .5em;
+}
+
+.sign-up #api-info,
+.sign-up #private-details,
+.sign-up #tos-details {
+    display: none;
+    padding: .5em;
+}
+
+.sign-up .ui.input input[type="password"],
+.sign-up .ui.input input[type="text"] {
+    margin-bottom: .5em;
+    min-width: 50%;
+    border-radius: 8.5px;
+}
+
+.sign-up .ui.input input[type="submit"] {
+    margin-bottom: 2em;
+    min-width: 25%;
+    border-radius: 8.5px;
+    background-color: #3787ab;
+    color: #fff;
+}
+
+.sign-up .ui.input .button:active {
+    background-color: #3787ab;
+}
+
+.sign-up .ui.input .button:hover {
+    background-color: #ecf4f7;
+    color: #193441;
+}
+
+.sign-up .ui.input .ok.button {
+    padding-bottom: .5em;
+}
+
+.sign-up .ui.input {
+    display: block;
+}
+
+.sign-up .ui.input.radio,
+.sign-up .ui.input.checkbox {
+    display: inline-block;
+}
+
+.sign-up .dialog-body a {
+    color: #9ec8d6;
+}
+
+.sign-up .dialog-body a:hover {
+    color: #3787ab;
+}
+
+.sign-up .ui.segment.first {
+    margin-top: 3em;
+}
+
+#preamble {
+    margin-bottom: 1em;
+    padding-top: 0em;
+}
+
+#api-workspace label p {
+    display: inline-block;
 }
 
 /** Legacy Frontpage Elements **/
@@ -571,7 +684,9 @@ div.location-label {
     border-bottom: 1px solid #ecf4f7;
 }
 
-.ui.page .segment .search-criterias,
+.ui.page .segment .search-criterias .two.column.grid .eight.column {
+    margin-bottom: 1em;
+}
 .ui.page .segment.more-button,
 .search-criterias .ui.grid.filter {
     padding-bottom: 1em;

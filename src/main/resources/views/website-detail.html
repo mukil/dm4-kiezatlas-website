@@ -5,13 +5,12 @@
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-        <link rel="stylesheet" type="text/css" href="/de.kiezatlas.website/css/semantic-ui/2.3/dist/semantic.min.css" />
-        <link rel="stylesheet" type="text/css" href="/de.kiezatlas.website/dist/leaflet-1.2/leaflet.css" />
         <link rel="stylesheet" type="text/css" href="/de.kiezatlas.website/css/kiezatlas-web.css" />
+        <link rel="stylesheet" type="text/css" href="/de.kiezatlas.website/vendor/leaflet-1.3.1/leaflet.css" />
 
         <script defer="true" src="/de.kiezatlas.website/vendor/jquery/jquery-3.2.1.min.js"></script>
         <script defer="true" src="/de.kiezatlas.website/css/semantic-ui/2.3/dist/semantic.min.js"></script>
-        <script defer="true" src="/de.kiezatlas.website/dist/leaflet-1.2/leaflet.js"></script>
+        <script defer="true" src="/de.kiezatlas.website/vendor/leaflet-1.3.1/leaflet.js"></script>
         <script defer="true" src="/de.kiezatlas.website/ka-restclient.js"></script>
         <!--script defer="true" src="/de.kiezatlas.website/ka-map.js"></script-->
         <script defer="true" src="/de.kiezatlas.website/ka-startseite.js" onload="init_einrichtungs_page()"></script>
@@ -28,16 +27,9 @@
         <div class="ui pusher">
 
             <!-- Teaser Area -->
-            <div class="ui vertical segment teaser">
-                <div class="ui container">
-                    <h2 class="header blue5bg white thin">
-                        Unser Kiezatlas f&uuml;r<br/>
-                        <b th:text='${geoobject.bezirk}'>Mitte</b>
-                    </h2>
-                </div>
-            </div>
+            <div th:replace="fragments/widgets :: teaser-small" />
 
-            <div th:replace="fragments/search :: dialog (false)"></div>
+            <div th:replace="fragments/search :: dialog (false, ${districts}, ${tags}, ${search}, ${searchType})"></div>
 
             <!-- Name, Description Area -->
             <div class="ui vertical container segment entry">
@@ -241,9 +233,7 @@
             </div>
 
             <!-- Footer Segment -->
-            <div class="ui vertical segment footer blue4bg">
-                <div th:replace="fragments/footer :: footer-new "></div>
-            </div>
+            <div th:replace="fragments/footer :: footer-new "></div>
 
         </div>
 

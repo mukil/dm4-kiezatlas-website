@@ -50,7 +50,7 @@ public class Migration8 extends Migration {
             infoArea.getUri(), "dm4.core.one", "dm4.core.one"));
         // 4) Configure custom dm-webclient renderer to webalias type
         ViewConfiguration viewConfig = webAlias.getViewConfig();
-        viewConfig.addSetting("dm4.webclient.view_config",
+        viewConfig.setConfigValue("dm4.webclient.view_config",
                 "dm4.webclient.simple_renderer_uri", "ka2.website.web_alias_renderer");
         log.info("##### Migration Nr. 8: Kiezatlas Website Type Definition Extension COMPLETE #####");
     }

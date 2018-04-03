@@ -1,5 +1,5 @@
 
-<div class="search-dialog" th:fragment="dialog (expanded, districts, tags)">
+<div class="search-dialog" th:fragment="dialog (expanded, districts, tags, search, type)">
 
     <!-- Search Area -->
     <div class="ui vertical segment search blue2bg">
@@ -49,14 +49,14 @@
                                 <div class="grouped fields">
                                     <div class="field">
                                         <div class="ui radio checkbox">
-                                            <input type="radio" name="type" id="places" onchange="einrichtungenChecked()" checked="checked" />
-                                            <label for="places">Einrichtungen</label>
+                                            <input type="radio" name="type" id="place" value="place" onchange="einrichtungenChecked()" checked="checked" />
+                                            <label for="place">Einrichtungen</label>
                                         </div>
                                     </div>
                                     <div class="field">
                                         <div class="ui radio checkbox">
-                                            <input type="radio" name="type" id="events" onchange="angeboteChecked()"/>
-                                            <label for="events">Angebote</label>
+                                            <input type="radio" name="type" id="event" value="event" onchange="angeboteChecked()"/>
+                                            <label for="event">Angebote</label>
                                         </div>
                                     </div>
                                 </div>

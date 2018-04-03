@@ -84,6 +84,7 @@ import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 import org.deepamehta.plugins.signup.SignupPlugin;
 import org.deepamehta.plugins.signup.service.SignupPluginService;
+import org.deepamehta.plugins.signup.events.SignupResourceRequestedListener;
 import de.kiezatlas.angebote.AssignedAngebotListener;
 import de.kiezatlas.angebote.ContactAnbieterListener;
 import de.kiezatlas.angebote.RemovedAngebotListener;
@@ -110,20 +111,22 @@ import de.kiezatlas.website.model.SearchKeywords;
 import de.kiezatlas.website.model.SearchResultList;
 import de.kiezatlas.website.model.SearchResult;
 import de.kiezatlas.website.model.UsernameView;
+import de.mikromedia.webpages.events.CustomRootResourceRequestedListener;
 import de.mikromedia.webpages.events.FrontpageRequestedListener;
+import de.mikromedia.webpages.events.ResourceNotFoundListener;
 import de.mikromedia.webpages.events.WebpageRequestedListener;
 import java.net.URI;
 import java.net.URISyntaxException;
 import javax.ws.rs.DELETE;
+import org.thymeleaf.context.AbstractContext;
 
 /**
- * The module bundling the Kiezatlas 2 Website.<br/>
- * Based on dm48-kiezatlas-2.1.9-SNAPSHOT, dm47-kiezatlas-etl-0.6.2 and dm48-webpages-0.4.1.<br/>
- * Compatible with DeepaMehta 4.8.3
+ * The module orchestrates all bundles composing the Kiezatlas 2 Website.<br/>
+ * 
  * <a href="http://github.com/mukil/dm4-kiezatlas-website">Source Code</a>
  *
  * @author Malte Reißig (<a href="mailto:malte@mikromedia.de">Contact</a>)
- * @version 0.6-SNAPSHOT
+ * @version 0.7-SNAPSHOT
  */
 @Path("/website")
 @Consumes(MediaType.APPLICATION_JSON)
@@ -132,7 +135,10 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
                                                                               RemovedAngebotListener,
                                                                               ContactAnbieterListener,
                                                                               PostUpdateTopicListener,
+                                                                              SignupResourceRequestedListener,
                                                                               WebpageRequestedListener,
+                                                                              CustomRootResourceRequestedListener,
+                                                                              ResourceNotFoundListener,
                                                                               FrontpageRequestedListener {
 
     private final Logger log = Logger.getLogger(getClass().getName());
@@ -237,13 +243,15 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     @Produces(MediaType.TEXT_HTML)
     public Viewable prepareNewFrontpage(@QueryParam("site") String site, @QueryParam("search") String search,
             @QueryParam("koordinate") String koordinate, @QueryParam("zoomstufe") String zoomstufe,
-            @QueryParam("searchtype") String searchtype) {
+            @QueryParam("searchType") String searchType) {
         viewData("districts", getAvailableDistrictTopics());
         viewData("tags", getAllTagTopics());
         viewData("site", site);
         viewData("search", search);
+        viewData("searchType", searchType);
         viewData("koordinate", koordinate);
         viewData("zoomstufe", zoomstufe);
+        preparePageTemplate("website-grid");
         return getFrontpage();
     }
 
@@ -495,8 +503,13 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     @GET
     @Path("/geo/redesign/{topicId}")
     @Produces(MediaType.TEXT_HTML)
-    public Viewable prepareNewGeoObjectInfoPage(@PathParam("topicId") String topicId) {
+    public Viewable prepareNewGeoObjectInfoPage(@PathParam("topicId") String topicId, @QueryParam("site") String site,
+            @QueryParam("search") String search, @QueryParam("searchType") String searchType) {
         Topic geoObject = getGeoObjectById(topicId);
+        viewData("districts", getAvailableDistrictTopics());
+        viewData("search", search);
+        viewData("searchtype", searchType);
+        viewData("site", site);
         return (geoObject != null) ? prepareNewGeoObjectTemplate(geoObject.getId()) : getNotFoundPage();
     }
 
@@ -1519,7 +1532,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
             if (isInvalidSearchQuery(query)) return results;
             String queryValue = prepareLuceneQueryString(query, false, true, false, true);
             // 2) Fetch unique geo object topics by text query string (leading AND ending ASTERISK)
-            List<Topic> offers = angebote.searchInAngebotsinfoChildsByText(queryValue);
+            List<RelatedTopic> offers = angebote.searchInAngebotsinfoChildsByText(queryValue);
             // 3) Process saerch results and create DTS for map display
             for (Topic angebot : offers) {
                 List<RelatedTopic> places = angebote.getAssignedGeoObjectTopics(angebot);
@@ -3782,13 +3795,31 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     }
 
     @Override
-    public void webpageRequested(Webpage webpage, String sitePrefix) {
-        log.info("Kiezatlas Website received webpage requested: /" + sitePrefix + "/" + webpage.getWebAlias());
+    public void webpageRequested(AbstractContext context, String webAlias, String sitePrefix) {
+        context.setVariable("districts", getAvailableDistrictTopics());
     }
 
     @Override
-    public void frontpageRequested(Topic website, String location) {
-        log.info("Kiezatlas Website received frontpage of website requested " + location + " " + website);
+    public void frontpageRequested(AbstractContext context, Topic website) {
+        log.info("Custom root resource requested, e.g. a citymap published under \"/\"" + website);
+    }
+
+    @Override
+    public void resourceNotFound(AbstractContext context, String webAlias, String sitePrefix) {
+        log.info("Kiezatlas 2.0 received a 404 for request on \"/" + sitePrefix + "/" + webAlias + "\"");
+        context.setVariable("message", "Sorry, this resource is not in our coordinate system!");
+    }
+
+    @Override
+    public void frontpageRequested(AbstractContext context, Topic website, String webAlias) {
+        log.info("Index frontpage at /" + website + "/" + webAlias + " requested");
+    }
+
+    @Override
+    public void signupResourceRequested(AbstractContext context, String templateName) {
+        log.info("Kiezatlas Website providing template data for sign-up resources...");
+        context.setVariable("districts", getAvailableDistrictTopics());
+        preparePageTemplate(templateName);
     }
 
 }
