@@ -3,23 +3,6 @@ module.exports = function(grunt) {
     // Project configuration.
     grunt.initConfig({
         concat: {
-            semanticss: {
-                files: {
-                    'src/main/resources/web/css/semantic-ui/2.2/components/ka-website-custom.min.css': [
-                        'src/main/resources/web/css/semantic-ui/2.2/components/container.min.css',
-                        'src/main/resources/web/css/semantic-ui/2.2/components/dropdown.min.css',
-                        'src/main/resources/web/css/semantic-ui/2.2/components/transition.min.css',
-                        'src/main/resources/web/css/semantic-ui/2.2/components/header.min.css',
-                        'src/main/resources/web/css/semantic-ui/2.2/components/icon.min.css',
-                        'src/main/resources/web/css/semantic-ui/2.2/components/input.min.css',
-                        'src/main/resources/web/css/semantic-ui/2.2/components/item.min.css',
-                        'src/main/resources/web/css/semantic-ui/2.2/components/menu.min.css',
-                        'src/main/resources/web/css/semantic-ui/2.2/components/sidebar.min.css',
-                        'src/main/resources/web/css/semantic-ui/2.2/components/button.min.css',
-                        'src/main/resources/web/css/semantic-ui/2.2/components/checkbox.min.css'
-                    ]
-                }
-            },
             frontpage: {
                 files: {
                     'src/main/resources/web/dist/ka-website-frontpage.js': [
@@ -29,11 +12,7 @@ module.exports = function(grunt) {
                         'src/main/resources/web/ka-favourites.js',
                         'src/main/resources/web/ka-website-angebote.js',
                         'src/main/resources/web/ka-website.js',
-                        'src/main/resources/web/ka-citymap.js',
-                        'src/main/resources/web/css/semantic-ui/2.2/sidebar.min.js',
-                        'src/main/resources/web/css/semantic-ui/2.2/checkbox.min.js',
-                        'src/main/resources/web/css/semantic-ui/2.2/api.min.js',
-                        'src/main/resources/web/css/semantic-ui/2.2/search.min.js'
+                        'src/main/resources/web/ka-citymap.js'
                     ]
                 }
             },

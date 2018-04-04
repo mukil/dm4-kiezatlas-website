@@ -32,16 +32,165 @@ var results = [],
         "bright_blue": "#ecf4f7",   // unused
         "ka_water": "#ccdddd",      // unused
         "grey": "#868686"           // unused
-    }
+    },
+    districts = undefined,
+    bezirksTopic = undefined
 
+var $sidebarUi = undefined
 
 // --- Page Methods -- //
 
 function init_page() {
+    // Register historyState API
+    kiezatlas.init_page_navigation()
+    parameter = kiezatlas.get_page_parameter_from_url()
+    // Build up UI handlers
     $('.ui.checkbox').checkbox()
     $('.ui.dropdown').dropdown()
+    // $('.ui.sidebar').sidebar()
+    // initialize data on districts
+    load_district_data(function() {
+        console.log("Loaded district data", districts, "Parameter", parameter)
+        render_district_topic()
+    })
     // init_map_segment()
-    kiezatlas.render_page()
+    kiezatlas.render_page("#gesamt")
+}
+
+
+function render_district_topic() {
+    // ### Make rendering page parameter dynamic again
+    bezirksTopic = get_bezirks_topic_by_hash("#mitte")
+    console.log(bezirksTopic)
+    if (bezirksTopic) { // Renders BEZIRKSPAGE
+        console.log("Attempting to render bezirks-stadtplan..")
+        searchContext = bezirksTopic.id
+        set_site_info(bezirksTopic)
+        show_district_info()
+        // load_marker_cluster_scripts()
+        // render_map(false, parameter.viewport, false, true) // detectLocation=false
+        // sets district filter
+        // show_district_page(_self.get_site_info().id)
+        // render_district_menu(bezirksTopic)
+    } else {
+        kiezatlas.render_gesamtstadtplan() // Renders GESAMTSTADTPLAN
+        console.warn("Entschudligung, die Bezirksseite "+parameter.page+" konnte nicht geladen werden. ")
+    }
+}
+
+function show_district_info() {
+    var bezirk_html = bezirksTopic.html
+    var bezirk_name = bezirksTopic.value
+    var bezirk_feed_url = bezirksTopic.newsfeed
+    $('.teaser .header b').text(bezirk_name)
+    kiezatlas.show_message("<em>Die Volltextsuche liefert ab jetzt nur Ergebnisse aus dem Bezirk</em> <b>"
+        + bezirk_name + "</b><em>. W&auml;hlen sie <em>Bezirksfilter aufheben</em> um wieder Berlinweit"
+        + " Einrichtungen zu finden.</em>", 7000)
+    show_context_subline()
+    show_newsfeed_area(searchContext, bezirk_feed_url)
+    /**
+    $('.location-label .text').html("Berlin " + bezirk_name) // duplicate, use render_current_location_label
+    $('.top.menu a.star').hide()
+    // TODO: rewrite filter button container
+    if ($('div.legende').children('a.district-control').length === 0) {
+        $('div.legende').append('<a class="district-control" href="javascript:kiezatlas.clear_district_page()">'
+            + 'Bezirksfilter aufheben</a>')
+    }
+    _self.set_fulltext_search_placeholder("Volltextsuche für " + bezirk_name)
+    $('a.lock-control').hide()
+    $('a.circle-control').hide()
+    $('#site-area').show("flex")
+    $('#site-area .content-area').html(bezirk_html + '<br/>'
+        + '<a href="'+_self.get_site_info().imprint+'">Impressum</a>')
+    leafletMap.scroll_into_view()
+    _self.set_mapcontrol_mode_results()
+    _self.update_document_title(undefined, bezirk_name)
+    _self.show_spinning_wheel()
+    // Load Newsfeed in District
+    kiezatlas.show_newsfeed_area(topic_id, bezirk_feed_url)
+    // Load Geo Objects in District
+    restc.load_district_topics(topic_id, function(response) {
+        leafletMap.clear_marker()
+        _self.hide_spinning_wheel()
+        leafletMap.set_items(response)
+        if (parameter.viewport) {
+            leafletMap.render_geo_objects(false)
+        } else {
+            leafletMap.render_geo_objects(true)
+        }
+    }) **/
+}
+
+function show_context_subline() {
+    if (bezirksTopic) {
+        var contextName = bezirksTopic.value
+        var contextHtml = bezirksTopic.html
+        $('.teaser .header.subline').html(contextHtml)
+        $('.teaser .header.white b').text(contextName)
+    } else {
+        console.warn("No context subline available")
+    }
+    // ### append imprint
+}
+
+function show_newsfeed_area() {
+    // gather news context
+    var contextId = searchContext
+    if (bezirksTopic) {
+        var contextName = bezirksTopic.value
+        var feedUrl = bezirksTopic.newsfeed
+        // load news feed
+        restc.load_news_items(contextId, function(results) {
+            // construct news items
+            var html_item = ""
+            if (results.length > 0) {
+                for (var r in results) {
+                    var news = results[r]
+                    html_item += '<div class="news-item">'
+                        + '<div class="date bold">' + kiezatlas.format_date(news.published) + '</div>'
+                        + '<div class="headline">' + news.title + '</div><a href="'
+                        + news.link +'" target="_blank"><i class="icon caret right"/>mehr Infos</a>'
+                    + '</div>'
+                }
+            } else {
+                html_item = '<div class="news-item">Entschuldigen Sie bitte...</div>'
+                html_item += '<div class="news-item">Der Newsfeed f&uuml;r diese Site (<a target="_blank" href="'
+                        + feedUrl + '">Link</a>) konnte gerade nicht geladen werden.</div>'
+            }
+            // render "aktuelles" column
+            $('.content .column.aktuelles h3 .context').text('in ' + contextName)
+            var $area = $('.content .column.aktuelles .news-area')
+                $area.empty()
+                $area.append(html_item)
+        })
+    } else {
+        console.warn("No newsfeed for context", contextId, "available")
+    }
+}
+
+function load_district_data(handleResults) {
+    if (!districts) {
+        restc.load_districts(function(results) {
+            districts = results.sort(restc.value_sort_asc)
+            if (handleResults) handleResults()
+        })
+    } else {
+        handleResults()
+    }
+}
+
+function get_bezirks_topic_by_id(id) {
+    for (var i in districts) {
+        if (districts[i].id === id) return districts[i]
+    }
+}
+
+function get_bezirks_topic_by_hash(hash) {
+    for (var i in districts) {
+        var bezirk = districts[i]
+        var anchor_name = '#' + encodeURIComponent(bezirk.value.toLowerCase())
+        if (anchor_name === hash) return bezirk
+    }
 }
 
 function init_einrichtungs_page() {
@@ -148,7 +297,7 @@ function hide_more_results_button(count) {
     $('.more-results .count').text(count)
 }
 
-/** -- UI Handlers -- **/
+/** --- UI Handlers --- **/
 
 function einrichtungenChecked() {
     console.log("einrichtungenChecked")

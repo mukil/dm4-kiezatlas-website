@@ -3,6 +3,9 @@
 @import url('/de.kiezatlas.website/css/semantic-ui/2.3/dist/semantic.min.css');
 
 /** --- Re-design custom styles --- **/
+body.pushable {
+    background-color: #fff !important;
+}
 
 .ui .navigation {
     height: 138px;
@@ -19,9 +22,15 @@
     background-attachment: scroll;
 }
 
-.ui.teaser .header {
+.ui.teaser .header.white.thin {
     width: 25%;
     margin-bottom: 0px;
+}
+
+.ui.teaser .header.subline {
+    max-width: 25%;
+    margin-bottom: 0px;
+    padding: .8em;
 }
 
 .ui.teaser .subline {
@@ -326,6 +335,11 @@ header .large.menu h3.caption,
 .ui.inverted.dimmer .ui.loader {
     padding-left: 1em;
     padding-top: 3em;
+}
+
+.content .column.aktuelles .ui.inverted.dimmer .ui.loader {
+    width: 230px;
+    padding-left: .5em;
 }
 
 .page.detail .ui.segment.teaser {
