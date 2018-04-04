@@ -50,7 +50,7 @@ function init_page() {
     // $('.ui.sidebar').sidebar()
     // initialize data on districts
     load_district_data(function() {
-        console.log("Loaded district data", districts, "Parameter", parameter)
+        console.log("Initialized district data", districts)
         render_district_topic()
     })
     // init_map_segment()
@@ -61,12 +61,10 @@ function init_page() {
 function render_district_topic() {
     // ### Make rendering page parameter dynamic again
     bezirksTopic = get_bezirks_topic_by_hash("#mitte")
-    console.log(bezirksTopic)
     if (bezirksTopic) { // Renders BEZIRKSPAGE
-        console.log("Attempting to render bezirks-stadtplan..")
         searchContext = bezirksTopic.id
         set_site_info(bezirksTopic)
-        show_district_info()
+        show_district_frontpage()
         // load_marker_cluster_scripts()
         // render_map(false, parameter.viewport, false, true) // detectLocation=false
         // sets district filter
@@ -78,8 +76,8 @@ function render_district_topic() {
     }
 }
 
-function show_district_info() {
-    var bezirk_html = bezirksTopic.html
+function show_district_frontpage() {
+    // var bezirk_html = bezirksTopic.html
     var bezirk_name = bezirksTopic.value
     var bezirk_feed_url = bezirksTopic.newsfeed
     $('.teaser .header b').text(bezirk_name)
@@ -88,6 +86,7 @@ function show_district_info() {
         + " Einrichtungen zu finden.</em>", 7000)
     show_context_subline()
     show_newsfeed_area(searchContext, bezirk_feed_url)
+    update_search_criteria_dialog()
     /**
     $('.location-label .text').html("Berlin " + bezirk_name) // duplicate, use render_current_location_label
     $('.top.menu a.star').hide()
@@ -119,6 +118,14 @@ function show_district_info() {
             leafletMap.render_geo_objects(true)
         }
     }) **/
+}
+
+function update_search_criteria_dialog() {
+    // Well, semantic ui does neither update dom properly nor does it wrap the correct element.
+    // This is a workaround to let our (form) HTML reflect the state of the currentsearch criterias.
+    $('[name="area"]').removeAttr("checked")
+    $(".ui.checkbox." + searchContext).checkbox("check")
+    $(".ui.checkbox." + searchContext + " input").attr("checked", "checked")
 }
 
 function show_context_subline() {
