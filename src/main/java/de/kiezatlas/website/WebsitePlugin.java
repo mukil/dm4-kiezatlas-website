@@ -45,6 +45,7 @@ import static de.kiezatlas.KiezatlasService.IMAGE_FACET;
 import static de.kiezatlas.KiezatlasService.IMAGE_PATH;
 import de.kiezatlas.angebote.AngebotService;
 import static de.kiezatlas.angebote.AngebotService.ANGEBOT_BESCHREIBUNG;
+import de.kiezatlas.angebote.events.AngeboteResourceRequestedListener;
 import de.kiezatlas.angebote.model.AngebotsinfosAssigned;
 import static de.kiezatlas.etl.KiezatlasETLService.BESCHREIBUNG;
 import static de.kiezatlas.etl.KiezatlasETLService.BESCHREIBUNG_FACET;
@@ -85,9 +86,9 @@ import org.codehaus.jettison.json.JSONObject;
 import org.deepamehta.plugins.signup.SignupPlugin;
 import org.deepamehta.plugins.signup.service.SignupPluginService;
 import org.deepamehta.plugins.signup.events.SignupResourceRequestedListener;
-import de.kiezatlas.angebote.AssignedAngebotListener;
-import de.kiezatlas.angebote.ContactAnbieterListener;
-import de.kiezatlas.angebote.RemovedAngebotListener;
+import de.kiezatlas.angebote.events.AssignedAngebotListener;
+import de.kiezatlas.angebote.events.ContactAnbieterListener;
+import de.kiezatlas.angebote.events.RemovedAngebotListener;
 import de.kiezatlas.comments.CommentsService;
 import de.kiezatlas.etl.KiezatlasETLService;
 import static de.kiezatlas.etl.KiezatlasETLService.ANGEBOT_FACET;
@@ -136,6 +137,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
                                                                               ContactAnbieterListener,
                                                                               PostUpdateTopicListener,
                                                                               SignupResourceRequestedListener,
+                                                                              AngeboteResourceRequestedListener,
                                                                               WebpageRequestedListener,
                                                                               CustomRootResourceRequestedListener,
                                                                               ResourceNotFoundListener,
@@ -3552,6 +3554,10 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         return cities;
     }
 
+    /** 
+     * Todo: Caching, do fetch districts just once per day.
+     * @return 
+     */
     private List<Topic> getAvailableDistrictTopics() {
         List<Topic> topics = dm4.getTopicsByType("ka2.bezirk");
         List<Topic> results = topics;
@@ -3818,6 +3824,12 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     @Override
     public void signupResourceRequested(AbstractContext context, String templateName) {
         log.info("Kiezatlas Website providing template data for sign-up resources...");
+        context.setVariable("districts", getAvailableDistrictTopics());
+        preparePageTemplate(templateName);
+    }
+
+    @Override
+    public void angeboteResourceRequested(AbstractContext context, String templateName) {
         context.setVariable("districts", getAvailableDistrictTopics());
         preparePageTemplate(templateName);
     }

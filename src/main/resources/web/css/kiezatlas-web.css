@@ -494,6 +494,12 @@ header .large.menu h3.caption,
     border: 1px solid #ecf4f7;
 }
 
+/** --- Angebote UI Overrides -- */
+
+.angebotsinfos #dialog-confirm {
+    display: none;
+}
+
 /** --- Sign-up Dialog Overrides --- **/
 
 .sign-up.logout-page .ui.segment.padded {
@@ -576,6 +582,26 @@ header .large.menu h3.caption,
 
 #api-workspace label p {
     display: inline-block;
+}
+
+#map-sidebar {
+    display: none;
+    position: absolute;
+    right: 3em;
+    top: 5em;
+    width: 33%;
+    height: auto;
+    z-index: 3000;
+}
+
+#map-sidebar .entry {
+    background-color: #fff;
+    padding: 1em;
+}
+
+#map-sidebar .entry h3 {
+    padding-top: 0em;
+    padding-left: 0em;
 }
 
 /** Legacy Frontpage Elements **/

@@ -57,10 +57,6 @@ function cleanUpAddress(addressValue) {
     }
 }
 
-function render_selected_place_details(details) {
-    console.log("Render selected place details", details)
-}
-
 /** function show_search_options() {
     $('#options-menu').show()
     $('#options-spacer').show("slow")
@@ -832,13 +828,17 @@ var kiezatlas = (function($, leafletMap, restc, favourites) {
 
     this.show_selected_geo_details = function(result_list) {
         var list_of_marker_ids = []
+        var $sidebar = $('#map-sidebar')
+            $sidebar.empty()
+            $sidebar.show()
         for (var i in result_list) {
             var marker_model = result_list[i].options
             var marker_id = marker_model['id']
+            $sidebar.append('<div class="entry"><h3>' + marker_model.name + '</h3><a href="/website/geo/redesign/' + marker_id + '">'
+                + '<i class="icon caret right"></i>mehr Infos</a></div>')
             list_of_marker_ids.push(marker_id)
             restc.load_geo_object_detail(marker_id, function(result) {
                 _self.render_selected_details_card(result)
-                render_selected_place_details(result)
             })
         }
     }
@@ -848,7 +848,6 @@ var kiezatlas = (function($, leafletMap, restc, favourites) {
         var einrichtung = {id: model['location_id'], name: model['name'], address: model['address'] }
         restc.load_related_angebotsinfos(model['location_id'], function(results) {
             _self.render_selected_angebot_details_card(results, einrichtung)
-            // render_selected_event_details(results, einrichtung)
         })
     }
 

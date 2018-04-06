@@ -129,8 +129,11 @@
     </div>
 </div>
 
-<!-- Kiezatlas 2.0 UI Navigation Menu (White) -->
-<div th:fragment="top2 (publisher)">
+<!-- 
+    Kiezatlas 2.0 UI Navigation Menu (White)
+    Note: A copy of this needs to be maintainede in in dm4-kiezatlas-angebote views/fragments/navigation.html
+-->
+<div th:fragment="top-menu (publisher)">
 
     <div class="ui container">
         <h3 class="citymap-title"></h3>
@@ -153,13 +156,35 @@
                 </div>
             </div>
             <div class="ui simple dropdown item">
-                <span>Weitere Stadtpl&auml;ne</span> <i class="dropdown icon"></i>
-                <div class="menu">
-                    <div class="item">Familienstadtplan</div>
-                    <div class="item">VskA Stadtteilzentren</div>
+                <span>Sozialraumdaten</span> <i class="dropdown icon"></i>
+                <div class="menu" id="sozialraumdaten">
+                    <a href="https://sozialraumdaten.kiezatlas.de/" class="item">via Straße / Hnr.</a>
+                    <a href="https://sozialraumdaten.kiezatlas.de/seiten/" class="item">via Karte</a>
                 </div>
             </div>
-            <a href="https://sozialraumdaten.kiezatlas.de/seiten/" class="item">Sozialraumdaten</a>
+            <div class="ui simple dropdown item">
+                <span>Infos</span> <i class="dropdown icon"></i>
+                <div class="menu">
+                    <a href="/" class="item">Alter Kiezatlas</a>
+                    <a href="/" class="item">AnsprechpartnerInnen Liste</a>
+                    <a href="/" class="item">Das Projekt</a>
+                    <div class="ui simple dropdown item">
+                        <span>Hilfe</span>
+                        <i class="icon dropdown"></i>
+                        <div class="menu">
+                            <a href="/" class="item">F&uuml;r AnbieterInnen</a>
+                            <a href="/" class="item">F&uuml;r Einrichtungen</a>
+                            <a href="/" class="item">Workflows &amp; Berechtigungen</a>
+                            <a href="/" class="item">&Uuml;bersicht NutzerInnen</a>
+                            <a href="/" class="item">Technologie</a>
+                            <a href="/" class="item">Tipps &amp; Tricks</a>
+                        </div>
+                    </div>
+                    <a href="/" class="item">Impressum</a>
+                    <a href="/" class="item">Nutzungsbedingungen</a>
+                    <a href="/" class="item">&Uuml;ber uns</a>
+                </div>
+            </div>
             <a th:if="!${authenticated}" href="/sign-up/login"
                th:class="${#strings.contains(template, 'login')} ? 'active item login' : 'item login'">Login / Registrieren</a>
             <a th:if="${authenticated}" href="/sign-up/login"

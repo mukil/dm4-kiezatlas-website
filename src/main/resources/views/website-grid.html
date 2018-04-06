@@ -24,7 +24,7 @@
     <body class="ui page">
 
         <div class="navigation">
-            <div class="top-menu" th:include="fragments/navigation :: top2 (publisher=${is_publisher})"></div>
+            <div class="top-menu" th:include="fragments/navigation :: top-menu (publisher=${is_publisher})"></div>
         </div>
 
         <div class="ui vertical left menu sidebar" th:include="fragments/navigation :: vertical (publisher=${is_publisher})"></div>
@@ -123,6 +123,7 @@
                                 <div id="map">
                                     <div class="ui text loader">Lade Stadtplan...</div>
                                 </div>
+                                <div id="map-sidebar"></div>
                             </div>
                             <!-- Notification area -->
                             <div id="notification" class="blue4bg thin" onclick="kiezatlas.close_message_window()">
