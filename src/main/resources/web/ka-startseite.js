@@ -6,6 +6,8 @@ var results = [],
     from = undefined,
     to = 0,
     searchType = "places", // or "events"
+    searchMethod = "quick", // or "fulltext"
+    searchNearby = "berlin", // or "nearby"
     searchContext = 0, // 0=berlin-wide, otherwise number (ID) of district or site topic
     updateURL = true, // If false, updating the url using replaceState is defunct (see text search requests)
     query = undefined, // Search User Input
@@ -40,23 +42,46 @@ var $sidebarUi = undefined
 
 // --- Page Methods -- //
 
-function init_page() {
-    // Register historyState API
-    kiezatlas.init_page_navigation()
-    parameter = kiezatlas.get_page_parameter_from_url()
+function init_page(page) {
     // Build up UI handlers
     $('.ui.checkbox').checkbox()
     $('.ui.dropdown').dropdown()
     // $('.ui.sidebar').sidebar()
-    // initialize data on districts
-    load_district_data(function() {
-        console.log("Initialized district data", districts)
-        render_district_topic()
-    })
     // init_map_segment()
-    kiezatlas.render_page("#gesamt")
+    if (page === "gesamt") {
+        // initialize data on districts
+        load_district_data(function() {
+            console.log("Initialized district topics on page", page)
+            render_district_topic()
+        })
+        // Register historyState API
+        kiezatlas.init_page_navigation()
+        parameter = kiezatlas.get_page_parameter_from_url()
+        kiezatlas.render_page("#gesamt")
+    } else if (page === "place") {
+        init_einrichtungs_page()
+    }
 }
 
+function init_einrichtungs_page() {
+    init_detail_map() // function defined in "website-detail" template
+    if (districtId !== -1) {
+        searchContext = districtId
+        load_district_data(function(e) {
+            bezirksTopic = get_bezirks_topic_by_id(districtId)
+            if (bezirksTopic) {
+                show_context_subline()
+            } else {
+                console.warn("Bezirks Topic could not be loaded")
+            }
+        })
+    }
+    update_search_criteria_dialog()
+}
+
+function init_angebots_page() {
+    console.warn("Not yet implemented..")
+}
 
 function render_district_topic() {
     // ### Make rendering page parameter dynamic again
@@ -123,9 +148,13 @@ function show_district_frontpage() {
 function update_search_criteria_dialog() {
     // Well, semantic ui does neither update dom properly nor does it wrap the correct element.
     // This is a workaround to let our (form) HTML reflect the state of the currentsearch criterias.
-    $('[name="area"]').removeAttr("checked")
-    $(".ui.checkbox." + searchContext).checkbox("check")
-    $(".ui.checkbox." + searchContext + " input").attr("checked", "checked")
+    // $('[name="area"]').removeAttr("checked")
+    if (searchContext) {
+        $(".ui.checkbox." + searchContext).checkbox("check")
+        $(".ui.checkbox." + searchContext + " input").attr("checked", "checked")   
+    } else {
+        console.log("No search context available...")
+    }
 }
 
 function show_context_subline() {
@@ -198,10 +227,6 @@ function get_bezirks_topic_by_hash(hash) {
         var anchor_name = '#' + encodeURIComponent(bezirk.value.toLowerCase())
         if (anchor_name === hash) return bezirk
     }
-}
-
-function init_einrichtungs_page() {
-    init_detail_map() // defined in "website-detail" template
 }
 
 function do_logout() {
@@ -306,7 +331,7 @@ function hide_more_results_button(count) {
 
 /** --- UI Handlers --- **/
 
-function einrichtungenChecked() {
+/** function einrichtungenChecked() {
     console.log("einrichtungenChecked")
     $('.ui.grid.filter .column.angebote-tags').addClass('hidden')
     searchType = "places"
@@ -316,6 +341,32 @@ function angeboteChecked() {
     console.log("angeboteChecked")
     $('.ui.grid.filter .column.angebote-tags').removeClass('hidden')
     searchType = "events"
+} **/
+
+function quickSearchChecked() {
+    console.log("quickSearchChecked")
+    searchMethod = "quick" // or "fulltext"
+    return true
+}
+
+function fulltextSearchChecked() {
+    console.log("fulltextSearchChecked")
+    searchMethod = "fulltext" // or "quick"
+    return true
+}
+
+function nearbySearchChecked() {
+    console.log("nearbySearchChecked")
+    $('.ui.grid.filter .column.nearby').removeClass('hidden')
+    searchNearby = "nearby"
+    return true
+}
+
+function berlinSearchChecked(e) {
+    console.log("berlinSearchChecked", e.id)
+    $('.ui.grid.filter .column.nearby').addClass('hidden')
+    searchNearby = "berlin"
+    return true
 }
 
 function toggleSearchCriteria() {

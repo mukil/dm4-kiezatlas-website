@@ -13,7 +13,13 @@
         <script defer="true" src="/de.kiezatlas.website/vendor/leaflet-1.3.1/leaflet.js"></script>
         <script defer="true" src="/de.kiezatlas.website/ka-restclient.js"></script>
         <!--script defer="true" src="/de.kiezatlas.website/ka-map.js"></script-->
-        <script defer="true" src="/de.kiezatlas.website/ka-startseite.js" onload="init_einrichtungs_page()"></script>
+        <script th:inline="javascript">
+            /*<![CDATA[*/
+                var districtId = /*[[${geoobject.bezirkId}]]*/ '-1';
+                var districtName = /*[[${geoobject.bezirk}]]*/ 'Berlin';
+            /*]]>*/
+        </script>
+        <script defer="true" src="/de.kiezatlas.website/ka-startseite.js" onload="init_page('place')"></script>
 
     </head>
     <body class="ui page detail">

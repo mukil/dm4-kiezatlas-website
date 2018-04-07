@@ -8,6 +8,15 @@
                 <i class="search icon"></i>
                 <input id="query" name="search" onkeyup="handleSearchInput()"
                     class="prompt" type="text" placeholder="Geben Sie hier Ihre Suchanfrage ein..." />
+                <div class="ui simple dropdown blue1 blue4bg">
+                    <input type="hidden" name="type" />
+                    <i class="dropdown icon"></i>
+                    <div class="default text">Einrichtungen</div>
+                    <div class="menu">
+                        <div class="item active" data-value="place">Einrichtungen</div>
+                        <div class="item" data-value="event">Angebote</div>
+                    </div>
+                </div>
                 <div class="ui ka button" onclick="search()">Suchen</div>
             </div>
         </div>
@@ -42,9 +51,9 @@
         <div class="ui container search-criterias">
             <h3 class="header thin" onclick="toggleSearchCriteria()">Suchkriterien <i th:class="${expanded} ? 'icon caret up' : 'icon caret down'"></i></h3>
             <div th:class="${expanded} ? 'ui two column grid filter' : 'ui two column grid filter hidden'">
-                <div class="column">
-                    <div class="ui three column grid">
-                        <div class="column">
+                <div class="column first">
+                    <div class="ui two column grid">
+                        <!--div class="column">
                             <div class="ui form">
                                 <div class="grouped fields">
                                     <div class="field">
@@ -61,64 +70,80 @@
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                        <div class="column search-type">
-                            <div class="ui form">
-                                <div class="grouped fields">
-                                    <div class="field">
-                                        <div class="ui radio checkbox quick">
-                                            <input type="radio" name="method" id="quick" checked="checked" />
-                                            <label for="quick">Schnellsuche</label>
+                        </div-->
+                        <div class="ui row">
+                            <div class="column search-type">
+                                <div class="ui form">
+                                    <div class="grouped fields">
+                                        <div class="field">
+                                            <div class="ui radio checkbox quick">
+                                                <input type="radio" name="method" id="quick" value="quick" checked="checked"
+                                                       onchange="quickSearchChecked()"/>
+                                                <label for="quick">Schnellsuche</label>
+                                            </div>
+                                        </div>
+                                        <div class="field">
+                                            <div class="ui radio checkbox fulltext">
+                                                <input type="radio" name="method" value="fulltext" id="fulltext"
+                                                       onchange="fulltextSearchChecked()"/>
+                                                <label for="fulltext">Volltextsuche</label>
+                                            </div>
                                         </div>
                                     </div>
-                                    <div class="field">
-                                        <div class="ui radio checkbox fulltext">
-                                            <input disabled="true" type="radio" name="method" id="fulltext" />
-                                            <label for="fulltext">Volltextsuche</label>
+                                </div>
+                            </div>
+                            <div class="column area">
+                                <div class="ui form">
+                                    <div class="grouped fields">
+                                        <div class="field">
+                                            <div class="ui radio checkbox berlin">
+                                                <input type="radio" name="area" id="berlin" value="berlin" checked="checked"
+                                                       onchange="berlinSearchChecked(this)"/>
+                                                <label for="berlin">Gesamtberlin</label>
+                                            </div>
+                                        </div>
+                                        <div class="field">
+                                            <div class="ui radio checkbox circle">
+                                                <input type="radio" name="area" id="circle" value="nearby"
+                                                       onchange="nearbySearchChecked()"/>
+                                                <label for="circle">Umkreissuche</label>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="column area">
-                            <div class="ui form">
-                                <div class="grouped fields">
-                                    <div class="field">
-                                        <div class="ui radio checkbox berlin">
-                                            <input type="radio" name="area" id="berlin" checked="checked" />
-                                            <label for="berlin">Gesamtberlin</label>
-                                        </div>
-                                    </div>
-                                    <div class="field">
-                                        <div class="ui radio checkbox circle">
-                                            <input disabled="true" type="radio" name="area" id="circle" />
-                                            <label for="circle">Umkreissuche</label>
-                                        </div>
+                        <div class="ui row">
+                            <div class="column sixteen wide nearby hidden">
+                                <h4 class="header thin">Meine Suche beschr&auml;nken auf Ergebnisse in der N&auml;he von</h4>
+                                <div class="column attributes">
+                                    <div class="ui input fluid">
+                                        <input type="text" query="nearby" placeholder="Straße/ Hnr, Postleitzahl"/>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="ui eight column grid">
+                <div class="ui eight column second grid">
                     <div class="seven wide column district attributes">
                         <div class="ui form">
                             <div class="grouped fields">
                                 <div class="field">
                                     <div class="ui radio checkbox 7293">
-                                        <input type="radio" name="area" id="7293" tabindex="0" class="hidden"/>
+                                        <input type="radio" onchange="berlinSearchChecked(this)" name="area" id="7293" tabindex="0"/>
                                         <label for="7293">Charlottenburg-Wilmersdorf</label>
                                     </div>
                                 </div>
                                 <div class="field">
                                     <div class="ui radio checkbox 7278">
-                                        <input type="radio" name="area" id="7278" tabindex="0" class="hidden"/>
+                                        <input type="radio" onchange="berlinSearchChecked(this)" name="area" id="7278" tabindex="0"/>
                                         <label for="7278">Friedrichshain-Kreuzberg</label>
                                     </div>
                                 </div>
                                 <div class="field">
                                     <div class="ui radio checkbox 7302">
-                                        <input type="radio" name="area" id="7302" tabindex="0" class="hidden"/>
+                                        <input type="radio" onchange="berlinSearchChecked(this)" name="area" id="7302" tabindex="0"/>
                                         <label for="7302">Lichtenberg</label>
                                     </div>
                                 </div>
@@ -130,19 +155,19 @@
                             <div class="grouped fields">
                                 <div class="field">
                                     <div class="ui radio checkbox 1707925">
-                                        <input type="radio" name="area" id="1707925" tabindex="0" class="hidden"/>
+                                        <input type="radio" onchange="berlinSearchChecked(this)" name="area" id="1707925" tabindex="0"/>
                                         <label for="1707925">Marzahn-Hellersdorf</label>
                                     </div>
                                 </div>
                                 <div class="field">
                                     <div class="ui radio checkbox 7275">
-                                        <input type="radio" name="area" id="7275" tabindex="0" class="hidden"/>
+                                        <input type="radio" onchange="berlinSearchChecked(this)" name="area" id="7275" tabindex="0"/>
                                         <label for="7275">Mitte</label>
                                     </div>
                                 </div>
                                 <div class="field">
                                     <div class="ui radio checkbox">
-                                        <input type="radio" name="area" id="7287" tabindex="0" class="hidden"/>
+                                        <input type="radio" onchange="berlinSearchChecked(this)" name="area" id="7287" tabindex="0"/>
                                         <label for="7287">Neukölln</label>
                                     </div>
                                 </div>
@@ -154,19 +179,19 @@
                             <div class="grouped fields">
                                 <div class="field">
                                     <div class="ui radio checkbox 7296">
-                                        <input type="radio" name="area" id="7296" tabindex="0" class="hidden"/>
+                                        <input type="radio" onchange="berlinSearchChecked(this)" name="area" id="7296" tabindex="0"/>
                                         <label for="7296">Spandau</label>
                                     </div>
                                 </div>
                                 <div class="field">
                                     <div class="ui radio checkbox 7299">
-                                        <input type="radio" name="area" id="7299" tabindex="0" class="hidden"/>
+                                        <input type="radio" onchange="berlinSearchChecked(this)" name="area" id="7299" tabindex="0"/>
                                         <label for="7299">Steglitz-Zehlendorf</label>
                                     </div>
                                 </div>
                                 <div class="field">
                                     <div class="ui radio checkbox 7281">
-                                        <input type="radio" name="area" id="7281" tabindex="0" class="hidden"/>
+                                        <input type="radio" onchange="berlinSearchChecked(this)" name="area" id="7281" tabindex="0"/>
                                         <label for="7281">Tempelhof-Schöneberg</label>
                                     </div>
                                 </div>
@@ -178,29 +203,23 @@
                             <div class="grouped fields">
                                 <div class="field">
                                     <div class="ui radio checkbox 7284">
-                                        <input type="radio" name="area" id="7284" tabindex="0" class="hidden"/>
+                                        <input type="radio" onchange="berlinSearchChecked(this)" name="area" id="7284" tabindex="0"/>
                                         <label for="7284">Treptow-Köpenick</label>
                                     </div>
                                 </div>
                                 <div class="field">
                                     <div class="ui radio checkbox 7290">
-                                        <input disabled="true" type="radio" name="area" id="7290" tabindex="0" class="hidden"/>
+                                        <input disabled="disabled" type="radio" name="area" id="7290" tabindex="0"/>
                                         <label for="7290">Pankow</label>
                                     </div>
                                 </div>
                                 <div class="field">
                                     <div class="ui radio checkbox 1707928">
-                                        <input disabled="true" type="radio" name="area" id="1707928" tabindex="0" class="hidden"/>
+                                        <input disabled="disabled" type="radio" name="area" id="1707928" tabindex="0"/>
                                         <label for="1707928">Reinickendorf</label>
                                     </div>
                                 </div>
                             </div>
-                                <!--div class="field" th:each="district : ${districts}">
-                                    <div class="ui radio checkbox">
-                                        <input type="radio" name="area" th:id="${district.id}" />
-                                        <label th:for="${district.id}" th:text="${district.simpleValue}"></label>
-                                    </div>
-                                </div-->
                         </div>
                     </div>
                 </div>

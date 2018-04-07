@@ -172,6 +172,7 @@ body.pushable {
     color: #ecf4f7;
 }
 
+.ui.search .ui.dropdown.blue4bg,
 .page .ui.segment.footer.blue4bg,
 .blue4bg {
     background-color: #ecf4f7;
@@ -460,6 +461,7 @@ header .large.menu h3.caption,
     padding-bottom: 0em;
 }
 
+.page .stichworte .tag,
 .page .angebote-tags .tag {
     margin-right: .25em;
     margin-bottom: .5em;
@@ -492,6 +494,10 @@ header .large.menu h3.caption,
 
 .ui.grid .row .column.circle-search .subline {
     padding-bottom: .5em;
+}
+
+.angebotsinfos .geo-objects-area a.read-more {
+    text-decoration: none;
 }
 
 .angebotsinfos .geo-objects-area a.read-more:hover {
@@ -822,6 +828,19 @@ div.location-label {
 
 .ui.search-criterias .header {
     cursor: pointer;
+}
+
+.ui.search-criterias .first.column {
+    margin-left: 1em;
+}
+
+.search-criterias .nearby {
+    /** TOOD:  ###
+ **/
+}
+
+.search-criterias .nearby.column.hidden {
+    display: none;
 }
 
 /** -- Map Fullscreen Related Styles -- **/
