@@ -209,6 +209,7 @@ body.pushable {
     margin-top: 4em;
     padding-top: 2em;
     border-top: 1px solid #3787ab;
+    padding-bottom: 2em;
 }
 
 .ui .footer .your-data img {
@@ -225,6 +226,18 @@ body.pushable {
 .ui.grid.filter.hidden,
 .hidden {
     display: none
+}
+
+.assignment .geo-objects-area .label,
+.assignment label,
+span.label,
+h3.label {
+    color: #a9a9a9;
+}
+
+.big-char {
+    font-size: 22px;
+    margin-right: .4em;
 }
 
 .page #map {
@@ -417,7 +430,7 @@ header .large.menu h3.caption,
 }
 
 .ui.grid .row .column {
-    padding: 0em !important;
+    padding: 0em;
 }
 
 .page.detail .stichworte,
@@ -462,6 +475,10 @@ header .large.menu h3.caption,
     padding-top: .5em;
 }
 
+.content .ui.grid .column.aktuelles {
+    padding-bottom: .9em;
+}
+
 .content .ui.grid .column.aktuelles h3 {
     padding-bottom: .3em;
 }
@@ -477,7 +494,13 @@ header .large.menu h3.caption,
     padding-bottom: .5em;
 }
 
-.page.detail .angebote a,
+.angebotsinfos .geo-objects-area a.read-more:hover {
+    color: #3e606f !important;
+    box-shadow: 2px 2px 2px 0px #a9a9a9;
+}
+
+.angebotsinfos .einrichtungen a,
+.angebotsinfos .angebote a,
 .page.detail .info-area label,
 .result-list .item a,
 .content .ui.grid .row .column a,
@@ -498,6 +521,66 @@ header .large.menu h3.caption,
 
 .angebotsinfos #dialog-confirm {
     display: none;
+}
+
+.angebotsinfos .shortcuts .ui.button {
+    background-color: #fff;
+    font-style: italic;
+    color: #3f606f;
+    margin-right: 1em;
+    text-align: left;
+    padding-left: 1em;
+    padding-right: 1em;
+}
+
+.angebotsinfos .shortcuts .ui.button:hover {
+    background-color: #3f606f;
+    color: #fff;
+}
+
+.angebotsinfos .segment.einrichtungs-area,
+.angebotsinfos .segment.commands {
+    padding-top: 2em;
+    padding-bottom: 2em;
+}
+
+.angebotsinfos .ui.button {
+    font-style: italic;
+}
+
+.angebotsinfos button:hover,
+.einrichtungs-area button:hover,
+.angebot-area button:hover {
+    color: #3f606f;
+}
+
+.einrichtungs-area li,
+.angebot-area li {
+    padding: 1em;
+    margin-top: 1em;
+}
+
+.einrichtungs-area li a.command,
+.angebot-area li a.command {
+    font-size: 16px;
+    margin-right: 2em;
+    color: #3787ab;
+}
+
+.einrichtungs-area li a.command:hover,
+.angebot-area li a.command:hover {
+    color: #9ec8d6;
+}
+
+.einrichtungs-area li,
+.angebot-area li {
+    padding: 1em 1em .5em 1em;
+    margin: .5em 0em .5em 0em;
+    font-size: 1.2em;
+}
+
+.angebot-area {
+    margin-top: 2em;
 }
 
 /** --- Sign-up Dialog Overrides --- **/
@@ -674,7 +757,6 @@ header .large.menu h3.caption,
 
 div.location-label {
     display: inline-block;
-    margin-bottom: .3em;
 }
 
 .content .ui.grid .column .location-label .text {
