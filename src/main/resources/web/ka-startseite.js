@@ -74,6 +74,8 @@ function init_page(page) {
         kiezatlas.render_page("#gesamt")
     } else if (page === "place") {
         init_einrichtungs_page()
+    } else if (page === "event") {
+        init_angebots_page()
     }
 }
 
@@ -281,6 +283,7 @@ function render_search_results() {
         if (searchType === "place") {
             render_place_search_results(from, to, count, $container)
         } else if (searchType === "event") {
+             // exclude which were never assigned to a place
              render_event_search_results(from, to, count, $container)
         }
     } else  {
@@ -325,6 +328,7 @@ function render_event_search_results(from, to, count, $container) {
 }
 
 function get_event_list_item_html(element) {
+    if (!element.locations) return ""
     var location_count = element.locations.length
     var first_assignment = element.locations[get_random_int_inclusive(1, location_count+1)]
     if (!first_assignment) first_assignment = element.locations[0]
@@ -355,6 +359,7 @@ function search() {
     if (searchType === "event") {
         fire_angebote_search(searchText, function(events) {
             results = events.fulltext
+            console.log("Found events", events)
             render_search_results()
         })
     } else {
