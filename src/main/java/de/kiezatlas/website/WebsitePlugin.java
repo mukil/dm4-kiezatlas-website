@@ -163,6 +163,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     HashMap<Long, List<GeoMapView>> citymapCache = new HashMap<Long, List<GeoMapView>>();
     HashMap<Long, Long> citymapCachedAt = new HashMap<Long, Long>();
     HashMap<String, Topic> internalLORs = new HashMap<String, Topic>();
+    List<Topic> availableDistricts = null;
 
     public static final String DM4_HOST_URL = System.getProperty("dm4.host.url"); // should come with trailing slash
     public static final String ANGEBOTE_RESOURCE = "angebote/";
@@ -243,22 +244,18 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     @GET
     @Path("/startseite")
     @Produces(MediaType.TEXT_HTML)
-    public Viewable prepareNewFrontpage(@QueryParam("site") String site, @QueryParam("search") String search,
+    public Viewable prepareNewFrontpage(@QueryParam("context") String site, @QueryParam("search") String search,
             @QueryParam("koordinate") String koordinate, @QueryParam("zoomstufe") String zoomstufe,
-            @QueryParam("searchType") String searchType) {
+            @QueryParam("type") String searchType, @QueryParam("method") String searchMethod,
+            @QueryParam("nearby") String searchNearby) {
         viewData("districts", getAvailableDistrictTopics());
         viewData("tags", getAllTagTopics());
-        viewData("site", site);
-        viewData("search", search);
-        viewData("searchType", searchType);
+        prepareSearchTemplateParameter(search, site, searchMethod, searchType, searchNearby);
         viewData("koordinate", koordinate);
         viewData("zoomstufe", zoomstufe);
+        log.info("Frontpage search preparation, search=" + search + " type=" + searchType + " site=" + site);
         preparePageTemplate("website-grid");
         return getFrontpage();
-    }
-
-    private List<Topic> getAllTagTopics() {
-        return dm4.getTopicsByType("dm4.tags.tag");
     }
 
     @GET
@@ -491,42 +488,28 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     @GET
     @Path("/geo/{topicId}")
     @Produces(MediaType.TEXT_HTML)
-    public Viewable prepareGeoObjectInfoPage(@PathParam("topicId") String topicId) {
+    public Viewable prepareGeoObjectInfoPage(@PathParam("topicId") String topicId, @QueryParam("context") String site,
+            @QueryParam("search") String search, @QueryParam("type") String searchType,
+            @QueryParam("method") String searchMethod, @QueryParam("nearby") String searchNearby) {
         Topic geoObject = getGeoObjectById(topicId);
+        viewData("districts", getAvailableDistrictTopics());
+        prepareSearchTemplateParameter(search, site, searchMethod, searchType, searchNearby);
+        log.info("Page search preparation, search=" + search + " type=" + searchType + " context=" + site);
         return (geoObject != null) ? prepareGeoObjectTemplate(geoObject.getId()) : getNotFoundPage();
     }
 
     /**
-     * Renders details about a Kiezatlas Geo Object into HTML.
-     *
-     * @param topicId
-     * @return
-     */
-    @GET
-    @Path("/geo/redesign/{topicId}")
-    @Produces(MediaType.TEXT_HTML)
-    public Viewable prepareNewGeoObjectInfoPage(@PathParam("topicId") String topicId, @QueryParam("site") String site,
-            @QueryParam("search") String search, @QueryParam("searchType") String searchType) {
-        Topic geoObject = getGeoObjectById(topicId);
-        viewData("districts", getAvailableDistrictTopics());
-        viewData("search", search);
-        viewData("searchtype", searchType);
-        viewData("site", site);
-        return (geoObject != null) ? prepareNewGeoObjectTemplate(geoObject.getId()) : getNotFoundPage();
-    }
-
-    /**
      * Fetches details about a Kiezatlas Geo Object.
-     * @param referer
+     * @param referrer
      * @param topicId
      * @return A GeoObject DetailsView as DTO to presend details about a place.
      */
     @GET
     @Path("/geo/{topicId}")
     @Produces(MediaType.APPLICATION_JSON)
-    public GeoDetailView getGeoObjectDetails(@HeaderParam("Referer") String referer,
-                                                   @PathParam("topicId") long topicId) {
-        if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
+    public GeoDetailView getGeoObjectDetails(@HeaderParam("Referer") String referrer,
+            @PathParam("topicId") long topicId) {
+        if (!isValidReferer(referrer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
         log.info("Load geo object details via API: " + topicId);
         Topic geoObject = dm4.getTopic(topicId);
         GeoDetailView geoDetailsView = null;
@@ -553,7 +536,9 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     @Path("/geo/delete/{topicId}")
     @Produces(MediaType.TEXT_HTML)
     @Transactional
-    public Viewable processGeoObjectDeletion(@PathParam("topicId") String topicId) {
+    public Viewable processGeoObjectDeletion(@PathParam("topicId") String topicId, @QueryParam("context") String site,
+            @QueryParam("search") String search, @QueryParam("type") String searchType,
+            @QueryParam("method") String searchMethod, @QueryParam("nearby") String searchNearby) {
         // Check Authorization
         Topic geoObject = getGeoObjectById(topicId);
         String name = geoObject.getSimpleValue().toString();
@@ -570,21 +555,23 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
                 return getSimpleMessagePage();
             } else {
                 viewData("message", "Der Datensatz konnte nicht gelöscht werden da ein Fehler aufgetreten ist.");
-                return prepareGeoObjectInfoPage("" + topicId);
+                return prepareGeoObjectInfoPage("" + topicId, site, search, searchType, searchMethod, searchNearby);
             }
         } else {
             log.info("Geo Object could not be loaded by topicId=\"" + topicId + "\"");
         }
         viewData("message", "<p>Der Datensatz konnte nicht gelöscht werden, da Sie dazu nicht die nötigen Berechtigungen haben.</p>"
                 + "<p><a href=\"/angebote/my\">Zur&uuml;ck zu meinen Eintr&auml;gen</a></p>");
-        return prepareGeoObjectInfoPage("" + topicId);
+        return prepareGeoObjectInfoPage("" + topicId, site, search, searchType, searchMethod, searchNearby);
     }
 
     @GET
     @Path("/geo/delete/final/{topicId}")
     @Produces(MediaType.TEXT_HTML)
     @Transactional
-    public Viewable processFinalGeoObjectDeletion(@PathParam("topicId") String topicId) {
+    public Viewable processFinalGeoObjectDeletion(@PathParam("topicId") String topicId, @QueryParam("context") String site,
+            @QueryParam("search") String search, @QueryParam("type") String searchType,
+            @QueryParam("method") String searchMethod, @QueryParam("nearby") String searchNearby) {
         if (!isAuthenticated()) return getUnauthorizedPage();
         Topic geoObject = getGeoObjectById(topicId);
         String name = geoObject.getSimpleValue().toString();
@@ -597,7 +584,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
             return getSimpleMessagePage();
         }
         viewData("message", "Der Datensatz konnte nicht gelöscht werden, da Sie dazu nicht die nötigen Berechtigungen haben.");
-        return prepareGeoObjectInfoPage("" + topicId);
+        return prepareGeoObjectInfoPage("" + topicId, site, search, searchType, searchMethod, searchNearby);
     }
 
     private Viewable prepareBezirksregionListingPage(@PathParam("districtId") long districtId) {
@@ -1924,6 +1911,19 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
 
     // ------------------------------------------ Kiezatlas Website Page/Template Preparation Helpers --------------- //
 
+    private List<Topic> getAllTagTopics() {
+        return dm4.getTopicsByType("dm4.tags.tag");
+    }
+
+    private void prepareSearchTemplateParameter(String search, String site,
+            String method, String type, String nearby) {
+        viewData("search", (search == null) ? "" : search);
+        viewData("searchContext", (site == null) ? 0 : site);
+        viewData("searchMethod", (method == null) ? "quick" : method);
+        viewData("searchNearby", (nearby == null) ? "berlin" : nearby);
+        viewData("searchType", (type == null) ? "place" : type);
+    }
+
     private void initializeCityMapWebAliasResources() {
         webpages.setFrontpageAliases(loadCitymapSiteAliases());
         webpages.reinitTemplateEngine();
@@ -1980,35 +1980,6 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         if (angebotsInfos.size() > 0) viewData("angebotsinfos", angebotsInfos);
         // user auth
         preparePageTemplate("detail");
-        // geo object auth
-        viewData("is_trashed", isTopicInDeletionWorkspace(geoObject));
-        viewData("is_published", isTopicInStandardWorkspace(geoObject));
-        viewData("editable", isGeoObjectEditable(geoObject, username));
-        // ### is viewData("deletable", hasUserWritePermission(geoObject, username));
-        viewData("deletable", isDeletionWorkspaceMember());
-        viewData("workspace", getAssignedWorkspace(geoObject));
-        return view("detail");
-    }
-
-    private Viewable prepareNewGeoObjectTemplate(@PathParam("topicId") long topicId) {
-        // ### redirect if user has no READ permission on this topic
-        Topic username = getUsernameTopic();
-        Topic geoObject = dm4.getTopic(topicId);
-        if (!isGeoObjectTopic(geoObject)) return getNotFoundPage();
-        // Assemble Generic Einrichtungs Infos
-        EinrichtungView einrichtung = assembleEinrichtungsDetails(geoObject);
-        // ### Yet Missing: Träger und Stichworte
-        // Eventually show: Bezirk, Bezirksregion and Sonstiges (Administrator Infos)
-        viewData("geoobject", einrichtung);
-        // Assemble Category Assignments for Einrichtung;
-        viewData("zielgruppen", facets.getFacets(geoObject, ZIELGRUPPE_FACET));
-        viewData("themen", facets.getFacets(geoObject, THEMA_FACET));
-        viewData("angebote", facets.getFacets(geoObject, ANGEBOT_FACET));
-        // fetch related angebote, includeFutureOnes=true
-        List<AngebotsinfosAssigned> angebotsInfos = angebote.getActiveAngebotsinfosAssigned(geoObject, true);
-        if (angebotsInfos.size() > 0) viewData("angebotsinfos", angebotsInfos);
-        // user auth
-        preparePageTemplate("website-detail");
         // geo object auth
         viewData("is_trashed", isTopicInDeletionWorkspace(geoObject));
         viewData("is_published", isTopicInStandardWorkspace(geoObject));
@@ -3555,13 +3526,16 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     }
 
     /** 
-     * Todo: Caching, do fetch districts just once per day.
+     * Cached progressively, loaded once per bundle refresh.
      * @return 
      */
     private List<Topic> getAvailableDistrictTopics() {
+        // Attention: list of districts is never loaded twice (per runtime)
+        if (availableDistricts != null) return availableDistricts;
         List<Topic> topics = dm4.getTopicsByType("ka2.bezirk");
         List<Topic> results = topics;
         sortAlphabeticalDescending(results);
+        availableDistricts = results;
         return results;
     }
 

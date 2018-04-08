@@ -1,23 +1,21 @@
 
 // --- Frontpage State --- //
+// See website-detail, website-grid and "dm4-kiezatlas-angebote/detail"
+// for all global state vars
 
 var results = [],
     MAX_RESULTS = 7,
     from = undefined,
     to = 0,
-    searchType = "places", // or "events"
-    searchMethod = "quick", // or "fulltext"
-    searchNearby = "berlin", // or "nearby"
-    searchContext = 0, // 0=berlin-wide, otherwise number (ID) of district or site topic
     updateURL = true, // If false, updating the url using replaceState is defunct (see text search requests)
-    query = undefined, // Search User Input
-    parameter = {               // View/Page Parameter
-        page: undefined, viewport: undefined
+    parameter = { // View/Page Parameter
+        page: undefined, viewport: undefined,
+        searchType: undefined, searchMethod: undefined, // "place", or "event" method: "quick", // or "fulltext"
+        searchNearby: undefined, searchContext: undefined, //  "berlin", "nearby" or some "Street Nr" // 0=berlin-wide, otherwise number (ID) of district or site topic‚
+        search: undefined, from: undefined, to: undefined // search user input, search result starting from, render to
     },
-    settings = {
-        "webapp_title" : "Kiezatlas 2 Website",
-        "history_api_supported" : window.history.pushState
-    },
+    webapp_title = "Kiezatlas 2 Website",
+    history_api_supported = window.history.pushState,
     selected_marker = undefined, // geoobject or marker id
     month_names_de = [ "Januar", "Februar", "März", "April", "Mai", "Juni",
         "Juli", "August", "September", "Oktober", "November", "Dezember" ],
@@ -45,7 +43,23 @@ var $sidebarUi = undefined
 function init_page(page) {
     // Build up UI handlers
     $('.ui.checkbox').checkbox()
-    $('.ui.dropdown').dropdown()
+    $('.ui.menu .dropdown').dropdown()
+    // init new search dropdown component according to searchType
+    $('.search .ui.dropdown').dropdown({
+        onChange: search_menu_changed,
+        values: [
+            {
+                name: 'Einrichtungen',
+                value: 'place',
+                selected: (searchType === "place") ? true : false
+            },
+            {
+                name     : 'Angebote',
+                value    : 'event',
+                selected : (searchType === "event") ? true : false
+            }
+        ]
+    })
     // $('.ui.sidebar').sidebar()
     // init_map_segment()
     if (page === "gesamt") {
@@ -263,25 +277,69 @@ function render_search_results() {
     $('.search-results .count').text(count)
     if (count > 0) {
         show_results_container()
-        rendering:
-        for (var r in results) {
-            if (r >= from && r < to) {
-                var el = results[r]
-                // var anschrift = (el.anschrift) ? el.anschrift.replace(' Deutschland', '') + ', ' : ''
-                $container.append('<div class="item"><h3 class="thin">' + el.name + '</h3>'
-                    + '<div class="subline">' + el.zusatz +'<br/>'
-                    + '<a href="/website/geo/redesign/'+ el.link.substr((el.link.lastIndexOf("/")+1)) +'"><i class="icon caret right"></i>mehr Infos</a></div></div>')
-            }
+        console.log("Render search results for searchType", searchType)
+        if (searchType === "place") {
+            render_place_search_results(from, to, count, $container)
+        } else if (searchType === "event") {
+             render_event_search_results(from, to, count, $container)
         }
-        if (to > count) {
-            hide_more_results_button()
-        } else {
-            show_more_results_button(count)
-            $('.more-results').data("result-from", to)
-        }
-    } else {
+    } else  {
         // ### Wir konnten keine Suchergebnisse finden
     }
+}
+
+function render_place_search_results(from, to, count, $container) {
+    rendering:
+    for (var r in results) {
+        if (r >= from && r < to) {
+            var el = results[r]
+            // var anschrift = (el.anschrift) ? el.anschrift.replace(' Deutschland', '') + ', ' : ''
+            $container.append('<div class="item"><h3 class="thin">' + el.name + '</h3>'
+                + '<div class="subline">' + el.zusatz +'<br/>'
+                + '<a href="/website/geo/'+ el.link.substr((el.link.lastIndexOf("/")+1)) +'"><i class="icon caret right"></i>mehr Infos</a></div></div>')
+        }
+    }
+    if (to > count) {
+        hide_more_results_button()
+    } else {
+        show_more_results_button(count)
+        $('.more-results').data("result-from", to)
+    }
+}
+
+function render_event_search_results(from, to, count, $container) {
+    rendering:
+    for (var r in results) {
+        if (r >= from && r < to) {
+            var el = results[r]
+            // var anschrift = (el.anschrift) ? el.anschrift.replace(' Deutschland', '') + ', ' : ''
+            $container.append(get_event_list_item_html(el))
+        }
+    }
+    if (to > count) {
+        hide_more_results_button()
+    } else {
+        show_more_results_button(count)
+        $('.more-results').data("result-from", to)
+    }
+}
+
+function get_event_list_item_html(element) {
+    var location_count = element.locations.length
+    var first_assignment = element.locations[get_random_int_inclusive(1, location_count+1)]
+    if (!first_assignment) first_assignment = element.locations[0]
+    if (first_assignment) {// Angebote werden nur angezeigt wenn sie mindestens ein "Assignment" haben
+        var standort_html = (location_count > 1) ? location_count + ' Standorten' : ' einem Standort'
+        var zb_html = (location_count > 1) ? 'z.B. vom' : 'Vom'
+        var html_string = '<div class="item"><h3 class="thin">' + element.name + '</h3>'
+                + '<div class="subline">wird an ' + standort_html + ' angeboten, '
+                + zb_html +' <i>'+first_assignment.anfang+'</i> bis </i>'+first_assignment.ende+'</i>, <b>' + first_assignment.name + '</b><br/>'
+        if (!is_empty(element.kontakt)) html_string += '<span class="contact">Kontakt: ' + element.kontakt + '</span>'
+        // if (element.creator) html_string += '<br/><span class="username">Info von <em>'+element.creator+'</em></span>'
+        html_string += '<br/><a href="/angebote/'+ element.id +'"><i class="icon caret right"></i>mehr Infos</a></div></div>'
+        return html_string
+    }
+    return ""
 }
 
 function search() {
@@ -290,16 +348,25 @@ function search() {
     $('.more-results').data("result-from", to)
     // ### show loading indicator
     // fire query
-    var text = get_search_input()
-    var queryUrl = '/website/search/autocomplete?query='+text
-    /** if (_self.get_site_id()) {
-        queryUrl = '/website/search/' + _self.get_site_id() + '/?search=' + text
-    } **/
-    $.getJSON(queryUrl, function (geo_objects) {
-        results = geo_objects.results.cat1.results // Einrichtungen
-        render_search_results()
-    })
-    // ### update query parameter
+    searchText = get_search_input()
+    // place search
+    // var queryUrl = '/website/search/autocomplete?query=' + encodeURIComponent(searchText)
+    var queryUrl = '/website/search/autocomplete?query=' + searchText
+    if (searchType === "event") {
+        fire_angebote_search(searchText, function(events) {
+            results = events.fulltext
+            render_search_results()
+        })
+    } else {
+        /** if (_self.get_site_id()) {
+            queryUrl = '/website/search/' + _self.get_site_id() + '/?search=' + text
+        } **/
+        $.getJSON(queryUrl, function (geo_objects) {
+            results = geo_objects.results.cat1.results // Einrichtungen
+            render_search_results()
+        })   
+    }
+    replace_page_parameters()
 }
 
 function get_search_input() {
@@ -329,6 +396,37 @@ function hide_more_results_button(count) {
     $('.more-results .count').text(count)
 }
 
+function replace_page_parameters() {
+    parameter.search = searchText
+    parameter.searchType = searchType
+    parameter.searchMethod = searchMethod
+    parameter.searchContext = searchContext
+    parameter.searchNearby = searchNearby
+    parameter.from = from
+    parameter.to = to
+    var url = window.document.location.origin + window.document.location.pathname
+    url += "?search=" + searchText + "&type=" + searchType + "&method=" + searchMethod + "&context=" + searchContext
+            + "&nearby=" + encodeURIComponent(searchNearby)
+    /** if (frontpage) {
+        url += create_viewport_parameter()
+    } **/
+    if (history_api_supported) {
+        // console.log("replace history state", parameter, url)
+        window.history.replaceState(parameter, webapp_title, url)
+    } else {
+        console.warn("window.history manipulation not supported", window.navigator)
+    }
+}
+
+function create_viewport_parameter() {
+    var mapView = leafletMap.get_map_viewport()
+    var viewportState = undefined
+    if (mapView) {
+        viewportState = "&koordinate=" + mapView.center.lat.toFixed(5) + "," + mapView.center.lng.toFixed(5) + "&zoomstufe=" + mapView.zoom
+    }
+    return viewportState
+}
+
 /** --- UI Handlers --- **/
 
 /** function einrichtungenChecked() {
@@ -343,29 +441,39 @@ function angeboteChecked() {
     searchType = "events"
 } **/
 
+function search_menu_changed(value, text, $selectedItem) {
+    searchType = value
+    console.log("searchType menu changed to", searchType)
+    replace_page_parameters()
+}
+
 function quickSearchChecked() {
     console.log("quickSearchChecked")
     searchMethod = "quick" // or "fulltext"
+    replace_page_parameters()
     return true
 }
 
 function fulltextSearchChecked() {
     console.log("fulltextSearchChecked")
     searchMethod = "fulltext" // or "quick"
+    replace_page_parameters()
     return true
 }
 
 function nearbySearchChecked() {
     console.log("nearbySearchChecked")
     $('.ui.grid.filter .column.nearby').removeClass('hidden')
-    searchNearby = "nearby"
+    searchNearby = "" // Clearing for user input
+    replace_page_parameters()
     return true
 }
 
 function berlinSearchChecked(e) {
     console.log("berlinSearchChecked", e.id)
     $('.ui.grid.filter .column.nearby').addClass('hidden')
-    searchNearby = "berlin"
+    searchNearby = e.id
+    replace_page_parameters()
     return true
 }
 
@@ -381,8 +489,14 @@ function toggleSearchCriteria() {
     }
 }
 
-function handleSearchInput() {
+function handleSearchInput(e) {
     if (event.keyCode === 13) {
-        search(render_search_results)
+        if (e.id === "query") {
+            search(render_search_results)
+        } else if (e.id === "streetnr") {
+            searchNearby = e.value.trim()
+            console.log("Updated search nearby value", searchNearby)
+            search(render_search_results)
+        }
     }
 }

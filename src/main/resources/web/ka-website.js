@@ -278,7 +278,7 @@ var kiezatlas = (function($, leafletMap, restc, favourites) {
     }
 
     this.get_page_parameter_from_url = function() {
-        var viewport = _self.get_map_viewport_from_url()
+        var viewport = undefined // _self.get_map_viewport_from_url()
         var locationHash = window.location.hash
         var hashStart = 0, questStart = -1
         if (window.location.hash.indexOf("?") !== -1) { // Correcting Hash

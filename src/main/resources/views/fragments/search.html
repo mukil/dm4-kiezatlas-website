@@ -6,9 +6,9 @@
         <div class="ui container">
             <div class="ui left icon action input">
                 <i class="search icon"></i>
-                <input id="query" name="search" onkeyup="handleSearchInput()"
+                <input id="query" name="search" onkeyup="handleSearchInput(this)"
                     class="prompt" type="text" placeholder="Geben Sie hier Ihre Suchanfrage ein..." />
-                <div class="ui simple dropdown blue1 blue4bg">
+                <div class="ui button dropdown blue1 blue4bg">
                     <input type="hidden" name="type" />
                     <i class="dropdown icon"></i>
                     <div class="default text">Einrichtungen</div>
@@ -118,7 +118,8 @@
                                 <h4 class="header thin">Meine Suche beschr&auml;nken auf Ergebnisse in der N&auml;he von</h4>
                                 <div class="column attributes">
                                     <div class="ui input fluid">
-                                        <input type="text" query="nearby" placeholder="Straße/ Hnr, Postleitzahl"/>
+                                        <input type="text" id="streetnr" query="nearby"
+                                               onkeyup="handleSearchInput(this)" placeholder="Straße/ Hnr, Postleitzahl"/>
                                     </div>
                                 </div>
                             </div>

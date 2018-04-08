@@ -19,6 +19,22 @@
         <script defer="true" src="/de.kiezatlas.website/ka-favourites.js"></script>
         <script defer="true" src="/de.kiezatlas.website/ka-website.js"></script>
         <script defer="true" src="/de.kiezatlas.website/ka-startseite.js" onload="init_page('gesamt')"></script>
+        <script defer="true" src="/de.kiezatlas.website/search-angebote.js"></script>
+        <script th:inline="javascript">
+            /*<![CDATA[*/
+                var frontpage = true
+                searchText = /*[[${search}]]*/ '';
+                searchType = /*[[${searchType}]]*/ 'place';
+                searchContext = /*[[${searchContext}]]*/ '0';
+                searchMethod = /*[[${searchMethod}]]*/ 'quick';
+                searchNearby = /*[[${searchNearby}]]*/ 'berlin';
+                zoomstufe = /*[[${zoomstufe}]]*/ '14';
+                koordinate = /*[[${koordinate}]]*/ undefined;
+                console.log("initializing search=", searchText, "type=", searchType, "site=", searchContext,
+                "method=", searchMethod, "nearby=", searchNearby)
+            /*]]>*/
+        </script>
+
 
     </head>
     <body class="ui page">

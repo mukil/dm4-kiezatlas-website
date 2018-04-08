@@ -15,11 +15,21 @@
         <!--script defer="true" src="/de.kiezatlas.website/ka-map.js"></script-->
         <script th:inline="javascript">
             /*<![CDATA[*/
+                var frontpage = false
                 var districtId = /*[[${geoobject.bezirkId}]]*/ '-1';
                 var districtName = /*[[${geoobject.bezirk}]]*/ 'Berlin';
+                console.log("initialized district filter in frontend", districtId, districtName)
+                searchText = /*[[${search}]]*/ '';
+                searchType = /*[[${searchType}]]*/ 'place';
+                searchContext = /*[[${searchContext}]]*/ '0';
+                searchMethod = /*[[${searchMethod}]]*/ 'quick';
+                searchNearby = /*[[${searchNearby}]]*/ 'berlin';
+                console.log("initializing search=", searchText, "type=", searchType, "site=", searchContext,
+                    "method=", searchMethod, "nearby=", searchNearby)
             /*]]>*/
         </script>
         <script defer="true" src="/de.kiezatlas.website/ka-startseite.js" onload="init_page('place')"></script>
+        <script defer="true" src="/de.kiezatlas.website/search-angebote.js"></script>
 
     </head>
     <body class="ui page detail">

@@ -172,6 +172,11 @@ body.pushable {
     color: #ecf4f7;
 }
 
+.ui.search .ui.dropdown.blue4bg {
+    color: #193441;
+    padding-left: .7em;
+}
+
 .ui.search .ui.dropdown.blue4bg,
 .page .ui.segment.footer.blue4bg,
 .blue4bg {
@@ -248,6 +253,7 @@ h3.label {
 .ui.button {
     font-smooth: antialiased;
     -webkit-font-smoothing: antialiased;
+    font-size: 18px;
 }
 
 .ui.search {
@@ -327,6 +333,10 @@ header .large.menu h3.caption,
     margin: 0em !important;
     padding: 0em;
     height: 17px;
+}
+
+.search .ui.dropdown .text {
+    margin-top: .3em;
 }
 
 .ui.dropdown > .dropdown.icon {
