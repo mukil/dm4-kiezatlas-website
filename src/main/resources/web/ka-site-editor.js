@@ -21,8 +21,8 @@ var sites = {
                 }
                 if (webAlias.indexOf("familienportal") === -1) {
                     var $html = $("<li class=\"concrete-assignment\"><h3>"+ site.value + ", Web Alias <span class=\"webalias\">/"+webAlias+"</span></h3>"
-                        + "<button class=\"ui button basic small\" onclick=\"sites.go_to_site_edit("+site.id+")\">Bearbeiten</button>"
-                        + "<button class=\"ui button basic small\" onclick=\"sites.go_to_site('"+webAlias+"')\" title=\""+site.value+" aufrufen\">Stadtplan aufrufen</a>"
+                        + "<button class=\"ui button small\" onclick=\"sites.go_to_site_edit("+site.id+")\">Bearbeiten</button>"
+                        + "<button class=\"ui button small\" onclick=\"sites.go_to_site('"+webAlias+"')\" title=\""+site.value+" aufrufen\">Stadtplan aufrufen</a>"
                         + "</li>")
                     $('.listing .sites').append($html)
                 }
@@ -203,7 +203,7 @@ var sites = {
     },
     // ### render all input fields as required (the current facet for any update request)
     render_facet_form: function(siteId, facetTypeDefs) {
-        var $submit = $('<span class="ui button small basic">')
+        var $submit = $('<span class="ui button small">')
             $submit.html("&Auml;nderungen speichern")
             $submit.click(function(e) {
                 sites.save_facet_edits(siteId, facetTypeDefs)
@@ -257,7 +257,7 @@ var sites = {
             }
             $facetLabelDiv.append($facetInput)
             if (assocDefType.indexOf("aggregation_def") !== -1) {
-                var $button = $('<span class="ui button basic small" '
+                var $button = $('<span class="ui button small" '
                     + 'onclick="sites.activate_options(\'' + facetTypeUri + '\', \''+facetTopicType.uri+'\', ' + addEmptyOption + ', '+existingMany+')">').text("Facette bearbeiten")
                 $facetLabelDiv.append($button)
             }

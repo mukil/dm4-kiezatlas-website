@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Sozialraumdaten Berlin - Kiezatlas</title>
+        <meta charset="UTF-8"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+        <link rel="stylesheet" type="text/css" href="/de.kiezatlas.website/vendor/leaflet-1.3.1/leaflet.css" />
+	<link rel="stylesheet" type="text/css" href="//cdn.jsdelivr.net/openlayers.geocoder/latest/ol3-geocoder.min.css"/>
+        <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/ol3/3.20.1/ol.css" />
+	<link rel="stylesheet" type="text/css" href="//maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css"/>
+        <link rel="stylesheet" type="text/css" href="/de.kiezatlas.website/css/kiezatlas-web.css" />
+
+        <!--script defer="true" src="/de.kiezatlas.website/vendor/jquery/jquery-3.2.1.min.js"></script-->
+        <script defer="true" src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+	<script defer="true" src="https://cdnjs.cloudflare.com/ajax/libs/ol3/3.20.1/ol.js"></script>
+	<script defer="true" src="/de.kiezatlas.website/vendor/monitoring/jquery.tablesorter.min.js"></script>
+	<script defer="true" src="/de.kiezatlas.website/vendor/monitoring/ol-layerswitcher.js"></script>
+	<script defer="true" src="//cdn.jsdelivr.net/openlayers.geocoder/latest/ol3-geocoder.js"></script>
+        <script defer="true" src="/de.kiezatlas.website/css/semantic-ui/2.3/dist/semantic.min.js"></script>
+        <script defer="true" src='/de.kiezatlas.website/ka-monitoring.js'></script>
+        <script defer="true" src="/de.kiezatlas.website/ka-startseite.js" onload="init_page('sozialraumdaten')"></script>
+        <script type="text/javascript" th:inline="javascript">
+            /*<![CDATA[*/
+                lorId = /*[[${lorId}]]*/ '';
+                searchText = /*[[${search}]]*/ '';
+                searchType = /*[[${searchType}]]*/ 'place';
+                searchContext = /*[[${searchContext}]]*/ 'berlin';
+                searchMethod = /*[[${searchMethod}]]*/ 'quick';
+                searchNearby = /*[[${searchNearby}]]*/ undefined;
+                console.log("initializing search=", searchText, "type=", searchType, "site=", searchContext,
+                    "method=", searchMethod, "nearby=", searchNearby)
+            /*]]>*/
+        </script>
+        <meta th:replace="fragments/tracker" />
+    </head>
+    <body class="ui page detail kiezatlas monitoring topic">
+
+        <div class="navigation">
+            <div class="top-menu" th:include="fragments/navigation :: top-menu (publisher=${is_publisher})"></div>
+        </div>
+
+        <div class="ui vertical left menu sidebar" th:include="fragments/navigation :: vertical (publisher=${is_publisher})"></div>
+
+        <div class="ui pusher">
+
+            <div class="ui vertical segment container headline">
+                <h3>Sozialraumdaten im Kiezatlas - Datenbank lebensweltlich orientierter Planungsr&auml;ume</h3>
+            </div>
+            <div id="header" class="ui vertical segment blue4bg">
+                <div class="welcome ui container">
+                    <p>
+                        Diese Karte zeigt den Status der 447 kleinr&auml;umlichen Planungseinheiten Berlins (den sog. LORs, Lebensweltlich orientierte Planungsr&auml;umen) in dem <b>Monitoring Soziale Stadt 2015</b>.
+                        &Uuml;ber die Auswahl eines Planungsraums in der Karte gelangen Sie zu unserer Auswertung der Daten, den jeweiligen Kiezatlas-Sozialraumdaten (o.a. LOR-Seiten).
+                    </p>
+                    <p>
+                        Datenbasis:<br/>Altersverteilung, Staatsangeh&ouml;rigkeit und Migration des Amts für Statistik Berlin Brandenburg (2011/12 - 2017/12) in Verbindung mit dem Monitoring Soziale Stadt 2015.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Details Area -->
+            <div id="detail-area" class="ui vertical segment container" th:addclass="${angebotsinfos} ? 'angebotsinfos'">
+
+                <div id="mapDiv">
+                    <div class="container-fluid">
+                        <div class="panel panel-default" id="legende">
+                            <div>
+                                <h3 class="ui thin">Legende</h3>
+                            </div>
+                            <div id="collapse1" class="panel-collapse  collapse in">
+                                <div class="body" id='panelbody'>
+                                    <b>Status</b><br/>
+                                    <span class='fa fa-map' style="color:#9cc300"></span> : hoch <br/>
+                                    <span class='fa fa-map' style="color:#ffffb2"></span> : mittel <br/>
+                                    <span class='fa fa-map' style="color:#fd8d3c"></span> : niedrig <br/>
+                                    <span class='fa fa-map' style="color:#ce0000"></span> : sehr niedrig <br/>
+                                    <span class='fa fa-map' style="color:lightblue"></span> : ohne Wert <br/>
+                                    <br/>
+                                    <b>Geometrie</b><br/>
+                                    <span class='fa fa-map-o' style="color:gray"></span> : Bezirke <br/>
+                                    <span class='fa fa-map-o' style="color:blue"></span> : Bezirkregionen <br/>
+                                    <span class='fa fa-map-o' style="color:black"></span> : LORs <br/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="popupDiv">
+                        <a href="#" id="popup-closer"></a>
+                        <div id="popup-content"></div>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- Footer Segment -->
+        <div th:replace="fragments/footer :: footer-new "></div>
+
+    </body>
+</html>
+

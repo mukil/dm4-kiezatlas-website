@@ -113,7 +113,6 @@ import de.kiezatlas.website.model.SearchResultList;
 import de.kiezatlas.website.model.SearchResult;
 import de.kiezatlas.website.model.UsernameView;
 import de.mikromedia.webpages.events.CustomRootResourceRequestedListener;
-import de.mikromedia.webpages.events.FrontpageRequestedListener;
 import de.mikromedia.webpages.events.ResourceNotFoundListener;
 import de.mikromedia.webpages.events.WebpageRequestedListener;
 import java.net.URI;
@@ -140,8 +139,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
                                                                               AngeboteResourceRequestedListener,
                                                                               WebpageRequestedListener,
                                                                               CustomRootResourceRequestedListener,
-                                                                              ResourceNotFoundListener,
-                                                                              FrontpageRequestedListener {
+                                                                              ResourceNotFoundListener {
 
     private final Logger log = Logger.getLogger(getClass().getName());
 
@@ -198,7 +196,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
             log.info("Announcing our Website Bundle as additional template resource at Webpages TemplateEngines");
             webpages.addTemplateResolverBundle(bundle);
             // Overrides root resource response of the dm4-webpages plugin
-            webpages.overrideFrontpageTemplate("ka-index");
+            webpages.overrideFrontpageTemplate("website-grid");
             // Register additional root resource names we want to respond to
             initializeCityMapWebAliasResources();
         } else if (service instanceof SignupPluginService) {
@@ -224,15 +222,26 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
 
     // --------------------------------------------------------------------------------- Routing Pages and Forms ------/
 
-    /** Responds witha a Viewable,the frontpage of the Kiezatlas Website. */
+
+
+    /** Responds with a Viewable, the new frontpage of the Kiezatlas Website. */
     @GET
+    @Path("/")
     @Produces(MediaType.TEXT_HTML)
-    public Viewable prepareFrontpage() {
-        preparePageTemplate("ka-index");
-        return view("ka-index");
+    public Viewable prepareNewFrontpage(@QueryParam("context") long site, @QueryParam("search") String search,
+            @QueryParam("koordinate") String koordinate, @QueryParam("zoomstufe") String zoomstufe,
+            @QueryParam("type") String searchType, @QueryParam("method") String searchMethod,
+            @QueryParam("nearby") String searchNearby) {
+        viewData("tags", getAllTagTopics());
+        prepareSearchTemplateParameter(search, site, searchMethod, searchType, searchNearby);
+        viewData("koordinate", koordinate);
+        viewData("zoomstufe", zoomstufe);
+        log.info("Frontpage search preparation, search=" + search + " type=" + searchType + " contextId=" + site);
+        preparePageTemplate("website-grid");
+        return getFrontpage();
     }
 
-    /** Responds witha a Viewable, the new frontpage of the Kiezatlas Website. */
+    /** Responds with a Viewable, the new frontpage of the Kiezatlas Website. */
     @GET
     @Path("/map")
     @Produces(MediaType.TEXT_HTML)
@@ -240,22 +249,21 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         return getWebsiteMap();
     }
 
-    /** Responds witha a Viewable, the new frontpage of the Kiezatlas Website. */
+    /** Responds with a Viewable, the new frontpage of the Kiezatlas Website. */
     @GET
-    @Path("/startseite")
+    @Path("/sozialraumdaten")
     @Produces(MediaType.TEXT_HTML)
-    public Viewable prepareNewFrontpage(@QueryParam("context") String site, @QueryParam("search") String search,
+    public Viewable prepareSozialraumdaten(@QueryParam("lorId") String lorId, @QueryParam("context") long site, @QueryParam("search") String search,
             @QueryParam("koordinate") String koordinate, @QueryParam("zoomstufe") String zoomstufe,
             @QueryParam("type") String searchType, @QueryParam("method") String searchMethod,
             @QueryParam("nearby") String searchNearby) {
-        viewData("districts", getAvailableDistrictTopics());
-        viewData("tags", getAllTagTopics());
+        viewData("lorId", lorId);
         prepareSearchTemplateParameter(search, site, searchMethod, searchType, searchNearby);
         viewData("koordinate", koordinate);
         viewData("zoomstufe", zoomstufe);
-        log.info("Frontpage search preparation, search=" + search + " type=" + searchType + " site=" + site);
-        preparePageTemplate("website-grid");
-        return getFrontpage();
+        log.info("LOR Page preparation ("+lorId+"), search=" + search + " type=" + searchType + " contextId=" + site);
+        preparePageTemplate("website-lor");
+        return view("website-lor");
     }
 
     @GET
@@ -488,13 +496,13 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     @GET
     @Path("/geo/{topicId}")
     @Produces(MediaType.TEXT_HTML)
-    public Viewable prepareGeoObjectInfoPage(@PathParam("topicId") String topicId, @QueryParam("context") String site,
+    public Viewable prepareGeoObjectInfoPage(@PathParam("topicId") String topicId, @QueryParam("context") long contextId,
             @QueryParam("search") String search, @QueryParam("type") String searchType,
             @QueryParam("method") String searchMethod, @QueryParam("nearby") String searchNearby) {
         Topic geoObject = getGeoObjectById(topicId);
-        viewData("districts", getAvailableDistrictTopics());
-        prepareSearchTemplateParameter(search, site, searchMethod, searchType, searchNearby);
-        log.info("Page search preparation, search=" + search + " type=" + searchType + " context=" + site);
+        viewData("tags", getAllTagTopics());
+        prepareSearchTemplateParameter(search, contextId, searchMethod, searchType, searchNearby);
+        log.info("Page search preparation, search=" + search + " type=" + searchType + " context=" + contextId);
         return (geoObject != null) ? prepareGeoObjectTemplate(geoObject.getId()) : getNotFoundPage();
     }
 
@@ -536,7 +544,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     @Path("/geo/delete/{topicId}")
     @Produces(MediaType.TEXT_HTML)
     @Transactional
-    public Viewable processGeoObjectDeletion(@PathParam("topicId") String topicId, @QueryParam("context") String site,
+    public Viewable processGeoObjectDeletion(@PathParam("topicId") String topicId, @QueryParam("context") long contextId,
             @QueryParam("search") String search, @QueryParam("type") String searchType,
             @QueryParam("method") String searchMethod, @QueryParam("nearby") String searchNearby) {
         // Check Authorization
@@ -555,21 +563,21 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
                 return getSimpleMessagePage();
             } else {
                 viewData("message", "Der Datensatz konnte nicht gelöscht werden da ein Fehler aufgetreten ist.");
-                return prepareGeoObjectInfoPage("" + topicId, site, search, searchType, searchMethod, searchNearby);
+                return prepareGeoObjectInfoPage("" + topicId, contextId, search, searchType, searchMethod, searchNearby);
             }
         } else {
             log.info("Geo Object could not be loaded by topicId=\"" + topicId + "\"");
         }
         viewData("message", "<p>Der Datensatz konnte nicht gelöscht werden, da Sie dazu nicht die nötigen Berechtigungen haben.</p>"
                 + "<p><a href=\"/angebote/my\">Zur&uuml;ck zu meinen Eintr&auml;gen</a></p>");
-        return prepareGeoObjectInfoPage("" + topicId, site, search, searchType, searchMethod, searchNearby);
+        return prepareGeoObjectInfoPage("" + topicId, contextId, search, searchType, searchMethod, searchNearby);
     }
 
     @GET
     @Path("/geo/delete/final/{topicId}")
     @Produces(MediaType.TEXT_HTML)
     @Transactional
-    public Viewable processFinalGeoObjectDeletion(@PathParam("topicId") String topicId, @QueryParam("context") String site,
+    public Viewable processFinalGeoObjectDeletion(@PathParam("topicId") String topicId, @QueryParam("context") long contextId,
             @QueryParam("search") String search, @QueryParam("type") String searchType,
             @QueryParam("method") String searchMethod, @QueryParam("nearby") String searchNearby) {
         if (!isAuthenticated()) return getUnauthorizedPage();
@@ -584,7 +592,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
             return getSimpleMessagePage();
         }
         viewData("message", "Der Datensatz konnte nicht gelöscht werden, da Sie dazu nicht die nötigen Berechtigungen haben.");
-        return prepareGeoObjectInfoPage("" + topicId, site, search, searchType, searchMethod, searchNearby);
+        return prepareGeoObjectInfoPage("" + topicId, contextId, search, searchType, searchMethod, searchNearby);
     }
 
     private Viewable prepareBezirksregionListingPage(@PathParam("districtId") long districtId) {
@@ -1915,12 +1923,12 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         return dm4.getTopicsByType("dm4.tags.tag");
     }
 
-    private void prepareSearchTemplateParameter(String search, String site,
+    private void prepareSearchTemplateParameter(String search, long contextId,
             String method, String type, String nearby) {
         viewData("search", (search == null) ? "" : search);
-        viewData("searchContext", (site == null) ? 0 : site);
+        viewData("searchContext", (contextId <= 0) ? 0 : contextId);
         viewData("searchMethod", (method == null) ? "quick" : method);
-        viewData("searchNearby", (nearby == null) ? "berlin" : nearby);
+        viewData("searchNearby", (nearby == null) ? "undefined" : nearby);
         viewData("searchType", (type == null) ? "place" : type);
     }
 
@@ -2122,6 +2130,8 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         boolean isAuthenticated = isAuthenticated();
         boolean isConfirmationMember = isConfirmationWorkspaceMember();
         boolean isSiteManager = isSiteEditor();
+        List<Topic> districts = getAvailableDistrictTopics();
+        viewData("districts", districts);
         viewData("authenticated", isAuthenticated);
         viewData("is_publisher", isConfirmationMember);
         viewData("is_district_admin", (getUserDistrictTopics() != null));
@@ -3776,35 +3786,40 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
 
     @Override
     public void webpageRequested(AbstractContext context, String webAlias, String sitePrefix) {
-        context.setVariable("districts", getAvailableDistrictTopics());
+        preparePageTemplate(webAlias);
     }
 
     @Override
-    public void frontpageRequested(AbstractContext context, Topic website) {
-        log.info("Custom root resource requested, e.g. a citymap published under \"/\"" + website);
+    public void frontpageRequested(AbstractContext context, Topic website, String name) {
+        if (name.equals("/")) {
+            // frontpage root resource
+            log.info("Kiezatlas frontpage requested");
+            prepareSearchTemplateParameter(null, 0, "quick", "place", "undefined");
+        } else {
+            // citymap resource
+            log.info("Citymap at /" + name + " requested");
+            Topic citymap = dm4.getTopicByValue("ka2.website.web_alias", new SimpleValue(name));
+            prepareSearchTemplateParameter(null, citymap.getId(), "quick", "place", "undefined");
+        }
+        preparePageTemplate(name);
     }
 
     @Override
     public void resourceNotFound(AbstractContext context, String webAlias, String sitePrefix) {
         log.info("Kiezatlas 2.0 received a 404 for request on \"/" + sitePrefix + "/" + webAlias + "\"");
-        context.setVariable("message", "Sorry, this resource is not in our coordinate system!");
+        context.setVariable("message", "An dieser Adresse unseres Koordinatensystems haben wir keine weiteren Informationen");
+        preparePageTemplate(webAlias);
     }
 
-    @Override
-    public void frontpageRequested(AbstractContext context, Topic website, String webAlias) {
-        log.info("Index frontpage at /" + website + "/" + webAlias + " requested");
-    }
 
     @Override
     public void signupResourceRequested(AbstractContext context, String templateName) {
         log.info("Kiezatlas Website providing template data for sign-up resources...");
-        context.setVariable("districts", getAvailableDistrictTopics());
         preparePageTemplate(templateName);
     }
 
     @Override
     public void angeboteResourceRequested(AbstractContext context, String templateName) {
-        context.setVariable("districts", getAvailableDistrictTopics());
         preparePageTemplate(templateName);
     }
 

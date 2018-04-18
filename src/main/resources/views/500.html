@@ -9,92 +9,64 @@
         <meta itemprop="description" content="Internal server error"/>
         <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 
-        <link media="all" href="/de.mikromedia.webpages/css/semantic-ui/dist/semantic.min.css" rel="stylesheet" />
-        <link media="all" href="/de.mikromedia.webpages/css/semantic-ui-overrides.css" rel="stylesheet" />
+        <link rel="stylesheet" type="text/css" href="/de.kiezatlas.website/css/kiezatlas-web.css" />
 
-        <script src="/de.mikromedia.webpages/jquery/jquery-3.2.1.min.js"></script>
-        <script src="/de.mikromedia.webpages/css/semantic-ui/dist/semantic.min.js"></script>
-        <script src="/de.mikromedia.webpages/js/page-methods.js"></script>
-
-        <script>
-            $(document).ready(function () {
-                // fix menu when passed
-                $('.masthead').visibility({
-                        once: false,
-                        onBottomPassed: function () {
-                            $('.fixed.menu').transition('fade in');
-                        },
-                        onBottomPassedReverse: function () {
-                            $('.fixed.menu').transition('fade out');
-                        }
-                    })
-
-                // create sidebar and attach to menu open
-                $('.ui.sidebar').sidebar('attach events', '.toc.item')
-                render_page()
-            })
-        </script>
+        <script defer="true" src="/de.mikromedia.webpages/jquery/jquery-3.2.1.min.js"></script>
+        <script defer="true" src="/de.kiezatlas.website/css/semantic-ui/2.3/dist/semantic.min.js"></script>
+        <script defer="true" src="/de.mikromedia.webpages/js/page-methods.js" onload="render_page()"></script>
 
         <meta th:replace="fragments/tracker" />
     </head>
-    <body class="page internal-error">
+    <body class="ui page detail internal-error">
 
-        <!-- Following Menu -->
-        <div class="ui large top fixed hidden menu inverted">
-            <nav id="lower-page-nav" th:include="fragments/navigation :: lower-page-nav"></nav>
+        <div class="navigation">
+            <div class="top-menu" th:include="fragments/navigation :: top-menu (publisher=${is_publisher})"></div>
         </div>
 
-        <!-- Sidebar Menu -->
-        <div class="ui vertical inverted sidebar menu">
-            <nav id="sidebar-nav" class="ui container" th:include="fragments/navigation :: vertical-nav"></nav>
-        </div>
+        <div class="ui vertical left menu sidebar" th:include="fragments/navigation :: vertical (publisher=${is_publisher})"></div>
 
         <!-- Page Contents -->
         <div class="pusher">
 
+            <!-- Teaser Area -->
+            <div th:replace="fragments/widgets :: teaser-small"></div>
+
+            <div th:replace="fragments/search :: dialog (false, ${districts}, ${tags}, ${search}, ${searchType})"></div>
+
             <header class="ui inverted vertical masthead center aligned segment">
 
-                <nav id="header-page-nav" class="ui container" th:include="fragments/navigation :: standard-nav"></nav>
+                <!--nav id="header-page-nav" class="ui container" th:include="fragments/navigation :: standard-nav"></nav-->
 
-                <div class="ui text container">
+                <div class="ui container">
                     <h1 class="ui inverted header" itemprop="headline">500</h1>
                     <h3>Entschuldigung, die Kiezatlas-Anwendung hat einen internen Fehler festgestellt‚.</h3>
                 </div>
 
             </header>
 
-            <div class="ui vertical stripe segment">
+            <div class="ui vertical stripe blue4bg segment body">
 
                 <article itemprop="mainContentOfPage" itemscope="" itemtype="http://schema.org/WebPageElement">
-                    <div class="main ui text container">
+                    <div class="main ui container">
                         <div class="text" itemprop="text" th:utext="${message}"></div>
                     </div>
-                    <div class="main ui text container">
+                    <div class="main ui container">
                         <p>Hier geht's zur <a class="button" href="/">Startseite</a></p>
                     </div>
                 </article>
 
             </div>
 
-            <div class="ui inverted vertical footer segment">
+            <!-- Footer Segment -->
+            <div th:replace="fragments/footer :: footer-new "></div>
 
-                <div class="ui container">
-
-                    <div class="site-link" th:include="fragments/widgets :: footer-site-link"></div>
-
-                    <div class="footer" th:include="fragments/footer :: footer-new"></div>
-
-                    <div class="debug" itemprop="isPartOf" itemscope="" itemtype="http://schema.org/WebSite">
-                        <meta itemprop="name" th:content="${siteName}"/>
-                        <meta th:if="${!#strings.isEmpty(siteCaption)}" itemprop="alternateName" th:content="${siteCaption}"/>
-                        <meta th:if="${!#strings.isEmpty(siteAbout)}" itemprop="about" th:content="${siteAbout}"/>
-                        <link itemprop="url" th:href="${hostUrl} + ${website}"/>
-                        <meta itemprop="description" th:content="${footerText}"></meta>
-                        <meta id="siteId" th:content="${siteId}"></meta>
-                    </div>
-
-                </div>
-
+            <div class="debug" itemprop="isPartOf" itemscope="" itemtype="http://schema.org/WebSite">
+                <meta itemprop="name" th:content="${siteName}"/>
+                <meta th:if="${!#strings.isEmpty(siteCaption)}" itemprop="alternateName" th:content="${siteCaption}"/>
+                <meta th:if="${!#strings.isEmpty(siteAbout)}" itemprop="about" th:content="${siteAbout}"/>
+                <link itemprop="url" th:href="${hostUrl} + ${website}"/>
+                <meta itemprop="description" th:content="${footerText}"></meta>
+                <meta id="siteId" th:content="${siteId}"></meta>
             </div>
 
         </div>

@@ -6,44 +6,38 @@
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 
-        <link rel="stylesheet" type="text/css" href="/de.kiezatlas.angebote/dist/vendor/jquery-ui-1.12.1-kiezatlas.min.css"/>
-        <link rel="stylesheet" type="text/css" href="/de.kiezatlas.website/css/sitestyle.css"/>
-        <link rel="stylesheet" type="text/css" href="/de.kiezatlas/style/kiezatlas.css"/>
         <link rel="stylesheet" type="text/css" href="/de.kiezatlas.website/vendor/datatables/datatables1.10.15.min.css"/>
+        <link rel="stylesheet" type="text/css" href="/de.kiezatlas.website/css/kiezatlas-web.css" />
 
-        <script type="text/javascript" src="/de.kiezatlas.angebote/dist/vendor/jquery-1.9.1-and-1.12.1-ui-custom.min.js"></script>
-        <script type="text/javascript" src="/de.kiezatlas.website/css/semantic-ui/2.2/sidebar.min.js"></script>
-        <script type="text/javascript" src="/de.kiezatlas.website/vendor/datatables/datatables1.10.15.min.js"></script>
+        <script defer="true" src="/de.kiezatlas.website/vendor/jquery/jquery-3.2.1.min.js"></script>
+        <script defer="true" src="/de.kiezatlas.website/css/semantic-ui/2.3/dist/semantic.min.js"></script>
+        <script defer="true" src="/de.kiezatlas.website/ka-restclient.js"></script>
+        <script defer="true" src="/de.kiezatlas.website/vendor/datatables/datatables1.10.15.min.js"></script>
+        <script defer="true" src="/de.kiezatlas.website/ka-startseite.js" onload="init_page('filter-list')"></script>
 
-        <script type="text/javascript">
-
-            // SAP List initialization
-            $(document).ready(function(e) {
-                $('#listing').dataTable({ "lengthMenu": [ 10, 25, 50, 75, 100, 250, 500, 750, 1000, 2000 ] })
-                // { "lengthMenu": [ 10, 25, 50, 75, 100, 500, 1000, 2000 ] }
-                $sidebarUi = $('.ui.sidebar').sidebar('setting', 'dimPage', false)
-            })
-
-            function refresh_list_filter() {
-                var selection = document.getElementById("districts")
-                if (selection) {
-                    var districtId = document.getElementById("districts").value
-                    window.document.location.href = "/website/list/filter/" + districtId
-                }
-            }
-
-        </script>
         <meta th:replace="fragments/tracker" />
     </head>
-    <body class="kiezatlas filter list places">
-        
-        <div class="top-menu" th:include="fragments/navigation :: top (publisher=${is_publisher})"></div>
+    <body class="ui page detail kiezatlas filter list places">
+
+        <div class="navigation">
+            <div class="top-menu" th:include="fragments/navigation :: top-menu (publisher=${is_publisher})"></div>
+        </div>
 
         <div class="ui vertical left menu sidebar" th:include="fragments/navigation :: vertical (publisher=${is_publisher})"></div>
 
         <div class="pusher">
 
-            <div id="header">
+            <div id="commands" class="ui container vertical segment commands">
+                <div class="commands buttons ui">
+                    <a class="button ui" href="/website/list/freischalten">Neue Orte freischalten</a>
+                    <a th:if="${is_district_admin}" class="button ui" href="/website/list/bezirksregionen">StadtteilkoordinatorInnen</a>
+                    <a class="button ui" href="/website/list/hinweise">Kommentare</a>
+                    <a class="button ui" href="/website/list/ansprechpartner">AnsprechpartnerInnen</a>
+                    <a class="button ui green active" href="/website/list/filter">Gro&szlig;e Listenansicht</a>
+                </div>
+            </div>
+
+            <div id="header" class="ui container vertical segment">
                 <h2>Alle Ortseintr&auml;ge der Region <label for="districts" th:text="${viewName}" class="italic"></label></h2>
                 <form class="filter-form">
                     <label for="districts">Region
@@ -55,13 +49,6 @@
                         </select>
                     </label>
                 </form>
-                <div class="commands buttons ui">
-                    <a class="button ui" href="/website/list/freischalten">Neue Orte freischalten</a>
-                    <a th:if="${is_district_admin}" class="button ui" href="/website/list/bezirksregionen">StadtteilkoordinatorInnen</a>
-                    <a class="button ui" href="/website/list/hinweise">Kommentare</a>
-                    <a class="button ui" href="/website/list/ansprechpartner">AnsprechpartnerInnen</a>
-                    <a class="button ui green active" href="/website/list/filter">Gro&szlig;e Listenansicht</a>
-                </div>
                 <p th:if="${not is_publisher}"><b>Sorry!</b><br/>Sie haben aktuell nicht die n&ouml;tigen Berechtigungen um alle Einrichtungen im Kiezatlas einzusehen.</p>
             </div>
 
@@ -134,9 +121,8 @@
 
         </div>
 
-        <p>&nbsp;</p>
-
-        <div class="footer" th:include="fragments/navigation :: footer-links (publisher=false)"></div>
+        <!-- Footer Segment -->
+        <div th:replace="fragments/footer :: footer-new "></div>
 
     </body>
 </html>

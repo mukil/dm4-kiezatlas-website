@@ -5,34 +5,108 @@
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-        <link rel="stylesheet" type="text/css" href="/de.kiezatlas.website/css/kiezatlas-web.css" />
         <link rel="stylesheet" type="text/css" href="/de.kiezatlas.website/vendor/leaflet-1.3.1/leaflet.css" />
+        <link rel="stylesheet" type="text/css" href="/de.kiezatlas.website/vendor/leaflet-1.3.1/MarkerCluster.css" />
+        <link rel="stylesheet" type="text/css" href="/de.kiezatlas.angebote/dist/vendor/jquery-ui-1.12.1-kiezatlas.min.css"/>
+        <link rel="stylesheet" type="text/css" href="/de.kiezatlas.website/css/kiezatlas-web.css" />
 
-        <script defer="true" src="/de.kiezatlas.website/vendor/jquery/jquery-3.2.1.min.js"></script>
+        <script defer="true" src="/de.kiezatlas.angebote/dist/vendor/jquery-1.9.1-and-1.12.1-ui-custom.min.js"></script>
         <script defer="true" src="/de.kiezatlas.website/css/semantic-ui/2.3/dist/semantic.min.js"></script>
         <script defer="true" src="/de.kiezatlas.website/vendor/leaflet-1.3.1/leaflet.js"></script>
+        <script defer="true" src="/de.kiezatlas.website/vendor/leaflet-1.3.1/L.CircleEditor.js"></script>
+
+        <script defer="true" src="/de.kiezatlas.website/ka-model.js"></script>
         <script defer="true" src="/de.kiezatlas.website/ka-restclient.js"></script>
-        <!--script defer="true" src="/de.kiezatlas.website/ka-map.js"></script-->
-        <script th:inline="javascript">
+        <script defer="true" src="/de.kiezatlas.website/ka-map.js"></script>
+        <script type="text/javascript" th:inline="javascript">
             /*<![CDATA[*/
+                var map = undefined
+                var singleGroupLayer = undefined
+                var NEIGHBOUR_QUERY_RADIUS = 800
+                var GEO_OBJECT_DELETE_URI = "/website/geo/delete/"
                 var frontpage = false
-                var districtId = /*[[${geoobject.bezirkId}]]*/ '-1';
-                var districtName = /*[[${geoobject.bezirk}]]*/ 'Berlin';
+                var districtId = /*[[${geoobject.bezirkId}]]*/ '-1'
+                var districtName = /*[[${geoobject.bezirk}]]*/ 'Berlin'
+                var lCoordinate = undefined
                 console.log("initialized district filter in frontend", districtId, districtName)
-                searchText = /*[[${search}]]*/ '';
-                searchType = /*[[${searchType}]]*/ 'place';
-                searchContext = /*[[${searchContext}]]*/ '0';
-                searchMethod = /*[[${searchMethod}]]*/ 'quick';
-                searchNearby = /*[[${searchNearby}]]*/ 'berlin';
-                console.log("initializing search=", searchText, "type=", searchType, "site=", searchContext,
+                searchText = /*[[${search}]]*/ ''
+                searchType = /*[[${searchType}]]*/ 'place'
+                searchContext = /*[[${searchContext}]]*/ '0'
+                searchMethod = /*[[${searchMethod}]]*/ 'quick'
+                searchNearby = /*[[${searchNearby}]]*/ undefined
+                console.log("initializing search dialog \"", searchText, "\" type=", searchType, "site=", searchContext,
                     "method=", searchMethod, "nearby=", searchNearby)
+
+                function init_detail_map() {
+                    var latitude = /*[[${geoobject.latitude}]]*/ undefined
+                    var longitude = /*[[${geoobject.longitude}]]*/ undefined
+                    var name = /*[[${geoobject.name}]]*/ undefined;
+                    var corner1 = L.latLng(52.716749, 12.965609),
+                        corner2 = L.latLng(52.304296, 13.797459),
+                        bounds = L.latLngBounds(corner1, corner2)
+                    lCoordinate = L.latLng(latitude, longitude)
+                    map = L.map('map', { center: [ latitude, longitude ], zoom: 16, minZoom: 10, maxBounds: bounds, zoomSnap: 0.5 })
+                    L.tileLayer('https://api.tiles.mapbox.com/v4/kiezatlas.pd8lkp64/{z}/{x}/{y}.png?' // old style id="kiezatlas.map-feifsq6f"
+                       + 'access_token=pk.eyJ1Ijoia2llemF0bGFzIiwiYSI6ImNpa3BndjU2ODAwYm53MGxzM3JtOXFmb2IifQ._PcBhOcfLYDD8RP3BS0U_g', {
+                       attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors,'
+                       + '<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery &#169; <a href="http://mapbox.com">Mapbox</a>',
+                       id: 'kiezatlas.m7222ia5'}).addTo(map)
+                    // override map instance of leafletMap
+                    leafletMap.setup('map', false, map, 16)
+                    leafletMap.set_map_center(lCoordinate)
+                    singleGroupLayer = L.featureGroup()
+                    map.addLayer(singleGroupLayer)
+                    // 1) show geo object in question
+                    var standort = L.circleMarker(lCoordinate, {
+                        fillColor: model.colors.ka_yellow, color : model.colors.blue3, fillOpacity: 1,
+                        weight: 2, opacity: 1, radius: 10
+                    })
+                    standort.addTo(singleGroupLayer)
+                    // 2) fetch geo objects naerby
+                    restc.get_places_nearby(lCoordinate, NEIGHBOUR_QUERY_RADIUS, function(places) {
+                        console.log("Found neighbouring places in radius of " + NEIGHBOUR_QUERY_RADIUS + "m", places.length)
+                        for (var p in places) {
+                            var place = places[p]
+                            if (place.name !== name && (place.longitude != longitude && place.latitude != latitude)) {
+                                var neighbour = create_nearby_marker(place)
+                                    neighbour.addTo(singleGroupLayer)
+                            }
+                        }
+                    })
+                    standort.bringToFront()
+                }
+
+                function delete_geo_object(id) {
+                    $("#dialog-confirm").dialog({
+                        resizable: false, height: "auto", width: 340, modal: true,
+                        title: "Kiezatlas Standort löschen", buttons: {
+                            "Ja": function() {
+                                $( this ).dialog( "close" );
+                                window.document.location.href = GEO_OBJECT_DELETE_URI + id
+                            },
+                            "Nein": function() {
+                                $( this ).dialog( "close" );
+                            }
+                        }
+                    })
+                }
+
+                function user_note_select() {
+                    console.log('user note select')
+                    add_editorial_note()
+                }
+
+                function add_editorial_note(text, value) {
+                    var $selection = $('#add-comment')
+                    console.log("Allow user to input a note for data editors...", $selection, text, value)
+                }
             /*]]>*/
         </script>
         <script defer="true" src="/de.kiezatlas.website/ka-startseite.js" onload="init_page('place')"></script>
         <script defer="true" src="/de.kiezatlas.website/search-angebote.js"></script>
 
     </head>
-    <body class="ui page detail">
+    <body class="ui page detail kiezatlas">
 
         <div class="navigation">
             <div class="top-menu" th:include="fragments/navigation :: top-menu (publisher=${is_publisher})"></div>
@@ -43,9 +117,19 @@
         <div class="ui pusher">
 
             <!-- Teaser Area -->
-            <div th:replace="fragments/widgets :: teaser-small" />
+            <div th:replace="fragments/widgets :: teaser-small"></div>
 
             <div th:replace="fragments/search :: dialog (false, ${districts}, ${tags}, ${search}, ${searchType})"></div>
+
+            <div th:if="${authenticated}" class="ui vertical segment commands blue4bg">
+                <div class="ui container">
+                    <p th:if="${!#strings.isEmpty(message)}" th:text="${message}"></p>
+                    <a class="ui button green edit" th:if="${authenticated} and ${editable}" th:href="'/website/geo/edit/' + ${geoobject.id}">Bearbeiten</a>
+                    <a class="ui button red delete" th:if="${authenticated} and ${deletable} and ${!is_trashed}" th:href="'javascript:delete_geo_object(' + ${geoobject.id} + ')'">In den Papierkorb</a>
+                    <a class="ui button red delete" th:if="${authenticated} and ${is_trashed} and ${deletable}" th:href="'/website/geo/delete/final/' + ${geoobject.id}">Endg&uuml;ltig l&ouml;schen</a>
+                    <a class="ui button green publish" th:if="${is_publisher} and ${!is_published}" th:href="'/website/geo/confirm/' + ${geoobject.id}">Ver&ouml;ffentlichen</a>
+                </div>
+            </div>
 
             <!-- Name, Description Area -->
             <div class="ui vertical container segment entry">
@@ -86,46 +170,15 @@
                 </div>
             </div>
 
-            <!--div class="commands">
-                <p th:if="${!#strings.isEmpty(message)}" th:text="${message}"></p>
-                <a class="ui button olive edit" th:if="${authenticated} and ${editable}" th:href="'/website/geo/edit/' + ${geoobject.id}">Ortseintrag bearbeiten</a>
-                <a class="ui button red delete" th:if="${authenticated} and ${deletable} and ${!is_trashed}" th:href="'javascript:delete_geo_object(' + ${geoobject.id} + ')'">In den Papierkorb</a>
-                <a class="ui button red delete" th:if="${authenticated} and ${is_trashed} and ${deletable}" th:href="'/website/geo/delete/final/' + ${geoobject.id}">Endg&uuml;ltig l&ouml;schen</a>
-                <a class="ui button olive publish" th:if="${is_publisher} and ${!is_published}" th:href="'/website/geo/confirm/' + ${geoobject.id}">Ver&ouml;ffentlichen</a>
-            </div>
-            <p class="comment" th:each="comment : ${geoobject.comments}">
-                <span class="message" th:text="${comment.message}"></span>
-                <span class="contact" th:if="${comment.contact}" th:text="'(' + ${comment.contact} + ')'"></span>
-            </p-->
-
             <!-- Details Map Area -->
             <div class="ui vertical segment map inverted active dimmer">
-                <!-- Map Segment -->
-                <script defer="true" type="text/javascript" th:inline="javascript">
-                    function init_detail_map() {
-                        var latitude = /*[[${geoobject.latitude}]]*/ undefined;
-                        var longitude = /*[[${geoobject.longitude}]]*/ undefined;
-                        var corner1 = L.latLng(52.716749, 12.965609),
-                            corner2 = L.latLng(52.304296, 13.797459),
-                            bounds = L.latLngBounds(corner1, corner2);
-                        var map = undefined
-                        if (L) {
-                            map = L.map('map', { center: [ latitude, longitude ], zoom: 16, minZoom: 10, maxBounds: bounds, zoomSnap: 0.5 })
-                            L.tileLayer('https://api.tiles.mapbox.com/v4/kiezatlas.pd8lkp64/{z}/{x}/{y}.png?' // old style id="kiezatlas.map-feifsq6f"
-                               + 'access_token=pk.eyJ1Ijoia2llemF0bGFzIiwiYSI6ImNpa3BndjU2ODAwYm53MGxzM3JtOXFmb2IifQ._PcBhOcfLYDD8RP3BS0U_g', {
-                               attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors,'
-                               + '<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery &#169; <a href="http://mapbox.com">Mapbox</a>',
-                               id: 'kiezatlas.m7222ia5'}).addTo(map)
-                           console.log("Lat", latitude, "Lng", longitude)
-                           L.circleMarker([latitude, longitude],).addTo(map);
-                        } else {
-                            console.log("Leaflet not loaded yet")
-                        }
-                    }
-                </script>
                 <div id="map">
                     <div class="ui container">
                         <br/>Lade Stadtplan...
+                    </div>
+                    <div id="map-sidebar"></div>
+                    <div class="ui input circle-control blue4">
+                        <input type="button" class="ui button" onclick="activate_circle_search()" value="Umkreissuche aktivieren" />
                     </div>
                 </div>
             </div>
@@ -247,6 +300,8 @@
                      <a th:href="${geoobject.imprint}">Impressum</a>
                 </div>
             </div>
+
+            <div id="dialog-confirm" title="Eintrag löschen?">Willst du diesen Standort in den Papierkorb verschieben so dass dieser vorerst nicht mehr &ouml;ffentlich sichtbar ist?</div>
 
             <!-- Footer Segment -->
             <div th:replace="fragments/footer :: footer-new "></div>

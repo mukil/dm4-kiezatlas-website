@@ -5,55 +5,38 @@
         <meta charset="UTF-8"/>
         <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 
-        <link rel="stylesheet" href="/de.kiezatlas/style/kiezatlas.css"/>
-        <link rel="stylesheet" href="/de.kiezatlas.website/css/sitestyle.css"/>
-        <link rel="stylesheet" href="/de.kiezatlas.website/css/semantic-ui/2.2/components/search.min.css"/>
-        <link rel="stylesheet" href="/de.kiezatlas.website/css/semantic-ui/2.2/components/tab.min.css"/>
+        <link rel="stylesheet" type="text/css" href="/de.kiezatlas.website/css/kiezatlas-web.css" />
 
-        <script src="/de.kiezatlas.angebote/dist/vendor/jquery-1.9.1-and-1.12.1-ui-custom.min.js"></script>
-        <script src="/de.kiezatlas.website/css/semantic-ui/2.2/sidebar.min.js"></script>
-        <script src="/de.kiezatlas.website/css/semantic-ui/2.2/dropdown.min.js"></script>
-        <script src="/de.kiezatlas.website/css/semantic-ui/2.2/transition.min.js"></script>
-        <script src="/de.kiezatlas.website/dist/vendor/dm4-webclient-utils.min.js"></script>
-        <script src="/de.kiezatlas.website/ka-restclient.js"></script>
-        <script src="/de.kiezatlas.website/ka-admin.js"></script>
+        <script defer="true" src="/de.kiezatlas.website/vendor/jquery/jquery-3.2.1.min.js"></script>
+        <script defer="true" src="/de.kiezatlas.website/css/semantic-ui/2.3/dist/semantic.min.js"></script>
+        <script defer="true" src="/de.kiezatlas.website/ka-restclient.js"></script>
+        <script defer="true" src="/de.kiezatlas.website/ka-startseite.js" onload="init_page('editors')"></script>
+        <script defer="true" src="/de.kiezatlas.website/ka-admin.js"></script>
 
-        <script type="text/javascript" th:inline="javascript">
-        /*<![CDATA[*/
-            var $sidebarUi = undefined
-            // App initialization
-            $(document).ready(function(e) {
-                $sidebarUi = $('.ui.sidebar').sidebar('setting', 'dimPage', false)
-                $('#listing select.ui.dropdown').dropdown({
-                    fullTextSearch: true, placeholder: "Benutzer auswählen"
-                })
-                 // $('#districts').dropdown()
-                list.init_page()
-            })
-
-            function refresh_regionen_list() {
-                var selection = document.getElementById("districts")
-                if (selection) {
-                    console.log("Navigating to district bezirksregionen list...")
-                    var districtId = document.getElementById("districts").value
-                    window.document.location.href = "/website/list/bezirksregionen/" + districtId
-                }
-            }
-        /*]]>*/
-        </script>
         <meta th:replace="fragments/tracker" />
     </head>
-    <body class="kiezatlas list comments">
+    <body class="ui page detail kiezatlas list comments">
 
-        <div class="top-menu" th:include="fragments/navigation :: top (publisher=${is_publisher})"></div>
+        <div class="navigation">
+            <div class="top-menu" th:include="fragments/navigation :: top-menu (publisher=${is_publisher})"></div>
+        </div>
 
-        <div class="ui vertical left menu sidebar"
-             th:include="fragments/navigation :: vertical (publisher=${is_publisher})"></div>
+        <div class="ui vertical left menu sidebar" th:include="fragments/navigation :: vertical (publisher=${is_publisher})"></div>
 
         <div class="pusher">
 
-            <div id="header">
-                <h2>AnsprechpartnerInnen in den Bezirkrsregionen</h2>
+            <div id="commands" class="ui container vertical segment commands">
+                <div class="commands buttons ui">
+                    <a class="button ui" href="/website/list/freischalten">Neue Orte freischalten</a>
+                    <a th:if="${is_district_admin}" class="button ui green active" href="/website/list/bezirksregionen">StadtteilkoordinatorInnen</a>
+                    <a class="button ui" href="/website/list/hinweise">Kommentare</a>
+                    <a class="button ui" href="/website/list/ansprechpartner">AnsprechpartnerInnen</a>
+                    <a class="button ui" href="/website/list/filter">Gro&szlig;e Listenansicht</a>
+                </div>
+                <p th:if="${not is_publisher}"><b>Sorry!</b><br/>Sie haben aktuell nicht die n&ouml;tigen Berechtigungen um neue AnsprechpartnerInnen im Kiezatlas zu verwalten.</p>
+            </div>
+
+            <div id="header" class="ui container vertical segment">
                 <form class="filter-form" th:if="${is_publisher}">
                     <label class="filter" for="districts">Bezirk
                         <select id="districts" class="ui dropdown basic" onchange="refresh_regionen_list()">
@@ -63,18 +46,10 @@
                         </select>
                     </label>
                 </form>
-                <div class="commands buttons ui">
-                    <a class="button ui" href="/website/list/freischalten">Neue Orte freischalten</a>
-                    <a th:if="${is_district_admin}" class="button ui green active" href="/website/list/bezirksregionen">StadtteilkoordinatorInnen</a>
-                    <a class="button ui" href="/website/list/hinweise">Kommentare</a>
-                    <a class="button ui" href="/website/list/ansprechpartner">AnsprechpartnerInnen</a>
-                    <a class="button ui" href="/website/list/filter">Gro&szlig;e Listenansicht</a>
-                </div>
-                <p th:if="${not is_publisher}"><b>Sorry!</b><br/>Sie haben aktuell nicht die n&ouml;tigen Berechtigungen um neue Einrichtungen im Kiezatlas freizuschalten.</p>
             </div>
 
             <!-- Details Area -->
-            <div th:if="${is_publisher}" class="ui container">
+            <div th:if="${is_publisher}" class="ui container vertical segment list">
                 <p class="info">
                     Auf dieser Seite kannst du die AnsprechpartnerInnen f&uuml;r die folgenden Bezirksregionen festlegen.
                     Die hier gelisteten NutzerInnen d&uuml;rfen dann neue Orte freischalten, Ortsdaten aktualisieren und Angebotsinfos revidieren.
@@ -118,9 +93,8 @@
 
         </div>
 
-        <p>&nbsp;</p>
-
-        <div class="footer" th:include="fragments/navigation :: footer-links (publisher=false)"></div>
+        <!-- Footer Segment -->
+        <div th:replace="fragments/footer :: footer-new "></div>
 
     </body>
 </html>

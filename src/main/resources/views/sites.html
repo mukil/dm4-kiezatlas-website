@@ -9,76 +9,79 @@
         <link rel="stylesheet" href="/de.kiezatlas.angebote/dist/vendor/jquery-ui-1.12.1-kiezatlas.min.css"/>
 
         <link rel="stylesheet" href="/de.kiezatlas.website/css/sitestyle.css"/>
-        <link rel="stylesheet" href="/de.kiezatlas.website/css/semantic-ui/2.2/components/button.min.css"/>
-        <link rel="stylesheet" href="/de.kiezatlas.website/css/semantic-ui/2.2/components/search.min.css"/>
+        <link rel="stylesheet" type="text/css" href="/de.kiezatlas.website/css/kiezatlas-web.css" />
 
-        <script src="/de.kiezatlas.website/vendor/pouchdb/pouchdb-3.6.0.min.js"></script>
-        <script src="/de.kiezatlas.angebote/dist/vendor/jquery-1.9.1-and-1.12.1-ui-custom.min.js"></script>
+        <!--script defer="true" src="/de.kiezatlas.website/vendor/jquery/jquery-3.2.1.min.js"></script-->
+        <script defer="true" src="/de.kiezatlas.angebote/dist/vendor/jquery-1.9.1-and-1.12.1-ui-custom.min.js"></script>
+        <script defer="true" src="/de.kiezatlas.website/css/semantic-ui/2.3/dist/semantic.min.js"></script>
+        <script defer="true" src="/de.kiezatlas.website/ka-restclient.js"></script>
+        <!--script src="/de.kiezatlas.website/dist/vendor/dm4-webclient-utils.min.js"></script-->
 
-        <script src="/de.kiezatlas.website/dist/vendor/dm4-webclient-utils.min.js"></script>
-
-        <script src="/de.kiezatlas.website/ka-restclient.js"></script>
-        <script src="/de.kiezatlas.website/ka-site-editor.js"></script>
-        <script th:inline="javascript">
+        <script defer="true" src="/de.kiezatlas.website/ka-site-editor.js"></script>
+        <script defer="true" th:inline="javascript">
         /*<![CDATA[*/
-            $(document).ready(function(e) {
-                var page = /*[[${page}]]*/ undefined
-                if (page === "site-editor") {
-                    sites.init_site_editor()
-                } else if (page === "site-listing") {
-                    sites.init_list()
-                } 
-            })
+            var page = /*[[${page}]]*/ undefined
         /*]]>*/
         </script>
+        <script defer="true" src="/de.kiezatlas.website/ka-startseite.js" onload="init_page(page)"></script>
         <meta th:replace="fragments/tracker" />
     </head>
-    <body class="kiezatlas sites">
+    <body class="ui page detail kiezatlas sites">
 
-        <div class="top-menu" th:include="fragments/navigation :: top (publisher=${is_publisher})"></div>
-
-        <div id="header">
-            <div class="welcome" th:if="${!site}">
-                <h2 class="title">Kiezatlas 2 Stadtpl&auml;ne</h2>
-            </div>
+        <div class="navigation">
+            <div class="top-menu" th:include="fragments/navigation :: top-menu (publisher=${is_publisher})"></div>
         </div>
 
-        <div class="listing" th:if="${#strings.contains(page, 'site-listing')}">
-            <ul class="sites"></ul>
-        </div>
+        <div class="ui vertical left menu sidebar" th:include="fragments/navigation :: vertical (publisher=${is_publisher})"></div>
 
-        <div class="editor" th:if="${site}">
-            <div class="site" th:id="${site.id}">
-                <h3 th:text="${site.simpleValue}"></h3>
-                <div class="label">Neue Einrichtungen diesem Stadtplan zuweisen</div>
-            </div>
-            <div class="flex-container" th:if="${#strings.contains(page, 'site-editor')}">
-                <div class="selector">
-                    <div class="ui search">
-                        <div class="ui icon input">
-                            <input class="prompt" type="text" placeholder="Suche nach Einrichtungen" />
-                        </div>
-                        <button class="circular ui icon button basic small">
-                            <i class="icon search"></i>
-                        </button>
+        <div class="pusher">
+
+            <div class="ui vertical segment container">
+                <div id="header">
+                    <div class="welcome" th:if="${!site}">
+                        <h2 class="title">Kiezatlas 2 Stadtpl&auml;ne</h2>
                     </div>
-                    <ul class="results"></ul>
+                     <div class="listing" th:if="${#strings.contains(page, 'site-listing')}">
+                        <ul class="sites"></ul>
+                    </div>
                 </div>
-                <div class="assigned">
-                    <div class="label"><span th:if="${geoobjects}" th:text="${geoobjects.size}"></span> Einrichtungen sind diesem Stadtplan aktuell zugewiesen:</div>
-                    <ul class="geoobjects" th:if="${geoobjects}">
-                        <li th:each="item : ${geoobjects}" th:id="${item.id}">
-                            <span style="font-weight: bold;" th:text="${item.simpleValue}">Einrichtung</span><br/>
-                            <a th:href="'/website/edit/' + ${site.id} + '/facets/' + ${item.id}">Facetten bearbeiten</a>,
-                            <a href="#remove" th:onclick="'sites.remove_assignment(' + ${item.id} + ', '+${site.id}+')'">Aus dem Stadtplan entfernen</a>
-                        </li>
-                    </ul>
+
+                <div class="editor" th:if="${site}">
+                    <div class="site" th:id="${site.id}">
+                        <h3 th:text="${site.simpleValue}"></h3>
+                        <div class="label">Neue Einrichtungen diesem Stadtplan zuweisen</div>
+                    </div>
+                    <div class="flex-container" th:if="${#strings.contains(page, 'site-editor')}">
+                        <div class="selector">
+                            <div class="ui search">
+                                <div class="ui icon input">
+                                    <input class="prompt" type="text" placeholder="Suche nach Einrichtungen" />
+                                </div>
+                                <button class="circular ui icon button basic small">
+                                    <i class="icon search"></i>
+                                </button>
+                            </div>
+                            <ul class="results"></ul>
+                        </div>
+                        <div class="assigned">
+                            <div class="label"><span th:if="${geoobjects}" th:text="${geoobjects.size}"></span> Einrichtungen sind diesem Stadtplan aktuell zugewiesen:</div>
+                            <ul class="geoobjects" th:if="${geoobjects}">
+                                <li th:each="item : ${geoobjects}" th:id="${item.id}">
+                                    <span style="font-weight: bold;" th:text="${item.simpleValue}">Einrichtung</span><br/>
+                                    <a th:href="'/website/edit/' + ${site.id} + '/facets/' + ${item.id}">Facetten bearbeiten</a>,
+                                    <a href="#remove" th:onclick="'sites.remove_assignment(' + ${item.id} + ', '+${site.id}+')'">Aus dem Stadtplan entfernen</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div id="dialog-confirm"></div>
                 </div>
             </div>
-            <div id="dialog-confirm"></div>
+
         </div>
 
-        <div class="footer" th:include="fragments/navigation :: footer-links (publisher=${is_publisher})"></div>
+        <!-- Footer Segment -->
+        <div th:replace="fragments/footer :: footer-new "></div>
 
     </body>
 </html>

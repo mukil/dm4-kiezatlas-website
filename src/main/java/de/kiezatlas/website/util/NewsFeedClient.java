@@ -49,7 +49,7 @@ public class NewsFeedClient {
                result.append(line);
            }
            rd.close();
-           List<NewsFeedItem> newsfeed = parseXMLNewsfeedString(result, 3);
+           List<NewsFeedItem> newsfeed = parseXMLNewsfeedString(result, 4);
            log.info("Site Feed OK - Fetched " + newsfeed.size() + " news items");
            return newsfeed;
        } catch (UnknownHostException uke) {

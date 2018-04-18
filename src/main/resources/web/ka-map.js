@@ -28,28 +28,35 @@ var leafletMap = (function($, L) {
     var map = {}
     var items = []
 
-    map.setup = function(elementId, mouseWheelZoom) {
-        map.elementId = elementId
+    map.setup = function(elementId, mouseWheelZoom, newMap, initialZoom) {
         // console.log("Set up Leaflet Map #"+ elementId + ", mouseWheelZoom", mouseWheelZoom)
-        map.map = new L.Map(elementId, {
+        if (newMap) {
+            map.map = newMap
+            map.elementId = 'map' // fallback: Leaflet map object seems not to store the element id it was initialized in
+        } else {
+            map.map = new L.Map(elementId)
+            map.elementId = elementId
+            L.tileLayer('https://api.tiles.mapbox.com/v4/kiezatlas.pd8lkp64/{z}/{x}/{y}.png?' // old style id="kiezatlas.map-feifsq6f"
+                + 'access_token=pk.eyJ1Ijoia2llemF0bGFzIiwiYSI6ImNpa3BndjU2ODAwYm53MGxzM3JtOXFmb2IifQ._PcBhOcfLYDD8RP3BS0U_g', {
+                attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors,'
+                + '<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery &#169; <a href="http://mapbox.com">Mapbox</a>',
+                id: 'kiezatlas.m7222ia5'}).addTo(map.map)
+        }
+        L.Util.setOptions(map.map, {
             dragging: true, touchZoom: true, scrollWheelZoom: false, doubleClickZoom: true,
-            zoomControl: false, minZoom: 9, max_bounds: mapping.max_bounds
+            zoomControl: false, minZoom: 9
         })
-        map.zoom = L.control.zoom({ position: "topright" })
-        map.zoom.addTo(map.map)
+        map.map.setMaxBounds(mapping.max_bounds)
+        // map.zoom = L.control.zoom({ position: "topright" })
+        // map.zoom.addTo(map.map)
         L.control.scale( { imperial: false, updateWhenIdle: true } ).addTo(map.map)
-        L.tileLayer('https://api.tiles.mapbox.com/v4/kiezatlas.pd8lkp64/{z}/{x}/{y}.png?' // old style id="kiezatlas.map-feifsq6f"
-            + 'access_token=pk.eyJ1Ijoia2llemF0bGFzIiwiYSI6ImNpa3BndjU2ODAwYm53MGxzM3JtOXFmb2IifQ._PcBhOcfLYDD8RP3BS0U_g', {
-            attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors,'
-            + '<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery &#169; <a href="http://mapbox.com">Mapbox</a>',
-            id: 'kiezatlas.m7222ia5'}).addTo(map.map)
         map.map.on('locationfound', map.on_browser_location_found)
         map.map.on('locationerror', map.on_browser_location_error) // ### just if user answers "never"
         map.map.on('dragend', map.on_map_drag_end)
         map.map.on('drag', map.on_map_drag)
         //
         mapping.control_group.addTo(map.map)
-        map.map.setView(map.get_current_location_coords(), mapping.zoom_kiez)
+        map.map.setView(map.get_current_location_coords(), (initialZoom) ? initialZoom : mapping.zoom_kiez)
         //
         map.map.on('zoomend', function(e) {
             if (mapping.marker_radius_fixed) return;
@@ -185,7 +192,6 @@ var leafletMap = (function($, L) {
     map.create_geo_object_marker = function(geo_object) {
         if (geo_object.hasOwnProperty("latitude")
             && geo_object.hasOwnProperty("longitude")) {
-            console.log('creating geo object marker')
             // 0) pre-process: geo object has geo coordinate
             var result = geo_object
             // 1) pre-processing: do worldwide coordinate check & log
@@ -299,11 +305,11 @@ var leafletMap = (function($, L) {
     map.calculate_default_circle_options = function(marker_topic) {
         // console.log("creating marker for ", marker_topic["name"], "with location_id", marker_topic["location_id"])
         // var hasAngebote = (marker_topic["angebote_count"] > 0) ? true : false
-        var angeboteDashArray = map.calculate_geo_object_dash_array(marker_topic)
+        // var angeboteDashArray = map.calculate_geo_object_dash_array(marker_topic)
         var angeboteId = (marker_topic.hasOwnProperty("angebots_id")) ? marker_topic["angebots_id"] : undefined
         return { // ### improve new colors for angebote rendering
             fillColor: model.colors.ka_yellow, color : model.colors.blue3, fillOpacity: 0.4, 
-            lineCap: 'square', dashArray: angeboteDashArray, weight: 2,
+            lineCap: 'square', weight: 2, // dashArray: angeboteDashArray,
             title: marker_topic["name"], name: marker_topic["name"], alt: "Markierung von " + marker_topic["name"],
             bezirk_uri: marker_topic["bezirk_uri"], uri: marker_topic["uri"], // riseOnHover: true,
             bezirksregion_uri: marker_topic["bezirksregion_uri"], z_indexOffset: 1001, uri: marker_topic["uri"],
@@ -543,6 +549,7 @@ var leafletMap = (function($, L) {
     }
 
     map.fire_geo_marker_select = function(selection) {
+        console.log("fire geo marker select", map.elementId)
         var domElement = document.getElementById(map.elementId)
         fire_custom_event(domElement, 'marker_select', selection)
     }

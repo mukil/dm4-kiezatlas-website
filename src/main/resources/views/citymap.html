@@ -7,48 +7,42 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 
         <link rel="stylesheet" href="/de.kiezatlas.website/vendor/leaflet-1.3.1/leaflet.css"/>
-        <link rel="stylesheet" href="/de.kiezatlas.angebote/dist/vendor/jquery-ui-1.12.1-kiezatlas.min.css"/>
 
-        <link rel="stylesheet" href="/de.kiezatlas.website/css/sitestyle.css"/>
-        <link rel="stylesheet" href="/de.kiezatlas.website/css/semantic-ui/2.3/dist/components/search.min.css"/>
-        <link rel="stylesheet" href="/de.kiezatlas.website/css/semantic-ui/2.3/dist/components/tab.min.css"/>
+        <!--link rel="stylesheet" href="/de.kiezatlas.website/css/sitestyle.css"/-->
+        <link rel="stylesheet" type="text/css" href="/de.kiezatlas.website/css/kiezatlas-web.css" />
 
         <!-- link rel="icon" href="" type="image/vnd.microsoft.icon"/-->
 
         <script src="/de.kiezatlas.website/vendor/pouchdb/pouchdb-6.2.0.min.js"></script>
-        <script src="/de.kiezatlas.angebote/dist/vendor/jquery-1.9.1-and-1.12.1-ui-custom.min.js"></script>
-        <script src="/de.kiezatlas.website/vendor/leaflet-1.3.1/leaflet.js"></script>
+        <!--script src="/de.kiezatlas.angebote/dist/vendor/jquery-1.9.1-and-1.12.1-ui-custom.min.js"></script-->
+        <script defer="true" src="/de.kiezatlas.website/vendor/jquery/jquery-3.2.1.min.js"></script>
+        <script defer="true" src="/de.kiezatlas.website/vendor/leaflet-1.3.1/leaflet.js"></script>
         <script defer="true" src="/de.kiezatlas.website/vendor/leaflet-1.3.1/L.CircleEditor.js"></script>
-        <script src="/de.kiezatlas.website/dist/vendor/dm4-webclient-utils.min.js"></script>
-        <script src="/de.kiezatlas.website/dist/ka-website-frontpage.js"></script>
+        <script defer="true" src="/de.kiezatlas.website/dist/vendor/dm4-webclient-utils.min.js"></script>
+        <script defer="true" src="/de.kiezatlas.website/css/semantic-ui/2.3/dist/semantic.min.js"></script>
+        <script defer="true" src="/de.kiezatlas.website/dist/ka-website-frontpage.js"></script>
+        <script defer="true" src="/de.kiezatlas.website/ka-startseite.js" onload="init_page('citymap')"></script>
         <!--script src="/de.kiezatlas.website/dist/ka-website-frontpage.min.js"></script-->
-        <script src="/de.kiezatlas.website/css/semantic-ui/2.3/dist/components/tab.min.js"></script>
-
-        <script type="text/javascript" th:inline="javascript">
-        /*<![CDATA[*/
-
-            var $sidebarUi = undefined
-            // App initialization
-            $(document).ready(function(e) {
-                $sidebarUi = $('.ui.sidebar').sidebar('setting', 'dimPage', false)
-                // $sidebarUi.sidebar('setting', 'scrollLock', true).sidebar('setting', 'returnScroll', true).sidebar('setting', 'dimPage', false).sidebar('hide')
-                // 1) setup citymap page
-                citymap.init(window.location.pathname.substr(1), ($('#karte').css("display") !== "none"))
-                citymap.register_page_handlers()
-                // 2) update layout
-                leafletMap.fit_to_height(65)
-                citymap.set_sidebar_height()
-                // 3) used for imprint
-                kiezatlas.load_district_topics()
-
-            })
-        /*]]>*/
+        <!--script src="/de.kiezatlas.website/css/semantic-ui/2.3/dist/components/tab.min.js"></script-->
+        <script th:inline="javascript">
+            /*<![CDATA[*/
+                var frontpage = false
+                searchText = /*[[${site}]]*/ '';
+                searchType = /*[[${searchType}]]*/ 'place';
+                searchContext = /*[[${searchContext}]]*/ '0';
+                searchMethod = /*[[${searchMethod}]]*/ 'quick';
+                searchNearby = /*[[${searchNearby}]]*/ 'berlin';
+                console.log("initializing search=", searchText, "type=", searchType, "site=", searchContext,
+                    "method=", searchMethod, "nearby=", searchNearby)
+            /*]]>*/
         </script>
         <meta th:replace="fragments/tracker" />
     </head>
-    <body class="kiezatlas citymap"><!-- ### change classname to citymap -->
+    <body class="ui page detail kiezatlas citymap"><!-- ### change classname to citymap -->
 
-        <div class="top-menu" th:include="fragments/navigation :: top (publisher=${is_publisher})"></div>
+        <div class="navigation">
+            <div class="top-menu" th:include="fragments/navigation :: top-menu (publisher=${is_publisher})"></div>
+        </div>
 
         <div class="ui vertical left menu sidebar" th:include="fragments/navigation :: vertical (publisher=${is_publisher})"></div>
 
@@ -81,14 +75,14 @@
 
                         <div class="criterias"></div>
 
-                        <!-- Hidden Search Dialog (visible on small screen devices only) -->
+                        <!-- Search Dialog  -->
                         <div class="ui search">
-                            <div class="ui icon input">
-                                <input class="prompt" type="text" placeholder="Suchanfrage" />
+                            <div class="ui icon action input">
+                                <input type="text" placeholder="Suchanfrage" />
+                                <button class="circular ui icon button primary small">
+                                    <i class="icon search"></i>
+                                </button>
                             </div>
-                            <button class="circular ui icon button primary small">
-                                <i class="icon search"></i>
-                            </button>
                         </div>
 
                     </div>

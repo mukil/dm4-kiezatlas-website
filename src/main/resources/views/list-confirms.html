@@ -5,58 +5,26 @@
         <meta charset="UTF-8"/>
         <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 
-        <link rel="stylesheet" href="/de.kiezatlas/style/kiezatlas.css"/>
-        <link rel="stylesheet" href="/de.kiezatlas.website/css/sitestyle.css"/>
-        <link rel="stylesheet" href="/de.kiezatlas.website/css/semantic-ui/2.2/components/search.min.css"/>
-        <link rel="stylesheet" href="/de.kiezatlas.website/css/semantic-ui/2.2/components/tab.min.css"/>
+        <link rel="stylesheet" type="text/css" href="/de.kiezatlas.website/css/kiezatlas-web.css" />
 
-        <script src="/de.kiezatlas.website/dist/vendor/jquery-1.9.1.min.js"></script>
-        <script src="/de.kiezatlas.website/css/semantic-ui/2.2/sidebar.min.js"></script>
-        <!--script src="/de.kiezatlas.website/css/semantic-ui/2.2/dropdown.min.js"></script>
-        <script src="/de.kiezatlas.website/css/semantic-ui/2.2/transition.min.js"></script-->
-
-        <script type="text/javascript" th:inline="javascript">
-        /*<![CDATA[*/
-            var $sidebarUi = undefined
-            // App initialization
-            $(document).ready(function(e) {
-                $sidebarUi = $('.ui.sidebar').sidebar('setting', 'dimPage', false)
-                console.log("hello publisher")
-                // $('.ui.dropdown').dropdown();
-            })
-
-            function refresh_confirmation_list() {
-                var selection = document.getElementById("districts")
-                if (selection) {
-                    console.log("Navigating to district confirmation list...")
-                    var districtId = document.getElementById("districts").value
-                    window.document.location.href = "/website/list/freischalten/" + districtId
-                }
-            }
-        /*]]>*/
-        </script>
+        <script defer="true" src="/de.kiezatlas.website/vendor/jquery/jquery-3.2.1.min.js"></script>
+        <script defer="true" src="/de.kiezatlas.website/css/semantic-ui/2.3/dist/semantic.min.js"></script>
+        <script defer="true" src="/de.kiezatlas.website/ka-restclient.js"></script>
+        <script defer="true" src="/de.kiezatlas.website/ka-startseite.js" onload="init_page('confirm')"></script>
         <meta th:replace="fragments/tracker" />
     </head>
-    <body class="kiezatlas list confirm">
 
-        <div class="top-menu" th:include="fragments/navigation :: top (publisher=${is_publisher})"></div>
+    <body class="ui page detail kiezatlas list confirm">
 
-        <div class="ui vertical left menu sidebar"
-             th:include="fragments/navigation :: vertical (publisher=${is_publisher})"></div>
+        <div class="navigation">
+            <div class="top-menu" th:include="fragments/navigation :: top-menu (publisher=${is_publisher})"></div>
+        </div>
 
-        <div class="pusher">
+        <div class="ui vertical left menu sidebar" th:include="fragments/navigation :: vertical (publisher=${is_publisher})"></div>
 
-            <div id="header">
-                <h2>Neue Ortseintr&auml;ge zur Freischaltung</h2>
-                <form th:if="${#strings.equals(viewtype, 'bezirk') and is_publisher}" class="filter-form">
-                    <label>Region
-                        <select id="districts" class="ui dropdown basic" onchange="refresh_confirmation_list()">
-                            <option th:each="district: ${userDistricts}" th:selected="${districtId == district.id} ? true : false"
-                                    th:value="${district.id}" th:text="${district.simpleValue}">
-                            </option>
-                        </select>
-                    </label>
-                </form>
+        <div class="ui pusher">
+
+            <div id="commands" class="ui container vertical segment commands">
                 <div class="commands ui buttons">
                     <a class="button ui green active" href="/website/list/freischalten">Neue Orte freischalten</a>
                     <a th:if="${is_district_admin}" class="button ui" href="/website/list/bezirksregionen">StadtteilkoordinatorInnen</a>
@@ -67,8 +35,19 @@
                 <p th:if="${not is_publisher}"><b>Sorry!</b><br/>Sie haben aktuell nicht die n&ouml;tigen Berechtigungen um neue Einrichtungen im Kiezatlas freizuschalten.</p>
             </div>
 
+            <div id="header" class="ui container vertical segment">
+                <form th:if="${#strings.equals(viewtype, 'bezirk') and is_publisher}" class="filter-form">
+                    <label>Region</label>
+                    <select id="districts" class="ui dropdown basic" onchange="refresh_confirmation_list()">
+                        <option th:each="district: ${userDistricts}" th:selected="${districtId == district.id} ? true : false"
+                                th:value="${district.id}" th:text="${district.simpleValue}">
+                        </option>
+                    </select>
+                </form>
+             </div>
+
             <!-- Details Area -->
-            <div th:if="${is_publisher}" class="ui container">
+            <div th:if="${is_publisher}" class="ui container vertical segment list">
 
                 <!-- Bezirks-wide confirmation list -->
                 <div id="listing" th:if="${#strings.equals(viewtype, 'bezirk')}">
@@ -121,9 +100,8 @@
 
         </div>
 
-        <p>&nbsp;</p>
-
-        <div class="footer" th:include="fragments/navigation :: footer-links (publisher=false)"></div>
+        <!-- Footer Segment -->
+        <div th:replace="fragments/footer :: footer-new "></div>
 
     </body>
 </html>

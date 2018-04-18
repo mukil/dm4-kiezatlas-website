@@ -1,39 +1,52 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title th:text="'Edit ' + ${geoobject.name} + ' - Kiezatlas'"></title>
+        <title th:text="'Bearbeiten ' + ${geoobject.name} + ' - Kiezatlas'"></title>
         <meta charset="UTF-8"/>
         <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 
-        <link rel="stylesheet" href="/de.kiezatlas.angebote/dist/vendor/jquery-ui-1.12.1-kiezatlas.min.css"/>
+        <link type="text/css" rel="stylesheet" href="/de.kiezatlas.angebote/dist/vendor/jquery-ui-1.12.1-kiezatlas.min.css"/>
         <link type="text/css" rel="stylesheet" href="/de.kiezatlas.website/vendor/leaflet/leaflet.css"/>
-        <link type="text/css" rel="stylesheet" href="/de.kiezatlas.website/css/sitestyle.css"/>
 
-        <script src="/de.kiezatlas.angebote/dist/vendor/jquery-1.9.1-and-1.12.1-ui-custom.min.js"></script>
-        <script type="text/javascript" src="/de.kiezatlas.website/vendor/dm4-webclient/jquery/jquery.ui.touch-punch.min.js"></script>
-        <script type="text/javascript" src="/de.kiezatlas.website/dist/vendor/dm4-webclient-utils.min.js"></script>
-        <script type="text/javascript" src="/de.kiezatlas.website/vendor/dm4-webclient/util/gui_toolkit.js"></script>
-        <script type="text/javascript" src="/de.kiezatlas.website/vendor/leaflet/leaflet.js"></script>
-        <script type="text/javascript" src="/de.kiezatlas.angebote/vendor/ckeditor/ckeditor.js"></script>
-        <script type="text/javascript" src="/de.kiezatlas.angebote/vendor/ckeditor/config.js"></script>
-        <script type="text/javascript" src="/de.kiezatlas.website/ka-restclient.js"></script>
+        <link rel="stylesheet" type="text/css" href="/de.kiezatlas.website/css/kiezatlas-web.css" />
+        <!--link rel="stylesheet" type="text/css" href="/de.kiezatlas.website/vendor/leaflet-1.3.1/leaflet.css" /-->
+        <!--link type="text/css" rel="stylesheet" href="/de.kiezatlas.website/css/sitestyle.css"/-->
+
+        <script defer="true" type="text/javascript" src="/de.kiezatlas.angebote/dist/vendor/jquery-1.9.1-and-1.12.1-ui-custom.min.js"></script>
+        <script defer="true" type="text/javascript" src="/de.kiezatlas.website/vendor/dm4-webclient/jquery/jquery.ui.touch-punch.min.js"></script>
+        <script defer="true" type="text/javascript" src="/de.kiezatlas.website/css/semantic-ui/2.3/dist/semantic.min.js"></script>
+        <script defer="true" type="text/javascript" src="/de.kiezatlas.website/dist/vendor/dm4-webclient-utils.min.js"></script>
+        <script defer="true" type="text/javascript" src="/de.kiezatlas.website/vendor/dm4-webclient/util/gui_toolkit.js"></script>
+        <!--script defer="true" type="text/javascript" src="/de.kiezatlas.website/vendor/leaflet/leaflet.js"></script-->
+        <script defer="true" type="text/javascript" src="/de.kiezatlas.angebote/vendor/ckeditor/ckeditor.js"></script>
+        <script defer="true" type="text/javascript" src="/de.kiezatlas.angebote/vendor/ckeditor/config.js"></script>
+        <script defer="true" type="text/javascript" src="/de.kiezatlas.website/ka-restclient.js"></script>
+        <script defer="true" type="text/javascript" src="/de.kiezatlas.website/ka-model.js"></script>
+        <script defer="true" type="text/javascript" src="/de.kiezatlas.website/ka-startseite.js" onload="init_page('place-edit')"></script>
+        <!--script defer="true" src="/de.kiezatlas.website/vendor/jquery/jquery-3.2.1.min.js"></script-->
+        <script defer="true" type="text/javascript" src="/de.kiezatlas.website/css/semantic-ui/2.3/dist/semantic.min.js"></script>
+        <script defer="true" type="text/javascript" src="/de.kiezatlas.website/vendor/leaflet-1.3.1/leaflet.js"></script>
         <!-- script src="/de.kiezatlas.website/ka-map.js"></script-->
 
         <script type="text/javascript" th:inline="javascript">
         /*<![CDATA[*/
-            // App initialization
-            var draggableMarker, map, circleMarker, latitude, longitude, lCoordinate;
-            var kiezatlasWsId = /*[[${workspace.id}]]*/ undefined;
-            if (kiezatlasWsId) {
-                restc.erase_cookie("dm4_workspace_id")
-                restc.create_cookie("dm4_workspace_id", kiezatlasWsId)
-            }
-            document.cookie = " dm4_no_geocoding=true;"
-
+            // Page initialization
+            var districtId = /*[[${geoobject.bezirkId}]]*/ '-1';
+            var districtName = /*[[${geoobject.bezirk}]]*/ 'Berlin';
+            console.log("initialized district filter in frontend", districtId, districtName)
+            var NEIGHBOUR_QUERY_RADIUS = 800
+            var draggableMarker, map, circleMarker, name, latitude, longitude, lCoordinate;
+            latitude = /*[[${geoobject.latitude}]]*/ undefined;
+            longitude = /*[[${geoobject.longitude}]]*/ undefined;
+            name = /*[[${geoobject.name}]]*/ undefined;
             window.onload = function() {
-                latitude = /*[[${geoobject.latitude}]]*/ undefined;
-                longitude = /*[[${geoobject.longitude}]]*/ undefined;
                 lCoordinate = L.latLng(latitude, longitude)
+                var kiezatlasWsId = /*[[${workspace.id}]]*/ undefined;
+                if (kiezatlasWsId) {
+                    js.remove_cookie("dm4_workspace_id")
+                    js.set_cookie("dm4_workspace_id", kiezatlasWsId)
+                }
+                document.cookie = " dm4_no_geocoding=true;"
                 map = L.map('map', { scrollWheelZoom: false } ).setView(lCoordinate, 17)
                 L.tileLayer('https://api.tiles.mapbox.com/v4/kiezatlas.pd8lkp64/{z}/{x}/{y}.png?' // old style id="kiezatlas.map-feifsq6f"
                     + 'access_token=pk.eyJ1Ijoia2llemF0bGFzIiwiYSI6ImNpa3BndjU2ODAwYm53MGxzM3JtOXFmb2IifQ._PcBhOcfLYDD8RP3BS0U_g', {
@@ -48,15 +61,25 @@
                     document.getElementById('longitude-val').value = Number((pos.lng).toFixed(5))
                 })
                 circleMarker = L.circleMarker(lCoordinate, {
-                    weight: 3, opacity: 0.6, fillColor: "#a9a9a9", fillOpacity: 0.2, color: "#8f1414", clickable: true
+                    fillColor: model.colors.ka_yellow, color : model.colors.blue3, fillOpacity: 1,
+                    weight: 3, opacity: 1, radius: 10
                 })
                 circleMarker.addTo(map)
-                /** circleMarker.on('click', function(e) {
-                    do_manual_placement()
-                }) **/
                 CKEDITOR.inline('beschreibung')
                 CKEDITOR.inline('oeffnungszeiten')
                 do_manual_placement()
+                // 2) fetch geo objects naerby
+                restc.get_places_nearby(lCoordinate, NEIGHBOUR_QUERY_RADIUS, function(places) {
+                    console.log("Found neighbouring places in radius of " + NEIGHBOUR_QUERY_RADIUS + "m", places.length)
+                    for (var p in places) {
+                        var place = places[p]
+                        if (place.name !== name && (place.longitude != longitude && place.latitude != latitude)) {
+                            var neighbour = create_nearby_marker(place)
+                            neighbour.addTo(map)
+                        }
+                    }
+                })
+                // circleMarker.bringToFront()
             }
 
             function do_reverse_geocode() {
@@ -297,150 +320,182 @@
         </script>
         <meta th:replace="fragments/tracker" />
     </head>
-    <body class="kiezatlas topic edit">
+    <body class="ui page detail kiezatlas topic edit">
 
-        <div class="top-menu" th:include="fragments/navigation :: top (publisher=${is_publisher})"></div>
-
-        <div id="header">
-            <div class="welcome"></div>
+        <div class="navigation">
+            <div class="top-menu" th:include="fragments/navigation :: top-menu (publisher=${is_publisher})"></div>
         </div>
 
-        <!-- Details Area -->
-        <div id="detail-area">
-            <h2 th:if="${geoobject.id eq -1}">Neuen Ort anlegen</h2>
-            <h2 th:if="${geoobject.id gt -1}">Ortseintrag bearbeiten</h2>
-            <div class="commands">
-                <span th:if="${!#strings.isEmpty(message)}" th:utext="${message}" class="message"></span>
-                <!--a th:if="${editable} and ${authenticated}" th:href="'/website/geo/' + ${geoobject.id}">Cancel</a-->
+        <div class="ui vertical left menu sidebar" th:include="fragments/navigation :: vertical (publisher=${is_publisher})"></div>
+
+        <div class="ui pusher">
+
+            <div id="header" class="ui container vertical segment">
+                <div class="welcome"></div>
             </div>
-            <p class="comment" th:each="comment : ${geoobject.comments}">
-                <span class="message" th:text="${comment.message}"></span>
-                <span class="contact" th:if="${comment.contact}" th:text="'(' + ${comment.contact} + ')'"></span>
-            </p>
-            <!-- -->
-            <div id="map"></div>
-            <div class="info-area">
-                <button onclick="submit_form()" id="save" class="ui button olive">Speichern</button>
-                <a class="button ui" th:if="${geoobject.id} != -1" th:href="'/website/geo/' + ${geoobject.id}">Abbrechen</a>
-                <a class="button ui" th:if="${geoobject.id} == -1" href="/angebote/my">Abbrechen</a>
-            </div>
-            <div class="warning" id="duplicates"></div>
-            <div th:if="${!#strings.isEmpty(warning)}" th:utext="${warning}" class="warning message"></div>
-            <form class="infos" id="geoobject-form" action="/website/geo/save" method="POST">
-                <input th:if="${!#strings.isEmpty(geoobject.id)}" type="hidden" id="geo-id" name="id" th:value='${geoobject.id}'/>
 
-                <div class="info-area">
-
-                    <div class="left-side">
-                        <!-- Essential Einrichtungs Informationen -->
-                        <label for="name">Name</label>
-                        <input id="geoname" type="text" required="true" minlength="3" onblur="search_for_duplicates()"
-                               name="name" th:value='${geoobject.name}'/>
-                            <span class="required">*</span>
-                        <label for="strasse">Stra&szlig;enname</label>
-                        <input type="text" id="streetnr" name="strasse" th:value='${geoobject.strasse}'/>
-                        <label for="plz">Postleitzahl, Bezirk</label>
-                        <input type="number" required="true" minlength="5" id="postal-code" onblur="is_valid_zip_code()"
-                               class="plz" name="plz" th:value='${geoobject.plz}'/>
-                            <span class="required">*</span>
-                        <select id="district" name="district" required="true" onblur="is_valid_district()">
-                            <option value="-1">Bitte Bezirk ausw&auml;hlen</option>
-                            <option th:each="district : ${availableDistricts}" th:selected="${#strings.toString(district.simpleValue) eq geoobject.bezirk}" th:value="${district.id}" th:text="${district.simpleValue}"></option>
-                        </select>
-                        <span class="required">*</span>
-                        <!--input type="hidden" id="google-district" name="googleDistrictName" value=""/-->
-                        <br/>
-                        <select id="city" name="city">
-                            <option th:each="city : ${availableCities}" th:selected="${#strings.toString(city.simpleValue) eq geoobject.city}"  th:value="${city.id}" th:text="${city.simpleValue}"></option>
-                        </select>
-                        <select id="country" name="country">
-                            <option th:each="city : ${availableCountries}" th:selected="${#strings.toString(city.simpleValue) eq geoobject.country}"  th:value="${city.id}" th:text="${city.simpleValue}"></option>
-                        </select>
-
-                        <!-- Geo Object Desription & Details -->
-                        <label for="ansprechpartner">AnsprechpartnerIn</label>
-                        <input type="text" name="ansprechpartner" th:value='${geoobject.ansprechpartner}'/>
-                        <label for="telefon">Telefon</label>
-                        <input type="text" name="telefon" th:value='${geoobject.telefon}'/>
-                        <label for="email">Email</label>
-                        <input type="text" name="email" onblur="is_valid_email()"
-                               id="email-address" required="true" th:value='${geoobject.email}'/>
-                            <span class="required">*</span>
-                        <label for="fax">Fax</label>
-                        <input type="text" name="fax" th:value='${geoobject.fax}'/>
-                        <!-- Image File Upload, Träger, LOR Nummer -->
-                        <!-- input type="button" class="button" value="Bild hinzufügen" onclick="start_upload()"/>
-                        <input type="hidden" id="bild-topic" name="fileTopicId" value=""/-->
+            <!-- Details Area -->
+            <div id="detail-area" class="ui vertical segment commands container">
+                    <h2 th:if="${geoobject.id eq -1}">Neuen Ort anlegen</h2>
+                    <h2 th:if="${geoobject.id gt -1}">Ortseintrag bearbeiten</h2>
+                    <div class="commands">
+                        <span th:if="${!#strings.isEmpty(message)}" th:utext="${message}" class="message"></span>
+                        <!--a th:if="${editable} and ${authenticated}" th:href="'/website/geo/' + ${geoobject.id}">Cancel</a-->
                     </div>
+                    <p class="comment" th:each="comment : ${geoobject.comments}">
+                        <span class="message" th:text="${comment.message}"></span>
+                        <span class="contact" th:if="${comment.contact}" th:text="'(' + ${comment.contact} + ')'"></span>
+                    </p>
+            </div>
 
-                    <div class="right-side">
-                        <!-- Geo Coordinate Settings -->
-                        <span class="label">Standortangabe (Geo Koordinate, Breiten- und L&auml;ngengrad)</span><span class="required">*</span><br/>
-                        <input class="coordinates" onchange="do_manual_placement()" id="latitude-val" type="number" step="any" name="lat" th:value='${geoobject.latitude}'/>
-                        <input class="coordinates" onchange="do_manual_placement()" id="longitude-val" type="number" step="any" name="lon" th:value='${geoobject.longitude}'/>
-                        <br/>
-                        <label for="lat">Angabe m&ouml;glich durch <b>klicken &amp; ziehen des Markers</b> in der Karte oder
-                            &uuml;ber die Angabe der Adresse und die Funktion <b>Koordinate ermitteln</b>.</label>
-                        <a class="button reset" onclick="do_geocode()">Koordinate ermitteln (anhand der Adresse)</a>
-                        <!--a class="button" onclick="do_manual_placement()">Manuell platzieren</a-->
-                        <a class="button" onclick="reset_coordinates()">Zur&uuml;cksetzen</a>
-                        <a class="button" onclick="clear_coordinates()">L&ouml;schen</a>
-                        <br/><br/>
+            <div class="ui vertical segment blue4bg">
+                <div id="map"></div>
+                <div class="info-area ui container">
+                    <button onclick="submit_form()" id="save" class="ui button green">Speichern</button>
+                    <a class="button red ui" th:if="${geoobject.id} != -1" th:href="'/website/geo/' + ${geoobject.id}">Abbrechen</a>
+                    <a class="button red ui" th:if="${geoobject.id} == -1" href="/angebote/my">Abbrechen</a>
+                </div>
+            </div>
 
-                        <!-- HTML Data -->
-                        <label for="beschreibung">Beschreibung</label>
-                        <textarea id="beschreibung" name="beschreibung"
-                                  contenteditable="true" th:utext="${geoobject.beschreibung}"/>
-                        <label for="open">&Ouml;ffnungszeiten</label>
-                        <textarea id="oeffnungszeiten" name="open" contenteditable="true" th:utext='${geoobject.oeffnungszeiten}'/>
-                        <!-- label for="stichworte">Stichworte</label>
-                        <input type="text" name="stichworte" th:value='${geoobject.stichworte}'/-->
-                        <label for="website">Website</label>
-                        <input type="text" name="website" th:value='${geoobject.webpage}'/>
+            <div class="ui vertical container segment form">
+                <div class="warning" id="duplicates"></div>
+                <div th:if="${!#strings.isEmpty(warning)}" th:utext="${warning}" class="warning message"></div>
+                <form class="infos ui form" id="geoobject-form" action="/website/geo/save" method="POST">
+                    <input th:if="${!#strings.isEmpty(geoobject.id)}" type="hidden" id="geo-id" name="id" th:value='${geoobject.id}'/>
 
-                        <!-- Geo Object Category Relations: Zielgruppe und Thema -->
-                        <div th:if="${!simple}">
-                            <label for="zielgruppen">Zielgruppe</label>
-                            <select id="zielgruppen" name="zielgruppen" multiple="true">
-                                <option th:each="category : ${availableZielgruppen}"
-                                        th:selected="${zielgruppen.contains(category)}"
-                                        th:value="${category.id}" th:text="${category.simpleValue}"></option>
+                    <div class="info-area ui grid equal width stackable">
+
+                        <div class="left-side ui column">
+                            <!-- Essential Einrichtungs Informationen -->
+                            <label for="name">Name<span class="required">*</span></label>
+                            <div class="ui fluid input">
+                                <input id="geoname" type="text" required="true" minlength="3" onblur="search_for_duplicates()"
+                                       name="name" th:value='${geoobject.name}'/>
+                            </div>
+                            <label for="strasse">Stra&szlig;enname</label>
+                            <div class="ui fluid input">
+                                <input type="text" id="streetnr" name="strasse" th:value='${geoobject.strasse}'/>
+                            </div>
+                            <label for="plz">Postleitzahl, Bezirk<span class="required">*</span></label>
+                            <div class="ui input">
+                                <input type="number" required="true" minlength="5" id="postal-code" onblur="is_valid_zip_code()"
+                                       class="plz" name="plz" th:value='${geoobject.plz}'/>
+                            </div>
+                            <select id="district" class="ui selection dropdown" name="district" required="true" onblur="is_valid_district()">
+                                <option value="-1" class="selected">Bitte Bezirk ausw&auml;hlen</option>
+                                <option th:each="district : ${availableDistricts}" th:selected="${#strings.toString(district.simpleValue) eq geoobject.bezirk}"
+                                        th:value="${district.id}" th:text="${district.simpleValue}"></option>
                             </select>
-                            <label for="thema">Thema</label>
-                            <select id="thema" name="themen" multiple="true">
-                                <option th:each="category : ${availableThemen}"
-                                        th:selected="${themen.contains(category)}"
-                                        th:value="${category.id}" th:text="${category.simpleValue}"></option>
+                            <!--input type="hidden" id="google-district" name="googleDistrictName" value=""/-->
+                            <select id="city" name="city" class="ui selection dropdown" >
+                                <option th:each="city : ${availableCities}" th:selected="${#strings.toString(city.simpleValue) eq geoobject.city}"
+                                        th:value="${city.id}" th:text="${city.simpleValue}"></option>
                             </select>
-                            <label for="angebote-crit">Angebot</label>
-                            <select id="angebote-crit" name="angebote" multiple="true">
-                                <option th:each="thema : ${availableAngebote}" th:value="${thema.id}" th:text="${thema.simpleValue}"></option>
+                            <select id="country" name="country" class="ui selection dropdown" >
+                                <option th:each="city : ${availableCountries}" th:selected="${#strings.toString(city.simpleValue) eq geoobject.country}"
+                                        th:value="${city.id}" th:text="${city.simpleValue}"></option>
                             </select>
+                            <br/>
+                            <label for="ansprechpartner">AnsprechpartnerIn</label>
+                            <div class="ui fluid input">
+                                <!-- Geo Object Desription & Details -->
+                                <input type="text" name="ansprechpartner" th:value='${geoobject.ansprechpartner}'/>
+                            </div>
+                            <label for="telefon">Telefon</label>
+                            <div class="ui fluid input">
+                                <input type="text" name="telefon" th:value='${geoobject.telefon}'/>
+                            </div>
+                            <label for="email">Email<span class="required">*</span></label>
+                            <div class="ui fluid input">
+                                <input type="text" name="email" onblur="is_valid_email()"
+                                       id="email-address" required="true" th:value='${geoobject.email}'/>
+                            </div>
+                            <label for="fax">Fax</label>
+                            <div class="ui fluid input">
+                                <input type="text" name="fax" th:value='${geoobject.fax}'/>
+                                <!-- Image File Upload, Träger, LOR Nummer -->
+                                <!-- input type="button" class="button" value="Bild hinzufügen" onclick="start_upload()"/>
+                                <input type="hidden" id="bild-topic" name="fileTopicId" value=""/-->
+                            </div>
+                        </div>
+
+                        <div class="right-side ui column">
+                            <!-- Geo Coordinate Settings -->
+                            <label>Standortangabe (Geo Koordinate, Breiten- und L&auml;ngengrad)<span class="required">*</span></label>
+                            <div class="ui input">
+                                <input class="coordinates" onchange="do_manual_placement()" id="latitude-val" type="number" step="any" name="lat" th:value='${geoobject.latitude}'/>
+                                <input class="coordinates" onchange="do_manual_placement()" id="longitude-val" type="number" step="any" name="lon" th:value='${geoobject.longitude}'/>
+                            </div><br/><br/>
+                            <label for="lat">Eomgane m&ouml;glich durch <b>klicken &amp; ziehen des Markers</b> (oben) oder
+                                    &uuml;ber die Angabe der Adresse (links) und die Funktion <b>Koordinate ermitteln</b>.</label>
+                            <div class="ui input coord-buttons">
+                                <a class="ui button reset green" onclick="do_geocode()">Automatisch ermitteln</a>
+                                <!--a class="button" onclick="do_manual_placement()">Manuell platzieren</a-->
+                                <a class="ui button red" onclick="reset_coordinates()">Zur&uuml;cksetzen</a>
+                                <a class="ui button red" onclick="clear_coordinates()">L&ouml;schen</a>
+                            </div>
+
+                            <!-- HTML Data -->
+                            <label for="beschreibung">Beschreibung</label>
+                            <div class="ui input">
+                                <textarea id="beschreibung" name="beschreibung"
+                                          contenteditable="true" th:utext="${geoobject.beschreibung}"/>
+                            </div>
+                            <br/>
+                            <label for="open">&Ouml;ffnungszeiten</label>
+                            <div class="ui input">
+                                <textarea id="oeffnungszeiten" name="open" contenteditable="true" th:utext='${geoobject.oeffnungszeiten}'/>
+                            </div><br/>
+                            <!-- label for="stichworte">Stichworte</label>
+                            <input type="text" name="stichworte" th:value='${geoobject.stichworte}'/-->
+                            <label for="website">Website</label>
+                            <div class="ui fluid input">
+                                <input type="text" name="website" th:value='${geoobject.webpage}'/>
+                            </div>
+
+                            <!-- Geo Object Category Relations: Zielgruppe und Thema -->
+                            <div th:if="${!simple}">
+                                <label for="zielgruppen">Zielgruppe</label>
+                                <select id="zielgruppen" class="ui mutiple fluid selection dropdown" name="zielgruppen" multiple="true">
+                                    <option th:each="category : ${availableZielgruppen}"
+                                            th:selected="${zielgruppen.contains(category)}"
+                                            th:value="${category.id}" th:text="${category.simpleValue}"></option>
+                                </select>
+                                <label for="thema">Thema</label>
+                                <select id="thema" class="ui mutiple selection fluid dropdown" name="themen" multiple="true">
+                                    <option th:each="category : ${availableThemen}"
+                                            th:selected="${themen.contains(category)}"
+                                            th:value="${category.id}" th:text="${category.simpleValue}"></option>
+                                </select>
+                                <label for="angebote-crit">Angebot</label>
+                                <select id="angebote-crit" class="ui mutiple fluid selection dropdown" name="angebote" multiple="true">
+                                    <option th:each="thema : ${availableAngebote}" th:value="${thema.id}" th:text="${thema.simpleValue}"></option>
+                                </select>
+                            </div>
+                        </div>
+                        <!--
+                        <p class="sozialraumdaten" th:if="${!#strings.isEmpty(geoobject.lor)}"><a th:href="@{http://sozialraumdaten.kiezatlas.de/seiten/2014/12/(lor=${geoobject.lor})}">Sozialraumdaten</a></p>
+                        <a class="imprint" th:href="${geoobject.imprint}">Impressum</a-->
+                    </div>
+                </form>
+                <!--div th:if="${!simple}">
+                    <div class="categories">
+                        <div class="related-topics" th:each="audience : ${zielgruppen}">
+                            <span class="thema" th:text='${audience.simpleValue}'>Name der Zielgruppe</span>
+                        </div>
+                        <div class="related-topics" th:each="service : ${angebote}">
+                            <span class="angebot" th:text='${service.simpleValue}'>Name der Angebote</span>
+                        </div>
+                        <div class="related-topics" th:each="topic : ${themen}">
+                            <span class="zielgruppe" th:text='${topic.simpleValue}'>Name des Themas</span>
                         </div>
                     </div>
-                    <!--
-                    <p class="sozialraumdaten" th:if="${!#strings.isEmpty(geoobject.lor)}"><a th:href="@{http://sozialraumdaten.kiezatlas.de/seiten/2014/12/(lor=${geoobject.lor})}">Sozialraumdaten</a></p>
-                    <a class="imprint" th:href="${geoobject.imprint}">Impressum</a-->
-                </div>
-            </form>
-            <div th:if="${!simple}">
-                <div class="categories">
-                    <div class="related-topics" th:each="audience : ${zielgruppen}">
-                        <span class="thema" th:text='${audience.simpleValue}'>Name der Zielgruppe</span>
-                    </div>
-                    <div class="related-topics" th:each="service : ${angebote}">
-                        <span class="angebot" th:text='${service.simpleValue}'>Name der Angebote</span>
-                    </div>
-                    <div class="related-topics" th:each="topic : ${themen}">
-                        <span class="zielgruppe" th:text='${topic.simpleValue}'>Name des Themas</span>
-                    </div>
-                </div>
+                </div-->
             </div>
         </div>
 
-        <p>&nbsp;</p>
-
-        <div class="footer" th:include="fragments/navigation :: footer-links (publisher=${is_publisher})"></div>
+        <!-- Footer Segment -->
+        <div th:replace="fragments/footer :: footer-new "></div>
 
     </body>
 </html>

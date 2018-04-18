@@ -224,12 +224,13 @@ var kiezatlas = (function($, leafletMap, restc, favourites) {
     this.push_page_view = function(viewportState) {
         if (settings.history_api_supported) {
             if (viewportState && parameter) {
-                var url = viewportState + parameter.page
+                var url = "/" +parameter.page + viewportState
                 window.history.replaceState(parameter, settings.webapp_title, url)
             }
         } else {
             console.warn("window.history manipulation not supported", window.navigator)
         }
+        console.log("Pushing page view parameter in ka-website.js")
     }
 
     this.create_viewport_parameter = function () {
@@ -246,7 +247,7 @@ var kiezatlas = (function($, leafletMap, restc, favourites) {
             console.log("Kiezatlas Citymap", _self.get_site_id(), _self.get_site_info())
         } else if (_self.get_site_id()) {
             console.log("Kiezatlas Website Mode", _self.get_site_id(), _self.get_site_info().value)
-        } else if (_self.is_map_result_control() && query) {
+        } /**else if (_self.is_map_result_control() && query) {
             if (_self.is_angebote_mode()) {
                 parameter.page = "#angebotssuche=" + query
             } else {
@@ -256,7 +257,8 @@ var kiezatlas = (function($, leafletMap, restc, favourites) {
             parameter.page = "#angebote"
         } else {
             parameter.page = "#gesamt"
-        }
+        } **/
+        parameter.page = "website"
         var viewportState = _self.create_viewport_parameter()
         _self.push_page_view(viewportState)
     }
@@ -350,10 +352,7 @@ var kiezatlas = (function($, leafletMap, restc, favourites) {
         } else {
             _self.render_map(true, undefined, false) // detectLocation=true
         }
-        // ### re-use our set of client-side cacehd bezirks topics
-        _self.load_district_topics(function(e) {
-            _self.render_district_menu() // should do "Gesamtstadtplan"
-        })
+        render_district_menu() // should do "Gesamtstadtplan"
     }
 
     this.render_search_page = function() {
@@ -410,13 +409,13 @@ var kiezatlas = (function($, leafletMap, restc, favourites) {
 
     this.load_marker_cluster_scripts = function() {
         var clusterStyle1 = document.createElement("link")
-            clusterStyle1.setAttribute("href", "/de.kiezatlas.website/vendor/leaflet/markercluster/dist/MarkerCluster.css")
+            clusterStyle1.setAttribute("href", "/de.kiezatlas.website/vendor/leaflet-1.3.1/MarkerCluster.css")
             clusterStyle1.setAttribute("rel", "stylesheet")
         var clusterStyle2 = document.createElement("link")
-            clusterStyle2.setAttribute("href", "/de.kiezatlas.website/vendor/leaflet/markercluster/dist/MarkerCluster.Default.css")
+            clusterStyle2.setAttribute("href", "/de.kiezatlas.website/vendor/leaflet-1.3.1/MarkerCluster.Default.css")
             clusterStyle2.setAttribute("rel", "stylesheet")
         var clusterScript = document.createElement("script")
-            clusterScript.setAttribute("src", "/de.kiezatlas.website/vendor/leaflet/markercluster/dist/leaflet.markercluster.js")
+            clusterScript.setAttribute("src", "/de.kiezatlas.website/vendor/leaflet-1.3.1/leaflet.markercluster.js")
         document.head.appendChild(clusterStyle1)
         document.head.appendChild(clusterStyle2)
         document.head.appendChild(clusterScript)
@@ -448,14 +447,18 @@ var kiezatlas = (function($, leafletMap, restc, favourites) {
         if (click_href.indexOf("/") === 0) {
             click_href = click_href.substr(1)
         }
-        if (click_href === "#gesamt") {
-            _self.clear_district_page()
-            _self.render_page("gesamt")
+        console.log("District Menu Item Clicked", click_href, "onStartseite", frontpage, "ka-website.js")
+        if (frontpage && click_href === "#gesamt") {
+            kiezatlas.clear_district_page()
+            render_page("gesamt")
+        } else if (frontpage) {
+            var bezirksTopic = get_bezirks_topic_by_hash(click_href)
+            searchContext = bezirksTopic.id
+            render_page("bezirk")
         } else {
-            var bezirksTopic = _self.get_bezirks_topic_by_hash(click_href)
-            _self.render_bezirkspage(bezirksTopic)
+            window.document.location.assign(window.document.location.origin + "/website" + click_href)
         }
-        _self.hide_sidebar()
+        // _self.hide_sidebar()
     }
 
     this.hide_sidebar = function() {
@@ -637,7 +640,6 @@ var kiezatlas = (function($, leafletMap, restc, favourites) {
     }
 
     this.setup_map_area = function(dom_el_id, mouseWheelZoom, skipCircleSearch) {
-        var mapMovedSkipLocating = false // a local var to influence the outcome of the "browser locating" query
         var $map = $('#map')
             $map.empty()
             $map.show()
@@ -654,6 +656,14 @@ var kiezatlas = (function($, leafletMap, restc, favourites) {
         $('div.legende').show()
         //
         leafletMap.setup(dom_el_id, mouseWheelZoom)
+        _self.register_map_listeners()
+        _self.render_browser_location_button()
+        _self.render_current_location_label()
+        if (!skipCircleSearch) leafletMap.render_circle_search_control()
+    }
+
+    this.register_map_listeners = function() {
+        var mapMovedSkipLocating = false // a local var to influence the outcome of the "browser locating" query
         leafletMap.listen_to('drag', function(e) {
             if (leafletMap.is_circle_control_fixed() && _self.is_map_query_control()) {
                 leafletMap.set_current_location_coords(leafletMap.get_map_center())
@@ -729,9 +739,6 @@ var kiezatlas = (function($, leafletMap, restc, favourites) {
                 console.log("Skip locatiing_error as user already interacted with the map", e)
             }
         })
-        _self.render_browser_location_button()
-        _self.render_current_location_label()
-        if (!skipCircleSearch) leafletMap.render_circle_search_control()
     }
 
     this.focus_locationsearch_result = function() {
@@ -834,7 +841,7 @@ var kiezatlas = (function($, leafletMap, restc, favourites) {
         for (var i in result_list) {
             var marker_model = result_list[i].options
             var marker_id = marker_model['id']
-            $sidebar.append('<div class="entry"><h3>' + marker_model.name + '</h3><a href="/website/geo/redesign/' + marker_id + '">'
+            $sidebar.append('<div class="entry"><h3>' + marker_model.name + '</h3><a href="/website/geo/' + marker_id + '">'
                 + '<i class="icon caret right"></i>mehr Infos</a></div>')
             list_of_marker_ids.push(marker_id)
             restc.load_geo_object_detail(marker_id, function(result) {

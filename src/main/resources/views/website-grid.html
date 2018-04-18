@@ -18,7 +18,7 @@
         <script defer="true" src="/de.kiezatlas.website/ka-map.js"></script>
         <script defer="true" src="/de.kiezatlas.website/ka-favourites.js"></script>
         <script defer="true" src="/de.kiezatlas.website/ka-website.js"></script>
-        <script defer="true" src="/de.kiezatlas.website/ka-startseite.js" onload="init_page('gesamt')"></script>
+        <script defer="true" src="/de.kiezatlas.website/ka-startseite.js" onload="init_page('startseite')"></script>
         <script defer="true" src="/de.kiezatlas.website/search-angebote.js"></script>
         <script th:inline="javascript">
             /*<![CDATA[*/
@@ -27,11 +27,11 @@
                 searchType = /*[[${searchType}]]*/ 'place';
                 searchContext = /*[[${searchContext}]]*/ '0';
                 searchMethod = /*[[${searchMethod}]]*/ 'quick';
-                searchNearby = /*[[${searchNearby}]]*/ 'berlin';
+                searchNearby = /*[[${searchNearby}]]*/ undefined;
                 zoomstufe = /*[[${zoomstufe}]]*/ '14';
                 koordinate = /*[[${koordinate}]]*/ undefined;
-                console.log("initializing search=", searchText, "type=", searchType, "site=", searchContext,
-                "method=", searchMethod, "nearby=", searchNearby)
+                console.log("initializing search=", searchText, "type=", searchType, "context=", searchContext,
+                    "method=", searchMethod, "nearby=", searchNearby)
             /*]]>*/
         </script>
 
@@ -71,17 +71,22 @@
                                 <h3>Aktuelles <span class="context"></span></h3>
                             </div>
                             <div class="news-area ui active dimmer inverted">
-                                <div class="ui loader">Lade Aktuelles</div>
+                                <div class="news-item">
+                                    <div class="date bold">19. April 2018, 10:00 Uhr</div>
+                                    <div class="headline">
+                                        Der neue Kiezatlas ist endlich da! Dank freundlicher Unterstützung des Bezirksamt-Mitte Jugendamt und in Zusammenarbeit mit united Communications konnten wir ein Web-Design f&uuml;r Kiezatlas 2 realisieren.
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         <!-- Umreissuche Tile -->
-                        <div class="column yellowbg circle-search">
+                        <div class="column yellowbg circle-search" onclick="kiezatlas.clear_district_page()">
                             <h3>Verwenden der Umkreissuche</h3>
                             <div class="subline">
-                                Lorem ipsum tra lala hicks.
+                                Der Stadtplan auf dieser Seite erm&ouml;glicht ihnen die grafische Umkreissuche.
                             </div>
                              <img src="/de.kiezatlas.website/images/Umkreissuche-75.jpg"
-                                 title="Zur Registrierung und Eingabe neuer Orte" alt="Grafik als Eingabeaufforderung"/>
+                                 title="Klicken zur Verwendung der grafischen Umkreissuche" alt="Grafik als Eingabeaufforderung"/>
                         </div>
                         <!-- Call-to-Action Tile -->
                         <div class="column yellowbg action">
@@ -89,7 +94,7 @@
                                  title="Zur Registrierung und Eingabe neuer Orte" alt="Grafik als Eingabeaufforderung"/>
                             <h3>Stellen Sie Angebote oder Einrichtungen in den Kiezatlas</h3>
                             <div class="subline">
-                                Lorem ipsum tra lala hicks.
+                                Nutzen Sie suchmaschinenoptimierte Eintr&auml;ge im Kiezatlas.
                             </div>
                         </div>
                     </div>
@@ -98,9 +103,10 @@
                         <div class="four wide column yellowbg citymaps">
                             <h3>Entdecken Sie unsere weiteren Stadtpl&auml;ne</h3>
                             <div class="subline">
-                                Lorem ipsum tra lala hicks.
-                                Familienportal Stadtplan<br/>
-                                VskA Stadtteilzentren<br/>
+                                <a href="//kiezatlas.de/browse/atlas-al-arab">Atlas Al-Arab</a><br/>
+                                <a href="//kiezatlas.de/browse/go-areas">Neuk&ouml;lnn Go-Areas</a><br/>
+                                <a href="/outreach">Outreach Mobile Jugendarbeit</a><br/>
+                                <a href="/vska-stadtteilzentren">VskA Stadtteilzentren</a><br/><br/>
                                 <a href="/weitere-stadplaene"><i class="icon caret right"></i>weitere Stadtpl&auml;ne</a>
                             </div>
                         </div>
@@ -110,7 +116,8 @@
                                  title="Link zu den Sozialraumdaten - Datenbank LOR" alt="Kartengrafik als Link zu den Sozialraumdaten"/>
                             <h3>Sozialraumdaten zu lebensweltlich orientierten R&auml;umen (LOR)</h3>
                             <div class="subline">
-                                Lorem ipsum tra lala hicks.
+                                Die Sozialraumdaten einer Nachbarschaft finden Sie &uuml;ber <a href="/website/sozialraumdaten">unsere Karte</a> oder
+                                &uuml;ber die <a href="https://sozialraumdaten.kiezatlas.de">Adresseingabe</a>.
                             </div>
                         </div>
                     </div>

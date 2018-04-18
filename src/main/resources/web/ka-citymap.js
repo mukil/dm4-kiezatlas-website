@@ -4,9 +4,13 @@
 var DATA_TOPIC_ID = "data-topic-id"
 
 function create_list_item(obj) {
-    return $('<li class="item" data-topic-id="'+obj.id+'"><h3>' + obj.name
-        + ', <span class="anschrift">'+obj.anschrift.replace(" Deutschland", "") +'</span>, '
-        + '<a href="javascript:citymap.show_selected_detail('+obj.id+', true);">mehr Infos</a></h3></li>')
+    if (obj != null) {
+        return $('<li class="item" data-topic-id="'+obj.id+'"><h3>' + obj.name
+            + ', <span class="anschrift">'+obj.anschrift.replace(" Deutschland", "") +'</span>, '
+            + '<a href="javascript:citymap.show_selected_detail('+obj.id+', true);">mehr Infos</a></h3></li>')
+    } else {
+        console.log("Skipped creting null list item", obj)
+    }
 }
 
 function hide_loading_indicator() {
@@ -34,11 +38,11 @@ var citymap = {
         // show loading indicator
         kiezatlas.show_spinning_wheel()
         // Adapt our default leaflet map handling options
-        leafletMap.zoom.setPosition("topleft")
+        // leafletMap.zoom.setPosition("topleft")
         leafletMap.deactivate_circle_control()
         leafletMap.remove_circle_search_control()
         // Init our map container
-        // ### introduce new site configuration options (marker radius/size) with migration
+        // ### Todo: introduce new site configuration options (marker radius/size) with migration
         if (siteAlias.indexOf("stadtteil") !== -1) {
             leafletMap.set_marker_radius(10)
             leafletMap.set_marker_selected_radius(15)
@@ -166,27 +170,29 @@ var citymap = {
 
     render_mobile_details_card: function(object) {
         // _append_ to dom
-        var unconfirmedClass = (object.unconfirmed) ? " unconfirmed" : ""
-        $('#detail-area').append('<div class="entry-card' + unconfirmedClass + '" id="details-'+object.id+'">'
-            + '<h3>'+object.name+'</h3>'
-            + '<div class="details">'
-            + '<p>' + object.anschrift + '<br/>'
-            + '</p>'
-            // + '<a href="/website/geo/' + object.id + '" title="Zeige Details">mehr Infos</a>'
-            + '<a href="javascript:citymap.show_selected_detail(' + object.id + ', false)" title="Zeige Details">mehr Infos</a>'
-            + '<a href="https://fahrinfo.bvg.de/Fahrinfo/bin/query.bin/dn?Z=' + encodeURIComponent(object.anschrift)
-                + '&REQ0JourneyStopsZA1=2&start=1&pk_campaign=kiezatlas.de">'
-                + '<img src="/de.kiezatlas.website/images/fahrinfo.gif"></a>'
-            + '</div>'
-        + '</div>')
-        /** var $item = create_list_item(object)
-        $item.click(function(e) {
-            var itemId = e.target.getAttribute(DATA_TOPIC_ID)
-            if (!itemId) itemId = e.delegateTarget.getAttribute(DATA_TOPIC_ID)
-            citymap.show_selected_detail(object.id, true)
-        })
-        $('#detail-area .results').append($item) **/
-        $('#detail-area .mobile-load').show()
+        if (obj != null) {
+            var unconfirmedClass = (object.unconfirmed) ? " unconfirmed" : ""
+            $('#detail-area').append('<div class="entry-card' + unconfirmedClass + '" id="details-'+object.id+'">'
+                + '<h3>'+object.name+'</h3>'
+                + '<div class="details">'
+                + '<p>' + object.anschrift + '<br/>'
+                + '</p>'
+                // + '<a href="/website/geo/' + object.id + '" title="Zeige Details">mehr Infos</a>'
+                + '<a href="javascript:citymap.show_selected_detail(' + object.id + ', false)" title="Zeige Details">mehr Infos</a>'
+                + '<a href="https://fahrinfo.bvg.de/Fahrinfo/bin/query.bin/dn?Z=' + encodeURIComponent(object.anschrift)
+                    + '&REQ0JourneyStopsZA1=2&start=1&pk_campaign=kiezatlas.de">'
+                    + '<img src="/de.kiezatlas.website/images/fahrinfo.gif"></a>'
+                + '</div>'
+            + '</div>')
+            /** var $item = create_list_item(object)
+            $item.click(function(e) {
+                var itemId = e.target.getAttribute(DATA_TOPIC_ID)
+                if (!itemId) itemId = e.delegateTarget.getAttribute(DATA_TOPIC_ID)
+                citymap.show_selected_detail(object.id, true)
+            })
+            $('#detail-area .results').append($item) **/
+            $('#detail-area .mobile-load').show()
+        }
     },
 
     show_selected_details: function(result_list) {
@@ -455,9 +461,9 @@ var citymap = {
 
         $(window).resize(function() {
             setTimeout(function() {
-                leafletMap.fit_to_height(65)
+                leafletMap.fit_to_height(81)
                 citymap.set_sidebar_height()
-            }, 50)
+            }, 350)
         })
 
         // add click and touch handlers on our "three near by options"

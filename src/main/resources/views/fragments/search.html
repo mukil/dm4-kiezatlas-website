@@ -26,11 +26,7 @@
     </div>
     <div class="ui vertical segment blue4bg result-list hidden">
         <div class="ui container">
-            <div class="item">
-                <h3 class="thin">Search result one..</h3>
-                <div class="subline"></div>
-                <a href="/">mehr Infos</a>
-            </div>
+            <!-- Search Results Container -->
         </div>
     </div>
 
@@ -46,9 +42,9 @@
     <div class="ui vertical segment">
         <div class="ui container search-criterias">
             <h3 class="header thin" onclick="toggleSearchCriteria()">Suchkriterien <i th:class="${expanded} ? 'icon caret up' : 'icon caret down'"></i></h3>
-            <div th:class="${expanded} ? 'ui two column grid filter' : 'ui two column grid filter hidden'">
+            <div th:class="${expanded} ? 'ui two column grid stackable filter' : 'ui two column stackable grid filter hidden'">
                 <div class="column first">
-                    <div class="ui two column grid">
+                    <div class="ui two column stackable grid">
                         <!--div class="column">
                             <div class="ui form">
                                 <div class="grouped fields">
@@ -93,9 +89,9 @@
                                     <div class="grouped fields">
                                         <div class="field">
                                             <div class="ui radio checkbox berlin">
-                                                <input type="radio" name="area" id="berlin" value="berlin" checked="checked"
+                                                <input type="radio" name="area" id="0" value="0" checked="checked"
                                                        onchange="berlinSearchChecked(this)"/>
-                                                <label for="berlin">Gesamtberlin</label>
+                                                <label for="0">Gesamtberlin</label>
                                             </div>
                                         </div>
                                         <div class="field">
@@ -152,7 +148,7 @@
                             <div class="grouped fields">
                                 <div class="field">
                                     <div class="ui radio checkbox 1707925">
-                                        <input type="radio" onchange="berlinSearchChecked(this)" name="area" id="1707925" tabindex="0"/>
+                                        <input type="radio" disabled="disabled" onchange="berlinSearchChecked(this)" name="area" id="1707925" tabindex="0"/>
                                         <label for="1707925">Marzahn-Hellersdorf</label>
                                     </div>
                                 </div>

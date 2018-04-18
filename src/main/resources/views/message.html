@@ -5,43 +5,52 @@
         <meta charset="UTF-8"/>
         <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 
-        <link rel="stylesheet" href="/de.kiezatlas.website/css/sitestyle.css"/>
+        <link rel="stylesheet" type="text/css" href="/de.kiezatlas.website/css/kiezatlas-web.css" />
 
-        <script src="/de.kiezatlas.website/dist/vendor/jquery-1.9.1.min.js"></script>
-        <script src="/de.kiezatlas.website/css/semantic-ui/2.2/sidebar.min.js"></script>
+        <script defer="true" src="/de.kiezatlas.website/vendor/jquery/jquery-3.2.1.min.js"></script>
+        <script defer="true" src="/de.kiezatlas.website/css/semantic-ui/2.3/dist/semantic.min.js"></script>
+        <script defer="true" src="/de.kiezatlas.website/ka-startseite.js" onload="init_page('message')"></script>
         <script type="text/javascript" th:inline="javascript">
-        /*<![CDATA[*/
-            $sidebarUi = undefined
-            // App initialization
-            $(document).ready(function(e) {
-                $sidebarUi = $('.ui.sidebar').sidebar('setting', 'dimPage', false)
-            })
-        /*]]>*/
+            /*<![CDATA[*/
+                searchText = /*[[${search}]]*/ '';
+                searchType = /*[[${searchType}]]*/ 'place';
+                searchContext = /*[[${searchContext}]]*/ 'berlin';
+                searchMethod = /*[[${searchMethod}]]*/ 'quick';
+                searchNearby = /*[[${searchNearby}]]*/ undefined;
+                console.log("initializing search=", searchText, "type=", searchType, "site=", searchContext,
+                    "method=", searchMethod, "nearby=", searchNearby)
+            /*]]>*/
         </script>
-
         <meta th:replace="fragments/tracker" />
     </head>
-    <body class="kiezatlas topic">
+    <body class="ui page detail kiezatlas message topic">
 
-        <div class="top-menu" th:include="fragments/navigation :: top (publisher=${is_publisher})"></div>
+        <div class="navigation">
+            <div class="top-menu" th:include="fragments/navigation :: top-menu (publisher=${is_publisher})"></div>
+        </div>
 
         <div class="ui vertical left menu sidebar" th:include="fragments/navigation :: vertical (publisher=${is_publisher})"></div>
 
-        <div class="pusher">
+        <div class="ui pusher">
 
-            <div id="header">
+            <!-- Teaser Area -->
+            <div th:replace="fragments/widgets :: teaser-small"></div>
+
+            <div th:replace="fragments/search :: dialog (false, ${districts}, ${tags}, ${search}, ${searchType})"></div>
+
+            <div id="header" class="ui vertical segment container">
                 <div class="welcome">
                 </div>
             </div>
 
             <!-- Details Area -->
-            <div id="detail-area" th:class="${angebotsinfos} ? 'angebotsinfos'">
-                <div class="commands">
+            <div id="detail-area" class="ui vertical segment blue4bg body" th:addclass="${angebotsinfos} ? 'angebotsinfos'">
+                <div class="commands ui container">
                 </div>
                 <!-- ### map -->
-                <div class="info-area">
+                <div class="info-area ui container">
                     <div class="infos">
-                        <h3 th:text='${name}'>Name des Eintrags</h3>
+                        <h3 th:text='${name}'>Message Name</h3>
                         <p th:if="${!#strings.isEmpty(message)}" th:utext="${message}"></p>
                     </div>
                 </div>
@@ -49,9 +58,8 @@
 
         </div>
 
-        <p>&nbsp;</p>
-
-        <div class="footer" th:include="fragments/navigation :: footer-links (publisher=false)"></div>
+        <!-- Footer Segment -->
+        <div th:replace="fragments/footer :: footer-new "></div>
 
     </body>
 </html>

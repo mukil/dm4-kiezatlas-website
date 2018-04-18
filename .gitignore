@@ -4,6 +4,7 @@ node_modules/
 *iml
 src/main/resources/web/images/unused/
 src/main/resources/web/vendor/leaflet/markercluster/
+src/main/resources/web/dist/
 *flick
 *flick.zip
 .DS_Store
