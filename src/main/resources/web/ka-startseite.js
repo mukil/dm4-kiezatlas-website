@@ -113,6 +113,8 @@ function render_frontpage(name) {
     } else if (name === "bezirk") {
         if (!loadingDistrict) {
             render_district_frontpage()
+        } else {
+            console.log("District", bezirksTopic.value, "is currently loading")
         }
     }
 }
@@ -192,14 +194,12 @@ function init_citymap() {
 function init_einrichtungs_edit_page() {
     if (districtId !== -1) {
         searchContext = districtId
-        load_district_data(function(e) {
-            bezirksTopic = get_bezirks_topic_by_id(districtId)
-            if (bezirksTopic) {
-                show_context_subline()
-            } else {
-                console.warn("Bezirks Topic could not be loaded")
-            }
-        })
+        bezirksTopic = get_bezirks_topic_by_id(districtId)
+        if (bezirksTopic) {
+            show_context_subline()
+        } else {
+            console.warn("Bezirks Topic could not be loaded")
+        }
     }
 }
 
@@ -211,14 +211,12 @@ function init_einrichtungs_page() {
     init_detail_map() // function defined in "website-detail" template
     if (districtId !== -1) {
         searchContext = districtId
-        load_district_data(function(e) {
-            bezirksTopic = get_bezirks_topic_by_id(districtId)
-            if (bezirksTopic) {
-                show_context_subline()
-            } else {
-                console.warn("Bezirks Topic could not be loaded")
-            }
-        })
+        bezirksTopic = get_bezirks_topic_by_id(districtId)
+        if (bezirksTopic) {
+            show_context_subline()
+        } else {
+            console.warn("Bezirks Topic could not be loaded")
+        }
     }
     init_search_type_menu()
 }
@@ -493,7 +491,7 @@ function show_district_frontpage() {
         /** if (parameter.viewport) {
             leafletMap.render_geo_objects(false)
         } else { **/
-            leafletMap.render_geo_objects(true)
+        leafletMap.render_geo_objects(true)
         loadingDistrict = false
         //}
     })
@@ -909,11 +907,17 @@ function nearbySearchChecked() {
 
 function berlinSearchChecked(e) {
     console.log("berlinSearchChecked", e.id)
-    $('.ui.grid.filter .column.nearby').addClass('hidden')
-    searchContext = e.id
-    replace_page_parameters()
-    render_district_frontpage()
-    return false
+    if (!loadingDistrict) {
+        $('.ui.grid.filter .column.nearby').addClass('hidden')
+        searchContext = e.id
+        bezirksTopic = get_bezirks_topic_by_id(e.id)
+        replace_page_parameters()
+        render_district_frontpage()
+        return false
+    } else {
+        // ### leave radiobutton unchecked and check preovious cheked again
+        console.log("District", bezirksTopic.value, "is already loading")
+    }
 }
 
 function toggleSearchCriteria() {
