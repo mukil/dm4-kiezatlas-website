@@ -84,12 +84,8 @@ function fire_angebote_search(query, callback) {
     console.log("Search Query: " + luceneQueryString + ", Location", locationValue, "Radius", location_radius, "DateTime", dateTime)
     $.getJSON('/angebote/search?query=' + luceneQueryString + '&location=' + locationValue + '&radius='
             + location_radius + '&datetime=' + dateTime, function(angebote_results) {
-        // hide_search_loading_sign()
         results = angebote_results
-        console.log("Angebote search results", results)
-        // angebotsinfos = results
         if (callback) callback(angebote_results)
-        // render_angebote_search_results()
     })
 }
 

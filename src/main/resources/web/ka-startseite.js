@@ -76,16 +76,20 @@ function init_page(page) {
             }
             update_search_criteria_dialog()
             init_search_type_menu()
+            init_angebote_tag_handler()
         } else if (page === "place") {
             init_einrichtungs_page()
             update_search_criteria_dialog()
+            init_angebote_tag_handler()
         } else if (page === "place-edit") {
             init_einrichtungs_edit_page()
+            init_angebote_tag_handler()
         } else if (page === "citymap") {
             init_citymap()
         } else if (page === "event") {
             init_angebots_page()
             update_search_criteria_dialog()
+            init_angebote_tag_handler()
         } else if (page === "confirm") {
             // init_angebots_page()
         } else if (page === "editors") {
@@ -114,6 +118,20 @@ function render_frontpage(name) {
     } else if (name === "bezirk") {
         render_district_frontpage()
     }
+}
+
+function init_angebote_tag_handler() {
+    $('.page .stichworte .tag').click(angebot_tag_clicked)
+    $('.page .angebote-tags .tag').click(angebot_tag_clicked)
+}
+
+function angebot_tag_clicked(e) {
+    console.log("Clicked on angebote tag handler", e)
+    searchType = "event"
+    init_search_type_menu()
+    set_search_input(e.currentTarget.innerText)
+    do_text_search()
+    scroll_to('query')
 }
 
 function init_citymap() {
@@ -621,6 +639,11 @@ function get_search_input() {
     return $('#query').val()
 }
 
+function set_search_input(value) {
+    searchText = value
+    $('#query').val(value)
+}
+
 function handleSearchInput(e) {
     if (event.keyCode === 13) {
         if (e.id === "query") {
@@ -673,7 +696,6 @@ function do_text_search() {
                 results = geo_objects.results.cat1.results // Einrichtungen
             } else if (searchMethod === "fulltext") {
                 results = geo_objects
-                console.log("Fulltext Search Results", results)
             }
             render_search_results()
         })   
@@ -744,6 +766,11 @@ function init_search_type_menu() {
             }
         ]
     })
+}
+
+function search_menu_changed(value, text, $selectedItem) {
+    searchType = value
+    replace_page_parameters()
     update_search_criteria_dialog()
 }
 
@@ -756,6 +783,7 @@ function update_search_criteria_dialog() {
             // deactivate district filter
             disableDistrictCheckboxes()
             checkQuickSearchbox()
+            // checkBerlinwideSearchbox()
         } else if (searchMethod === "fulltext") {
             // activate district filter
             enableDistrictCheckboxes()
@@ -765,6 +793,7 @@ function update_search_criteria_dialog() {
         enableNearbySearchChecked()         // deactivate district filter in general
         disableDistrictCheckboxes()        // activate nearby search
         checkFulltextSearchbox()
+        // checkBerlinwideSearchbox()
         disableQuickSearchCheckbox()
     }
     // Well, semantic ui does neither update dom properly nor does it wrap the correct element.
@@ -786,20 +815,12 @@ function update_search_criteria_dialog() {
     }
 }
 
-function search_menu_changed(value, text, $selectedItem) {
-    searchType = value
-    replace_page_parameters()
-    update_search_criteria_dialog()
-}
-
 function quickSearchChecked() {
-    console.log("quickSearchChecked")
     searchMethod = "quick" // or "fulltext"
     berlinSearchChecked({id: 0}) // only available berlin wide
     disableDistrictCheckboxes()
+    // checkBerlinwideSearchbox()
     replace_page_parameters()
-    update_search_criteria_dialog()
-    return false
 }
 
 function fulltextSearchChecked() {
@@ -811,7 +832,6 @@ function fulltextSearchChecked() {
     }
     replace_page_parameters()
     enableDistrictCheckboxes()
-    return false
 }
 
 function nearbySearchChecked() {
@@ -819,7 +839,6 @@ function nearbySearchChecked() {
     $('.ui.grid.filter .column.nearby').removeClass('hidden')
     searchNearby = "" // Clearing for user input
     replace_page_parameters()
-    return false
 }
 
 function berlinSearchChecked(e) {
@@ -831,20 +850,21 @@ function berlinSearchChecked(e) {
         // district search is only availabe with searchMethod=fulltext
         if (searchContext != 0) {
             fulltextSearchChecked()
-            replace_page_parameters()
             render_district_frontpage()
         } else {
             // check gesamtberlin
+            checkBerlinwideSearchbox()
         }
     } else {
         searchContext = e.id
         if (searchContext != 0) {
             bezirksTopic = get_bezirks_topic_by_id(e.id)
+            show_context_subline()
             // ### leave radiobutton unchecked and check preovious cheked again
             console.log("Set District Filter", bezirksTopic.value)   
         }
     }
-    return true
+    replace_page_parameters()
 }
 
 function enableNearbySearchChecked() {
@@ -875,15 +895,18 @@ function disableDistrictCheckboxes() {
 }
 
 function checkFulltextSearchbox() {
-    // $('.ui.radio.checkbox.fulltext').addClass('checked')
-    $('.ui.radio.checkbox.quick input').removeAttr('checked')
-    $('.ui.radio.checkbox.fulltext input').attr('checked', 'checked')
+    $('.ui.radio.checkbox.fulltext').checkbox('check')
+    searchMethod = "fulltext"
 }
 
 function checkQuickSearchbox() {
-    // $('.ui.radio.checkbox.fulltext').addClass('checked')
-    $('.ui.radio.checkbox.fulltext input').removeAttr('checked')
-    $('.ui.radio.checkbox.quick input').attr('checked', 'checked')
+    $('.ui.radio.checkbox.quick').checkbox('check')
+    searchMethod = "quick"
+}
+
+function checkBerlinwideSearchbox() {
+    $('.ui.radio.checkbox.berlin').checkbox('check')
+    searchContext = 0
 }
 
 // --- Search Results Rendering --- //
@@ -994,6 +1017,12 @@ function get_event_list_item_html(element) {
 }
 
 /** Utility Methods **/
+
+function scroll_to(custom_anchor) {
+    if (custom_anchor) {
+        document.getElementById(custom_anchor).scrollIntoView()
+    }
+}
 
 function load_district_data(handleResults) {
     if (!districts) {

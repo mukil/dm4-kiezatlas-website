@@ -677,6 +677,13 @@ select option[selected] {
     margin-bottom: .5em;
 }
 
+.page .stichworte .tag:hover,
+.page .angebote-tags .tag:hover {
+    background-color: #3787ab;
+    color: #fff;
+    cursor: pointer;
+}
+
 .content .ui.grid .column h3 {
     padding-top: .5em;
     padding-left: .7em;

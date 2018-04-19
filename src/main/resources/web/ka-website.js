@@ -563,7 +563,7 @@ var kiezatlas = (function($, leafletMap, restc, favourites) {
         $('#site-area').show("flex")
         $('#site-area .content-area').html(bezirk_html + '<br/>'
             + '<a href="'+_self.get_site_info().imprint+'">Impressum</a>')
-        leafletMap.scroll_into_view()
+        // leafletMap.scroll_into_view()
         _self.set_mapcontrol_mode_results()
         _self.show_message("Die Volltextsuche liefert ab jetzt nur Ergebnisse aus dem Bezirk <em>"
             + bezirk_name + "</em>. W&auml;hlen sie <em>Bezirksfilter aufheben</em> um wieder Berlinweit"
