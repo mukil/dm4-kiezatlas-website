@@ -47,7 +47,7 @@ var model = {
         "ka_red": "#ce0000",        // districs layer polygon outline
         "ka_green": "#9cc300",      // ...
         "m_blue": "#9ec8d6",        // marker: medium blue outline and fill-in (selected)
-        "ka_gold": "#f8f6e9",       // marker: yellow fill-ine and outline (selected)
+        "ka_gold": "#f8f6e9",
         "bright_grey": "#a9a9a9",   // circlemarker: fill-in
         "yellow": "#f8f6e9",        // circle control
         "darkgrey": "#343434",      // unused
@@ -55,10 +55,10 @@ var model = {
         "bright_blue": "#ecf4f7",   // unused
         "ka_water": "#ccdddd",      // unused
         "grey": "#868686",           // unused,
-        "ka_yellow": "#f8f6e9", 
+        "ka_yellow": "#f8f6e9",     // circle marker: yellow fill-in (not-selected), hover (opacity=1)
         "blue1": "#193441",
-        "blue2": "#9ec8d6",
-        "blue3": "#3787ab",
+        "blue2": "#9ec8d6",         // circle marker: fill-in (selected)
+        "blue3": "#3787ab",         // circle marker: outline (not-selected & selected), hover (opacity=1)
         "blue4": "#ecf4f7",
         "blue5": "#3e606f"
     }

@@ -126,7 +126,6 @@ function init_angebote_tag_handler() {
 }
 
 function angebot_tag_clicked(e) {
-    console.log("Clicked on angebote tag handler", e)
     searchType = "event"
     init_search_type_menu()
     set_search_input(e.currentTarget.innerText)

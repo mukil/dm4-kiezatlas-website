@@ -220,7 +220,7 @@ var leafletMap = (function($, L) {
             })
             circle.on('mouseover', function(e) {
                 circle.setRadius(mapping.marker_radius + 5)
-                circle.setStyle(map.calculate_hover_circle_options())
+                circle.setStyle(map.calculate_hover_circle_options(geo_object))
                 map.fire_marker_mouseover(e)
             })
             circle.on('mouseout', function(e) {
@@ -253,7 +253,7 @@ var leafletMap = (function($, L) {
             var marker_id = el.options["id"]
             if (marker_id == topicId) {
                 if (!mapping.do_cluster_marker) {
-                    el.setStyle(map.calculate_selected_circle_options())
+                    el.setStyle(map.calculate_selected_circle_options(el.options))
                     el.bringToFront()
                     el.setRadius(mapping.marker_radius_selected)
                 }
@@ -288,7 +288,7 @@ var leafletMap = (function($, L) {
             dummyObject = el.options
         })
         // highlight selected marker
-        marker.setStyle(map.calculate_selected_circle_options())
+        marker.setStyle(map.calculate_selected_circle_options(marker))
         marker.bringToFront()
         marker.setRadius(mapping.marker_radius_selected)
         if (marker.options.angebots_id) {
@@ -304,11 +304,11 @@ var leafletMap = (function($, L) {
     /** TODO: Visually differentiate between geo object and angebot markers */
     map.calculate_default_circle_options = function(marker_topic) {
         // console.log("creating marker for ", marker_topic["name"], "with location_id", marker_topic["location_id"])
-        // var hasAngebote = (marker_topic["angebote_count"] > 0) ? true : false
+        var hasAngebote = (marker_topic["angebote_count"] > 0) ? true : false
         // var angeboteDashArray = map.calculate_geo_object_dash_array(marker_topic)
         var angeboteId = (marker_topic.hasOwnProperty("angebots_id")) ? marker_topic["angebots_id"] : undefined
         return { // ### improve new colors for angebote rendering
-            fillColor: model.colors.ka_yellow, color : model.colors.blue3, fillOpacity: 0.4, 
+            fillColor: (hasAngebote) ? model.colors.blue3 : model.colors.ka_yellow, color: model.colors.blue3, fillOpacity: 0.4,
             lineCap: 'square', weight: 2, // dashArray: angeboteDashArray,
             title: marker_topic["name"], name: marker_topic["name"], alt: "Markierung von " + marker_topic["name"],
             bezirk_uri: marker_topic["bezirk_uri"], uri: marker_topic["uri"], // riseOnHover: true,
@@ -318,17 +318,21 @@ var leafletMap = (function($, L) {
         }
     }
 
-    map.calculate_selected_circle_options = function() {
+    map.calculate_selected_circle_options = function(geo_object) {
+        var hasAngebote = (geo_object["angebote_count"] > 0) ? true : false
+        console.log("Selected Marker", geo_object, hasAngebote)
         return {
-            color: model.colors.blue3, weight: 3, opacity: 1,
-            fillColor: model.colors.blue2, fillOpacity: 1, className: "selected"
+            color: (hasAngebote) ? model.colors.ka_yellow : model.colors.blue3, weight: 3, opacity: 1,
+            fillColor: (hasAngebote) ? model.colors.blue3 : model.colors.blue2, fillOpacity: 1, className: "selected"
         }
     }
 
-    map.calculate_hover_circle_options = function() {
+    map.calculate_hover_circle_options = function(geo_object) {
+        var hasAngebote = (geo_object["angebote_count"] > 0) ? true : false
+        console.log("Hover Marker", geo_object, hasAngebote)
         return {
-            color: model.colors.blue3, weight: 3, opacity: 1,
-            fillColor: model.colors.ka_yellow, fillOpacity: 1, className: "hover"
+            color: (hasAngebote) ? model.colors.ka_yellow : model.colors.blue3, opacity: 1,
+            fillColor: (hasAngebote) ? model.colors.blue3 : model.colors.blue2, fillOpacity: 1, className: "hover"
         }
     }
 

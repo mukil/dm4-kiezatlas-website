@@ -352,7 +352,7 @@ var kiezatlas = (function($, leafletMap, restc, favourites) {
         } else {
             _self.render_map(true, undefined, false) // detectLocation=true
         }
-        render_district_menu() // should do "Gesamtstadtplan"
+        // render_district_menu() // should do "Gesamtstadtplan"
     }
 
     this.render_search_page = function() {
@@ -426,9 +426,10 @@ var kiezatlas = (function($, leafletMap, restc, favourites) {
         if (!leafletMap.is_initialized()) {
             _self.setup_map_area('map', mousewheelzoom, skipCircleSearch)
         }
-        /** if (jump_to_map) {
-            leafletMap.scroll_into_view()
-        } **/
+        if (jump_to_map) {
+            console.log("Render Map with Srolling into View...")
+            // leafletMap.scroll_into_view()
+        }
         if (ask_location) {
             _self.get_browser_location()
         }
