@@ -149,10 +149,11 @@
             <a th:if="${authenticated}" href="/angebote/my" class="item">Meine Eintr&auml;ge</a>
             <!--a href="/angebote" class="item all-angebote">Angebote</a-->
             <div class="ui dropdown item">
+                <!-- Find # NOJS Solution for navigating to district frontpages -->
                 <span>Bezirksseiten</span> <i class="dropdown icon"></i>
                 <div class="menu" id="bezirksauswahl">
-                    <div class="item" th:each="district : ${districts}" th:id="${district.id}"
-                         th:text="${district.simpleValue}">Mitte</div>
+                    <a class="item" th:each="district : ${districts}" th:id="${district.id}"
+                         th:text="${district.simpleValue}" th:href="'/#' + ${district.simpleValue}">Mitte</a>
                 </div>
             </div>
             <div class="ui dropdown item">

@@ -63,7 +63,7 @@
                     })
                     standort.addTo(singleGroupLayer)
                     // 2) fetch geo objects naerby
-                    restc.get_places_nearby(lCoordinate, NEIGHBOUR_QUERY_RADIUS, function(places) {
+                    karestc.get_places_nearby(lCoordinate, NEIGHBOUR_QUERY_RADIUS, function(places) {
                         console.log("Found neighbouring places in radius of " + NEIGHBOUR_QUERY_RADIUS + "m", places.length)
                         for (var p in places) {
                             var place = places[p]

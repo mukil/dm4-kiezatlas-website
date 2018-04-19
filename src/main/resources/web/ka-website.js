@@ -77,7 +77,7 @@ function search_location_by_text() {
     // GUI
     kiezatlas.show_spinning_wheel(true)
     //
-    restc.do_geocode(streetFocus, function(response) {
+    karestc.do_geocode(streetFocus, function(response) {
         // GUI
         kiezatlas.hide_spinning_wheel(true)
         // Handling Response
@@ -426,9 +426,9 @@ var kiezatlas = (function($, leafletMap, restc, favourites) {
         if (!leafletMap.is_initialized()) {
             _self.setup_map_area('map', mousewheelzoom, skipCircleSearch)
         }
-        if (jump_to_map) {
+        /** if (jump_to_map) {
             leafletMap.scroll_into_view()
-        }
+        } **/
         if (ask_location) {
             _self.get_browser_location()
         }
@@ -624,7 +624,7 @@ var kiezatlas = (function($, leafletMap, restc, favourites) {
         $('a.district-control').remove()
         $('a.lock-control').show()
         // leafletMap.map.doubleClickZoom.disable();
-        leafletMap.scroll_into_view()
+        // leafletMap.scroll_into_view()
     }
 
     this.show_favourite_location = function(object) {
@@ -1330,4 +1330,4 @@ var kiezatlas = (function($, leafletMap, restc, favourites) {
 
     return this
 
-})($, leafletMap, restc, favourites)
+})($, leafletMap, karestc, favourites)

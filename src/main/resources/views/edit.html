@@ -38,6 +38,11 @@
             latitude = /*[[${geoobject.latitude}]]*/ undefined;
             longitude = /*[[${geoobject.longitude}]]*/ undefined;
             name = /*[[${geoobject.name}]]*/ undefined;
+            searchText = /*[[${search}]]*/ ''
+            searchType = /*[[${searchType}]]*/ 'place'
+            searchContext = /*[[${searchContext}]]*/ '0'
+            searchMethod = /*[[${searchMethod}]]*/ 'quick'
+            searchNearby = /*[[${searchNearby}]]*/ undefined
             window.onload = function() {
                 lCoordinate = L.latLng(latitude, longitude)
                 var kiezatlasWsId = /*[[${workspace.id}]]*/ undefined;
@@ -68,7 +73,7 @@
                 CKEDITOR.inline('oeffnungszeiten')
                 do_manual_placement()
                 // 2) fetch geo objects naerby
-                restc.get_places_nearby(lCoordinate, NEIGHBOUR_QUERY_RADIUS, function(places) {
+                karestc.get_places_nearby(lCoordinate, NEIGHBOUR_QUERY_RADIUS, function(places) {
                     console.log("Found neighbouring places in radius of " + NEIGHBOUR_QUERY_RADIUS + "m", places.length)
                     for (var p in places) {
                         var place = places[p]
@@ -82,7 +87,7 @@
             }
 
             function do_reverse_geocode() {
-                restc.do_reverse_geocode(leafletMap, undefined, function(result) {
+                karestc.do_reverse_geocode(leafletMap, undefined, function(result) {
                     console.log("Reverse Geocoded Address Component", result)
                 })
             }
@@ -102,7 +107,7 @@
                 console.log("Selected District", districtSelect, selectedDistrict.value)
                 if (selectedDistrict.value !== -1 && !selectedDistrict.text.startsWith("Bitte Bezirk")) queryString += selectedDistrict.text + " "
                 queryString += selectedCountry.text
-                restc.do_geocode(queryString, function(response) {
+                karestc.do_geocode(queryString, function(response) {
                     try {
                         var postalCode = parse_google_response("postal_code", response.results[0])
                         var districtName = parse_google_response("sublocality_level_1", response.results[0])
