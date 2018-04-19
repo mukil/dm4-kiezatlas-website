@@ -53,9 +53,58 @@ select.ui.dropdown {
     padding: .5em;
 }
 
+.ui .top.menu.fixed .fixed-border {
+    border-bottom: 1px solid #3787ab;
+    width: 100%;
+}
+
+.ui .top.menu.fixed .fixed-border .toc.button {
+    display: none;
+}
+
+.ui .top.menu.fixed .fixed-border .mobile-logo {
+    height: 42px;
+    width: auto;
+    margin-top: 9px;
+}
+
+.ui .top.menu.fixed .fixed-border .home,
+.ui .top.menu.fixed .fixed-border .container .sitename {
+    float: left;
+}
+
+.ui .top.menu.fixed .fixed-border .top.right {
+    float: right;
+}
+
 .ui .navigation {
     height: 138px;
     border-bottom: 1px solid #3787ab;
+}
+
+.top-menu .toc.item {
+    display: none;
+}
+
+.ui .top-menu .container {
+    position: relative;
+}
+
+.ui .top-menu .container a {
+    text-decoration: none;
+}
+
+.ui.sidebar.menu .item.inactive {
+    opacity: .5;
+    cursor: text;
+}
+
+.ui.menu .item {
+    color: #193441;
+}
+
+.webpages .ui.menu .item {
+    font-style: italic;
 }
 
 .ui.segment.teaser {
@@ -118,7 +167,7 @@ select.ui.dropdown {
     top: -20px;
 }
 
-.ui .navigation .top-menu .menu {
+.ui .navigation .top-menu .top.menu {
     float: right;
 }
 
@@ -251,7 +300,7 @@ a.blue4,
 }
 
 .page.detail .grid.infos {
-    padding-bottom: 8em;
+    padding-bottom: 1em;
 }
 
 /** Footer specific overrides **/
@@ -298,6 +347,11 @@ h3.label {
     font-smooth: antialiased;
     -webkit-font-smoothing: antialiased;
     font-size: 18px;
+    padding-bottom: .5em;
+}
+
+.ui.button.basic {
+    color: #193441 !important;
 }
 
 .ui.search {
@@ -1394,7 +1448,7 @@ ul.soziale-einrichtungen .einrichtungen li {
     border-radius: 2px;
     position: absolute;
     top: 10px;
-    left: 10px;
+    left: 3em;
     background: #fff;
     z-index: 2000;
     max-width: 300px;
@@ -1660,10 +1714,41 @@ div.location-label {
 
 .ui.page.detail #map-sidebar {
     top: 1em;
-    right: 4.5em;
+    right: 1em;
 }
 
+.webpages .ui.vertical.sidebar.menu,
+.webpages.page .ui.segment.header-background .ui.menu,
+.webpages .ui.segment.header-background .navigation {
+    background-color: #fff;
+    color: #193441;
+}
 
+.webpages .posts article .ui.header a {
+    color: #3787ab;
+}
+
+.webpages .footer .ui.container {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+}
+
+.webpages .footer .ui.stackable.grid>.row>.column {
+    padding: 0em;
+}
+
+.webpages .masthead.segment {
+    padding-top: 0em;
+    min-height: auto;
+}
+
+.webpages .masthead h1.ui.header {
+    margin-top: .5em;
+}
+
+.webpages .ui.vertical.stripe {
+    padding: 4em 0em;
+}
 
 /** ----------------------------------------------### Leaflet Overrides --- **/
 
@@ -1769,8 +1854,8 @@ div.location-label {
 #map-sidebar {
     display: none;
     position: absolute;
-    right: 3em;
-    top: 5em;
+    right: 1em;
+    top: 4.7em;
     width: 33%;
     z-index: 3000;
     overflow-y: auto;
@@ -1838,6 +1923,35 @@ div.location-label {
         padding-left: 1em;
         padding-right: 1em;
     }
+    .ui.teaser .header.white.thin {
+        width: 35%;
+    }
+}
+
+@media(max-width:925px) {
+    .top-menu .top.menu {
+        display: none;
+    }
+    .detail .top-menu .toc.item {
+        bottom: 0em;
+    }
+    .top-menu .toc.item {
+        display: inline-block;
+        cursor: pointer;
+        position: absolute;
+        bottom: 1em;
+        right: 0em;
+    }
+    .top-menu .toc.item:hover {
+        background: rgba(0,0,0,.03);
+    }
+    .ui.teaser .header.white.thin {
+        width: 50%;
+    }
+    .ui .search-results {
+        padding-left: 0em;
+        padding-right: 0em;
+    }
 }
 
 @media(max-width:900px) {
@@ -1855,5 +1969,61 @@ div.location-label {
     }
     .filter.list td.mail-col {
         display: none;
+    }
+    #map-sidebar {
+        width: 50%;
+    }
+    .page.detail .container.entry {
+        margin-top: 2em;
+    }
+}
+
+@media(max-width:767px) {
+    .ui .search-results {
+        padding-left: 1em;
+        padding-right: 1em;
+    }
+    .page.detail .grid.infos {
+        padding-bottom: 0em;
+    }
+    .webpages .footer .ui.container .ui.stackable.grid > .row > .column {
+        padding: 1rem !important;
+    }
+    .ui.vertical.container.segment.entry,
+    .ui.vertical.segment.info,
+    .ui.vertical.container.segment.imprint,
+    .ui.search-criterias .grid .column.first .grid,
+    .ui.angebotsinfos .ui.segment.einrichtungs-area,
+    .ui .footer .ui.container > .ui.stackable.grid > .row > .column,
+    .ui.container > .ui.stackable.grid > .column.angebote-tags,
+    .ui.search-criterias h3.header,
+    .ui.container.search-criterias > .ui.stackable.grid > .column.first {
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
+    }
+    .ui.container.segment.content > .ui.stackable.grid .column {
+        margin-top: 1rem !important;
+        margin-bottom: 1rem !important;
+        padding-top: 0rem !important;
+        padding-bottom: 0rem !important;
+    }
+    .ui .result-list .container {
+        padding-left: 1rem;
+    }
+    .ui.container.segment.content > .ui.stackable.grid .column.aktuelles,
+    .ui.container.segment.content > .ui.stackable.grid .column.citymaps {
+        padding-bottom: 1rem !important;
+    }
+    .ui .footer .ui.container > .ui.stackable.grid > .row > .column.your-data {
+        padding-left: 0rem !important;
+    }
+    .ui.search .ui.ka.button {
+        width: 100px;
+    }
+}
+
+@media(max-width:560px) {
+    .ui.search .input {
+        width: 40%;
     }
 }

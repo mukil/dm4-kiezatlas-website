@@ -47,6 +47,7 @@ function init_page(page) {
     // Build up UI handlers
     $('.ui.checkbox').checkbox()
     $('.ui.menu .dropdown').dropdown()
+    $sidebarUi = $('.ui.sidebar').sidebar('attach events', '.toc.item')
     // ### $('.ui.sidebar').sidebar()
     // initialize data on districts
     load_district_data(function() {
@@ -167,6 +168,17 @@ function init_sozialraumdaten_page() {
 }
 
 function init_einrichtungs_page() {
+    console.log("initializing detail page view...")
+    // fix menu when passed
+    $('.ui.vertical.segment.teaser').visibility({
+        once: false,
+        onBottomPassed: function () {
+            $('.fixed.menu').transition('fade in');
+        },
+        onBottomPassedReverse: function () {
+            $('.fixed.menu').transition('fade out');
+        }
+    })
     init_detail_map() // function defined in "website-detail" template
     if (districtId !== -1) {
         searchContext = districtId
@@ -358,8 +370,9 @@ function init_map_segment() {
     // use heatmap visualization first
     // set map mode "angebote" oder "einrichtungen"
 }
+
 function show_loading_map() {
-    $('#map').append('<div class="ui text loader">Aktualisiere Stadtplan...</div>')
+    $('#map').append('<div class="ui text loader">Lade Stadtplan...</div>')
     $('#map .leaflet-map-pane').css('opacity', 0.7)
 }
 
@@ -433,6 +446,7 @@ function activate_circle_search() {
     if (leafletMap.is_circle_query_active()) {
         $('#map .circle-control .button').remove()
     }
+    scroll_to('map')
 }
 
 function show_selected_geo_details (result_list) {
@@ -776,7 +790,7 @@ function search_menu_changed(value, text, $selectedItem) {
 function update_search_criteria_dialog() {
     if (searchType === "place") {
         einrichtungenChecked()
-        disableNearbySearchChecked()        // deactivate nearby search for both
+        // disableNearbySearchChecked()        // deactivate nearby search for both
         enableQuickSearchCheckbox()
         if (searchMethod === "quick") {
             // deactivate district filter
@@ -870,9 +884,9 @@ function enableNearbySearchChecked() {
     $('.ui.checkbox.circle input').removeAttr('disabled')
 }
 
-function disableNearbySearchChecked() {
+/** function disableNearbySearchChecked() {
     $('.ui.checkbox.circle input').attr('disabled', "disabled")
-}
+} **/
 
 function disableQuickSearchCheckbox() {
     $('.ui.checkbox.quick input').attr('disabled', "disabled")
@@ -1021,6 +1035,12 @@ function scroll_to(custom_anchor) {
     if (custom_anchor) {
         document.getElementById(custom_anchor).scrollIntoView()
     }
+}
+
+function focus_location_input_field() {
+    nearbySearchChecked()
+    scroll_to('query')
+    $('#streetnr').focus()
 }
 
 function load_district_data(handleResults) {

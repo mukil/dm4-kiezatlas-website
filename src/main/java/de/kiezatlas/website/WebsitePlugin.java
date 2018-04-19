@@ -3799,7 +3799,9 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
             // citymap resource
             log.info("Citymap at /" + name + " requested");
             Topic citymap = dm4.getTopicByValue("ka2.website.web_alias", new SimpleValue(name));
-            prepareSearchTemplateParameter(null, citymap.getId(), "quick", "place", "undefined");
+            if (citymap != null) { // requested custom resource is not a citymap topic
+                prepareSearchTemplateParameter(null, citymap.getId(), "quick", "place", "undefined");
+            }
         }
         preparePageTemplate(name);
     }

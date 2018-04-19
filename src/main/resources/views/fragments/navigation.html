@@ -1,132 +1,85 @@
 
-<!-- Mobile Semantic Sidebar Menu (Black) overwriting fragment in navigation.html from dm4-webpages -->
-<div th:fragment="vertical-nav">
+<!--- Standard Vertical Navigation (Experimental) -->
+<div th:fragment="vertical-nav (publisher)" class="ui vertical left menu sidebar">
 
-    <a th:replace="fragments/widgets :: logo-site-link"></a>
+    <div class="menu-header"></div>
 
-    <div class="ui category search item">
-        <div class="ui transparent inverted icon input">
-            <input class="prompt" type="text" placeholder="Search..." />
-            <i class="search link icon"></i>
-        </div>
-        <div class="results"></div>
-    </div>
-
-    <div th:each="menuItem : ${menuItems}" class="ui vertical inverted menu">
-
-        <a th:if="${!menuItem.hasChildItems}"
-            th:class="${#strings.equalsIgnoreCase(location, '/' + website + '/' + menuItem.href) ? 'active item' : 'item'}"
-            itemprop="url" th:title="'Open Page ' + ${menuItem.label}" th:text="${menuItem.label}"
-            th:href="${menuItem.fullHref}">Menu Item</a>
-
-        <div th:if="${menuItem.hasChildItems}" class="item">
-            <!-- a th:text="${menuItem.label}" th:href="${menuItem.href}"></a-->
-            <span th:text="${menuItem.label}" class="ui header"></span> <!-- Compare + Adjust Menu Below -->
-            <div class="menu">
-                <a th:class="${#strings.endsWith(location, '/' + childItem.href) ? 'active item' : 'item'}"
-                     th:each="childItem : ${menuItem.childMenuItems}"
-                     th:href="${childItem.fullHref}"
-                     th:text="${childItem.label}">
-                </a>
-            </div>
+    <div class="item general">
+        <div class="menu">
+            <a href="/" class="item" th:class="${#strings.contains(template, 'ka-index')} ? 'active item' : 'item'">Startseite</a>
+            <!--a href="/angebote" th:class="${#strings.contains(template, 'search')} ? 'active item' : 'item'">Angebotssuche</a-->
+            <a th:if="${!authenticated}" href="/angebote/my" class="item">Einstellen</a>
+            <a th:if="${!authenticated}" href="/sign-up/login" class="item">Login / Registriren</a>
         </div>
     </div>
 
-</div>
-
-<!-- Standard Semantic Top Menu (Black) overwriting fragment in navigation.html from dm4-webpages -->
-<div th:fragment="standard-nav">
-    <div class="ui large inverted menu">
-
-        <a th:replace="fragments/widgets :: logo-site-link"></a>
-
-        <a class="toc item">
-            <i class="sidebar icon"></i>
-        </a>
-
-        <div th:each="menuItem : ${menuItems}" class="menu-items">
-
-            <a th:if="${!menuItem.hasChildItems}"
-                th:class="${#strings.equalsIgnoreCase(location, '/' + website + '/' + menuItem.href) ? 'active item' : 'item'}"
-                itemprop="url" th:title="'Open Page ' + ${menuItem.label}" th:text="${menuItem.label}"
-                th:href="${menuItem.fullHref}">Menu Item</a>
-
-            <div th:if="${menuItem.hasChildItems}" class="ui simple dropdown item">
-                <!--a th:text="${menuItem.label}" th:href="${menuItem.href}"></a-->
-                <span th:text="${menuItem.label}" th:data="${menuItem.fullHref}"></span>
-                <i class="icon dropdown"></i>
-
-                <div class="menu">
-                    <div th:class="${#strings.endsWith(location, '/' + childItem.href) ? 'active red item' : 'red item'}"
-                         th:each="childItem : ${menuItem.childMenuItems}">
-
-                        <a class="ui" th:href="${childItem.fullHref}" th:text="${childItem.label}"></a>
-                    </div>
-                </div>
-
-            </div>
-
-        </div>
-
-        <div class="right menu">
-            <div class="ui right aligned category search item">
-                <div class="ui transparent inverted icon input">
-                    <input class="prompt" type="text" placeholder="Search..." />
-                    <i class="search link icon"></i>
-                </div>
-                <div class="results"></div>
-            </div>
-        </div>
-
-    </div>
-</div>
-
-<!-- Low Scrolling Position Semantic Top Menu (Black) overwriting fragment in navigation.html of dm4-webpages -->
-<div th:fragment="lower-page-nav">
-    <div class="ui large top fixed menu inverted">
-        <div class="ui container">
-
-            <a th:replace="fragments/widgets :: logo-site-link"></a>
-
-            <a class="toc item">
-                <i class="sidebar icon"></i>
-            </a>
-
-            <div th:each="menuItem : ${menuItems}" class="menu-items">
-
-                <a th:if="${!menuItem.hasChildItems}"
-                    th:class="${#strings.equalsIgnoreCase(location, '/' + website + '/' + menuItem.href) ? 'active item' : 'item'}"
-                    itemprop="url" th:title="'Open Page ' + ${menuItem.label}" th:text="${menuItem.label}"
-                    th:href="${menuItem.fullHref}">Menu Item</a>
-
-                <div th:if="${menuItem.hasChildItems}" class="ui simple dropdown item">
-                    <!--a th:text="${menuItem.label}" th:href="${menuItem.href}"></a-->
-                    <span th:text="${menuItem.label}" th:data="${menuItem.fullHref}"></span>
-                    <i class="icon dropdown"></i>
-
-                    <div class="menu">
-
-                        <div th:class="${#strings.endsWith(location, '/' + childItem.href) ? 'active red item' : 'red item'}" th:each="childItem : ${menuItem.childMenuItems}">
-                            <a class="ui" th:href="${childItem.fullHref}" th:text="${childItem.label}"></a>
-                        </div>
-                    </div>
-
-                </div>
-
-            </div>
-
-            <div class="right menu">
-                <div class="ui right aligned category search item">
-                    <div class="ui transparent inverted icon input">
-                        <input class="prompt" type="text" placeholder="Search..." />
-                        <i class="search link icon"></i>
-                    </div>
-                    <div class="results"></div>
-                </div>
-            </div>
-
+    <div class="item account" th:if="${authenticated}">
+        <div class="header">Account</div>
+        <div class="menu">
+            <a href="/angebote/my" class="item">Meine Eintr&auml;ge</a>
+            <!--a href="/sign-up/edit" class="item">Bearbeiten</a-->
+            <a href="/sign-up/login" class="item">Logout</a>
         </div>
     </div>
+
+    <div th:if="${is_publisher} or ${is_district_admin}" class="item administration">
+        <div class="header">Administration</div>
+        <div class="menu">
+            <a th:if="${is_publisher}" href="/website/list/filter/0" class="item">Gro&szlig;e Listenansicht</a>
+            <a th:if="${is_publisher}" href="/website/list/freischalten" class="item">Neue Orte freischalten</a>
+            <!--a href="/website/bezirk/edit" class="item">Bezirksseite bearbeiten</a-->
+            <a th:if="${is_district_admin}" href="/website/list/bezirksregionen" class="item">StadtteilkoordinatorInnen</a>
+            <a th:if="${is_publisher}" href="/website/list/ansprechpartner" class="item">EinrichtungsinhaberInnen</a>
+            <!--a href="/site/administration/" class="item">Listenansicht</a-->
+            <!-- Kiezatlas Membership -->
+            <a th:if="${is_site_manager}" href="/website/sites/" class="item">Stadtpl&auml;ne bearbeiten</a>
+        </div>
+    </div>
+
+    <div class="item bezirke">
+        <div class="header">Bezirksseiten</div>
+        <!-- Find # NOJS Solution for navigating to district frontpages -->
+        <!--div class="menu" id="bezirksauswahl">
+            <a class="item" th:each="district : ${districts}" th:id="${district.id}"
+                 th:text="${district.simpleValue}" th:href="'/#' + ${district.id}">Mitte</a>
+        </div-->
+        <div class="menu">
+            <a href="/#charlottenburg-wilmersdorf" th:class="'item cw'">Charlottenburg-Wilmersdorf</a>
+            <a href="/#friedrichshain-kreuzberg" th:class="'item fk'">Friedrichshain-Kreuzberg</a>
+            <a href="/#lichtenberg" th:class="'item lichtenberg'">Lichtenberg</a>
+            <a href="/#mitte" th:class="'item mitte'">Mitte</a>
+            <a href="/#neuk%C3%B6lln" th:class="'item nk'">Neuk&ouml;lln</a>
+            <a href="/#spandau" th:class="'item spandau'">Spandau</a>
+            <a href="/#steglitz-zehlendorf" th:class="'item spandau'">Steglitz-Zehlendorf</a>
+            <a href="/#tempelhof-sch%C3%B6neberg" th:class="'item spandau'">Tempelhof-Sch&ouml;neberg</a>
+            <a href="/#treptow-k%C3%B6penick" th:class="'item spandau'">Treptow-K&ouml;penick</a>
+            <a th:class="'item inactive'">Pankow</a>
+            <a th:class="'item inactive'">Marzahn-Hellersdorf</a>
+            <a th:class="'item inactive'">Reinickendorf</a>
+        </div>
+    </div>
+    <div class="ui item sozialraumdaten">
+        <div class="header">Sozialraumdaten</div>
+        <div class="menu" id="sozialraumdaten">
+            <a href="/website/sozialraumdaten" class="item">via Karte</a>
+            <a href="https://sozialraumdaten.kiezatlas.de/" class="item">via Straße / Hnr.</a>
+        </div>
+    </div>
+
+    <div class="item infos" th:if="${!#lists.isEmpty(menuItems)}">
+        <div class="header">Infos</div>
+        <div class="menu">
+            <span th:each="menuItem : ${menuItems}">
+                <a th:href="${menuItem.href}" th:class="'item'" th:id="${menuItem.id}" th:text="${menuItem.label}">Menu Item</a>
+                <span th:each="childItem : ${menuItem.childMenuItems}">
+                    <a class="ui item" th:href="${childItem.fullHref}" th:text="${childItem.label}"></a>
+                </span>
+            </span>
+        </div>
+    </div>
+
+    <p>&nbsp;</p>
+
 </div>
 
 <!-- 
@@ -136,11 +89,18 @@
 <div th:fragment="top-menu (publisher)">
 
     <div class="ui container">
+
         <h3 class="citymap-title"></h3>
         <a href="/" class="home" title="zur Startseite">
             <img src="/de.kiezatlas.website/images/kiezatlas2-logo.png" class="mobile-logo" />
         </a>
-        <div class="ui borderless right menu">
+
+        <a class="toc item ui basic button">
+            <i class="sidebar">Men&uuml;</i>
+        </a>
+
+        <div class="ui borderless right top menu">
+
             <!--a th:if="!${#strings.contains(template, 'website-')}" href="/" class="item">Startseite</a-->
             <!--a th:if="!${#strings.contains(template, 'page')}"
                class="item open-sidebar" onclick="$sidebarUi.sidebar('toggle');">Men&uuml;</a-->
@@ -195,246 +155,81 @@
 
 </div>
 
+<!-- Low Scrolling Position Semantic Top Menu -->
+<div th:fragment="lower-page-nav">
+    <div class="ui top fixed menu">
+        <div class="fixed-border">
+            <div class="ui container">
 
-<!-- Standard Horizontal Navigation (Wider Page > 900px) -->
-<div th:fragment="top (publisher)">
+                <a th:replace="fragments/widgets :: logo-site-link"></a>
 
-    <div class="ui menu">
-        <h3 class="citymap-title"></h3>
-        <div th:class="${is_publisher} ? 'ui container fluid' : 'ui container'">
-        <a href="/" class="home" title="zur Startseite">
-                <img src="/de.kiezatlas.website/images/kiezatlas2-logo.png" height="40" class="mobile-logo" />
-        </a>
-            <a th:if="!${#strings.contains(template, 'page')}"
-               class="item open-sidebar" onclick="$sidebarUi.sidebar('toggle');">Men&uuml;</a>
-               <!--  or !#strings.contains(template, 'login') or !#strings.contains(template, 'sign-up')} -->
-            <a th:if="${authenticated}" href="/angebote/my" class="item angebote">Meine Eintr&auml;ge</a>
-            <a th:if="!${#strings.contains(template, 'index')}" href="/" class="item">Startseite</a>
-            <a href="/angebote" class="item all-angebote">Angebote</a>
-            <div th:if="${#strings.contains(template, 'index')}" class="ui simple dropdown item">
-                Bezirke <i class="dropdown icon"></i>
-                <div class="menu" id="bezirksauswahl"></div>
-            </div>
-            <a th:if="${is_site_manager}" href="/website/sites"
-               th:class="${#strings.contains(template, 'site')} ? 'active item sites' : 'item sites'">Sites</a>
-            <a class="item star" title="Die aktuelle Kartenposition zu Ihren Standort-Favoriten hinzufügen" alt:="Icon: Favourite this location."
-               th:if="${#strings.contains(template, 'ka-index')}"><i class="icon star empty"></i></a>
-            <a th:if="!${authenticated}" href="/sign-up/login"
-               th:class="${#strings.contains(template, 'login')} ? 'active item login' : 'item login'">Login</a>
-            <a th:if="${authenticated}" href="/sign-up/login"
-               th:class="${#strings.contains(template, 'logout')} ? 'active item logout' : 'item logout'">Logout</a>
-            <div class="right menu">
-                <div class="item search-input" th:if="${#strings.contains(template, 'ka-index') or #strings.contains(template, 'citymap') or #strings.contains(template, 'detail')}">
-                    <!--  or #strings.contains(template, 'page')} -->
-                    <div class="ui category search small input">
-                        <div class="ui icon input">
-                            <input class="prompt" id="text-search" type="search"
-                                   placeholder="Suche in Namen"/> <!-- onfocus="show_search_options()" -->
+                <a class="toc item ui basic button">
+                    <i class="sidebar">Men&uuml;</i>
+                </a>
+
+                <div class="ui borderless right top menu">
+
+                    <!--a th:if="!${#strings.contains(template, 'website-')}" href="/" class="item">Startseite</a-->
+                    <!--a th:if="!${#strings.contains(template, 'page')}"
+                       class="item open-sidebar" onclick="$sidebarUi.sidebar('toggle');">Men&uuml;</a-->
+                       <!--  or !#strings.contains(template, 'login') or !#strings.contains(template, 'sign-up')} -->
+                    <a th:if="${!authenticated}" href="/angebote/my" class="item">Einstellen</a>
+                    <a th:if="${authenticated}" href="/angebote/my" class="item">Meine Eintr&auml;ge</a>
+                    <!--a href="/angebote" class="item all-angebote">Angebote</a-->
+                    <div class="ui dropdown item">
+                        <!-- Find # NOJS Solution for navigating to district frontpages -->
+                        <span>Bezirksseiten</span> <i class="dropdown icon"></i>
+                        <div class="menu">
+                            <a href="/#charlottenburg-wilmersdorf" th:class="'item cw'">Charlottenburg-Wilmersdorf</a>
+                            <a href="/#friedrichshain-kreuzberg" th:class="'item fk'">Friedrichshain-Kreuzberg</a>
+                            <a href="/#lichtenberg" th:class="'item lichtenberg'">Lichtenberg</a>
+                            <a href="/#mitte" th:class="'item mitte'">Mitte</a>
+                            <a href="/#neuk%C3%B6lln" th:class="'item nk'">Neuk&ouml;lln</a>
+                            <a href="/#spandau" th:class="'item spandau'">Spandau</a>
+                            <a href="/#steglitz-zehlendorf" th:class="'item spandau'">Steglitz-Zehlendorf</a>
+                            <a href="/#tempelhof-sch%C3%B6neberg" th:class="'item spandau'">Tempelhof-Sch&ouml;neberg</a>
+                            <a href="/#treptow-k%C3%B6penick" th:class="'item spandau'">Treptow-K&ouml;penick</a>
+                            <a th:class="'item inactive'">Pankow</a>
+                            <a th:class="'item inactive'">Marzahn-Hellersdorf</a>
+                            <a th:class="'item inactive'">Reinickendorf</a>
                         </div>
-                        <button id="search-submit" onclick="do_fulltext_search()" class="circular ui icon button basic small">
-                            <i class="search icon"></i>
-                        </button>
-                        <i class="my search icon small"></i>
-                        <div class="results"></div>
                     </div>
+                    <div class="ui dropdown item">
+                        <span>Sozialraumdaten</span> <i class="dropdown icon"></i>
+                        <div class="menu" id="sozialraumdaten">
+                            <a href="/website/sozialraumdaten" class="item">via Karte</a>
+                            <a href="https://sozialraumdaten.kiezatlas.de/" class="item">via Straße / Hnr.</a>
+                        </div>
+                    </div>
+                    <div class="ui dropdown item">
+                        <span>Infos</span> <i class="dropdown icon"></i>
+                        <div class="menu">
+                            <a href="/" class="item">Alter Kiezatlas</a>
+                            <a href="/" class="item">AnsprechpartnerInnen Liste</a>
+                            <a href="/" class="item">Das Projekt</a>
+                            <div class="ui dropdown button item">
+                                <i class="icon dropdown left"></i>
+                                <span class="text">Hilfe</span>
+                                <div class="menu left">
+                                    <a href="/" class="item">F&uuml;r AnbieterInnen</a>
+                                    <a href="/" class="item">F&uuml;r Einrichtungen</a>
+                                    <a href="/" class="item">Workflows &amp; Berechtigungen</a>
+                                    <a href="/" class="item">&Uuml;bersicht NutzerInnen</a>
+                                    <a href="/" class="item">Technologie</a>
+                                    <a href="/" class="item">Tipps &amp; Tricks</a>
+                                </div>
+                            </div>
+                            <a href="/" class="item">Impressum</a>
+                            <a href="/" class="item">Nutzungsbedingungen</a>
+                            <a href="/" class="item">&Uuml;ber uns</a>
+                        </div>
+                    </div>
+                    <a th:if="!${authenticated}" href="/sign-up/login"
+                       th:class="${#strings.contains(template, 'login')} ? 'active item login' : 'item login'">Login / Registrieren</a>
+                    <a th:if="${authenticated}" href="/sign-up/login"
+                       th:class="${#strings.contains(template, 'logout')} ? 'active item logout' : 'item logout'">Logout</a>
                 </div>
             </div>
         </div>
     </div>
-
-</div>
-
-<!--- Standard Vertical Navigation (Experimental) -->
-<div th:fragment="vertical (publisher)">
-
-    <div class="menu-header"></div>
-
-    <div class="item general">
-        <div class="menu">
-            <a href="/" class="item" th:class="${#strings.contains(template, 'ka-index')} ? 'active item' : 'item'">Startseite</a>
-            <a href="/angebote" th:class="${#strings.contains(template, 'search')} ? 'active item' : 'item'">Angebotssuche</a>
-        </div>
-    </div>
-
-    <div class="item account">
-        <div class="header">Account</div>
-        <div class="menu" th:if="!${authenticated}">
-            <a href="/sign-up/login" class="item">Login</a>
-            <a href="/sign-up/" class="item">Registrieren</a>
-        </div>
-        <div class="menu" th:if="${authenticated}">
-            <a href="/angebote/my" class="item">Meine Eintr&auml;ge</a>
-            <a href="/sign-up/edit" class="item">Bearbeiten</a>
-            <a href="/sign-up/login" class="item">Logout</a>
-        </div>
-    </div>
-
-    <div th:if="${is_publisher} or ${is_district_admin}" class="item administration">
-        <div class="header">Administration</div>
-        <div class="menu">
-            <a th:if="${is_publisher}" href="/website/list/filter/0" class="item">Gro&szlig;e Listenansicht</a>
-            <a th:if="${is_publisher}" href="/website/list/freischalten" class="item">Neue Orte freischalten</a>
-            <!--a href="/website/bezirk/edit" class="item">Bezirksseite bearbeiten</a-->
-            <a th:if="${is_district_admin}" href="/website/list/bezirksregionen" class="item">StadtteilkoordinatorInnen</a>
-            <a th:if="${is_publisher}" href="/website/list/ansprechpartner" class="item">EinrichtungsinhaberInnen</a>
-            <!--a href="/site/administration/" class="item">Listenansicht</a-->
-            <!-- Kiezatlas Membership -->
-            <a th:if="${is_site_manager}" href="/website/sites/" class="item">Stadtpl&auml;ne bearbeiten</a>
-        </div>
-    </div>
-
-    <div class="item bezirke">
-        <div class="header">Bezirksseiten</div>
-        <div class="menu">
-            <a href="/#charlottenburg-wilmersdorf" th:class="'item cw'">Charlottenburg-Wilmersdorf</a>
-            <a href="/#lichtenberg" th:class="'item lichtenberg'">Lichtenberg</a>
-            <a href="/#mitte" th:class="'item mitte'">Mitte</a>
-            <a href="/#neuk%C3%B6lln" th:class="'item nk'">Neuk&ouml;lln</a>
-            <a href="/#friedrichshain-kreuzberg" th:class="'item fk'">Friedrichshain-Kreuzberg</a>
-            <a href="/#spandau" th:class="'item spandau'">Spandau</a>
-            <a href="/#steglitz-zehlendorf" th:class="'item spandau'">Steglitz-Zehlendorf</a>
-            <a href="/#tempelhof-sch%C3%B6neberg" th:class="'item spandau'">Tempelhof-Sch&ouml;neberg</a>
-            <a href="/#treptow-k%C3%B6penick" th:class="'item spandau'">Treptow-K&ouml;penick</a>
-        </div>
-    </div>
-    <div class="item atlanten">
-        <div class="header">Stadtpl&auml;ne</div>
-        <div class="menu">
-            <a href="/familienportal-stadtplan" th:class="'item gesamt'">Familie</a>
-            <a href="/vska-stadtteilzentren" th:class="'item gesamt'">Stadtteilzentren</a>
-        </div>
-    </div>
-    <div class="item infos" th:if="${!#lists.isEmpty(menuItems)}">
-        <!--div class="header">Infos</div-->
-        <div class="menu">
-            <span th:each="menuItem : ${menuItems}">
-                <a th:href="${menuItem.href}" th:class="'item'" th:id="${menuItem.id}" th:text="${menuItem.label}">Menu Item</a>
-            </span>
-        </div>
-    </div>
-
-    <p>&nbsp;</p>
-
-</div>
-
-<!--div class="ui vertical accordion">
-    <div class="item">
-        <a class="active title">
-            <i class="dropdown icon"></i>
-            Bezirksstadtpl&auml;ne
-        </a>
-        <div class="content active bezirke">
-            <a href="#charlottenburg-wilmersdorf" th:class="'item cw'">Charlottenburg-Wilmersdorf</a>
-            <a href="#lichtenberg" th:class="'item lichtenberg'">Lichtenberg</a>
-            <a href="#mitte" th:class="'item mitte'">Mitte</a>
-            <a href="#neuk%C3%B6lln" th:class="'item nk'">Neuk&ouml;lln</a>
-            <a href="#friedrichshain-kreuzberg" th:class="'item fk'">Friedrichshain-Kreuzberg</a>
-            <a href="#spandau" th:class="'item spandau'">Spandau</a>
-            <a href="#steglitz-zehlendorf" th:class="'item spandau'">Steglitz-Zehlendorf</a>
-            <a href="#tempelhof-sch%C3%B6neberg" th:class="'item spandau'">Tempelhof-Sch&ouml;neberg</a>
-            <a href="#treptow-k%C3%B6penick" th:class="'item spandau'">Treptow-K&ouml;penick</a>
-        </div>
-    </div>
-    <div class="item">
-        <a class="active title">
-            <i class="dropdown icon"></i>
-            Atlanten
-        </a>
-        <div class="content active">
-            <a href="/vska-stadtteilzentren" th:class="'item gesamt'">Stadtteilzentren</a>
-            <a href="/familienportal-stadtplan" th:class="'item gesamt'">Familienportal</a>
-        </div>
-    </div>
-    <div class="item" th:if="${!#lists.isEmpty(menuItems)}">
-        <a class="active title">
-            <i class="dropdown  icon"></i>
-            Infos
-        </a>
-        <div class="content active">
-            <span th:each="menuItem : ${menuItems}">
-                <a th:href="${menuItem.href}" th:class="'item'" th:id="${menuItem.id}" th:text="${menuItem.label}">Menu Item</a>
-            </span>
-        </div>
-    </div>
-</div-->
-
-<!-- Standard Webpage Links Sitemap like Footer -->
-<div th:fragment="footer-links (publisher)" class="footer-links">
-
-    <div class="provider">
-
-        <div class="block links">
-            <div class="content">
-                <h3>Infos</h3>
-                <ul class="menu-items" th:if="${!#lists.isEmpty(menuItems)}">
-                    <li th:each="menuItem : ${menuItems}">
-                        <a th:href="'/' + ${menuItem.href}" th:class="'item'" th:id="${menuItem.id}" th:text="${menuItem.label}">Menu Item</a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="block user">
-            <div class="content">
-                <h3>Mein Zugang</h3>
-                <ul class="menu" th:if="!${authenticated}">
-                    <li><a href="/sign-up/login" class="item">Login</a></li>
-                    <li><a href="/sign-up/" class="item">Registrieren</a></li>
-                </ul>
-                <ul class="menu" th:if="${authenticated}">
-                    <li><a href="/angebote/my" class="item">Meine Eintr&auml;ge</a></li>
-                    <li><a href="/sign-up/edit" class="item">Bearbeiten</a></li>
-                    <li><a href="/sign-up/login" class="item">Logout</a></li>
-                </ul>
-            </div>
-        </div>
-
-        <div th:if="${is_publisher}" class="block administration">
-            <div class="content">
-                <h3>Administration</h3>
-                <ul class="menu">
-                    <li th:if="${is_publisher}"><a href="/website/list/filter/0" class="item">Gro&szlig;e Listenansicht</a></li>
-                    <!--li th:if="${is_district_admin}">
-                        <a href="/website/list" class="item">Einfache Listen</a>
-                    </li-->
-                    <li th:if="${is_publisher}"><a href="/website/list/freischalten" class="item">Neue Orte freischalten</a></li>
-                        <!--a href="/website/bezirk/edit" class="item">Bezirksseite bearbeiten</a-->
-                    <li th:if="${is_district_admin}"><a href="/website/list/bezirksregionen" class="item">StadtteilkoordinatorInnen</a></li>
-                    <li th:if="${is_publisher}"> <a href="/website/list/ansprechpartner" class="item">EinrichtungsinhaberInnen</a></li>
-                    <!-- Kiezatlas Membership -->
-                    <li th:if="${is_site_manager}"><a href="/website/sites/" class="item">Stadtpl&auml;ne bearbeiten</a></li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="block about">
-            <div class="content">
-                <h3>Kontakt</h3>
-                <p th:utext="${siteAbout}">Configure Website About Info (HTML)</p>
-            </div>
-        </div>
-
-        <div class="block webpages">
-            <div class="content">
-                <h3 th:text="${siteName}">Webpages</h3>
-                <ul class="webpages" th:if="${!#lists.isEmpty(webpages) and #strings.equals(website, 'standard')}">
-                    <li th:each="webpage : ${webpages}">
-                        <a th:href="'/' + ${webpage.webAlias}" th:class="'item'" th:id="${webpage.id}" th:text="${webpage.title}">Menu Item</a>
-                    </li>
-                </ul>
-                <ul class="webpages" th:if="${!#lists.isEmpty(webpages) and !#strings.equals(website, 'standard')}">
-                    <li th:each="webpage : ${webpages}">
-                        <a th:href="${webpage.webAlias}" th:class="'item'" th:id="${webpage.id}" th:text="${webpage.title}">Menu Item</a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </div>
-
-    <div class="powered-by" th:if="${!#strings.isEmpty(siteAbout)}">
-        <p th:utext="${footerText}">
-            Configure Website Footer Text (HTML)
-        </p>
-    </div>
-
 </div>

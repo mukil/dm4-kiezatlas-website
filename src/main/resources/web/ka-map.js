@@ -613,7 +613,7 @@ var leafletMap = (function($, L) {
     function handle_locating_error() {
         map.set_current_location_name('Ihr Standort liegt au&szlig;erhalb von Berlin, '
             + 'bitte nutzen sie die Umkreissuche oder '
-            + '<a href="javascript:kiezatlas.focus_location_input_field()" '+ '>die Texteingabe</a>.')
+            + '<a href="javascript:focus_location_input_field()" '+ '>die Texteingabe</a>.')
         map.map.setView(map.get_current_location_coords())
         map.map.setZoom(mapping.zoom_kiez)
         map.fire_location_error('Ihr Standort ist a&uszlig;erhalb von Berlin.')
