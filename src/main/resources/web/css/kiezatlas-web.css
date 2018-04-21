@@ -59,6 +59,10 @@ select.ui.dropdown {
     height: 52px;
 }
 
+.ui.webpages .top.menu.fixed .fixed-border {
+    height: 58px;
+}
+
 .ui .top.menu.fixed .fixed-border .toc.button {
     display: none;
 }
@@ -67,6 +71,11 @@ select.ui.dropdown {
     height: 42px;
     width: auto;
     margin-top: 9px;
+}
+
+.ui.webpages .top.menu.fixed .fixed-border .mobile-logo {
+    height: 50px;
+    margin-top: 8px;
 }
 
 .ui .top.menu.fixed .fixed-border .home,
