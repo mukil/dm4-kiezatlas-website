@@ -72,55 +72,74 @@ function init_page(page) {
                 render_frontpage("gesamt")
             }
             init_search_page_fragment()
+
         } else if (page === "place") {
             init_einrichtungs_page()
             init_search_page_fragment()
+
         } else if (page === "place-edit") {
             init_einrichtungs_edit_page()
             init_search_page_fragment()
+
         } else if (page === "citymap") {
             init_citymap()
+
         } else if (page === "message") {
             init_fixed_top_menu('.ui.vertical.segment.commands')
             init_search_page_fragment()
+
         } else if (page === "sozialraumdaten") {
             init_sozialraumdaten_page()
+
         } else if (page === "my-entries") { // --- Angebote UI
             // 
+
         } else if (page === "event") { // --- Angebote UI
             init_angebots_page()
             init_search_page_fragment()
+
         } else if (page === "event-edit") { // -- Angebote UI
             // 
+
         } else if (page === "angebots_assignment") { // --- Angebote UI
             //
+
         } else if (page === "revise") { // --- Angebote UI
             //
             // --- Editorial Pages --- //
+
         } else if (page === "comments") {
             init_fixed_top_menu('.ui.vertical.segment.commands')
+
         } else if (page === "confirm") {
             init_fixed_top_menu('.ui.vertical.segment.commands')
+
         } else if (page === "editors") {
             init_editors_list()
             init_fixed_top_menu('.ui.vertical.segment.commands')
+
         } else if (page === "user_assignment") {
             init_fixed_top_menu('.ui.vertical.segment.commands')
+
         } else if (page === "filter-list") {
             init_fixed_top_menu('.ui.vertical.segment.commands')
             init_filter_list()
             // --- Kiezatlas Administrator Pages --- //
+
         } else if (page === "site-editor") {
             init_fixed_top_menu('#header')
             sites.init_site_editor()
+
         } else if (page === "site-listing") {
             init_fixed_top_menu('#header')
             sites.init_list()
+
         } else if (page === "facet-editor") {
             init_fixed_top_menu('.ui.vertical.segment.commands')
             sites.init_facet_editor()
+
         } else if (page === "sign-up") {
-            
+            //
         }
         $('.fixed.menu').transition('fade out');
     })
@@ -144,12 +163,14 @@ function init_search_page_fragment() {
         console.log("nearby Search active", searchNearby)
         showNearbySearch()
         set_nearby_input(searchNearby)
-        // fires angebote_search subsequently (if succeeded)
+        // fires angebote_search subsequently (if geo-cording succeeded)
         do_search_streetcoordinates()
-    } else if (searchText &&  searchText.length >= 2) {
+    } else if (searchText && searchText.length >= 2) {
         searchNearby = undefined
         set_search_input(searchText)
-        do_text_search()
+        if (typeof frontpage !== "undefined") {
+            if (frontpage) do_text_search()
+        }
     }
     init_search_type_menu()
     update_search_criteria_dialog()
@@ -282,6 +303,10 @@ function handle_bezirks_item_click(e) {
     if (click_href.indexOf("/") === 0) {
         click_href = click_href.substr(1)
     }
+    if (typeof frontpage === "undefined") {
+        window.document.location.assign(window.document.location.origin + "/website" + click_href)
+        return
+    }
     if (frontpage && click_href === "#gesamt") {
         kiezatlas.clear_district_page()
         render_frontpage("gesamt")
@@ -290,10 +315,7 @@ function handle_bezirks_item_click(e) {
         searchContext = bezirksTopic.id
         $('.ui.dropdown').dropdown('hide')
         update_search_criteria_dialog()
-    } else {
-        window.document.location.assign(window.document.location.origin + "/website" + click_href)
     }
-    // _self.hide_sidebar()
 }
 
 function show_district_frontpage() {
