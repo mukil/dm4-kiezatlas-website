@@ -49,7 +49,7 @@ var citymap = {
             leafletMap.set_marker_fixed_radius(true)
         }
         // Load Site Info
-        restc.load_website_info(siteAlias, function(siteTopic) {
+        karestc.load_website_info(siteAlias, function(siteTopic) {
             // console.log("Load Kiezatlas Website ", siteAlias, siteTopic)
             kiezatlas.set_site_id(siteTopic.id)
             kiezatlas.set_site_info(siteTopic)
@@ -73,14 +73,14 @@ var citymap = {
             citymap.render_info_area(siteTopic)
             kiezatlas.show_newsfeed_area(siteTopic.id, siteTopic.newsfeed)
             // Load Geo Objects in Website
-            restc.load_website_geoobjects(siteTopic.id, function(results) {
+            karestc.load_website_geoobjects(siteTopic.id, function(results) {
                 // leafletMap.clear_marker()
                 kiezatlas.hide_spinning_wheel()
                 leafletMap.set_items(results)
                 leafletMap.render_geo_objects(true)
             })
             //
-            restc.load_website_facets(siteTopic.id, function(facetTypes) {
+            karestc.load_website_facets(siteTopic.id, function(facetTypes) {
                 // console.log("Loaded Websites Facet Type Definitions", facetTypes)
                 facetTypeDefs = facetTypes
             })
@@ -216,10 +216,10 @@ var citymap = {
         // 2) highlight/focus marker on map
         leafletMap.highlight_geo_object_marker_by_id(marker_id, focusOnMap)
         // 2) load basics
-        restc.load_geo_object_detail(marker_id, function(result) {
+        karestc.load_geo_object_detail(marker_id, function(result) {
             citymap.render_selected_detail(result)
             // 2.1) load facets
-            restc.load_facetted_geo_object(marker_id, kiezatlas.get_site_id(), function(obj) {
+            karestc.load_facetted_geo_object(marker_id, kiezatlas.get_site_id(), function(obj) {
                 citymap.render_geo_object_facets(obj)
             })
             // 2.2) display angebote in an extra tab
@@ -417,7 +417,7 @@ var citymap = {
         var $ul = $('#category-area ul.results')
             $ul.removeClass("cats")
             $ul.empty()
-        restc.load_topics_by_type(criteriaId, function(categories) {
+        karestc.load_topics_by_type(criteriaId, function(categories) {
             // console.log("Loaded Categories", categories)
             for (var c in categories) {
                 var cat = categories[c]
@@ -434,7 +434,7 @@ var citymap = {
     },
 
     select_category: function(categoryId) {
-        restc.load_geo_objects_by_category(kiezatlas.get_site_id(), categoryId, function(results) {
+        karestc.load_geo_objects_by_category(kiezatlas.get_site_id(), categoryId, function(results) {
             // console.log("Loaded Geo Objects by Category", categoryId, results)
             var $ul = $('#category-area ul.results')
             if (results.length > 0) {

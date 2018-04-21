@@ -19,6 +19,9 @@
     </head>
     <body class="ui page detail kiezatlas filter list places">
 
+        <!-- Following Menu -->
+        <nav id="lower-page-nav" th:include="fragments/navigation :: lower-page-nav"></nav>
+
         <div class="navigation">
             <div class="top-menu" th:include="fragments/navigation :: top-menu (publisher=${is_publisher})"></div>
         </div>

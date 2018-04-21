@@ -178,7 +178,7 @@ var kiezatlas = (function($, leafletMap, restc, favourites) {
     var _self = this
 
     this.do_logout = function() {
-        restc.logout()
+        karestc.logout()
         window.document.location.reload()
     }
 
@@ -216,7 +216,7 @@ var kiezatlas = (function($, leafletMap, restc, favourites) {
     }
 
     this.get_search_keywords = function(query) {
-        restc.load_search_keywords(query, function(els) {
+        karestc.load_search_keywords(query, function(els) {
             console.log("Loaded Search Keywords for ", query, "...", els)
         })
     }
@@ -515,7 +515,7 @@ var kiezatlas = (function($, leafletMap, restc, favourites) {
         $('span.einrichtungen-btn').removeClass('bold')
         _self.set_mapcontrol_mode_results()
         //
-        restc.load_current_angebotsinfos(function(offers) {
+        karestc.load_current_angebotsinfos(function(offers) {
             leafletMap.set_angebote_mode(true)
             leafletMap.clear_marker()
             leafletMap.set_items(offers)
@@ -574,7 +574,7 @@ var kiezatlas = (function($, leafletMap, restc, favourites) {
         // Load Newsfeed in District
         _self.show_newsfeed_area(topic_id, bezirk_feed_url)
         // Load Geo Objects in District
-        restc.load_district_topics(topic_id, function(response) {
+        karestc.load_district_topics(topic_id, function(response) {
             leafletMap.clear_marker()
             _self.hide_spinning_wheel()
             leafletMap.set_items(response)
@@ -587,7 +587,7 @@ var kiezatlas = (function($, leafletMap, restc, favourites) {
     }
 
     this.show_newsfeed_area = function(topic_id, feedUrl) {
-        restc.load_news_items(topic_id, function(results) {
+        karestc.load_news_items(topic_id, function(results) {
             var html_item
             if (!results) {
                 $('#site-area .news-area').hide()
@@ -845,7 +845,7 @@ var kiezatlas = (function($, leafletMap, restc, favourites) {
             $sidebar.append('<div class="entry"><h3>' + marker_model.name + '</h3><a href="/website/geo/' + marker_id + '">'
                 + '<i class="icon caret right"></i>mehr Infos</a></div>')
             list_of_marker_ids.push(marker_id)
-            restc.load_geo_object_detail(marker_id, function(result) {
+            karestc.load_geo_object_detail(marker_id, function(result) {
                 _self.render_selected_details_card(result)
             })
         }
@@ -854,7 +854,7 @@ var kiezatlas = (function($, leafletMap, restc, favourites) {
     this.show_selected_angebot_detail = function(marker, geo_objects) {
         var model = marker.options
         var einrichtung = {id: model['location_id'], name: model['name'], address: model['address'] }
-        restc.load_related_angebotsinfos(model['location_id'], function(results) {
+        karestc.load_related_angebotsinfos(model['location_id'], function(results) {
             _self.render_selected_angebot_details_card(results, einrichtung)
         })
     }
@@ -929,7 +929,7 @@ var kiezatlas = (function($, leafletMap, restc, favourites) {
     // --- Kiezatlas API Service helper
 
     this.load_district_topics = function(callback) {
-        restc.load_districts(function(results) {
+        karestc.load_districts(function(results) {
             _self.set_districts(results.sort(restc.value_sort_asc))
             if (callback) callback()
         })
@@ -1050,7 +1050,7 @@ var kiezatlas = (function($, leafletMap, restc, favourites) {
     }
 
     this.do_reverse_geocode = function(e) {
-        restc.do_reverse_geocode(leafletMap, _self)
+        karestc.do_reverse_geocode(leafletMap, _self)
     }
 
     // --- Simple HTML click handler

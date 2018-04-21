@@ -56,6 +56,7 @@ select.ui.dropdown {
 .ui .top.menu.fixed .fixed-border {
     border-bottom: 1px solid #3787ab;
     width: 100%;
+    height: 52px;
 }
 
 .ui .top.menu.fixed .fixed-border .toc.button {
@@ -454,6 +455,10 @@ header .large.menu h3.caption,
     padding-right: .8em;
 }
 
+.segment.query-parameter {
+    margin-top: 1em;
+}
+
 .ui.inverted.dimmer .ui.loader {
     padding-left: 1em;
     padding-top: 3em;
@@ -698,6 +703,7 @@ select option[selected] {
     padding: 0em;
 }
 
+.segment.query-parameter .parameter,
 .page.detail .stichworte,
 .page.detail .related-topics {
     margin-top: .5em;
@@ -706,6 +712,46 @@ select option[selected] {
 .page.detail .stichworte label,
 .page.detail .related-topics label {
     font-weight: bold;
+}
+
+.query-parameter .parameter.location .name {
+    display: inline-block;
+}
+
+.segment.query-parameter .parameter {
+    border-radius: 8.5px;
+    padding: .2em;
+    padding-right: .5em;
+    padding-left: .5em;
+    background-color: #ecf4f7;
+    display: inline-block;
+    color: #193441;
+}
+
+.query-parameter .parameter.location .coord-values {
+    font-size: 16px;
+}
+
+.parameter a.close {
+    padding-right: 0.3em;
+    padding-left: 0.5em;
+    /** background-color: #FC3; **/
+    color: #193441;
+    /** margin: 0em 0.5em 0em 0.5em; */
+    cursor: pointer;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.parameter a.close.prev,
+.parameter a.close.next {
+    color: #193441;
+    position: relative;
+    top: 1px;
+}
+
+.parameter a.close:hover {
+    color: #3787ab;
 }
 
 .page .angebote-tags .tag,
@@ -725,6 +771,8 @@ select option[selected] {
     padding-bottom: 0em;
 }
 
+.location-parameter .parameter,
+.segment.query-parameter .parameter,
 .page .stichworte .tag,
 .page .angebote-tags .tag {
     margin-right: .25em;
@@ -1315,11 +1363,6 @@ table.dataTable.display tbody tr.unconfirmed {
 }
 
 .list .status {
-    padding-left: 1em;
-}
-
-.soziale-einrichtungen {
-    max-width: 70%;
     padding-left: 1em;
 }
 
@@ -1929,6 +1972,7 @@ div.location-label {
 }
 
 @media(max-width:925px) {
+    #lower-page-nav,
     .top-menu .top.menu {
         display: none;
     }
@@ -2023,6 +2067,9 @@ div.location-label {
 }
 
 @media(max-width:560px) {
+    .ui.teaser .header.white.thin {
+        width: 70%;
+    }
     .ui.search .input {
         width: 40%;
     }

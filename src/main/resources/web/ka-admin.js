@@ -56,7 +56,7 @@ var list = (function($) {
             placeholder: "Benutzer auswählen"
         })
         $sidebarUi = $('.ui.sidebar').sidebar('setting', 'dimPage', false)
-        restc.load_view_permissions(function(info) {
+        karestc.load_view_permissions(function(info) {
             console.log("User has permissions on", info)
             view_permissions = info
             api.show_assigned_usernames(placeId)
@@ -70,7 +70,7 @@ var list = (function($) {
     }
 
     api.show_current_name = function(topicId) {
-        restc.load_geo_object_detail(topicId, function(response) {
+        karestc.load_geo_object_detail(topicId, function(response) {
             geo_object = response
             if (api.topic_list_contains_value(view_permissions.bezirksregionen, response.bezirksregion)
              || api.topic_list_contains_value(view_permissions.bezirke, response.bezirk)) {
@@ -145,7 +145,7 @@ var list = (function($) {
         // if (givenUserId) userId == givenUserId
         if (userId !== -1 && !isNaN(userId) && topicId) {
             console.log("Create Assign User", topicId, userId)
-            restc.create_user_assignment(topicId, userId, function(response) {
+            karestc.create_user_assignment(topicId, userId, function(response) {
                 console.log("Attempt to create a kiezatlas user assignment", response)
                 if (response.state === "ok") window.document.location.reload()
             })
@@ -157,7 +157,7 @@ var list = (function($) {
     api.do_remove_assignment = function(topicId, userId) {
         if (userId !== -1 && !isNaN(userId)) {
             console.log("Remove User Assignment", topicId, userId)
-            restc.delete_user_assignment(topicId, userId, function(response) {
+            karestc.delete_user_assignment(topicId, userId, function(response) {
                 console.log("Attempt to delete a kiezatlas user assignment", response)
                 if (response.state === "ok") window.document.location.reload()
             })
@@ -167,7 +167,7 @@ var list = (function($) {
     api.do_remove_geo_assignment = function(topicId, userId) {
         if (userId !== -1 && !isNaN(userId)) {
             console.log("Remove User Assignment", topicId, userId)
-            restc.delete_user_assignment(topicId, userId, function(response) {
+            karestc.delete_user_assignment(topicId, userId, function(response) {
                 console.log("Attempt to delete a kiezatlas user assignment", response)
                 if (response.state === "ok") window.document.location.reload()
             })
@@ -206,7 +206,7 @@ var list = (function($) {
     }
 
     api.render_bezirk_links = function() {
-        restc.load_district_topics(function(districts) {
+        karestc.load_district_topics(function(districts) {
             var $links = $(".district-links")
                 $links.empty()
             for (var i in districts) {

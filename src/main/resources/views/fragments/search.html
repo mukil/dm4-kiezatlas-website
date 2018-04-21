@@ -18,6 +18,11 @@
         </div>
     </div>
 
+    <!-- Query Parameter Area -->
+    <div class="ui vertical segment query-parameter container"></div>
+    <!-- Location Parameter Area
+    <div class="ui vertical segment location-parameter container"></div-->
+
     <!-- Search Results Area -->
     <div class="ui vertical segment search-results hidden">
         <div class="ui container">
@@ -97,7 +102,7 @@
                                         <div class="field">
                                             <div class="ui radio checkbox circle">
                                                 <input type="radio" name="area" id="circle" value="nearby"
-                                                       onchange="nearbySearchChecked()"/>
+                                                       onchange="showNearbySearch()"/>
                                                 <label for="circle">Umkreissuche</label>
                                             </div>
                                         </div>
@@ -109,10 +114,18 @@
                             <div class="column sixteen wide nearby hidden">
                                 <h4 class="header thin">Suche beschr&auml;nken auf Ergebnisse in der N&auml;he von</h4>
                                 <div class="column attributes">
-                                    <div class="ui input fluid">
-                                        <input type="text" id="streetnr" query="nearby"
-                                               onkeyup="handleSearchInput(this)" placeholder="Straße/ Hnr, Postleitzahl"/>
-                                    </div>
+                                    <form action="javascript:_void()" id="location-search-form" accept-charset="UTF-8">
+                                        <div class="nearby-dialog ui search fluid action input">
+                                            <!-- label for="nearby" class="label">In der N&auml;he von</label -->
+                                            <input id="nearby" title="Textbasierte Suche nach Anschrift und Geo-Koordinaten" name="nearby" class=""
+                                                   type="text" placeholder="Straße Hnr., PLZ , Anschrift in der Nähe von..." onkeyup="handleSearchInput(this)"/>
+                                            <button id="do-nearby" title="Standort suchen" class="ui icon button"
+                                                onclick="javascript:do_search_streetcoordinates()">Go</button>
+                                            <div class="message"></div>
+                                            <!--button id="do-locating" title="Meinen aktuellen Standort nutzen" class="circular ui icon button basic"
+                                                onclick="javascript:do_browser_location()"><i class="location arrow icon"></i><span>Standort nutzen</span></button-->
+                                        </div>
+                                    </form>
                                 </div>
                             </div>
                         </div>

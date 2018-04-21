@@ -12,7 +12,7 @@ var sites = {
     facetTypes: undefined,
 
     init_list: function() {
-        restc.load_websites(function(sites) {
+        karestc.load_websites(function(sites) {
             for (var s in sites) {
                 var site = sites[s]
                 var webAlias = site.childs['ka2.website.web_alias']
@@ -54,7 +54,7 @@ var sites = {
         sites.load_facet_value_options(typeUri, facetTopicTypeUri, addEmpty, existingMany)
     },
     load_facet_value_options: function(typeUri, facetTopicTypeUri, addEmpty, existingMany) {
-        restc.load_topics_by_type(typeUri, function(results) {
+        karestc.load_topics_by_type(typeUri, function(results) {
             var facetTypeUriInputFieldSelector = sites.transform_element_selector(facetTopicTypeUri)
             var $selectBox = $('#' + facetTypeUriInputFieldSelector)
             if ($selectBox.attr("data-initalized")) {
@@ -90,12 +90,12 @@ var sites = {
     init_facet_editor: function() {
         siteId = $('.editor .site').attr("id")
         objectId = $('.facet-editor .object').attr("id")
-        restc.load_facetted_geo_object(objectId, siteId, function(object) {
+        karestc.load_facetted_geo_object(objectId, siteId, function(object) {
             // 1) Load object into app
             // console.log("Loaded Facetted Geo Object", object)
             geoobject = object
             // 2) Load facets and render them
-            restc.load_website_facets(siteId, function(facetTypes) {
+            karestc.load_website_facets(siteId, function(facetTypes) {
                 // console.log("Loaded Websites Facet Type Definitions", facetTypes)
                 sites.render_facet_form(siteId, facetTypes)
             })
@@ -158,7 +158,7 @@ var sites = {
             }
         }
         console.log("Sending Topic Model", tm)
-        restc.update_facets(geoobject.id, siteId, tm, function(res) {
+        karestc.update_facets(geoobject.id, siteId, tm, function(res) {
             sites.handle_response_err(res)
         })
 
@@ -276,7 +276,7 @@ var sites = {
         }
     },
     assign_to_site: function(id) {
-        restc.create_website_assignment(id, siteId, function(response) {
+        karestc.create_website_assignment(id, siteId, function(response) {
             console.log("Added object to site", id, siteId)
             if (response.state === "ok") {
                 $('#dialog-confirm').html('<p>Der Einrichtungsdatensatz wurde diesem Stadtplan erfolgreich hinzugef&uuml;gt</p>'
@@ -297,7 +297,7 @@ var sites = {
         })
     },
     remove_assignment: function(id, site) {
-        restc.load_geo_object_detail(id, function(result) {
+        karestc.load_geo_object_detail(id, function(result) {
             console.log("Remove geo object from site", id, "Site", site)
             $('#dialog-confirm').html("<p>Aufhebung der Zuweisung dieses Einrichtungsdatensatzes zu diesem Stadtplan?</p>"
                 + "<p><b>" + result.name + "</b></p><p>Anschrift:<br/>" + result.anschrift + "</p>")
@@ -305,7 +305,7 @@ var sites = {
                 title: "Zuweisung aufheben?",
                 buttons: {
                     "Ja": function() {
-                        restc.remove_website_assignment(id, site, function(response) {
+                        karestc.remove_website_assignment(id, site, function(response) {
                             $('#' + id).hide("slow")
                             sites.handle_response_err(response)
                         })

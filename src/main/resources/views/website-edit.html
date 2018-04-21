@@ -21,6 +21,7 @@
         <script defer="true" type="text/javascript" src="/de.kiezatlas.angebote/vendor/ckeditor/config.js"></script>
         <script defer="true" type="text/javascript" src="/de.kiezatlas.website/ka-restclient.js"></script>
         <script defer="true" type="text/javascript" src="/de.kiezatlas.website/ka-model.js"></script>
+        <script defer="true" type="text/javascript" src="/de.kiezatlas.website/search-angebote.js"></script>
         <script defer="true" type="text/javascript" src="/de.kiezatlas.website/ka-startseite.js" onload="init_page('place-edit')"></script>
         <!--script defer="true" src="/de.kiezatlas.website/vendor/jquery/jquery-3.2.1.min.js"></script-->
         <script defer="true" type="text/javascript" src="/de.kiezatlas.website/css/semantic-ui/2.3/dist/semantic.min.js"></script>
@@ -325,6 +326,9 @@
         <meta th:replace="fragments/tracker" />
     </head>
     <body class="ui page detail kiezatlas topic edit">
+
+        <!-- Following Menu -->
+        <nav id="lower-page-nav" th:include="fragments/navigation :: lower-page-nav"></nav>
 
         <div class="navigation">
             <div class="top-menu" th:include="fragments/navigation :: top-menu (publisher=${is_publisher})"></div>

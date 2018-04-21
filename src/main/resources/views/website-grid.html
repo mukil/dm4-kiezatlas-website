@@ -42,6 +42,9 @@
     </head>
     <body class="ui page">
 
+        <!-- Following Menu -->
+        <nav id="lower-page-nav" th:include="fragments/navigation :: lower-page-nav"></nav>
+
         <div class="navigation">
             <div class="top-menu" th:include="fragments/navigation :: top-menu (publisher=${is_publisher})"></div>
         </div>
@@ -107,7 +110,7 @@
                             <h3>Entdecken Sie unsere weiteren Stadtpl&auml;ne</h3>
                             <div class="subline">
                                 <a href="//kiezatlas.de/browse/atlas-al-arab">Atlas Al-Arab</a><br/>
-                                <a href="//kiezatlas.de/browse/go-areas">Neuk&ouml;lnn Go-Areas</a><br/>
+                                <a href="//kiezatlas.de/browse/go-areas">Neuk&ouml;lln Go-Areas</a><br/>
                                 <a href="/outreach">Outreach Mobile Jugendarbeit</a><br/>
                                 <a href="/vska-stadtteilzentren">VskA Stadtteilzentren</a><br/><br/>
                                 <a href="/weitere-stadplaene"><i class="icon caret right"></i>weitere Stadtpl&auml;ne</a>

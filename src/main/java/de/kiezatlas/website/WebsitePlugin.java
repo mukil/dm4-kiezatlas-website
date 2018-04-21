@@ -241,6 +241,12 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         return getFrontpage();
     }
 
+    @GET
+    @Path("/startseite")
+    public Response redirectNewFrontpage() {
+        return Response.seeOther(URI.create("/")).build();
+    }
+
     /** Responds with a Viewable, the new frontpage of the Kiezatlas Website. */
     @GET
     @Path("/map")
@@ -447,9 +453,9 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         viewData("zielgruppen", new ArrayList<RelatedTopic>());
         viewData("angebote", new ArrayList<RelatedTopic>());
         populateGeoObjectFormTemplate();
-        preparePageTemplate("edit");
+        preparePageTemplate("website-edit");
         viewData("workspace", getConfirmationWorkspace());
-        return view("edit");
+        return view("website-edit");
     }
 
     /**
@@ -480,11 +486,11 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
             return getNotFoundPage("Eine Einrichtung mit dieser ID ist uns nicht bekannt.");
         }
         populateGeoObjectFormTemplate();
-        preparePageTemplate("edit");
+        preparePageTemplate("website-edit");
         // this makes sure we keep all (potentially new) child topics in the same workspace its parent is while editing
         viewData("workspace", getAssignedWorkspace(geoObject));
         viewData("editable", isEditable);
-        return view("edit");
+        return view("website-edit");
     }
 
     /**

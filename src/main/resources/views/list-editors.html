@@ -10,12 +10,15 @@
         <script defer="true" src="/de.kiezatlas.website/vendor/jquery/jquery-3.2.1.min.js"></script>
         <script defer="true" src="/de.kiezatlas.website/css/semantic-ui/2.3/dist/semantic.min.js"></script>
         <script defer="true" src="/de.kiezatlas.website/ka-restclient.js"></script>
-        <script defer="true" src="/de.kiezatlas.website/ka-startseite.js" onload="init_page('editors')"></script>
         <script defer="true" src="/de.kiezatlas.website/ka-admin.js"></script>
+        <script defer="true" src="/de.kiezatlas.website/ka-startseite.js" onload="init_page('editors')"></script>
 
         <meta th:replace="fragments/tracker" />
     </head>
     <body class="ui page detail kiezatlas list comments">
+
+        <!-- Following Menu -->
+        <nav id="lower-page-nav" th:include="fragments/navigation :: lower-page-nav"></nav>
 
         <div class="navigation">
             <div class="top-menu" th:include="fragments/navigation :: top-menu (publisher=${is_publisher})"></div>
