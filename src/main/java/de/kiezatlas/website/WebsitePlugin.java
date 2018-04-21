@@ -508,7 +508,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         Topic geoObject = getGeoObjectById(topicId);
         viewData("tags", getAllTagTopics());
         prepareSearchTemplateParameter(search, contextId, searchMethod, searchType, searchNearby);
-        log.info("Page search preparation, search=" + search + " type=" + searchType + " context=" + contextId);
+        log.info("Requested Place ("+topicId+") Search preparation, search=" + search + " type=" + searchType + " context=" + contextId);
         return (geoObject != null) ? prepareGeoObjectTemplate(geoObject.getId()) : getNotFoundPage();
     }
 
