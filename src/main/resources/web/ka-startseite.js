@@ -853,7 +853,9 @@ function update_search_criteria_dialog() {
         hideAngeboteTags()
         disableNearbySearchChecked()        // deactivate nearby search for both
         hideNearbySearch()
-        checkBerlinwideSearchbox()
+        if (searchContext == 0) {
+            checkBerlinwideSearchbox()
+        }
         enableQuickSearchCheckbox()
         if (searchMethod === "quick") {
             // deactivate district filter
@@ -869,7 +871,7 @@ function update_search_criteria_dialog() {
         enableNearbySearchChecked()         // deactivate district filter in general
         disableDistrictCheckboxes()        // activate nearby search
         checkFulltextSearchbox()
-        // checkBerlinwideSearchbox()
+        checkBerlinwideSearchbox()
         disableQuickSearchCheckbox()
     }
     if (searchNearby && searchNearby !== "undefined" && searchNearby.length > 2) {
@@ -928,6 +930,7 @@ function hideNearbySearch() {
 function berlinSearchChecked(e) {
     if (frontpage) {
         // set district filter
+        console.log("SearchContext", e)
         $('.ui.grid.filter .column.nearby').addClass('hidden')
         searchContext = e.id
         bezirksTopic = get_bezirks_topic_by_id(e.id)
@@ -935,7 +938,7 @@ function berlinSearchChecked(e) {
         if (searchContext != 0) {
             fulltextSearchChecked()
             render_district_frontpage()
-        } else {
+        } else if (searchContext == 0) {
             // check gesamtberlin
             checkBerlinwideSearchbox()
         }
@@ -949,6 +952,7 @@ function berlinSearchChecked(e) {
         }
     }
     replace_page_parameters()
+    return true
 }
 
 function enableNearbySearchChecked() {
@@ -993,6 +997,7 @@ function checkQuickSearchbox() {
 }
 
 function checkBerlinwideSearchbox() {
+    console.log("Check Berlin Wide Search!")
     $('.ui.radio.checkbox.berlin').checkbox('check')
     searchContext = 0
 }

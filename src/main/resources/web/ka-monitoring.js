@@ -233,10 +233,10 @@ $(document).ready(function () {
         return false;
     };
 
-    var layerSwitcher = new ol.control.LayerSwitcher({
+    /** var layerSwitcher = new ol.control.LayerSwitcher({
         tipLabel: 'Legende' // Optional label for button
     });
-    map.addControl(layerSwitcher);
+    map.addControl(layerSwitcher); **/
 
     // Geocoder
 
