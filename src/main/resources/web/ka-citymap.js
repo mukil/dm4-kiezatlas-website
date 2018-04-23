@@ -152,7 +152,7 @@ var citymap = {
             kiezatlas.do_circle_search(undefined, undefined)
             kiezatlas.do_reverse_geocode()
         })
-        kiezatlas.render_browser_location_button()
+        // kiezatlas.render_browser_location_button()
         kiezatlas.render_current_location_label()
         leafletMap.render_circle_search_control()
     },

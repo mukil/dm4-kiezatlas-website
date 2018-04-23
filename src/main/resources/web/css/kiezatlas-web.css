@@ -1975,7 +1975,8 @@ div.location-label {
         padding-left: 1em;
         padding-right: 1em;
     }
-    .ui.teaser .header.white.thin {
+    .ui.teaser .header.white.thin,
+    .ui.teaser .header.white.subline {
         width: 35%;
     }
 }
@@ -1998,7 +1999,8 @@ div.location-label {
     .top-menu .toc.item:hover {
         background: rgba(0,0,0,.03);
     }
-    .ui.teaser .header.white.thin {
+    .ui.teaser .header.white.thin,
+    .ui.teaser .header.white.subline {
         width: 50%;
     }
     .ui .search-results {
@@ -2028,6 +2030,9 @@ div.location-label {
     }
     .page.detail .container.entry {
         margin-top: 2em;
+    }
+    .ui.page.detail #map {
+        height: 300px;
     }
 }
 
@@ -2076,6 +2081,7 @@ div.location-label {
 }
 
 @media(max-width:560px) {
+    .ui.teaser .header.white.subline,
     .ui.teaser .header.white.thin {
         width: 70%;
     }
