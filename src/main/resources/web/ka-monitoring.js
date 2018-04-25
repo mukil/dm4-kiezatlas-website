@@ -62,8 +62,8 @@ $(document).ready(function () {
     //Hintergrundkarten und Tile-Layer aus Mapbox werden definiert und geladen
     var mapboxLayerHi = new ol.layer.Tile({
         source: new ol.source.XYZ({ // old style id="kiezatlas.map-feifsq6f"
-            url: 'https://api.tiles.mapbox.com/v4/kiezatlas.pd8lkp64/{z}/{x}/{y}.png?access_token=pk.eyJ1Ijoia2llemF0bGFzIiwiYSI6ImNpa3BndjU2ODAwYm53MGxzM3JtOXFmb2IifQ._PcBhOcfLYDD8RP3BS0U_g',
-            // https://api.mapbox.com/styles/v1/danielo/cj0b3nxhh00482smt51tb631i/tiles/256/{z}/{x}/{y}@2x?access_token=pk.eyJ1IjoiZGFuaWVsbyIsImEiOiJjajBmY3oxeWQwMDJvMzJyemx3cDQ4aW5uIn0.UPg8pUyhtf_Ecy5vy-2D4w',
+            url: 'https://api.mapbox.com/styles/v1/danielo/cj0b3nxhh00482smt51tb631i/tiles/256/{z}/{x}/{y}@2x?access_token=pk.eyJ1IjoiZGFuaWVsbyIsImEiOiJjajBmY3oxeWQwMDJvMzJyemx3cDQ4aW5uIn0.UPg8pUyhtf_Ecy5vy-2D4w',
+            // 'https://api.tiles.mapbox.com/v4/kiezatlas.pd8lkp64/{z}/{x}/{y}.png?access_token=pk.eyJ1Ijoia2llemF0bGFzIiwiYSI6ImNpa3BndjU2ODAwYm53MGxzM3JtOXFmb2IifQ._PcBhOcfLYDD8RP3BS0U_g',
         })
     });
 
@@ -153,7 +153,7 @@ $(document).ready(function () {
             scaleLineControl //hier wird die Maßstabsleiste der map hinzugefügt
         ]),
         target: 'mapDiv',
-        layers: [mapboxLayerHi, statusLayer],
+        layers: [mapboxLayerHi, statusLayer, mapboxLayerLi],
         overlays: [popup],
         view: new ol.View({
             center: ol.proj.transform([13.3833, 52.5167], 'EPSG:4326', 'EPSG:3857'),
@@ -242,7 +242,7 @@ $(document).ready(function () {
 
     // Create an instance of the custom provider, passing any options that are
     // required
-    var provider = MyOpenStreet();
+    // var provider = MyOpenStreet();
     var geocoder = new Geocoder('nominatim', {
         provider: 'osm',
         key: '',

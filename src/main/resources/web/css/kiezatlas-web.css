@@ -104,6 +104,10 @@ select.ui.dropdown {
     text-decoration: none;
 }
 
+.fixed.menu {
+    display: none;
+}
+
 .ui.sidebar.menu .item.inactive {
     opacity: .5;
     cursor: text;

@@ -232,7 +232,6 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
             @QueryParam("koordinate") String koordinate, @QueryParam("zoomstufe") String zoomstufe,
             @QueryParam("type") String searchType, @QueryParam("method") String searchMethod,
             @QueryParam("nearby") String searchNearby) {
-        viewData("tags", getAllTagTopics());
         prepareSearchTemplateParameter(search, site, searchMethod, searchType, searchNearby);
         viewData("koordinate", koordinate);
         viewData("zoomstufe", zoomstufe);
@@ -264,7 +263,6 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
             @QueryParam("type") String searchType, @QueryParam("method") String searchMethod,
             @QueryParam("nearby") String searchNearby) {
         viewData("lorId", lorId);
-        prepareSearchTemplateParameter(search, site, searchMethod, searchType, searchNearby);
         viewData("koordinate", koordinate);
         viewData("zoomstufe", zoomstufe);
         log.info("LOR Page preparation ("+lorId+"), search=" + search + " type=" + searchType + " contextId=" + site);
@@ -506,7 +504,6 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
             @QueryParam("search") String search, @QueryParam("type") String searchType,
             @QueryParam("method") String searchMethod, @QueryParam("nearby") String searchNearby) {
         Topic geoObject = getGeoObjectById(topicId);
-        viewData("tags", getAllTagTopics());
         prepareSearchTemplateParameter(search, contextId, searchMethod, searchType, searchNearby);
         log.info("Requested Place ("+topicId+") Search preparation, search=" + search + " type=" + searchType + " context=" + contextId);
         return (geoObject != null) ? prepareGeoObjectTemplate(geoObject.getId()) : getNotFoundPage();
@@ -1925,10 +1922,6 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
 
     // ------------------------------------------ Kiezatlas Website Page/Template Preparation Helpers --------------- //
 
-    private List<Topic> getAllTagTopics() {
-        return dm4.getTopicsByType("dm4.tags.tag");
-    }
-
     private void prepareSearchTemplateParameter(String search, long contextId,
             String method, String type, String nearby) {
         viewData("search", (search == null) ? "" : search);
@@ -1936,6 +1929,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         viewData("searchMethod", (method == null) ? "quick" : method);
         viewData("searchNearby", (nearby == null) ? "undefined" : nearby);
         viewData("searchType", (type == null) ? "place" : type);
+        viewData("tags", angebote.getAngeboteTags());
     }
 
     private void initializeCityMapWebAliasResources() {

@@ -431,7 +431,7 @@ var kiezatlas = (function($, leafletMap, restc, favourites) {
             // leafletMap.scroll_into_view()
         }
         if (ask_location) {
-            _self.get_browser_location()
+            // _self.get_browser_location()
         }
         if (viewport) {
             if (viewport.zoom) {

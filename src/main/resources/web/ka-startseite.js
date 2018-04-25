@@ -40,6 +40,7 @@ var $sidebarUi = undefined
 // --- Page Methods -- //
 
 function init_page(page) {
+    var subdomain_mitte = (window.location.host.indexOf("mitte.") !== -1 || window.location.hostname.indexOf("mitte.") !== -1) ? true : false
     // Build up UI handlers
     $('.ui.checkbox').checkbox()
     $('.ui.menu .dropdown').dropdown()
@@ -61,8 +62,12 @@ function init_page(page) {
             register_pop_state_navigation()
             get_location_hash_from_url()
             get_viewport_from_url()
-            console.log("Initialized startseite page", parameter.page, searchText, searchType, searchMethod, searchContext, searchNearby)
-            if (parameter.page) {
+            console.log("Initialized startseite page", parameter.page, searchText, searchType, searchMethod, searchContext, searchNearby, "mitte", subdomain_mitte)
+            if (subdomain_mitte) {
+                bezirksTopic = get_bezirks_topic_by_id(7275)
+                searchContext = bezirksTopic.id
+                render_frontpage("bezirk") // by bezirksTopic
+            } else if (parameter.page) {
                 bezirksTopic = get_bezirks_topic_by_hash(parameter.page)
                 searchContext = bezirksTopic.id
                 render_frontpage("bezirk") // by bezirksTopic
@@ -141,7 +146,6 @@ function init_page(page) {
         } else if (page === "sign-up") {
             //
         }
-        $('.fixed.menu').transition('fade out');
     })
 }
 
@@ -149,10 +153,12 @@ function init_fixed_top_menu(elementClassNames) {
     $(elementClassNames).visibility({
         once: false,
         onBottomPassed: function () {
-            $('.fixed.menu').transition('fade in');
+            $('.fixed.menu').show();
+            // $('.fixed.menu').transition('fade in');
         },
         onBottomPassedReverse: function () {
-            $('.fixed.menu').transition('fade out');
+            // $('.fixed.menu').transition('fade out');
+            $('.fixed.menu').hide();
         }
     })
 }
@@ -303,7 +309,7 @@ function handle_bezirks_item_click(e) {
     if (click_href.indexOf("/") === 0) {
         click_href = click_href.substr(1)
     }
-    if (typeof frontpage === "undefined") {
+    if (typeof frontpage === "undefined" || !frontpage) {
         window.document.location.assign(window.document.location.origin + "/website" + click_href)
         return
     }
@@ -311,9 +317,10 @@ function handle_bezirks_item_click(e) {
         kiezatlas.clear_district_page()
         render_frontpage("gesamt")
     } else if (frontpage) {
-        var bezirksTopic = get_bezirks_topic_by_hash(click_href)
+        bezirksTopic = get_bezirks_topic_by_hash(click_href)
         searchContext = bezirksTopic.id
         $('.ui.dropdown').dropdown('hide')
+        render_frontpage("bezirk")
         update_search_criteria_dialog()
     }
 }
@@ -848,7 +855,7 @@ function search_menu_changed(value, text, $selectedItem) {
 }
 
 function update_search_criteria_dialog() {
-    console.log("Updating search criteria dialog...")
+    console.log("Updating search criteria dialog", searchType, searchContext, searchMethod, searchNearby)
     if (searchType === "place") {
         hideAngeboteTags()
         disableNearbySearchChecked()        // deactivate nearby search for both
