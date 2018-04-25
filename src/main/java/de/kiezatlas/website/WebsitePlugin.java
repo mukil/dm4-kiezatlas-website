@@ -3811,6 +3811,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         log.info("Kiezatlas 2.0 received a 404 for request on \"/" + sitePrefix + "/" + webAlias + "\"");
         context.setVariable("message", "An dieser Adresse unseres Koordinatensystems haben wir keine weiteren Informationen");
         preparePageTemplate(webAlias);
+        prepareSearchTemplateParameter(null, 0, "quick", "place", "undefined");
     }
 
 
@@ -3823,6 +3824,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     @Override
     public void angeboteResourceRequested(AbstractContext context, String templateName) {
         preparePageTemplate(templateName);
+        prepareSearchTemplateParameter(null, 0, "fulltext", "event", "undefined");
     }
 
 }
