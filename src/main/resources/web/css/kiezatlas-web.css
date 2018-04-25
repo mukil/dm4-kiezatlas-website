@@ -510,7 +510,7 @@ header .large.menu h3.caption,
 
 .page.detail .metadata a,
 .page.detail .info-area a {
-    color: #9ec8d6;
+    color: #ecf4f7;
 }
 
 .page.message .body,
@@ -525,7 +525,7 @@ header .large.menu h3.caption,
 
 .page.detail .metadata a:hover,
 .page.detail .info-area a:hover {
-    color: #ecf4f7;
+    color: #9ec8d6;
 }
 
 .page.detail .metadata a.ui.button,

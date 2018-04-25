@@ -442,7 +442,7 @@ function create_nearby_marker(place) {
     if (place.latitude && place.longitude) {
         var coords = L.latLng(place.latitude, place.longitude)
         var marker = L.circleMarker(coords, {
-            weight: 2, opacity: 0.6, fillColor: model.colors.ka_yellow, fillOpacity: 0.6, color : model.colors.blue3,
+            weight: 2, opacity: 1, fillColor: model.colors.ka_yellow, fillOpacity: 1, color : model.colors.blue3,
             geo_object_id: place.id, title: place.name + ', ' + place.anschrift
         })
         marker.on('click', function(e) {
