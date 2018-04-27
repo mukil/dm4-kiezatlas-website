@@ -166,7 +166,6 @@ function init_fixed_top_menu(elementClassNames) {
 function init_search_page_fragment() {
     init_angebote_tag_handler()
     if (searchNearby && searchNearby !== "undefined" && searchNearby.length >= 3) {
-        console.log("nearby Search active", searchNearby)
         showNearbySearch()
         set_nearby_input(searchNearby)
         // fires angebote_search subsequently (if geo-cording succeeded)
@@ -1004,7 +1003,6 @@ function checkQuickSearchbox() {
 }
 
 function checkBerlinwideSearchbox() {
-    console.log("Check Berlin Wide Search!")
     $('.ui.radio.checkbox.berlin').checkbox('check')
     searchContext = 0
 }
@@ -1081,6 +1079,7 @@ function render_place_search_results(from, to, count, $container) {
 }
 
 function render_event_search_results(from, to, count, $container) {
+    console.lor("Render event search results", results)
     rendering:
     for (var r in results) {
         if (r >= from && r < to) {
@@ -1111,7 +1110,7 @@ function get_event_list_item_html(element) {
         var html_string = '<div class="item"><h3 class="thin">' + element.name + '</h3>'
                 + '<div class="subline">wird an ' + standort_html + ' angeboten, '
                 + zb_html +' <i>'+first_assignment.anfang+'</i> bis </i>'+first_assignment.ende+'</i>, <b>' + first_assignment.name + '</b>'
-        if (!is_empty(element.kontakt)) html_string += '<span class="contact">Kontakt: ' + element.kontakt + '</span>'
+        if (!is_empty(element.kontakt)) html_string += '<br/><span class="contact">Kontakt: ' + element.kontakt + '</span>'
         // if (element.creator) html_string += '<br/><span class="username">Info von <em>'+element.creator+'</em></span>'
         html_string += '<br/><a href="/angebote/'+ element.id +'"><i class="icon caret right"></i>mehr Infos</a></div></div>'
         return html_string

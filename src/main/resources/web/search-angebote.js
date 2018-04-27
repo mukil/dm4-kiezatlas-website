@@ -515,7 +515,7 @@ function remove_location_parameter() {
         angebotsinfos = undefined
         render_angebote_search_results()
     } else {
-        fire_angebote_search()
+        do_angebote_search()
     }
 }
 
@@ -526,7 +526,7 @@ function remove_time_parameter(fireSearch) {
         angebotsinfos = undefined
         render_angebote_search_results()
     }
-    if (fireSearch) fire_angebote_search()
+    if (fireSearch) do_angebote_search()
 }
 
 function remove_text_parameter(name, fireSearch) {
@@ -549,7 +549,7 @@ function remove_text_parameter(name, fireSearch) {
         // update_search_location()
         angebotsinfos = undefined
     }
-    if (fireSearch) fire_angebote_search()
+    if (fireSearch) do_angebote_search()
 }
 
 function remove_all_text_parameter(e) {
@@ -573,8 +573,8 @@ function handle_location_form(e) {
     var radiusSelection = document.getElementById("nearby-radius");
     if (radiusSelection) {
         location_radius = radiusSelection.options[radiusSelection.selectedIndex].value;
-        console.log("Updated Location Search Radius", location_radius)
-        fire_angebote_search()
+        // fire_angebote_search()
+        do_angebote_search()
     }
 }
 

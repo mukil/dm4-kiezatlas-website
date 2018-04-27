@@ -106,9 +106,10 @@
 
         <script defer="true" src="/de.kiezatlas.website/ka-startseite.js" onload="init_page('place')"></script>
         <script defer="true" src="/de.kiezatlas.website/search-angebote.js"></script>
+        <meta th:replace="fragments/tracker" />
 
     </head>
-    <body class="ui page detail kiezatlas">
+    <body class="ui page detail kiezatlas place">
 
         <!-- Following Menu -->
         <nav id="lower-page-nav" th:include="fragments/navigation :: lower-page-nav"></nav>
