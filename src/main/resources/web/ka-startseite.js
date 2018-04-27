@@ -734,6 +734,7 @@ function handleSearchInput(e) {
 function do_angebote_search() {
     show_loading_search()
     fire_angebote_search(searchText, function(events) {
+        console.log("Handle event search results", results)
         // Handle result set
         if (searchNearby && searchNearby.length >= 3 && location_coords) { // nearby search was successfully used
             results = events.spatial.sort(angebote_compare_by_distance_nearest_first)
@@ -1031,7 +1032,7 @@ function render_search_results() {
             render_event_search_results(from, to, count, $container)
         }
     } else {
-        contextText = (searchContext == 0) ? " in Gesamtberlin " : (bezirksTopic) ? " im Bezirk " + bezirksTopic.value : " in diesem Bezirk"
+        contextText = (searchContext == 0) ? (searchNearby) ? " in der Nähe von " + searchNearby : " in Gesamtberlin " : (bezirksTopic) ? " im Bezirk " + bezirksTopic.value : " in diesem Bezirk"
         // filterText = (searchText)
         $('.result-list .container').html('Zur Suchanfrage "' + searchText + '" ' + contextText + ' gab es keine Treffer')
     }
@@ -1079,7 +1080,6 @@ function render_place_search_results(from, to, count, $container) {
 }
 
 function render_event_search_results(from, to, count, $container) {
-    console.lor("Render event search results", results)
     rendering:
     for (var r in results) {
         if (r >= from && r < to) {
