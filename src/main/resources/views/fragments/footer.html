@@ -21,24 +21,35 @@
                 </div>
 
                 <div class="column menu">
-                    <h3 class="ui header">Weiterf&uuml;hrende Infos</h3>
-                    <div class="ui inverted link list menu-items" th:if="${!#lists.isEmpty(menuItems)}">
-                        <div th:each="menuItem : ${menuItems}">
-                            <a th:href="${menuItem.href}" th:class="'item'" th:id="${menuItem.id}" th:text="${menuItem.label}">Menu Item</a>
+                    <h3 class="ui header">Technologie</h3>
+                    <div class="ui inverted link list menu-items" th:if="${!#lists.isEmpty(techblogItems)}">
+                        <div th:each="menuItem : ${techblogItems}">
+                            <a th:if="${not menuItem.hasChildItems}" th:href="${menuItem.fullHref}" th:class="'item'" th:id="${menuItem.id}" th:text="${menuItem.label}">Menu Item</a>
+                            <div th:if="${menuItem.hasChildItems}" class="menu">
+                                <span class="header item" th:text="${menuItem.label}"></span><br/>
+                                <a th:class="${#strings.endsWith(location, '/' + childItem.href) ? 'active item' : 'item'}"
+                                     th:each="childItem : ${menuItem.childMenuItems}"
+                                     th:href="${childItem.fullHref}"
+                                     th:text="${childItem.label}">
+                                </a>
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <div class="column recent">
-                    <h3 class="ui header">Kiezatlas Webseiten</h3>
-                    <div class="ui link list webpages" th:if="${!#lists.isEmpty(webpages) and #strings.equals(website, 'standard')}">
-                        <div th:each="webpage,iterStat : ${webpages}" th:if="${iterStat.count lte 5}">
-                            <a th:href="'/' + ${webpage.webAlias}" th:class="'item'" th:id="${webpage.id}" th:text="${webpage.title}">Menu Item</a>
-                        </div>
-                    </div>
-                    <div class="ui inverted link list webpages" th:if="${!#lists.isEmpty(webpages) and !#strings.equals(website, 'standard')}">
-                        <div th:each="webpage,iterStat : ${webpages}" th:if="${iterStat.count lte 5}">
-                            <a th:href="${webpage.webAlias}" th:class="'item'" th:id="${webpage.id}" th:text="${webpage.title}">Menu Item</a>
+                    <h3 class="ui header">Infos</h3>
+                    <div class="ui link list webpages" th:if="${!#lists.isEmpty(standardItems)}">
+                        <div th:each="menuItem,iterStat : ${standardItems}">
+                            <a th:if="${not menuItem.hasChildItems}" th:href="${menuItem.fullHref}" th:class="'item'" th:id="${menuItem.id}" th:text="${menuItem.label}">Menu Item</a>
+                            <div th:if="${menuItem.hasChildItems}" class="menu">
+                                <span class="header item" th:text="${menuItem.label}"></span><br/>
+                                <a th:class="${#strings.endsWith(location, '/' + childItem.href) ? 'active item' : 'item'}"
+                                     th:each="childItem : ${menuItem.childMenuItems}"
+                                     th:href="${childItem.fullHref}"
+                                     th:text="${childItem.label}">
+                                </a>
+                            </div>
                         </div>
                     </div>
                 </div>

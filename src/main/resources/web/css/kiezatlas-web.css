@@ -170,6 +170,10 @@ select.ui.dropdown {
     padding-left: 1em;
 }
 
+.ui.footer .menu a.item {
+    display: block;
+}
+
 .ui .navigation .top-menu {
     position: relative;
     top: 40px;

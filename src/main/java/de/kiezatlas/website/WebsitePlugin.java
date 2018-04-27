@@ -115,6 +115,7 @@ import de.kiezatlas.website.model.UsernameView;
 import de.mikromedia.webpages.events.CustomRootResourceRequestedListener;
 import de.mikromedia.webpages.events.ResourceNotFoundListener;
 import de.mikromedia.webpages.events.WebpageRequestedListener;
+import de.mikromedia.webpages.model.MenuItem;
 import java.net.URI;
 import java.net.URISyntaxException;
 import javax.ws.rs.DELETE;
@@ -2140,6 +2141,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         viewData("location", (href == null) ? "" : href);
         Topic standardwebsite = webpages.getStandardWebsite();
         viewData("website", "standard");
+        prepareFooterMenuItems();
         prepareCityMapSite(standardwebsite);
         log.fine("Checked Authorization (isConfirmationMember=" + isConfirmationMember
             + ", isSiteManager="+isSiteManager+", isAuthenticated=" + isAuthenticated + ")");
@@ -3771,6 +3773,13 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
             throw new RuntimeException(ex);
         }
         return result;
+    }
+
+    private void prepareFooterMenuItems() {
+        List<MenuItem> siteItems = webpages.getWebsiteMenuItems("standard");
+        List<MenuItem> techItems = webpages.getWebsiteMenuItems("admin");
+        viewData("standardItems", siteItems);
+        viewData("techblogItems", techItems);
     }
 
     private boolean isInvalidSearchQuery(String query) {
