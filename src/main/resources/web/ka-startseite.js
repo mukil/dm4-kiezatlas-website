@@ -231,7 +231,7 @@ function init_einrichtungs_edit_page() {
 }
 
 function init_sozialraumdaten_page() {
-    console.log("To be implemented")
+    // Yet nothing to do here
 }
 
 function init_einrichtungs_page() {
