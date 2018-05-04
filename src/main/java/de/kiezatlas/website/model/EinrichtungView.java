@@ -418,6 +418,37 @@ public class EinrichtungView implements JSONEnabled {
         }
     }
 
+    public JSONObject getAddressJsonLD() {
+        try {
+            JSONObject address = new JSONObject();
+            address.put("@type", "PostalAddress");
+            address.put("addressLocality", getCity());
+            address.put("addressRegion", getCity());
+            address.put("postalCode", getPlz());
+            address.put("streetAddress", getStrasse());
+            return address;
+        } catch (JSONException ex) {
+            log.log(Level.FINE, "Einrichtung has no Postal Address (Id: " + getId() + ")", ex);
+            return new JSONObject();
+        }
+    }
+
+    public JSONObject getPlaceJsonLD() {
+        try {
+            JSONObject place = new JSONObject();
+            place.put("@type", "Place");
+            JSONObject geo = new JSONObject();
+            geo.put("@type", "GeoCoordinates");
+            geo.put("latitude", getLatitude());
+            geo.put("longitude", getLongitude());
+            place.put("geo", geo);
+            return place;
+        } catch (JSONException ex) {
+            log.log(Level.FINE, "Einrichtung has no Postal Address (Id: " + getId() + ")", ex);
+            return new JSONObject();
+        }
+    }
+    
     public String getStrasse() {
         try {
             return json.getString("strasse");
@@ -654,6 +685,24 @@ public class EinrichtungView implements JSONEnabled {
         } catch (JSONException ex) {
             return 0;
         }
+    }
+
+    public String toJSONLD() {
+        try {
+            JSONObject organization = new JSONObject();
+            organization.put("@context", "http://schema.org");
+            organization.put("@type", "Organization");
+            organization.put("name", getName());
+            organization.put("url", getWebpage());
+            organization.put("email", getEmail());
+            organization.put("telephone", getTelefon());
+            organization.put("address", getAddressJsonLD());
+            organization.put("location", getPlaceJsonLD());
+            return organization.toString().replace("\\","");
+        } catch (JSONException ex) {
+            log.log(Level.SEVERE, null, ex);
+        }
+        return null;
     }
 
     /** ------------------------- Java Object API Overrides --------------------- */

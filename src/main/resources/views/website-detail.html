@@ -314,5 +314,9 @@
 
         </div>
 
+        <div th:if="${placeMarkup}" class="metadata">
+            <script th:replace="fragments/schema-org :: place (${placeMarkup})" />
+        </div>
+
     </body>
 </html>

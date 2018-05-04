@@ -1989,6 +1989,8 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         if (angebotsInfos.size() > 0) viewData("angebotsinfos", angebotsInfos);
         // user auth
         preparePageTemplate("detail");
+        // Json-LD
+        viewData("placeMarkup", einrichtung.toJSONLD());
         // geo object auth
         viewData("is_trashed", isTopicInDeletionWorkspace(geoObject));
         viewData("is_published", isTopicInStandardWorkspace(geoObject));
