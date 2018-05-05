@@ -59,6 +59,7 @@ select.ui.dropdown {
     height: 52px;
 }
 
+.ui.webpages .top.fixed.menu.transition.visible,
 .ui.webpages .top.menu.fixed .fixed-border {
     height: 58px;
 }
