@@ -280,6 +280,12 @@ function render_district_frontpage() {
     }
 }
 
+function click_circle_search_action() {
+    kiezatlas.clear_district_page()
+    scroll_to('map-row')
+    // leafletMap.scroll_into_view()
+}
+
 function render_district_menu(districtVal) {
     var bezirke = districts
     var $bezirk = $('#bezirksauswahl')
@@ -446,14 +452,14 @@ function create_nearby_marker(place) {
         })
         marker.on('click', function(e) {
             window.document.location.href = "/website/geo/" + e.target.options.geo_object_id
-        }).bindPopup(place.name, {'offset': L.point(0, -10)})
+        }).bindPopup('<h4>' + place.name + '</h4>', {'offset': L.point(0, -10)})
         marker.on('mouseover', function(e) {
             // check if popup is openn ..if (this.popup)
-            e.target.setStyle({ fillOpacity: 1, opacity: 1 })
+            // e.target.setStyle({ fillOpacity: 1, opacity: 1 })
             this.openPopup()
         })
         marker.on('mouseout', function(e) {
-            e.target.setStyle({ fillOpacity: 0.6, opacity: 0.6 })
+            // e.target.setStyle({ fillOpacity: 0.6, opacity: 0.6 })
             this.closePopup()
         })
         return marker
