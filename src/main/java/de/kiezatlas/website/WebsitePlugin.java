@@ -3835,7 +3835,6 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     @Override
     public void angeboteResourceRequested(AbstractContext context, String templateName) {
         preparePageTemplate(templateName);
-        prepareSearchTemplateParameter(null, 0, "fulltext", "event", "undefined");
     }
 
 }
