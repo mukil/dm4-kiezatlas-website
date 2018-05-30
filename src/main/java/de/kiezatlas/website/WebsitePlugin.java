@@ -2696,6 +2696,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         // fetch lor and bezirksregion facet
         Topic lorTopic = facets.getFacet(geoObject, LOR_FACET);
         Topic bezirksregionTopic = facets.getFacet(geoObject, BEZIRKSREGION_NAME_FACET);
+        // 1. If LOR and Bezirksregions Facet are related - We prioritize these.
         if (bezirksregionTopic != null && lorTopic != null) {
             log.info("Using LOR \"" + lorTopic.getSimpleValue() + "\", Bezirksregion Name \""
                     + bezirksregionTopic.getSimpleValue() + "\" Facet for geo object \"" + geoObject.getSimpleValue() + "\"");
@@ -2715,7 +2716,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
                     if (bezirksregion != null) {
                         log.info("ENRICHED geo object \"" + geoObject.getSimpleValue() + "\" in LOR \""
                                 + lorIdValue + "\" (as LOR Facet="+lorTopic+") and (as BZR="+bezirksregionTopic+")"
-                                + "Bezirksregion Name \"" + bezirksregion.getSimpleValue() + "\"");
+                                + "Bezirksregion Name by LOR ID: \"" + bezirksregion.getSimpleValue() + "\"");
                         einrichtung.setBezirksregionName(bezirksregion.getSimpleValue().toString());
                         einrichtung.setBezirksregionId(bezirksregion.getId());
                     }

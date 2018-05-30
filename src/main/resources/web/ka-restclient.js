@@ -68,9 +68,10 @@ var karestc = (function($) {
                 // Append street nr to street name
                 if (object.street_nr) location_name += object.street_nr + ", "
                 // Append name of District OR (if unknown) City
-                if (object.district) {
-                    location_name += " " + object.district
-                } else if (object.city) {
+                if (object.postal_code) {
+                    location_name += " " + object.postal_code
+                }
+                if (object.city) {
                     location_name += " " + object.city
                 }
                 leafletMap.set_current_location_name(location_name)

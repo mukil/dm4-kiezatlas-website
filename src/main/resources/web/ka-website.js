@@ -230,7 +230,6 @@ var kiezatlas = (function($, leafletMap, restc, favourites) {
         } else {
             console.warn("window.history manipulation not supported", window.navigator)
         }
-        console.log("Pushing page view parameter in ka-website.js")
     }
 
     this.create_viewport_parameter = function () {

@@ -14,7 +14,7 @@ var mapping = {
     "circle_search_control": undefined,
     "circle_query": true,
     "circle_locked": true,
-    "current_location": { name: "Tucholskystraße, 10117 Berlin", coordinate: new L.latLng(52.524256, 13.392192) },
+    "current_location": { name: "Axel-Springer Str. 40/41, 10969 Berlin", coordinate: new L.latLng(52.507984, 13.399184) },
     "max_bounds": L.latLngBounds(L.latLng(52.234807, 12.976094), L.latLng(52.843370, 13.958482)),
     "marker_group": undefined,
     "control_group": L.featureGroup(),
@@ -329,7 +329,6 @@ var leafletMap = (function($, L) {
 
     map.calculate_hover_circle_options = function(geo_object) {
         var hasAngebote = (geo_object["angebote_count"] > 0) ? true : false
-        console.log("Hover Marker", geo_object, hasAngebote)
         return {
             color: (hasAngebote) ? model.colors.ka_yellow : model.colors.blue3, opacity: 1,
             fillColor: (hasAngebote) ? model.colors.blue3 : model.colors.blue2, fillOpacity: 1, className: "hover"

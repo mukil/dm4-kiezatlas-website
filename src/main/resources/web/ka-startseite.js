@@ -685,7 +685,6 @@ function replace_page_parameters() {
 }
 
 function create_viewport_parameter() {
-    console.log("Creating viewport parameter in ka-startseite.js")
     var mapView = leafletMap.get_map_viewport()
     var viewportState = undefined
     if (mapView) {

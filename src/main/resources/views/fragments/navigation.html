@@ -1,5 +1,5 @@
 
-<!--- Standard Vertical Navigation (Experimental) -->
+<!--- Sidebar Vertical Navigation (Experimental) -->
 <div th:fragment="vertical-nav (publisher)" class="ui vertical left menu sidebar">
 
     <div class="menu-header"></div>
@@ -144,7 +144,6 @@
                     </div>
                     <a href="/impressum" class="item">Impressum</a>
                     <a href="/nutzungsbedingungen-kiezatlas-website" class="item">Nutzungsbedingungen</a>
-                    <a href="/ueber-uns" class="item">&Uuml;ber uns</a>
                 </div>
             </div>
             <a th:if="!${authenticated}" href="/sign-up/login"
@@ -223,7 +222,6 @@
                             </div>
                             <a href="/impressum" class="item">Impressum</a>
                             <a href="/nutzungsbedingungen-kiezatlas-website" class="item">Nutzungsbedingungen</a>
-                            <a href="/ueber-uns" class="item">&Uuml;ber uns</a>
                         </div>
                     </div>
                     <a th:if="!${authenticated}" href="/sign-up/login"
