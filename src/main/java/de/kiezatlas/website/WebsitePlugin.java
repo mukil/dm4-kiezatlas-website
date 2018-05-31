@@ -340,7 +340,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     @Path("/geo/save")
     @Transactional
     public Viewable processGeoObjectFormPage(@FormParam("id") long topicId, @FormParam("name") String name, @FormParam("strasse") String strasse,
-            @FormParam("plz") String plz, @FormParam("city") long city, @FormParam("district") long district, @FormParam("fileTopicId") long fileId,
+            @FormParam("plz") String plz, @FormParam("city") long city, @FormParam("district") long district, @FormParam("fileTopicId") long bildTopicId,
             @FormParam("country") long country, @FormParam("beschreibung") String beschreibung,
             @FormParam("open") String oeffnungszeiten, @FormParam("ansprechpartner") String ansprechpartner,
             @FormParam("telefon") String telefon, @FormParam("email") String email, @FormParam("fax") String fax,
@@ -385,9 +385,9 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
                 Association assignment = createUserAssignment(geoObject);
                 privilegedAssignToWorkspace(assignment, getConfirmationWorkspace().getId());
                 // Handles Image-File Upload (Seperately)
-                if (fileId != 0) {
-                    log.info("> Bild File Topic Upload is file at=\"" + files.getFile(fileId).toString());
-                    createBildAssignment(geoObject, username, fileId);
+                if (bildTopicId != 0) {
+                    log.info("> Bild File Topic Upload is file at=\"" + files.getFile(bildTopicId).toString());
+                    createBildAssignment(geoObject, username, bildTopicId);
                 }
                 initiallyAssignGeoObjectFacetsToWorkspace(geoObject, getConfirmationWorkspace());
                 // Assign Geo Object to Confirmation WS (at last, otherwise we could not write its facets)
@@ -410,6 +410,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
                 geoObject.setChildTopics(geoObjectTopicModel);
                 attachGeoObjectChildTopics(geoObject, ansprechpartner, telefon, fax, email, beschreibung,
                     oeffnungszeiten, website, coordinatePair, district, themen, zielgruppen, angebote);
+                time.setModified(geoObject);
                 viewData("message", "Danke, der <a href=\"/" + GEO_OBJECT_RESOURCE + geoObject.getId()
                     + "\" title=\"Anzeigen\">Datensatz</a> wurde aktualisiert.");
             } else {
@@ -2982,6 +2983,8 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     private void updateSimpleCompositeFacet(Topic geoObject, String facetTypeUri, String childTypeUri, String value) {
         if (!value.trim().isEmpty()) {
             facets.updateFacet(geoObject.getId(), facetTypeUri, mf.newFacetValueModel(childTypeUri).put(value.trim()));
+        } else {
+            log.info("COULD update simple composite facet (" + childTypeUri + ") WITHOUT VALUE");
         }
     }
 
@@ -3077,14 +3080,16 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     }
 
     private void writeSimpleKeyCompositeFacet(Topic geoObject, String facetTypeUri, String childTypeUri, String value) {
-        // check if new value is empty
-        if (value.trim().isEmpty()) {
-            log.info("Passed empty value as new simple key composite facet - doing nothing");
-            return;
-        }
         // check if a former value was already assigned and we're updating
         Topic oldFacetTopic = facets.getFacet(geoObject.getId(), facetTypeUri);
-        // check if value already exist in a topic/db and if so, reference that
+        // check if new value is empty
+        if (value.trim().isEmpty()) {
+            log.info("Passed empty value as new simple key composite facet (" + childTypeUri + ") - DELETING facet value");
+            facets.updateFacet(geoObject, facetTypeUri, mf.newFacetValueModel(childTypeUri)
+                    .putDeletionRef(oldFacetTopic.getId()));
+            return;
+        }
+        // check if new value already exist in a topic/db and if so, reference that
         try { // and if it exists, we might need to catch an AccessControlException...
             Topic keyTopic = dm4.getTopicByValue(childTypeUri, new SimpleValue(value.trim()));
             if (oldFacetTopic != null && oldFacetTopic.getSimpleValue().toString().equals(value.trim())) {

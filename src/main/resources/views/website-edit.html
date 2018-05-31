@@ -167,8 +167,12 @@
 
             function start_upload() {
                 open_upload_dialog("/images/upload", function(response) {
-                    console.log("Bild Upload Handler", response)
                     $('#bild-topic').val(response.id)
+                    /** var fileName = response.value
+                    var filePath = response.childs["dm4.files.name"].value
+                    $('#bild-topic').val(response.id) **/
+                    /** $('.ui.fluid.image').append('<img class="bild" src="' + filePath + '" title="' + fileName + '">') **/
+                    console.log("Bild File Topic", response)
                 }, $("body"))
             }
 
@@ -292,11 +296,9 @@
                 })
                 .append($('<input type="file">').attr({name: "file", size: 60}))
                 .append($('<input class=\"button\" type="submit">').attr({value: "Upload"}))
-                .append($('<br/><br/><label>Hinweis: Das Bild sollte die Gr&ouml;&szlig;e von 360px nicht '
-                    + '&uuml;berschreiten.</label>'))
                 //
                 var toolkit = new GUIToolkit()
-                var upload_dialog = toolkit.dialog({id:"picture-upload", title: "Füge Bild hinzu", content: upload_form})
+                var upload_dialog = toolkit.dialog({id:"picture-upload", title: "Bild hochladen", content: upload_form})
                 $('.ui-dialog.ui-widget').show()
 
                 // bind handler
@@ -419,10 +421,15 @@
                             <label for="fax">Fax</label>
                             <div class="ui fluid input">
                                 <input type="text" name="fax" th:value='${geoobject.fax}'/>
-                                <!-- Image File Upload, Träger, LOR Nummer -->
-                                <!-- input type="button" class="button" value="Bild hinzufügen" onclick="start_upload()"/>
-                                <input type="hidden" id="bild-topic" name="fileTopicId" value=""/-->
                             </div>
+                            <!-- Image File Upload>
+                            <label for="bild">Bild</label>
+                            <div class="ui fluid image">
+                            </div>
+                            <div class="ui fluid input">
+                                <input type="button" class="button" value="Bild hochladen" onclick="start_upload()"/>
+                                <input type="hidden" id="bild-topic" name="fileTopicId" value=""/>
+                            </div-->
                         </div>
 
                         <div class="right-side ui column">
@@ -432,8 +439,8 @@
                                 <input class="coordinates" onchange="do_manual_placement()" id="latitude-val" type="number" step="any" name="lat" th:value='${geoobject.latitude}'/>
                                 <input class="coordinates" onchange="do_manual_placement()" id="longitude-val" type="number" step="any" name="lon" th:value='${geoobject.longitude}'/>
                             </div><br/><br/>
-                            <label for="lat">Eomgane m&ouml;glich durch <b>klicken &amp; ziehen des Markers</b> (oben) oder
-                                    &uuml;ber die Angabe der Adresse (links) und die Funktion <b>Koordinate ermitteln</b>.</label>
+                            <label for="lat">Eingabe m&ouml;glich durch <b>klicken &amp; ziehen des Markers</b> in der Karte (oben) oder
+                                    &uuml;ber die Angabe der Adresse (links) und die Funktion <b>Automatisch ermitteln</b>.</label>
                             <div class="ui input coord-buttons">
                                 <a class="ui button reset green" onclick="do_geocode()">Automatisch ermitteln</a>
                                 <!--a class="button" onclick="do_manual_placement()">Manuell platzieren</a-->
