@@ -110,12 +110,17 @@ function do_search_streetcoordinates() {
     var locationString = $('#nearby').val().trim()
     searchNearby = locationString
     console.log("Staring nearby search for", searchNearby)
+    show_results_container()
+    show_loading_search()
+    var $listing = $('.result-list .container')
     $.getJSON('/website/search/coordinates?query=' + encodeURIComponent(searchNearby), function(results) {
         if (results && results.length > 0) {
             street_coordinates = results
             select_locationsearch_parameter()
             if (get_search_input().length === 0) {
-                console.log("No search term defined, focusing search input field")
+                $('.search-results .count').text("...")
+                var message = "Wir konnten ihren gew&uuml;nschten Standort ermitteln ben&ouml;tigen jedoch noch einen Suchbegriff.<br/>"
+                $listing.html(message)
                 focus_text_query()
             } else {
                 console.log("Found coordinates, firing angebote search...")
@@ -124,7 +129,17 @@ function do_search_streetcoordinates() {
             replace_page_parameters()
         } else {
             console.log("Geo coding was unsuccesfull...")
+            $('.search-results .count').text("0")
+            var message = "F&uuml;r die Umkreissuche konnten wir mithilfe von Google leider keinen Standort ermitteln.<br/>"
+                + '<br/>Bitte versuchen Sie es erneut.</br>'
+            $listing.html(message)
         }
+    }).fail(function() {
+        console.log("Geo coding was unsuccesfull...")
+        $('.search-results .count').text("0")
+        var message = "Bei der Kommunikation mit der Google Maps Geo Coding API ist ein Fehler aufgetreten, wir konnten leider keinen Standort ermitteln.<br/>"
+            + '<br/>Bitte versuchen Sie es erneut.</br>'
+        $listing.html(message)
     })
 }
 
@@ -202,14 +217,18 @@ function load_and_render_tag_search_dialog() {
     }
 } **/
 
+/** 
+ * 
+ * @param {type} distinct_results   Render distinct result sets (both) for spatial and fulltext search.
+ * @returns {undefined}
+ */
 function render_angebote_search_results(distinct_results) {
-    var $listing = $('.list-area .results')
+    var $listing = $('.result-list .container')
     var result_length = 0
-    if (angebotsinfos) {
-        result_length = angebotsinfos.fulltext.length + angebotsinfos.spatial.length + angebotsinfos.timely.length
-        $listing.empty()
-    }
     // ### maybe at some time, allow display of inactive offers, too
+    if (angebotsinfos) {
+        result_length = angebotsinfos.fulltext.length + angebotsinfos.spatial.length
+    }
     // console.log("Split Search Results By Time", split_angebote_results_by_time(angebotsinfos))
     $listing.empty()
     if (!check_for_distinct_results_rendering() && !distinct_results) {  // Rendering of text and spatial search results combined
@@ -218,26 +237,27 @@ function render_angebote_search_results(distinct_results) {
         if (intersection.length > 0) {
             // apply spatial sorting
             intersection.sort(angebote_compare_by_distance_nearest_first)
-            render_result_header(intersection, $listing, '')
+            // render_result_header(intersection, $listing, '')
             for (var el in intersection) {
                 var element = intersection[el]
                 render_spatial_list_item(element, $listing)
             }
+            $('.search-results .count').text(intersection.length)
         } else {
-            var $header = $('<li class="header read-more">')
+            var $header = $('<div>')
             if (angebotsinfos.spatial.length > 0 || angebotsinfos.fulltext > 0) {
                 var count = (angebotsinfos.spatial.length + angebotsinfos.fulltext.length)
-                $header.html('<h4>Keine &Uuml;bereinstimmungen gefunden</h4><br/>'
-                    + '<h4>'+count+' Ergebnisse entsprechen zumindest <em>einem</em> der beiden Suchparameter</h4><br/><br/>')
-                var $button = $('<button class="ui basic small button">Suchergebnisse differenzieren</button>')
+                $header.html('<p>Keine &Uuml;bereinstimmungen gefunden</p>'
+                    + '<p>'+count+' Ergebnisse entsprechen zumindest <em>einem</em> der beiden Suchparameter</p>')
+                var $button = $('<button class="ui basic small button">Alle Suchergebnisse anzeigen</button>')
                 $button.click(function(e) {
                     // show_intersecting = false
                     render_angebote_search_results(true) // render distinct results
                 })
                 $header.append($button)
             } else {
-                $header.html('<h4 class="status">Leider konnten wir f&uuml;r beide Suchparameter '
-                    + '(<em>Standort</em> und <em>Stichwort</em>) keine aktuellen Angebote finden.</h4>')
+                $header.html('<p class="status">Leider konnten wir f&uuml;r beide Suchparameter '
+                    + '(<em>Standort</em> und <em>Stichwort</em>) keine aktuellen Angebote finden.</p>')
             }
             $listing.append($header)
         }
@@ -245,40 +265,31 @@ function render_angebote_search_results(distinct_results) {
         if (angebotsinfos.spatial) {
             // special sorting by distance
             angebotsinfos.spatial.sort(angebote_compare_by_distance_nearest_first)
-            render_result_header(angebotsinfos.spatial, $listing, 'in der N&auml;he des Standorts')
+            // render_result_header(angebotsinfos.spatial, $listing, 'in der N&auml;he des Standorts')
             for (var el in angebotsinfos.spatial) {
                 var element = angebotsinfos.spatial[el]
                 render_spatial_list_item(element, $listing)
             }
         }
-        if (angebotsinfos.timely) {
-            angebotsinfos.timely.sort(angebote_compare_by_end_earliest_last)
-            render_result_header(angebotsinfos.timely, $listing, 'der zeitbasierten Suche')
-            for (var el in angebotsinfos.timely) {
-                var element = angebotsinfos.timely[el]
-                render_fulltext_list_item(element, $listing)
-            }
-        }
         // overall (text search listing) not necessarily with locations assigned
         if (angebotsinfos.fulltext) {
             angebotsinfos.fulltext.sort(angebote_compare_by_end_earliest_last)
-            render_result_header(angebotsinfos.fulltext, $listing, 'in der Stichwortsuche')
+            // render_result_header(angebotsinfos.fulltext, $listing, 'in der Stichwortsuche')
             for (var el in angebotsinfos.fulltext) {
                 var element = angebotsinfos.fulltext[el]
                 render_fulltext_list_item(element, $listing)
             }
         }
+        $('.search-results .count').text(result_length)
     }
     // update status gui
     // var message = (result_length === 1) ? "1 Angebot" : result_length + " Angebote"
     if (result_length === 0) {
+        $('.search-results .count').text("0")
         var message = "F&uuml;r diese Suche konnte wir leider keine aktuellen Angebote finden.<br/>"
             + '<br/>Sie k&ouml;nnen uns aber gerne helfen neue oder aktuelle '
             + 'Angebote in unsere <a class="create-link" href=\"/sign-up/login\">Datenbank aufzunehmen</a>.</br>'
-        $('.list-area .status').html(message)
-        $('.list-area .status').show()
-    } else {
-        $('.list-area .status').hide()
+        $listing.html(message)
     }
 }
 

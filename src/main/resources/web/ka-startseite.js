@@ -737,16 +737,11 @@ function handleSearchInput(e) {
 }
 
 function do_angebote_search() {
+    show_results_container()
     show_loading_search()
     fire_angebote_search(searchText, function(events) {
-        console.log("Handle event search results", results)
-        // Handle result set
-        if (searchNearby && searchNearby.length >= 3 && location_coords) { // nearby search was successfully used
-            results = events.spatial.sort(angebote_compare_by_distance_nearest_first)
-        } else {
-            results = events.fulltext
-        }
-        render_search_results()
+        angebotsinfos = events
+        render_angebote_search_results()
     })
 }
 
@@ -942,7 +937,6 @@ function hideNearbySearch() {
 function berlinSearchChecked(e) {
     if (frontpage) {
         // set district filter
-        console.log("SearchContext", e)
         $('.ui.grid.filter .column.nearby').addClass('hidden')
         searchContext = e.id
         bezirksTopic = get_bezirks_topic_by_id(e.id)
@@ -1082,6 +1076,14 @@ function render_place_search_results(from, to, count, $container) {
         show_more_results_button(count)
         $('.more-results').data("result-from", to)
     }
+}
+
+function render_fulltext_list_item(el, $container) {
+    $container.append(get_event_list_item_html(el))
+}
+
+function render_spatial_list_item(el, $container) {
+    $container.append(get_spatial_event_list_item_html(el))
 }
 
 function render_event_search_results(from, to, count, $container) {
