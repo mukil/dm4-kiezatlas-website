@@ -47,6 +47,7 @@ function init_page(page) {
     $sidebarUi = $('.ui.sidebar').sidebar('attach events', '.toc.item')
     // fix lower page top nav menu when passing header
     init_fixed_top_menu('.ui.vertical.segment.teaser')
+    register_key_handlers()
     // ### $('.ui.sidebar').sidebar()
     // initialize data on districts
     load_district_data(function() {
@@ -67,12 +68,12 @@ function init_page(page) {
                 bezirksTopic = get_bezirks_topic_by_id(7275)
                 searchContext = bezirksTopic.id
                 render_frontpage("bezirk") // by bezirksTopic
+            } else if (searchContext !== 0 && searchContext != null) {
+                render_frontpage("bezirk") // by searchContext Id
             } else if (parameter.page) {
                 bezirksTopic = get_bezirks_topic_by_hash(parameter.page)
                 searchContext = bezirksTopic.id
                 render_frontpage("bezirk") // by bezirksTopic
-            } else if (searchContext !== 0 && searchContext != null) {
-                render_frontpage("bezirk") // by searchContext Id
             } else {
                 render_frontpage("gesamt")
             }
@@ -723,17 +724,19 @@ function set_nearby_input(value) {
     $('#nearby').val(value)
 }
 
-function handleSearchInput(e) {
-    if (event.keyCode === 13) {
-        if (e.id === "query") {
+function register_key_handlers() {
+    $("#query").keyup(function(e) {
+        const keyName = e.key
+        if (keyName === "Enter") {
             do_text_search()
-        } else if (e.id === "nearby") {
-            searchNearby = e.value.trim()
-            if (searchNearby.length >= 3) {
-                do_search_streetcoordinates()
-            }
         }
-    }
+    })
+    $("#nearby").keyup(function(e) {
+        const keyName = e.key
+        if (keyName === "Enter") {
+            do_search_streetcoordinates()
+        }
+    })
 }
 
 function do_angebote_search() {
