@@ -1449,7 +1449,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
             String queryValue = query.trim();
             if (isInvalidSearchQuery(queryValue)) return results;
             // DO Search for "Not Empty" AND "WITH ASTERISK ON BOTH SIDES" in NAME ONLY
-            queryValue = prepareLuceneQueryString(query, false, true, false, true);
+            queryValue = prepareGeoObjectNameSearchPhrase(queryValue);
             log.log(Level.INFO, "> autoCompleteQuery=\"{0}\"", queryValue);
             List<Topic> singleTopics = dm4.searchTopics(queryValue, "ka2.geo_object.name");
             int max = 50;
@@ -3327,6 +3327,18 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
             recipientCount++;
         }
         return recipients;
+    }
+
+    private String prepareGeoObjectNameSearchPhrase(String userQuery) {
+        StringBuilder queryPhrase = new StringBuilder();
+        if (userQuery.contains(" ")) {
+            queryPhrase.append("\"" + userQuery + "\"");
+            queryPhrase.append(" OR ");
+            queryPhrase.append("" + userQuery.replaceAll(" ", "?") + "*");
+        } else {
+            queryPhrase.append("*" + userQuery + "*");
+        }
+        return queryPhrase.toString();
     }
 
     /** Find 1:1 copy in dm4-kiezatlas-angebote plugin */

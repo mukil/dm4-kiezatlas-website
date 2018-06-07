@@ -383,7 +383,6 @@ h3.label {
 }
 
 .ui.search input {
-    padding-top: 1em;
     font-size: 18px;
 }
 
@@ -421,6 +420,28 @@ header .large.menu h3.caption,
     font-size: 18px;
     padding: .5em !important;
     padding-top: .7em !important;
+}
+
+::-webkit-input-placeholder { /* WebKit, Blink, Edge */
+    color:    #909;
+}
+:-moz-placeholder { /* Mozilla Firefox 4 to 18 */
+   color:    #909;
+   opacity:  1;
+}
+::-moz-placeholder { /* Mozilla Firefox 19+ */
+   color:    #909;
+   opacity:  1;
+}
+:-ms-input-placeholder { /* Internet Explorer 10-11 */
+   color:    #909;
+}
+::-ms-input-placeholder { /* Microsoft Edge */
+   color:    #909;
+}
+
+::placeholder { /* Most modern browsers support this now. */
+   color:    #909;
 }
 
 .ui.search .ka.button {

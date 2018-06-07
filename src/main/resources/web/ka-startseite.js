@@ -1034,7 +1034,7 @@ function render_search_results() {
             render_event_search_results(from, to, count, $container)
         }
     } else {
-        contextText = (searchContext == 0) ? (searchNearby) ? " in der Nähe von " + searchNearby : " in Gesamtberlin " : (bezirksTopic) ? " im Bezirk " + bezirksTopic.value : " in diesem Bezirk"
+        contextText = (searchContext == 0) ? (typeof searchNearby !== "undefined") ? " in der Nähe von " + searchNearby : " in Gesamtberlin " : (bezirksTopic) ? " im Bezirk " + bezirksTopic.value : " in diesem Bezirk"
         // filterText = (searchText)
         $('.result-list .container').html('Zur Suchanfrage "' + searchText + '" ' + contextText + ' gab es keine Treffer')
     }
