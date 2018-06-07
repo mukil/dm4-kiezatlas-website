@@ -242,7 +242,6 @@ $(document).ready(function () {
 
     // Create an instance of the custom provider, passing any options that are
     // required
-    // var provider = MyOpenStreet();
     var geocoder = new Geocoder('nominatim', {
         provider: 'osm',
         key: '',
@@ -278,46 +277,5 @@ $(document).ready(function () {
         }
     })
     
-    /**
-     * @class MyOpenStreet
-     */
-    function MyOpenStreet(options) {
-        return {
-            provider: 'MyOpenStreetMapNominatim',
-            getParameters: function(opt) {
-                return {
-                    url: 'https://nominatim.openstreetmap.org/search/',
-                    params: {
-                        q: '',
-                        format: 'json',
-                        addressdetails: 3,
-                        limit: 7,
-                        countrycodes: '',
-                        'accept-language': 'de-DE',
-                        params: opt.query
-                    }
-                };
-            },
-            handleResponse: function (results) {
-                return results.map(result => ({
-                    lon: result.lon,
-                    lat: result.lat,
-                    address: {
-                        name: result.display_name,
-                        road: result.address.road || '',
-                        houseNumber: result.address.house_number || '',
-                        postcode: result.address.postcode,
-                        city: result.address.city || result.address.town,
-                        state: result.address.state,
-                        country: result.address.country
-                    },
-                    original: {
-                        formatted: result.display_name,
-                        details: result.address
-                    }
-                }));
-            }
-        }
-    }
 
 });
