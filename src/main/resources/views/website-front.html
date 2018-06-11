@@ -5,18 +5,51 @@
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-        <link rel="stylesheet" type="text/css" href="/de.kiezatlas.website/dist/leaflet-1.2/leaflet.css" />
         <link rel="stylesheet" type="text/css" href="/de.kiezatlas.website/css/kiezatlas-web.css" />
+        <link rel="stylesheet" type="text/css" href="/de.kiezatlas.website/vendor/leaflet-1.3.1/leaflet.css" />
 
-        <script defer="true" src="/de.kiezatlas.website/vendor/jquery/jquery-3.2.1.slim.min.js"></script>
+        <script defer="true" src="/de.kiezatlas.website/vendor/jquery/jquery-3.2.1.min.js"></script>
         <script defer="true" src="/de.kiezatlas.website/css/semantic-ui/2.3/dist/semantic.min.js"></script>
-        <script defer="true" src="/de.kiezatlas.website/dist/leaflet-1.2/leaflet.js"></script>
-        <script defer="true" src="/de.kiezatlas.website/dist/ka-startseite.min.js"></script>
+        <script defer="true" src="/de.kiezatlas.website/vendor/leaflet-1.3.1/leaflet.js"></script>
+        <script defer="true" src="/de.kiezatlas.website/vendor/leaflet-1.3.1/L.CircleEditor.js"></script>
+        <script defer="true" src="/de.kiezatlas.website/vendor/leaflet-1.3.1/leaflet.markercluster.js"></script>
+        <script defer="true" src="/de.kiezatlas.website/vendor/pouchdb/pouchdb-6.2.0.min.js"></script>
+        <script defer="true" src="/de.kiezatlas.website/ka-restclient.js"></script>
+        <script defer="true" src="/de.kiezatlas.website/ka-model.js"></script>
+        <script defer="true" src="/de.kiezatlas.website/ka-map.js"></script>
+        <script defer="true" src="/de.kiezatlas.website/ka-favourites.js"></script>
+        <script defer="true" src="/de.kiezatlas.website/ka-website.js"></script>
+        <script defer="true" src="/de.kiezatlas.website/ka-startseite.js" onload="init_page('map')"></script>
+        <script defer="true" src="/de.kiezatlas.website/search-angebote.js"></script>
+        <script th:inline="javascript">
+            /*<![CDATA[*/
+                var frontpage = false
+                searchText = /*[[${search}]]*/ '';
+                searchType = /*[[${searchType}]]*/ 'place';
+                searchContext = /*[[${searchContext}]]*/ '0';
+                searchMethod = /*[[${searchMethod}]]*/ 'fulltext';
+                searchNearby = /*[[${searchNearby}]]*/ undefined;
+                zoomstufe = /*[[${zoomstufe}]]*/ '14';
+                koordinate = /*[[${koordinate}]]*/ undefined;
+                console.log("initializing search=", searchText, "type=", searchType, "context=", searchContext,
+                    "method=", searchMethod, "nearby=", searchNearby)
+            /*]]>*/
+        </script>
+
+        <meta th:replace="fragments/tracker" />
     </head>
-    <body class="map front">
+    <body class="map detail front">
 
         <div class="header">
-            <div class="top-menu" th:include="fragments/navigation :: top (publisher=${is_publisher})"></div>
+            <!--div class="top-menu" th:include="fragments/navigation :: top (publisher=${is_publisher})"></div-->
+            <div class="ui form">
+                <div class="grouped fields">
+                    <div class="ui icon action input spacing">
+                        <input type="text" id="query" placeholder="Suchanfrage..."></input>
+                        <button class="ui button">Suchen</button>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <div class="ui container pusher">
@@ -28,24 +61,15 @@
 
             <div class="ui side-panel">
                 <div class="section">
-                    <a class="item" href="#angebote"><div class="icon red"></div>Aktuelle Angebote</a>
-                    <a class="item" href="#orte"><div class="icon blue"></div>Einrichtungen &amp; Orte</a>
-                    <br/>
-                </div>
-                <div class="section">
-                    <form method="GET" action="/website/front" class="ui form">
+                    <div class="ui form">
                         <div class="grouped fields">
-                            <div class="ui icon input spacing">
-                                <input type="text" placeholder="Search..."></input>
-                                <i class="circular search link icon"></i>
-                            </div>
                             <div class="options ui">
                                 <label class="item">
-                                    <input type="radio" name="mode" checked="true" value="name"></input>
+                                    <input type="radio" name="mode" value="name"></input>
                                     Namenssuche
                                 </label>
                                 <label class="item">
-                                    <input type="radio" name="mode" value="fulltext"></input>
+                                    <input type="radio" name="mode" checked="true" value="fulltext"></input>
                                     Volltextsuche
                                 </label>
                                 <label class="item">
@@ -55,7 +79,12 @@
                                 <a class="item" href="#clear-district">Bezirksfilter aufheben</a>
                             </div>
                         </div>
-                    </form>
+                    </div>
+                </div>
+                <div class="section">
+                    <a class="item" href="#angebote"><div class="icon red"></div>Aktuelle Angebote</a>
+                    <a class="item" href="#orte"><div class="icon blue"></div>Einrichtungen &amp; Orte</a>
+                    <br/>
                 </div>
                 <div class="section">
                     <a class="item" href="#kategorien">Kategorien</a>

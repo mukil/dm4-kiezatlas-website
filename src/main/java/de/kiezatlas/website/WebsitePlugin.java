@@ -251,7 +251,12 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     @GET
     @Path("/map")
     @Produces(MediaType.TEXT_HTML)
-    public Viewable prepareCityMap() {
+    public Viewable prepareCityMap(@QueryParam("context") long site, @QueryParam("search") String search,
+            @QueryParam("koordinate") String koordinate, @QueryParam("zoomstufe") String zoomstufe,
+            @QueryParam("type") String searchType, @QueryParam("method") String searchMethod,
+            @QueryParam("nearby") String searchNearby) {
+        prepareSearchTemplateParameter(search, site, searchMethod, searchType, searchNearby);
+        viewData("searchMethod", "fulltext");
         return getWebsiteMap();
     }
 
