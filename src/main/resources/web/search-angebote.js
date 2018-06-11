@@ -125,6 +125,7 @@ function do_search_streetcoordinates() {
             } else {
                 console.log("Found coordinates, firing angebote search...")
                 do_angebote_search() 
+                render_query_parameter()
             }
             replace_page_parameters()
         } else {

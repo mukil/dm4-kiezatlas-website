@@ -246,7 +246,12 @@ var kiezatlas = (function($, leafletMap, restc, favourites) {
             console.log("Kiezatlas Citymap", _self.get_site_id(), _self.get_site_info())
         } else if (_self.get_site_id()) {
             console.log("Kiezatlas Website Mode", _self.get_site_id(), _self.get_site_info().value)
-        } /**else if (_self.is_map_result_control() && query) {
+            if (_self.get_site_info().webAlias.indexOf("search") !== -1 || _self.get_site_info().webAlias.indexOf("suche") !== -1) {
+                console.log("Skip Viewport Update on Search Citymap")
+                return
+            }
+        }
+        /**else if (_self.is_map_result_control() && query) {
             if (_self.is_angebote_mode()) {
                 parameter.page = "#angebotssuche=" + query
             } else {
@@ -259,7 +264,7 @@ var kiezatlas = (function($, leafletMap, restc, favourites) {
         } **/
         parameter.page = "website"
         var viewportState = _self.create_viewport_parameter()
-        _self.push_page_view(viewportState)
+        if (!viewMapOnly) _self.push_page_view(viewportState)
     }
 
     this.get_map_viewport_from_url = function() {
@@ -989,7 +994,8 @@ var kiezatlas = (function($, leafletMap, restc, favourites) {
     this.do_text_search_geo_objects = function(text, callback, fitBounds) {
         _self.set_mapcontrol_mode_results()
         var queryUrl = '/website/search/?search='+text
-        if (_self.get_site_id()) {
+        if (_self.get_site_id() && _self.get_site_info().webAlias.indexOf("search") === -1) {
+            console.log("Text search geo objects on", _self.get_site_info().webAlias)
             queryUrl = '/website/search/' + _self.get_site_id() + '/?search=' + text
         }
         _self.show_searching_indicator()

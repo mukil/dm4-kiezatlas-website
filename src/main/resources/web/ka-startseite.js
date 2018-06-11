@@ -33,7 +33,9 @@ var results = [],
         "grey": "#868686"           // unused
     },
     districts = undefined,
-    bezirksTopic = undefined
+    bezirksTopic = undefined,
+    viewSearchMap = false,
+    viewCityMap = false
 
 var $sidebarUi = undefined
 
@@ -78,6 +80,12 @@ function init_page(page) {
                 render_frontpage("gesamt")
             }
             init_search_page_fragment()
+
+        } else if (page === "search-map") {
+            register_pop_state_navigation()
+            get_location_hash_from_url()
+            get_viewport_from_url()
+            render_search_map()
 
         } else if (page === "place") {
             init_einrichtungs_page()
@@ -182,6 +190,12 @@ function init_search_page_fragment() {
     update_search_criteria_dialog()
 }
 
+function render_search_map() {
+    viewSearchMap = true
+    kiezatlas.render_map(true, undefined, false, true, true)
+    set_search_input(searchText)
+}
+
 function render_frontpage(name) {
     if (name === "gesamt") {
         kiezatlas.render_gesamtstadtplan()
@@ -204,6 +218,7 @@ function angebot_tag_clicked(e) {
 }
 
 function init_citymap() {
+    viewCityMap = true
     // $sidebarUi = $('.ui.sidebar').sidebar('setting', 'dimPage', false)
     // $sidebarUi.sidebar('setting', 'scrollLock', true).sidebar('setting', 'returnScroll',
     // true).sidebar('setting', 'dimPage', false).sidebar('hide')
@@ -673,6 +688,9 @@ function replace_page_parameters() {
     var url = window.document.location.origin
     if (frontpage) {
         url += '/website'
+    } else if (viewCityMap) {
+        console.log("Skipping update of url page parameter...")
+        return
     } else {
         url += window.document.location.pathname
     }
@@ -1013,32 +1031,37 @@ function checkBerlinwideSearchbox() {
 // --- Search Results Rendering --- //
 
 function render_search_results() {
-    var $container = $('.result-list .container')
-    var count = results.length
-    from = $('.more-results').data("result-from")
-    to += MAX_RESULTS
-    if (from === 0) {
-        $container.empty()
-    }
-    $('.search-results .count').text(count)
-    if (count > 0) {
-        show_results_container()
-        if (searchType === "place") {
-            if (searchMethod === "quick") {
-                render_place_search_results(from, to, count, $container)
-            } else if (searchMethod === "fulltext") {
-                render_place_fulltext_search_results(from, to, count, $container)
-            }
-        } else if (searchType === "event") {
-            // ### exclude which were never assigned to a place
-            render_event_search_results(from, to, count, $container)
-        }
+    if (viewSearchMap) {
+        leafletMap.set_items(results)
+        leafletMap.render_geo_objects(true)
     } else {
-        contextText = (searchContext == 0) ? (typeof searchNearby !== "undefined") ? " in der Nähe von " + searchNearby : " in Gesamtberlin " : (bezirksTopic) ? " im Bezirk " + bezirksTopic.value : " in diesem Bezirk"
-        // filterText = (searchText)
-        $('.result-list .container').html('Zur Suchanfrage "' + searchText + '" ' + contextText + ' gab es keine Treffer')
+        var $container = $('.result-list .container')
+        var count = results.length
+        from = $('.more-results').data("result-from")
+        to += MAX_RESULTS
+        if (from === 0) {
+            $container.empty()
+        }
+        $('.search-results .count').text(count)
+        if (count > 0) {
+            show_results_container()
+            if (searchType === "place") {
+                if (searchMethod === "quick") {
+                    render_place_search_results(from, to, count, $container)
+                } else if (searchMethod === "fulltext") {
+                    render_place_fulltext_search_results(from, to, count, $container)
+                }
+            } else if (searchType === "event") {
+                // ### exclude which were never assigned to a place
+                render_event_search_results(from, to, count, $container)
+            }
+        } else {
+            contextText = (searchContext == 0) ? (typeof searchNearby !== "undefined") ? " in der Nähe von " + searchNearby : " in Gesamtberlin " : (bezirksTopic) ? " im Bezirk " + bezirksTopic.value : " in diesem Bezirk"
+            // filterText = (searchText)
+            $('.result-list .container').html('Zur Suchanfrage "' + searchText + '" ' + contextText + ' gab es keine Treffer')
+        }
+        $(".item a").on('click', click)
     }
-    $(".item a").on('click', click)
 }
 
 function render_place_fulltext_search_results(from, to, count, $container) {
