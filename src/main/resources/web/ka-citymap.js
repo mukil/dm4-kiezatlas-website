@@ -61,13 +61,13 @@ var citymap = {
                 kiezatlas.load_marker_cluster_scripts()
             }
             if (siteTopic.locationPrompt) {
-                console.log("Do Location Prompt")
+                console.log("### Do Location Prompt")
             }
             if (siteTopic.locationSearch) {
-                console.log("Enable Location Search")
+                console.log("### Enable Location Search")
             }
             if (siteTopic.fahrinfoLink) {
-                console.log("Render Fahrinfo Link")
+                console.log("### Render Fahrinfo Link")
             }
             // Display Citymap Details
             citymap.render_info_area(siteTopic)
@@ -241,12 +241,14 @@ var citymap = {
         var fahrinfoLink = '<a href="https://fahrinfo.bvg.de/Fahrinfo/bin/query.bin/dn?Z=' + object.address_name.toString()
                 + '&REQ0JourneyStopsZA1=2&start=1&pk_campaign=kiezatlas.de">'
                 + '<img src="/de.kiezatlas.website/images/fahrinfo.gif"></a>'
+        var ortseintrag_link = '/website/geo/' + object.id
         var angebote_link = ''
         if (object.angebote_count > 0) {
             angebote_link = '<div class="angebote-link">'
-                + '<a class="button" href="/website/geo/' + object.id + '">Aktuelle Angebote anzeigen</a></div>'
+                + '<a class="button" href="' + ortseintrag_link + '">Aktuelle Angebote anzeigen</a></div>'
         }
         if (kiezatlas.get_site_info() && !kiezatlas.get_site_info().fahrinfoLink) {
+            console.log("Website info", kiezatlas.get_site_info())
             fahrinfoLink = ''
         }
         var body_text = ""
@@ -276,6 +278,7 @@ var citymap = {
             + angebote_link
             + '<div class="facets"></div>'
             // + '<a href="/website/geo/' + object.id + '" class="mobile-more" title="Zeige Details">mehr Infos</a>'
+            + '<a href="' + ortseintrag_link + '">Weitere Infos</a>'
             + fahrinfoLink
             + '</div>'
             + lor_link

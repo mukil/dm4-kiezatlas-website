@@ -24,11 +24,6 @@ body.pushable > .pusher {
     background-color: #EAEAEA;
 }
 
-/** ----- Helpers ------ **/
-.visible-ib {
-    display: inline-block !important;
-}
-
 /** ---- Special Elements -------- **/
 .search-option {
     display: inline-block;
@@ -126,15 +121,6 @@ body.pushable > .pusher {
 
 .top-menu .ui.menu.top.fixed {
     z-index: 3010;
-}
-
-.warning {
-    padding: 1em;
-    color: #8F1414;
-}
-
-.kiezatlas.topic.edit .warning {
-    font-size: 0.8em;
 }
 
 #pages,
@@ -361,11 +347,6 @@ body.pushable > .pusher {
 .facet-editor .right.menu .ui.search,
 .sites .right.menu .ui.search {
     display: none;
-}
-
-form .invalid {
-    border-color: #8F1414;
-    border-width: 2px;
 }
 
 .facet-editor form label {

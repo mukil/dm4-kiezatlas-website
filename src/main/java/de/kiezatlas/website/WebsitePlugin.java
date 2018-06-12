@@ -37,6 +37,7 @@ import de.deepamehta.plugins.geospatial.GeospatialService;
 import de.deepamehta.thymeleaf.ThymeleafPlugin;
 import de.deepamehta.time.TimeService;
 import de.deepamehta.workspaces.WorkspacesService;
+import de.kiezatlas.KiezatlasPlugin;
 import de.kiezatlas.KiezatlasService;
 import static de.kiezatlas.KiezatlasService.GEO_OBJECT;
 import static de.kiezatlas.KiezatlasService.GEO_OBJECT_ADDRESS;
@@ -450,7 +451,8 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     public Viewable prepareGeoObjectFormPage() {
         if (!isAuthenticated()) return getUnauthorizedPage();
         EinrichtungView geoObject = new EinrichtungView();
-        geoObject.setCoordinates(new GeoCoordinate(13.4, 52.5));
+        // Use Geo Coordinates of Brandenburger Tor as starting point
+        geoObject.setCoordinates(new GeoCoordinate(13.377757, 52.516329));
         // geoObject.setName("");
         geoObject.setId(-1);
         viewData("geoobject", geoObject);
@@ -954,31 +956,33 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
 
     /**
      * Loads geo objects for a given kieatlas site web alias.
+     * Cache of geo objects in citymap is emptied on bundle-refresh or every 6 hrs.
      *
      * @param siteId long   Topic id of Kiezatlas Website Topic
      * @return
      */
     @GET
     @Path("/{siteId}/geo")
+    @Transactional
     @Produces(MediaType.APPLICATION_JSON)
     public List<GeoMapView> getSiteGeoObjects(@HeaderParam("Referer") String referer, @PathParam("siteId") long siteId) {
         if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
-        // ### TODO: Make "Cache Site"  an option of "Kiezatlas Website" topic
+        // ### TODO: Make "Cache Site" an option of "Kiezatlas Website" topic
         // use cache
         Topic site = dm4.getTopic(siteId);
-        if (siteId != 499904) {
-            // Do not cache Showcase Stadtplan "VSKA Stadtteilzentren"
-            if (citymapCache.containsKey(siteId)) {
-                // caching lifetime is 30 000 or 12 000 ms for testing purposes
-                if (citymapCachedAt.get(siteId) > new Date().getTime() - 21600000) { // 21600000 for approx. 6hr in ms
-                    log.info("Returning cached list of geo object for site " + site.getSimpleValue());
-                    return citymapCache.get(siteId);
-                }
-                // invalidate cache
-                citymapCache.remove(siteId);
-                citymapCachedAt.remove(siteId);
+        // Do not cache Showcase Stadtplan "VSKA Stadtteilzentren"
+        if (citymapCache.containsKey(siteId)) {
+            // caching lifetime is 30 000 or 12 000 ms for testing purposes
+            if (citymapCachedAt.get(siteId) > new Date().getTime() - 21600000) { // 21600000 for approx. 6hr in ms
+                log.info("Using cached geo objects for site \"" + site.getSimpleValue()
+                        + "\" cachedAt: " + new Date(citymapCachedAt.get(siteId)).toString());
+                return citymapCache.get(siteId);
             }
+            // invalidate cache
+            citymapCache.remove(siteId);
+            citymapCachedAt.remove(siteId);
         }
+        refreshAutomaticPopulatedCityMaps(siteId);
         // populate new resultset
         List<GeoMapView> results = new ArrayList<GeoMapView>();
         try {
@@ -997,6 +1001,100 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         citymapCache.put(siteId, results);
         citymapCachedAt.put(siteId, new Date().getTime());
         return results;
+    }
+
+    private void refreshAutomaticPopulatedCityMaps(long siteId) {
+        Topic vskaCitymap = dm4.getTopicByUri(VSKA_WEBSITE_URI);
+        if (siteId == vskaCitymap.getId()) {
+            log.info("### UPDATING VskA Kiezatlas Stadtteil und Gemeinwesenarbeit...");
+            updateVskAStadtplanGeoObjects();
+            log.info("### FINISHED updating VskA Kiezatlas Stadtteil und Gemeinwesenarbeit...");
+        }
+        Topic famportalCitymap = dm4.getTopicByUri(FAMPORTAL_WEBSITE_URI);
+        if (siteId == famportalCitymap.getId()) {
+            log.info("### UPDATING Familienportal Stadtplan...");
+            updateFamportalStadtplanGeoObjects();
+            log.info("### FINISHED updating Familienportal Stadtplan...");
+        }
+    }
+
+    private void updateVskAStadtplanGeoObjects() {
+        Topic vskaCityMap = dm4.getTopicByUri(VSKA_WEBSITE_URI);
+        List<Topic> angebotFacets = dm4.getTopicsByType("ka2.criteria.angebot");
+        for (Topic angebotFacet : angebotFacets) {
+            if (isVskACategory(angebotFacet)) {
+                List<RelatedTopic> topics = angebotFacet.getRelatedTopics("dm4.core.aggregation",
+                        null, null, "ka2.geo_object");
+                log.info("> Category CHECK: " + angebotFacet.getSimpleValue() + " is a VsKa Category with "
+                        + topics.size() + " geo objects assigned");
+                addGeoObjectsToStadtplan(topics, vskaCityMap);
+            }
+        }
+        List<Topic> themaFacets = dm4.getTopicsByType("ka2.criteria.thema");
+        for (Topic themaFacet : themaFacets) {
+            if (isVskACategory(themaFacet)) {
+                List<RelatedTopic> topics = themaFacet.getRelatedTopics("dm4.core.aggregation",
+                        null, null, "ka2.geo_object");
+                log.info("> Category CHECK: " + themaFacet.getSimpleValue() + " is a VsKa Category with "
+                        + topics.size() + " geo objects assigned");
+                addGeoObjectsToStadtplan(themaFacet.getRelatedTopics("dm4.core.aggregation",
+                        null, null, "ka2.geo_object"), vskaCityMap);
+            }
+        }
+    }
+
+    private void addGeoObjectsToStadtplan(List<RelatedTopic> geoObjects, Topic cityMap) {
+        Topic kiezatlasWs = dm4.getTopicByUri(KiezatlasPlugin.KIEZATLAS_WORKSPACE_URI);
+        for (RelatedTopic geoObject : geoObjects) {
+            Association assignment = kiezatlas.addGeoObjectToWebsite(geoObject, cityMap);
+            if (assignment != null) {
+                workspaces.assignToWorkspace(assignment, kiezatlasWs.getId());
+            }
+        }
+    }
+
+    private boolean isVskACategory(Topic category) {
+        if (category.getSimpleValue().toString().equals("Familien- und Nachbarschaftszentren")
+            || category.getSimpleValue().toString().equals("Gemeinwesen")
+            || category.getSimpleValue().toString().equals("Kieztreff")
+            || category.getSimpleValue().toString().equals("Nachbarschaft und Stadtteil")
+            || category.getSimpleValue().toString().equals("Seniorinnen + Senioren")
+            || category.getSimpleValue().toString().equals("Familienzentren")
+            || category.getSimpleValue().toString().equals("Kieznahe Mehrgenerationenangebote")
+            || category.getSimpleValue().toString().equals("Nachbarschaftszentren")
+            || category.getSimpleValue().toString().equals("Offene Treffpunkte mit sozialkulturellem Charakter")
+            || category.getSimpleValue().toString().equals("Quartiersmanagement")
+            || category.getSimpleValue().toString().equals("Sozial-kulturelle Projekte")
+            || category.getSimpleValue().toString().equals("Stadtteilarbeit")
+            || category.getSimpleValue().toString().equals("Selbsthilfegruppen")) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    private void updateFamportalStadtplanGeoObjects() {
+        // 1) Fetch Famportal Stadtplan Website Topic
+        Topic famportalCityMap = dm4.getTopicByUri(FAMPORTAL_WEBSITE_URI);
+        Topic famportalWorkspace = dm4.getTopicByUri("de.kiezatlas.familienportal_ws");
+        // 2) Giving all existing geo objects with a familienportal category relation a famportal site assignment
+        List<Topic> geoObjects = dm4.getTopicsByType("ka2.geo_object");
+        for (Topic geoObject : geoObjects) {
+            if (isRelatedToFamportalCategory(geoObject)) {
+                Association assignment = kiezatlas.addGeoObjectToWebsite(geoObject, famportalCityMap);
+                log.info("Assigning Geo Object " + geoObject.getSimpleValue() + " related to Famportal Category"
+                    + " to Website \"" + famportalCityMap.getSimpleValue() + "\"");
+                if (assignment != null) {
+                    workspaces.assignToWorkspace(assignment, famportalWorkspace.getId());
+                }
+            }
+        }
+    }
+
+    /* --- Find copy in dm4-kiezatlas-famportal FamilienportalService**/
+    private boolean isRelatedToFamportalCategory(Topic geoObject) {
+        List<RelatedTopic> facetTopics = facets.getFacets(geoObject, FAMPORTAL_CATEGORY_FACET_URI);
+        return (facetTopics.size() >= 1);
     }
 
     /**

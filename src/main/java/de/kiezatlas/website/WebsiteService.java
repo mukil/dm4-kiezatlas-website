@@ -34,7 +34,11 @@ public interface WebsiteService {
     static final String DELETION_WORKSPACE_URI = "de.kiezatlas.del_workspace";
     static final String DELETION_WORKSPACE_NAME = "Papierkorb";
 
-    static final String FALLBACK_IMPRINT = "http://pax.spinnenwerk.de/~kiezatlas/index.php?id=6";
+    static final String FALLBACK_IMPRINT = "https://kiezatlas.berlin/impressum";
+
+    static final String FAMPORTAL_CATEGORY_FACET_URI  = "famportal.category.facet";
+    static final String FAMPORTAL_WEBSITE_URI = "de.kiezatlas.site_famportal";
+    static final String VSKA_WEBSITE_URI = "de.kiezatlas.vska_stadtplan";
 
     /**
      * Searching in four child topic types of geo object, returning topics of type "ka2.geo_object".

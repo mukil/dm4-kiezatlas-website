@@ -167,7 +167,17 @@ var leafletMap = (function($, L) {
         // build up: create new marker_group
         if (mapping.do_cluster_marker) {
             mapping.marker_group = L.markerClusterGroup({
-                spiderfyOnMaxZoom: true, spiderfyDistanceMultiplier: 2, showCoverageOnHover: false, maxClusterRadius: 60
+                spiderfyOnMaxZoom: true, spiderfyDistanceMultiplier: 2, showCoverageOnHover: false, maxClusterRadius: 60,
+                iconCreateFunction: function(cluster) {
+                    var childCount = cluster.getChildCount()
+                    var classNames = "clustermarker"
+                    if (childCount >= 10 && childCount <= 100) {
+                        classNames += " tens"
+                    } else if (childCount > 100) {
+                        classNames += " hundreds"
+                    }
+                    return L.divIcon({ html: '<div class="' + classNames + '">' + cluster.getChildCount() + '</div>' });
+                }
             })
             mapping.marker_group.addLayers(list_of_markers)
             mapping.marker_group.on('clusterclick', function(e) {

@@ -34,6 +34,7 @@
             console.log("initialized district filter in frontend", districtId, districtName)
             var NEIGHBOUR_QUERY_RADIUS = 800
             var draggableMarker, map, circleMarker, name, latitude, longitude, lCoordinate;
+            var geoObjectId = /*[[${geoobject.id}]]*/ undefined;
             latitude = /*[[${geoobject.latitude}]]*/ undefined;
             longitude = /*[[${geoobject.longitude}]]*/ undefined;
             name = /*[[${geoobject.name}]]*/ undefined;
@@ -50,7 +51,7 @@
                     js.set_cookie("dm4_workspace_id", kiezatlasWsId)
                 }
                 document.cookie = " dm4_no_geocoding=true;"
-                map = L.map('map', { scrollWheelZoom: false } ).setView(lCoordinate, 17)
+                map = L.map('map', { scrollWheelZoom: true } ).setView(lCoordinate, (geoObjectId !== -1) ? 17 : 14)
                 L.tileLayer('https://api.tiles.mapbox.com/v4/kiezatlas.pd8lkp64/{z}/{x}/{y}.png?' // old style id="kiezatlas.map-feifsq6f"
                     + 'access_token=pk.eyJ1Ijoia2llemF0bGFzIiwiYSI6ImNpa3BndjU2ODAwYm53MGxzM3JtOXFmb2IifQ._PcBhOcfLYDD8RP3BS0U_g', {
                     attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors,'
@@ -224,7 +225,7 @@
                 if (!is_valid_district() || !is_valid_email() || !is_valid_zip_code() || is_default_coordinate_pair()) {
                     console.warn("Form could not be submitted cause of missing input")
                     if (!is_valid_district()) {
-                        show_input_warning('Bitte w&auml;hle einene Bezirk aus')
+                        show_input_warning('Bitte w&auml;hle einen Bezirk aus')
                     } else if (!is_valid_email()) {
                         show_input_warning('Bitte gib eine Email Adresse an')
                     } else if (!is_valid_zip_code()) {
@@ -238,7 +239,9 @@
             }
 
             function show_input_warning(warning) {
-                $('#duplicates').html(warning)
+                $('.message').html(warning)
+                $('.message').addClass("warning")
+                $('.message').show()
             }
 
             function search_for_duplicates() {
@@ -347,11 +350,11 @@
                     <h2 th:if="${geoobject.id eq -1}">Neuen Ort anlegen</h2>
                     <h2 th:if="${geoobject.id gt -1}">Ortseintrag bearbeiten</h2>
                     <div class="commands">
-                        <span th:if="${!#strings.isEmpty(message)}" th:utext="${message}" class="message"></span>
+                        <span th:if="${!#strings.isEmpty(message)}" th:utext="${message}" class="comment"></span>
                         <!--a th:if="${editable} and ${authenticated}" th:href="'/website/geo/' + ${geoobject.id}">Cancel</a-->
                     </div>
                     <p class="comment" th:each="comment : ${geoobject.comments}">
-                        <span class="message" th:text="${comment.message}"></span>
+                        <span class="comment" th:text="${comment.message}"></span>
                         <span class="contact" th:if="${comment.contact}" th:text="'(' + ${comment.contact} + ')'"></span>
                     </p>
             </div>
@@ -366,7 +369,7 @@
             </div>
 
             <div class="ui vertical container segment form">
-                <div class="warning" id="duplicates"></div>
+                <div class="message" id="duplicates"></div>
                 <div th:if="${!#strings.isEmpty(warning)}" th:utext="${warning}" class="warning message"></div>
                 <form class="infos ui form" id="geoobject-form" action="/website/geo/save" method="POST">
                     <input th:if="${!#strings.isEmpty(geoobject.id)}" type="hidden" id="geo-id" name="id" th:value='${geoobject.id}'/>
@@ -422,6 +425,12 @@
                             <div class="ui fluid input">
                                 <input type="text" name="fax" th:value='${geoobject.fax}'/>
                             </div>
+                            <label for="thema">Thema</label>
+                            <select id="thema" class="ui mutiple selection fluid dropdown" name="themen" multiple="true">
+                                <option th:each="category : ${availableThemen}"
+                                        th:selected="${themen.contains(category)}"
+                                        th:value="${category.id}" th:text="${category.simpleValue}"></option>
+                            </select>
                             <!-- Image File Upload>
                             <label for="bild">Bild</label>
                             <div class="ui fluid image">
@@ -474,12 +483,6 @@
                                             th:selected="${zielgruppen.contains(category)}"
                                             th:value="${category.id}" th:text="${category.simpleValue}"></option>
                                 </select>
-                                <label for="thema">Thema</label>
-                                <select id="thema" class="ui mutiple selection fluid dropdown" name="themen" multiple="true">
-                                    <option th:each="category : ${availableThemen}"
-                                            th:selected="${themen.contains(category)}"
-                                            th:value="${category.id}" th:text="${category.simpleValue}"></option>
-                                </select>
                                 <label for="angebote-crit">Angebot</label>
                                 <select id="angebote-crit" class="ui mutiple fluid selection dropdown" name="angebote" multiple="true">
                                     <option th:each="thema : ${availableAngebote}" th:value="${thema.id}" th:text="${thema.simpleValue}"></option>
@@ -504,7 +507,15 @@
                         </div>
                     </div>
                 </div-->
+
+                <div class="ui container">
+                    <button onclick="submit_form()" id="save" class="ui button green">Speichern</button>
+                    <a class="button red ui" th:if="${geoobject.id} != -1" th:href="'/website/geo/' + ${geoobject.id}">Abbrechen</a>
+                    <a class="button red ui" th:if="${geoobject.id} == -1" href="/angebote/my">Abbrechen</a>
+                    <div class="message" id="duplicates"></div>
+                </div>
             </div>
+
         </div>
 
         <!-- Footer Segment -->

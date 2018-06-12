@@ -1,54 +1,32 @@
 package de.kiezatlas.website.migrations;
 
 import de.deepamehta.core.Topic;
+import de.deepamehta.core.service.Inject;
 import de.deepamehta.core.service.Migration;
+import de.deepamehta.workspaces.WorkspacesService;
 import de.kiezatlas.KiezatlasService;
-import java.util.List;
+import de.kiezatlas.website.WebsitePlugin;
 import java.util.logging.Logger;
 
 /**
- *
- * @author malt
+ * Create VskA Kiezatlas Stadtteil und Gemeinwesenarbeit Stadtplan.
+ * @author malted
  */
 public class Migration20 extends Migration {
 
-    private final Logger log = Logger.getLogger(getClass().getName());
+    private Logger log = Logger.getLogger(getClass().getName());
+
+
+    @Inject private KiezatlasService kiezService;
+    @Inject private WorkspacesService workspaces;
 
     @Override
     public void run() {
-        List<Topic> beschreibungen = dm4.getTopicsByType("ka2.beschreibung");
-        int descrRemoved = 0, hoursRemoved = 0;
-        for (Topic beschreibung : beschreibungen) {
-            Topic geoObject = getParentGeoObjectTopic(beschreibung);
-            if (geoObject == null) {
-                log.info("Removing orphaned Beschreibungstext \"" + beschreibung.getSimpleValue() + "\"");
-                beschreibung.delete();
-                descrRemoved++;
-            }
-        }
-        List<Topic> openingHours = dm4.getTopicsByType("ka2.oeffnungszeiten");
-        for (Topic openingHour : openingHours) {
-            Topic geoObject = getParentGeoObjectTopic(openingHour);
-            if (geoObject == null) {
-                log.info("Removing orphaned Öffnungszeiten \"" + openingHour.getSimpleValue() + "\"");
-                openingHour.delete();
-                hoursRemoved++;
-            }
-        }
-        log.info("Mogration 18 deleted " + descrRemoved + " orphaned Beschreibungen and " + hoursRemoved + " Öffnungszeiten topics");
-    }
-
-    private Topic getParentGeoObjectTopic(Topic entry) {
-        Topic result = null;
-        try {
-            result = entry.getRelatedTopic(null, "dm4.core.child", "dm4.core.parent", KiezatlasService.GEO_OBJECT);
-        } catch (RuntimeException ex) {
-            log.warning("Exception loading parent geo object topic cause \"" + ex.getLocalizedMessage() + "\"");
-            return result;
-        }
-        if (result == null) log.warning("Search Result Entry: " +entry.getTypeUri()
-            + ", " +entry.getId() +" has no Geo Object as PARENT"); // fulltext searches also "abandoned" facet topics
-        return result;
+        Topic kiezatlasWorkspace = workspaces.getWorkspace(KiezatlasService.KIEZATLAS_WORKSPACE_URI);
+        Topic vskaStadtplan = kiezService.createKiezatlasWebsite("VskA Kiezatlas Stadtteil- und Gemeinwesenarbeit", WebsitePlugin.VSKA_WEBSITE_URI);
+        log.info("Creating new Website \"" + vskaStadtplan.getSimpleValue() + "\", assigned to \"Kiezatlas\" workspace");
+        workspaces.assignToWorkspace(vskaStadtplan, kiezatlasWorkspace.getId());
+        log.info("### Migration 20 COMPLETED: Created new VskA Stadtplan \"" + vskaStadtplan + "\" in Kiezatlas Workspace");
     }
 
 }

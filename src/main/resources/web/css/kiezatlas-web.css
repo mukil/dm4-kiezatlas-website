@@ -21,9 +21,25 @@ select.ui.dropdown {
     margin-bottom: 1em;
 }
 
+.edit .warning {
+    margin-top: 1em;
+    padding: .5em;
+    padding-left: .75em;
+    background-color: #ce0000;
+    color: #fff;
+    border-radius: .28571429rem;
+    display: none;
+    width: auto;
+}
+
+form .invalid {
+    border-color: #ce0000 !important;
+    border-width: 2px;
+}
+
 #zielgruppen, #angebote-crit, #thema {
     padding: 0em;
-    height: 120px;
+    height: 280px;
 }
 
 #detail-area {
@@ -228,6 +244,10 @@ select.ui.dropdown {
 .page.detail .container.entry {
     margin-top: 3em;
     margin-bottom: 2em;
+}
+
+.page.detail .bild img {
+    max-width: 100%;
 }
 
 /** Typography related Styles **/
@@ -1114,9 +1134,35 @@ select option[selected] {
 
 .citymap #sidebar .logo {
     max-width: 90%;
-    max-width: 250px;
+    max-height: 250px;
     padding-bottom: .5em;
     padding-top: .5em;
+}
+
+.leaflet-marker-pane .leaflet-div-icon {
+    background: transparent;
+    border-color: transparent;
+}
+.leaflet-marker-pane .clustermarker {
+    border-radius: 5em;
+    padding: .5em;
+    padding-top: .4em;
+    padding-left: .75em;
+    background-color: #f8f6e9aa;
+    border: 2px solid #3787ab;
+    margin-left: -10px;
+    margin-top: -10px;
+    font-weight: bold;
+    height: 30px;
+    width: 30px;
+}
+
+.leaflet-marker-pane .clustermarker.hundreds {
+    padding-left: .25em;
+}
+
+.leaflet-marker-pane .clustermarker.tens {
+    padding-left: .5em;
 }
 
 .citymap #sidebar h3 {
