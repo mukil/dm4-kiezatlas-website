@@ -154,6 +154,8 @@ function init_page(page) {
 
         } else if (page === "sign-up") {
             //
+        } else {
+            init_search_page_fragment()
         }
     })
 }

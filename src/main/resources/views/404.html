@@ -13,8 +13,21 @@
 
         <script defer="true" src="/de.mikromedia.webpages/jquery/jquery-3.2.1.min.js"></script>
         <script defer="true" src="/de.kiezatlas.website/css/semantic-ui/2.3/dist/semantic.min.js"></script>
+        <script defer="true" src="/de.kiezatlas.website/ka-restclient.js"></script>
+        <script defer="true" src="/de.kiezatlas.website/ka-model.js"></script>
+        <script defer="true" src="/de.kiezatlas.website/search-angebote.js"></script>
+        <script defer="true" src="/de.kiezatlas.website/ka-startseite.js" onload="init_page()"></script>
         <script defer="true" src="/de.mikromedia.webpages/js/page-methods.js" onload="render_page()"></script>
-
+        <script defer="true" th:inline="javascript">
+        /*<![CDATA[*/
+            var frontpage = false
+            searchText = /*[[${search}]]*/ ''
+            searchType = /*[[${searchType}]]*/ 'place'
+            searchContext = /*[[${searchContext}]]*/ '0'
+            searchMethod = /*[[${searchMethod}]]*/ 'quick'
+            searchNearby = /*[[${searchNearby}]]*/ undefined
+        /*]]>*/
+        </script>
         <meta th:replace="fragments/tracker" />
     </head>
     <body class="ui page detail not-found">
