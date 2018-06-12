@@ -38,6 +38,7 @@ var karestc = (function($) {
         var locationString = restc.create_location_string(location)
         var radius_value = radius
         if (!radius) radius_value = 750 // meter
+        // Spatial Search Endpoint
         $.getJSON('/website/search/'+encodeURIComponent(locationString)+'/' + (radius_value / 1000), callback)
     }
 

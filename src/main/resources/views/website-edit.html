@@ -247,7 +247,7 @@
                     if (nameInput.length < 3) return;
                     // var streetInput = $('#streetnr').val()
                     var $area = $('#duplicates')
-                    $.getJSON('/website/search/duplicates?geoobject=' + nameInput, function(results) {
+                    $.getJSON('/website/search/name/duplicates?geoobject=' + nameInput, function(results) {
                         if (results && results.length > 0 && results.length < 20) {
                             $area.html("Im Kiezatlas gibt es bereits einige Orte unter diesem Namen:<br/>")
                             for (var e in results) {

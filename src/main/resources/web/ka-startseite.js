@@ -776,7 +776,7 @@ function do_text_search() {
     searchText = get_search_input()
     show_results_container()
     show_loading_search()
-    var queryUrl = '/website/search/autocomplete?query=' + searchText
+    var queryUrl = '/website/search/name/quick?query=' + searchText
     if (searchType === "event") {
         // Fire search query
         do_angebote_search()
