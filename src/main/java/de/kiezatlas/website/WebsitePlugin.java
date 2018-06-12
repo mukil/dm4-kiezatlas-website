@@ -1373,8 +1373,97 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         return regionen;
     }
 
-    // ---------------------------------------------------------------------------- Website Search Endpoints -------- //
+    // ------------------------------------------------------------------------ Website Angebote Search Endpoints ----- //
 
+    /**
+     * Builds up a list of search results (Geo Objects to be displayed in a map) by text query.
+     * @param referer
+     * @param query
+     */
+    @GET
+    @Path("/search/angebote")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<GeoMapView> searchAngebotsinfosFulltext(@HeaderParam("Referer") String referer,
+                                                        @QueryParam("search") String query) {
+        if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
+        try {
+            ArrayList<GeoMapView> results = new ArrayList<GeoMapView>();
+            if (isInvalidSearchQuery(query)) return results;
+            // String queryValue = prepareLuceneQueryString(query, false, true, false, true);
+            String queryValue = preparePhraseOrTermLuceneQuery(query);
+            // 2) Fetch unique geo object topics by text query string (leading AND ending ASTERISK)
+            List<RelatedTopic> offers = angebote.searchInAngebotsinfoChildsByText(queryValue);
+            // 3) Process saerch results and create DTS for map display
+            for (Topic angebot : offers) {
+                List<RelatedTopic> places = angebote.getAssignedGeoObjectTopics(angebot);
+                if (places != null && places.size() > 0) {
+                    GeoMapView angebotLocation = new GeoMapView(places.get(0), geomaps, angebote);
+                    angebotLocation.setAngebotSearchName(angebot.getSimpleValue().toString());
+                    results.add(angebotLocation);
+                }
+            }
+            log.info("Build up response " + offers.size() + " geo objects across all districts");
+            return results;
+        } catch (Exception e) {
+            throw new RuntimeException("Searching geo object topics failed", e);
+        }
+    }
+
+    // ------------------------------------------------------------------------ Website Place Search Endpoints ----- //
+
+    /**
+     * Fetches a combined list of Geo Objects and Angebote to be displayed in two-tier dropdown menu.
+     * @param referer
+     * @param query
+     */
+    @GET
+    @Path("/search/autocomplete")
+    @Produces(MediaType.APPLICATION_JSON)
+    public SearchResultList getSearchResultListByNameQuick(@HeaderParam("Referer") String referer,
+                                                           @QueryParam("query") String query) {
+        if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
+        SearchResultList results = new SearchResultList();
+        try {
+            String queryValue = query.trim();
+            if (isInvalidSearchQuery(queryValue)) return results;
+            // DO Search for "Not Empty" AND "WITH ASTERISK ON BOTH SIDES" in NAME ONLY
+            queryValue = preparePhraseOrTermLuceneQuery(queryValue);
+            log.log(Level.INFO, "> autoCompleteQuery=\"{0}\"", queryValue);
+            List<Topic> singleTopics = dm4.searchTopics(queryValue, "ka2.geo_object.name");
+            int max = 50;
+            int count = 0;
+            for (Topic topic : singleTopics) {
+                Topic geoObject = getParentGeoObjectTopic(topic);
+                if (geoObject != null) {
+                    Topic bezirk = getRelatedBezirk(geoObject);
+                    Topic street = getRelatedAddressStreetName(geoObject);
+                    String zusatzInfo = "";
+                    if (street != null) zusatzInfo += street.getSimpleValue();
+                    if (bezirk != null) zusatzInfo += ", " + bezirk.getSimpleValue().toString();
+                    results.putGeoObject(new SearchResult(geoObject, zusatzInfo));
+                    count++;
+                }
+                if (count == max) break;
+            }
+            /** Do Search for Angebote here too // Fixme: Move to dm4-kiezat-angebote plugin
+            count = 0;
+            List<Topic> angeboteTopics = dm4.searchTopics(queryValue, "ka2.angebot.name");
+            log.log(Level.INFO, "{0} geo topics found, {1} angebote topics found", new Object[]{singleTopics.size(), angeboteTopics.size()});
+            for (Topic topic : angeboteTopics) {
+                Topic angebot = topic.getRelatedTopic("dm4.core.composition",
+                    CHILD_ROLE, PARENT_ROLE, "ka2.angebot");
+                if (angebot != null) {
+                    results.putAngebot(new SearchResult(angebot));
+                    count++;
+                }
+                if (count == max) break;
+            } **/
+        } catch (Exception e) {
+            throw new RuntimeException("Searching geo object for auto completion failed", e);
+        }
+        return results;
+    }
+    
     /**
      * Fetches a list of Geo Objects for assignment used in Angebotszeitraum editor.
      * @param referer
@@ -1407,6 +1496,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
 
     /**
      * Fetches a list of Geo Objects possibly existing for /geo/create form.
+     * Search on Place Edit Form Name Input
      * @param referer
      * @param geoObjectName
      */
@@ -1414,7 +1504,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     @Path("/search/duplicates")
     @Produces(MediaType.APPLICATION_JSON)
     public List<GeoMapView> searchGeoObjectsByLooseName(@HeaderParam("Referer") String referer,
-                                                          @QueryParam("geoobject") String geoObjectName) {
+                                                        @QueryParam("geoobject") String geoObjectName) {
         if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
         try {
             // strip common prefixes as they irritate our search fo rduplicates leading to to many results
@@ -1436,59 +1526,6 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         } catch (Exception e) {
             throw new RuntimeException("Searching geo object topics by name failed", e);
         }
-    }
-
-    /**
-     * Fetches a combined list of Geo Objects and Angebote to be displayed in two-tier dropdown menu.
-     * @param referer
-     * @param query
-     */
-    @GET
-    @Path("/search/autocomplete")
-    @Produces(MediaType.APPLICATION_JSON)
-    public SearchResultList getSearchResultListByNameQuick(@HeaderParam("Referer") String referer,
-                                                           @QueryParam("query") String query) {
-        if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
-        SearchResultList results = new SearchResultList();
-        try {
-            String queryValue = query.trim();
-            if (isInvalidSearchQuery(queryValue)) return results;
-            // DO Search for "Not Empty" AND "WITH ASTERISK ON BOTH SIDES" in NAME ONLY
-            queryValue = prepareGeoObjectNameSearchPhrase(queryValue);
-            log.log(Level.INFO, "> autoCompleteQuery=\"{0}\"", queryValue);
-            List<Topic> singleTopics = dm4.searchTopics(queryValue, "ka2.geo_object.name");
-            int max = 50;
-            int count = 0;
-            for (Topic topic : singleTopics) {
-                Topic geoObject = getParentGeoObjectTopic(topic);
-                if (geoObject != null) {
-                    Topic bezirk = getRelatedBezirk(geoObject);
-                    Topic street = getRelatedAddressStreetName(geoObject);
-                    String zusatzInfo = "";
-                    if (street != null) zusatzInfo += street.getSimpleValue();
-                    if (bezirk != null) zusatzInfo += ", " + bezirk.getSimpleValue().toString();
-                    results.putGeoObject(new SearchResult(geoObject, zusatzInfo));
-                    count++;
-                }
-                if (count == max) break;
-            }
-            // Do Search for Angebote here too // Fixme: Move to dm4-kiezat-angebote plugin
-            count = 0;
-            List<Topic> angeboteTopics = dm4.searchTopics(queryValue, "ka2.angebot.name");
-            log.log(Level.INFO, "{0} geo topics found, {1} angebote topics found", new Object[]{singleTopics.size(), angeboteTopics.size()});
-            for (Topic topic : angeboteTopics) {
-                Topic angebot = topic.getRelatedTopic("dm4.core.composition",
-                    CHILD_ROLE, PARENT_ROLE, "ka2.angebot");
-                if (angebot != null) {
-                    results.putAngebot(new SearchResult(angebot));
-                    count++;
-                }
-                if (count == max) break;
-            }
-        } catch (Exception e) {
-            throw new RuntimeException("Searching geo object for auto completion failed", e);
-        }
-        return results;
     }
 
     /**
@@ -1517,39 +1554,6 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
                 }
             }
             log.info("Build up response " + results.size() + " geo objects across all districts");
-            return results;
-        } catch (Exception e) {
-            throw new RuntimeException("Searching geo object topics failed", e);
-        }
-    }
-
-    /**
-     * Builds up a list of search results (Geo Objects to be displayed in a map) by text query.
-     * @param referer
-     * @param query
-     */
-    @GET
-    @Path("/search/angebote")
-    @Produces(MediaType.APPLICATION_JSON)
-    public List<GeoMapView> searchAngebotsinfosFulltext(@HeaderParam("Referer") String referer,
-                                                        @QueryParam("search") String query) {
-        if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
-        try {
-            ArrayList<GeoMapView> results = new ArrayList<GeoMapView>();
-            if (isInvalidSearchQuery(query)) return results;
-            String queryValue = prepareLuceneQueryString(query, false, true, false, true);
-            // 2) Fetch unique geo object topics by text query string (leading AND ending ASTERISK)
-            List<RelatedTopic> offers = angebote.searchInAngebotsinfoChildsByText(queryValue);
-            // 3) Process saerch results and create DTS for map display
-            for (Topic angebot : offers) {
-                List<RelatedTopic> places = angebote.getAssignedGeoObjectTopics(angebot);
-                if (places != null && places.size() > 0) {
-                    GeoMapView angebotLocation = new GeoMapView(places.get(0), geomaps, angebote);
-                    angebotLocation.setAngebotSearchName(angebot.getSimpleValue().toString());
-                    results.add(angebotLocation);
-                }
-            }
-            log.info("Build up response " + offers.size() + " geo objects across all districts");
             return results;
         } catch (Exception e) {
             throw new RuntimeException("Searching geo object topics failed", e);
@@ -1615,8 +1619,8 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         // ### Todo: Fetch for ka2.ansprechpartner, traeger name, too
         HashMap<Long, Topic> uniqueResults = new HashMap<Long, Topic>();
         // Refactor prepareLucenQuery...
-        boolean forceExactQuery = (query.contains("?") || doExact);
-        String queryString = prepareLuceneQueryString(query, doSplitWildcards, appendWildcard, forceExactQuery, leadingWildcard);
+        // boolean forceExactQuery = (query.contains("?") || doExact);
+        String queryString = preparePhraseOrTermLuceneQuery(query);
         if (queryString != null) {
             List<Topic> searchResults = dm4.searchTopics(queryString, "ka2.geo_object.name");
             List<Topic> descrResults = dm4.searchTopics(queryString, "ka2.beschreibung");
@@ -3334,7 +3338,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         return recipients;
     }
 
-    private String prepareGeoObjectNameSearchPhrase(String userQuery) {
+    private String preparePhraseOrTermLuceneQuery(String userQuery) {
         StringBuilder queryPhrase = new StringBuilder();
         if (userQuery.contains(" ")) {
             queryPhrase.append("\"" + userQuery + "\"");

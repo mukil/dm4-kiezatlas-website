@@ -264,7 +264,7 @@ var kiezatlas = (function($, leafletMap, restc, favourites) {
         } **/
         parameter.page = "website"
         var viewportState = _self.create_viewport_parameter()
-        if (!viewMapOnly) _self.push_page_view(viewportState)
+        if (!viewSearchMap) _self.push_page_view(viewportState)
     }
 
     this.get_map_viewport_from_url = function() {

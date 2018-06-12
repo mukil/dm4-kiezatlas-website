@@ -1109,7 +1109,7 @@ select option[selected] {
 }
 
 .citymap #sidebar .logo {
-    max-height: 200px;
+    max-width: 90%;
     padding-bottom: .5em;
     padding-top: .5em;
 }
