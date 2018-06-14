@@ -14,17 +14,14 @@
         <script defer="true" type="text/javascript" src="/de.kiezatlas.website/css/semantic-ui/2.3/dist/semantic.min.js"></script>
         <script defer="true" type="text/javascript" src="/de.kiezatlas.website/dist/vendor/dm4-webclient-utils.min.js"></script>
         <script defer="true" type="text/javascript" src="/de.kiezatlas.website/vendor/dm4-webclient/util/gui_toolkit.js"></script>
-        <!--script defer="true" type="text/javascript" src="/de.kiezatlas.website/vendor/leaflet/leaflet.js"></script-->
         <script defer="true" type="text/javascript" src="/de.kiezatlas.angebote/vendor/ckeditor/ckeditor.js"></script>
         <script defer="true" type="text/javascript" src="/de.kiezatlas.angebote/vendor/ckeditor/config.js"></script>
         <script defer="true" type="text/javascript" src="/de.kiezatlas.website/ka-restclient.js"></script>
         <script defer="true" type="text/javascript" src="/de.kiezatlas.website/ka-model.js"></script>
         <script defer="true" type="text/javascript" src="/de.kiezatlas.website/search-angebote.js"></script>
         <script defer="true" type="text/javascript" src="/de.kiezatlas.website/ka-startseite.js" onload="init_page('place-edit')"></script>
-        <!--script defer="true" src="/de.kiezatlas.website/vendor/jquery/jquery-3.2.1.min.js"></script-->
         <script defer="true" type="text/javascript" src="/de.kiezatlas.website/css/semantic-ui/2.3/dist/semantic.min.js"></script>
         <script defer="true" type="text/javascript" src="/de.kiezatlas.website/vendor/leaflet-1.3.1/leaflet.js"></script>
-        <!-- script src="/de.kiezatlas.website/ka-map.js"></script-->
 
         <script type="text/javascript" th:inline="javascript">
         /*<![CDATA[*/
@@ -245,35 +242,34 @@
             }
 
             function search_for_duplicates() {
-                if ($('#geo-id').val() === "-1") { // Attempt to create a new geo object
+                if (geoObjectId === -1) { // In an attempt to create a new geo object
                     var nameInput = $('#geoname').val()
                     if (nameInput.length < 3) return;
                     // var streetInput = $('#streetnr').val()
-                    var $area = $('#duplicates')
-                    $.getJSON('/website/search/name/duplicates?geoobject=' + nameInput, function(results) {
-                        if (results && results.length > 0 && results.length < 20) {
-                            $area.html("Im Kiezatlas gibt es bereits einige Orte unter diesem Namen:<br/>")
-                            for (var e in results) {
-                                var result = results[e]
-                                if (result){
-                                    var html = '<a href="/website/geo/'+result.id+'" title="Öffnet diesen Datensatz '
-                                        + 'in einem neuen Fenster" target="_blank">'+ result.name + '</a>'
-                                    if (e < results.length - 1) html+= ", "
-                                    $area.append(html)
+                    $.getJSON('/website/search/name/duplicates?geoobject=' + nameInput, function(existingGeoObjects) {
+                        $('#duplicates').empty()
+                        $('#duplicates').hide()
+                        if (existingGeoObjects && existingGeoObjects.length > 0 && existingGeoObjects.length < 20) {
+                            $('#duplicates').html("Achtung: Im Kiezatlas gibt es bereits einige Orte mit &auml;hnlichem Namen:<br/>")
+                            for (var e in existingGeoObjects) {
+                                var duplicate = existingGeoObjects[e]
+                                if (duplicate) {
+                                    var html = '<a href="/website/geo/'+duplicate.id+'" title="Öffnet diesen Datensatz '
+                                        + 'in einem neuen Fenster" target="_blank">'+ duplicate.name + '</a>'
+                                    if (e < existingGeoObjects.length - 1) html+= ", "
+                                    $('#duplicates').append(html)
                                 }
                             }
-                            $area.append("<br/>Sind Sie sich sicher das Sie dies als neuen Ort anlegen m&ouml;chten?")
-                        } else if (results.length === 0) {
-                            $area.empty()
-                        } else if (results.length > 30) {
-                            console.warn("Es gibt zu viele Treffer für den Namen..")
-                            $area.empty()
+                            $('#duplicates').append("<br/>Sind Sie sich sicher das Sie einen neuen Ort eintragen m&ouml;chten?")
+                            $('#duplicates').show()
+                        } else if (existingGeoObjects.length > 20) {
+                            $('#duplicates').append('Achtung: Es gibt bereits mehr als 30 Orte im Kiezatlas mit einem ähnlichen Namen. '
+                             + 'Bitte pr&uuml;fen Sie die Existenz des von Ihnen gew&uuml;nschten Neueintrags mithilfe der obigen Karte nach Angabe des Standorts oder unserer '
+                             + '<a href="/" title="Öffnet unsere Suchseite in einem neuen Fenster" target="_blank">Suche</a> bevor Sie diesen neuen Ort anlegen. Vielen Dank f&uuml;r Ihre Unterst&uuml;tzung!')
+                            $('#duplicates').show()
                         }
-                        console.log("Duplicates search for geo objects", results)
                     })
-                } else {
-                    console.log("Editing an existing geo object..")
-                }
+                } // Editing an existing geo object...
                 is_valid_district()
                 is_valid_zip_code()
                 is_valid_email()
@@ -369,7 +365,8 @@
             </div>
 
             <div class="ui vertical container segment form">
-                <div class="message" id="duplicates"></div>
+                <div id="duplicates" class="blue2bg white"></div>
+                <div class="message"></div>
                 <div th:if="${!#strings.isEmpty(warning)}" th:utext="${warning}" class="warning message"></div>
                 <form class="infos ui form" id="geoobject-form" action="/website/geo/save" method="POST">
                     <input th:if="${!#strings.isEmpty(geoobject.id)}" type="hidden" id="geo-id" name="id" th:value='${geoobject.id}'/>

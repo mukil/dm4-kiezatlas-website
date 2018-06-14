@@ -32,6 +32,18 @@ select.ui.dropdown {
     width: auto;
 }
 
+.edit #duplicates {
+    margin-top: 1em;
+    padding: .5em;
+    z-index: 2000;
+    border-radius: 0.285em;
+    display: none;
+}
+
+.edit #duplicates a:hover {
+    color: #f8f6e9;
+}
+
 form .invalid {
     border-color: #ce0000 !important;
     border-width: 2px;

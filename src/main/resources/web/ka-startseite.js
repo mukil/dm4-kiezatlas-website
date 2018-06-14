@@ -1228,7 +1228,9 @@ function init_editors_list() {
 }
 
 function init_filter_list() {
-    $('#listing').dataTable({ "lengthMenu": [ 10, 25, 50, 75, 100, 250, 500, 750, 1000, 2000 ] })
+    moment.locale('de')
+    $.fn.dataTable.moment('LL', 'de')
+    $('#listing').dataTable({ "lengthMenu": [[ -1, 1000, 750, 500, 250, 100, 50, 10 ], [ "All", 1000, 750, 500, 250, 100, 50, 10] ] })
 }
 
 function refresh_list_filter() {
