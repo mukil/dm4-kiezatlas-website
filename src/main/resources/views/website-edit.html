@@ -423,7 +423,7 @@
                                 <input type="text" name="fax" th:value='${geoobject.fax}'/>
                             </div>
                             <label for="thema">Thema</label>
-                            <select id="thema" class="ui mutiple selection fluid dropdown" name="themen" multiple="true">
+                            <select id="thema" class="ui multiple selection fluid" name="themen" multiple="true">
                                 <option th:each="category : ${availableThemen}"
                                         th:selected="${themen.contains(category)}"
                                         th:value="${category.id}" th:text="${category.simpleValue}"></option>
@@ -442,8 +442,8 @@
                             <!-- Geo Coordinate Settings -->
                             <label>Standortangabe (Geo Koordinate, Breiten- und L&auml;ngengrad)<span class="required">*</span></label>
                             <div class="ui input">
-                                <input class="coordinates" onchange="do_manual_placement()" id="latitude-val" type="number" step="any" name="lat" th:value='${geoobject.latitude}'/>
-                                <input class="coordinates" onchange="do_manual_placement()" id="longitude-val" type="number" step="any" name="lon" th:value='${geoobject.longitude}'/>
+                                <input class="coordinates" onchange="do_manual_placement()" id="latitude-val" type="number" step="0.00001" name="lat" th:value='${geoobject.latitude}'/>
+                                <input class="coordinates" onchange="do_manual_placement()" id="longitude-val" type="number" step="0.00001" name="lon" th:value='${geoobject.longitude}'/>
                             </div><br/><br/>
                             <label for="lat">Eingabe m&ouml;glich durch <b>klicken &amp; ziehen des Markers</b> in der Karte (oben) oder
                                     &uuml;ber die Angabe der Adresse (links) und die Funktion <b>Automatisch ermitteln</b>.</label>
@@ -475,13 +475,13 @@
                             <!-- Geo Object Category Relations: Zielgruppe und Thema -->
                             <div th:if="${!simple}">
                                 <label for="zielgruppen">Zielgruppe</label>
-                                <select id="zielgruppen" class="ui mutiple fluid selection dropdown" name="zielgruppen" multiple="true">
+                                <select id="zielgruppen" class="ui multiple fluid selection" name="zielgruppen" multiple="true">
                                     <option th:each="category : ${availableZielgruppen}"
                                             th:selected="${zielgruppen.contains(category)}"
                                             th:value="${category.id}" th:text="${category.simpleValue}"></option>
                                 </select>
                                 <label for="angebote-crit">Angebot</label>
-                                <select id="angebote-crit" class="ui mutiple fluid selection dropdown" name="angebote" multiple="true">
+                                <select id="angebote-crit" class="ui multiple fluid selection" name="angebote" multiple="true">
                                     <option th:each="thema : ${availableAngebote}" th:value="${thema.id}" th:text="${thema.simpleValue}"></option>
                                 </select>
                             </div>
