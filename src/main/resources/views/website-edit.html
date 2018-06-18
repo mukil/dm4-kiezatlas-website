@@ -89,6 +89,10 @@
                 })
             }
 
+            function clear_multiple_selection(e) {
+                console.log("Clear selection", e)
+            }
+
             function do_geocode() {
                 var streetNr = document.getElementById('streetnr').value
                 var zipCode = document.getElementById('postal-code').value
@@ -428,6 +432,7 @@
                                         th:selected="${themen.contains(category)}"
                                         th:value="${category.id}" th:text="${category.simpleValue}"></option>
                             </select>
+                            <a onclick="javascript:clear_multiple_selection(this)" id="select-angebote">Thema zurücksetzen</a>
                             <!-- Image File Upload>
                             <label for="bild">Bild</label>
                             <div class="ui fluid image">
@@ -480,10 +485,12 @@
                                             th:selected="${zielgruppen.contains(category)}"
                                             th:value="${category.id}" th:text="${category.simpleValue}"></option>
                                 </select>
+                                <a onclick="javascript:clear_multiple_selection(this)" id="select-zielgruppe">Zielgruppe zurücksetzen</a>
                                 <label for="angebote-crit">Angebot</label>
                                 <select id="angebote-crit" class="ui multiple fluid selection" name="angebote" multiple="true">
                                     <option th:each="thema : ${availableAngebote}" th:value="${thema.id}" th:text="${thema.simpleValue}"></option>
                                 </select>
+                                <a onclick="javascript:clear_multiple_selection(this)" id="select-angebote">Auswahl zurücksetzen</a>
                             </div>
                         </div>
                         <!--
