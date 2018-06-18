@@ -889,7 +889,7 @@ function update_search_criteria_dialog() {
         enableQuickSearchCheckbox()
         if (searchMethod === "quick") {
             // deactivate district filter
-            disableDistrictCheckboxes()
+            // disableDistrictCheckboxes()
             checkQuickSearchbox()
             // checkBerlinwideSearchbox()
         } else if (searchMethod === "fulltext") {
@@ -958,6 +958,10 @@ function hideNearbySearch() {
 }
 
 function berlinSearchChecked(e) {
+    if (searchMethod === "quick") {
+        // switch to fulltext search when user clicks on district
+        fulltextSearchChecked()
+    }
     if (frontpage) {
         // set district filter
         $('.ui.grid.filter .column.nearby').addClass('hidden')
