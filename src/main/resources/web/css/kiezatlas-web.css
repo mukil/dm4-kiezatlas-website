@@ -1102,6 +1102,10 @@ select option[selected] {
     display: block;
 }
 
+.info-area label.criteria {
+    margin-top: 1em;
+}
+
 /** CityMap Styles **/
 
 

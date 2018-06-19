@@ -90,7 +90,8 @@
             }
 
             function clear_multiple_selection(e) {
-                console.log("Clear selection", e)
+                var domId = e.id.substr(7)
+                $('select#' + domId + ' option[selected="selected"]').removeAttr("selected")
             }
 
             function do_geocode() {
@@ -431,8 +432,8 @@
                                 <option th:each="category : ${availableThemen}"
                                         th:selected="${themen.contains(category)}"
                                         th:value="${category.id}" th:text="${category.simpleValue}"></option>
-                            </select>
-                            <a onclick="javascript:clear_multiple_selection(this)" id="select-angebote">Thema zurücksetzen</a>
+                            </select><br/>
+                            <a onclick="javascript:clear_multiple_selection(this)" class="ui button small red" id="select-thema">Themen zur&uuml;cksetzen</a>
                             <!-- Image File Upload>
                             <label for="bild">Bild</label>
                             <div class="ui fluid image">
@@ -479,18 +480,18 @@
 
                             <!-- Geo Object Category Relations: Zielgruppe und Thema -->
                             <div th:if="${!simple}">
-                                <label for="zielgruppen">Zielgruppe</label>
+                                <label for="zielgruppen" class="criteria">Zielgruppe</label>
                                 <select id="zielgruppen" class="ui multiple fluid selection" name="zielgruppen" multiple="true">
                                     <option th:each="category : ${availableZielgruppen}"
                                             th:selected="${zielgruppen.contains(category)}"
                                             th:value="${category.id}" th:text="${category.simpleValue}"></option>
-                                </select>
-                                <a onclick="javascript:clear_multiple_selection(this)" id="select-zielgruppe">Zielgruppe zurücksetzen</a>
-                                <label for="angebote-crit">Angebot</label>
+                                </select><br/>
+                                <a onclick="javascript:clear_multiple_selection(this)" class="ui button small red" id="select-zielgruppen">Zielgruppen zur&uuml;cksetzen</a>
+                                <label for="angebote-crit" class="criteria">Angebot</label>
                                 <select id="angebote-crit" class="ui multiple fluid selection" name="angebote" multiple="true">
                                     <option th:each="thema : ${availableAngebote}" th:value="${thema.id}" th:text="${thema.simpleValue}"></option>
-                                </select>
-                                <a onclick="javascript:clear_multiple_selection(this)" id="select-angebote">Auswahl zurücksetzen</a>
+                                </select><br/>
+                                <a onclick="javascript:clear_multiple_selection(this)" class="ui button small red" id="select-angebote-crit">Angebote zur&uuml;cksetzen</a>
                             </div>
                         </div>
                         <!--
