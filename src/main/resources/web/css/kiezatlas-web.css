@@ -1032,6 +1032,27 @@ select option[selected] {
     padding: .5em;
 }
 
+.ui.input > input::-webkit-input-placeholder { /* WebKit, Blink, Edge */
+    color: rgba(100,100,100,.95);
+}
+.ui.input > input:-moz-placeholder { /* Mozilla Firefox 4 to 18 */
+    color: rgb(100,100,100);
+    opacity: .95;
+}
+.ui.input > input::-moz-placeholder { /* Mozilla Firefox 19+ */
+    color: rgb(100,100,100);
+    opacity: .95;
+}
+.ui.input > input:-ms-input-placeholder { /* Internet Explorer 10-11 */
+    color: rgba(100,100,100,.95);
+}
+.ui.input > input::-ms-input-placeholder { /* Microsoft Edge */
+    color: rgba(100,100,100,.95);
+}
+.ui.input > input::placeholder { /* Most modern browsers support this now. */
+    color: rgba(100,100,100,.95);
+}
+
 .sign-up .ui.input input[type="password"],
 .sign-up .ui.input input[type="text"] {
     margin-bottom: .5em;
