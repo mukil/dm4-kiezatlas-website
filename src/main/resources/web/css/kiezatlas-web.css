@@ -1032,6 +1032,11 @@ select option[selected] {
     padding: .5em;
 }
 
+/**
+Using answer by fuxia adapted to semantic-ui rules:
+Source: https://stackoverflow.com/questions/2610497/change-an-html5-inputs-placeholder-color-with-css#2610741
+**/
+
 .ui.input > input::-webkit-input-placeholder { /* WebKit, Blink, Edge */
     color: rgba(100,100,100,.95);
 }
