@@ -388,7 +388,7 @@ a.blue4,
 .assignment label,
 span.label,
 h3.label {
-    color: #a9a9a9;
+    color: #383838;
 }
 
 .big-char {
@@ -917,6 +917,10 @@ select option[selected] {
 .angebotsinfos .geo-objects-area a.read-more:hover {
     color: #3e606f !important;
     box-shadow: 2px 2px 2px 0px #a9a9a9;
+}
+
+.angebotsinfos .einrichtungen {
+    margin-top: 1em;
 }
 
 .angebotsinfos .einrichtungen a,
