@@ -3699,7 +3699,15 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         Collections.sort(topics, new Comparator<Topic>() {
             public int compare(Topic t1, Topic t2) {
                 String one = t1.getSimpleValue().toString().toLowerCase();
+                one = one.replaceAll("ä", "ae");
+                one = one.replaceAll("ü", "ue");
+                one = one.replaceAll("ö", "oe");
+                one = one.replaceAll("ß", "ss");
                 String two = t2.getSimpleValue().toString().toLowerCase();
+                two = two.replaceAll("ä", "ae");
+                two = two.replaceAll("ü", "ue");
+                two = two.replaceAll("ö", "oe");
+                two = two.replaceAll("ß", "ss");
                 return one.compareTo(two);
             }
         });

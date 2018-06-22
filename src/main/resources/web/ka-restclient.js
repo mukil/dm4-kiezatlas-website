@@ -6,12 +6,12 @@ var karestc = (function($) {
     console.log("REST Client Module (jQuery based) Loaded")
     
     function value_sort_asc(a, b) {
-        var nameA = a.value
-        var nameB = b.value
+        var nameA = a.value.toLowerCase().replace("ä", "ae").replace("ö", "oe").replace("ü", "ue").replace("ß", "ss")
+        var nameB = b.value.toLowerCase().replace("ä", "ae").replace("ö", "oe").replace("ü", "ue").replace("ß", "ss")
         //
-        if (nameA.toLowerCase() > nameB.toLowerCase()) // sort string descending
+        if (nameA > nameB)
           return 1
-        if (nameA.toLowerCase() < nameB.toLowerCase())
+        if (nameA < nameB)
           return -1
         return 0 //default return value (no sorting)
     }
