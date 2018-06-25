@@ -1833,6 +1833,14 @@ div.location-label {
     padding-bottom: 1.5em;
 }
 
+.result-list h2.result-type {
+    margin-bottom: .5em;
+}
+
+.result-list h2.result-type.last {
+    margin-top: 1em;
+}
+
 .ui .result-list .container {
     position: relative;    
 }

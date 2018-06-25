@@ -1110,6 +1110,14 @@ function render_place_search_results(from, to, count, $container) {
     }
 }
 
+function render_list_item_header($container, headline, last) {
+    if (last) {
+        $container.append('<div><h2 class="result-type middle">' + headline + '</h2></div>')
+    } else {
+        $container.append('<div><h2 class="result-type">' + headline + '</h2></div>')
+    }
+}
+
 function render_fulltext_list_item(el, $container) {
     $container.append(get_event_list_item_html(el))
 }

@@ -264,6 +264,12 @@ function render_angebote_search_results(distinct_results) {
         }
     } else { // Rendering of distinct search results per parameter
         if (angebotsinfos.spatial) {
+            if (location_coords && typeof location_coords.name !== "undefined") {
+                cleanup_location_coords_name(location_coords.name)
+                var headline = 'Angebote in der N&auml;he von "' + location_coords.name + '"'
+                if (angebotsinfos.fulltext && angebotsinfos.fulltext.length == 0) headline += ' ohne das Stichwort "' + search_input[0] + '"'
+                render_list_item_header($listing, headline)
+            }
             // special sorting by distance
             angebotsinfos.spatial.sort(angebote_compare_by_distance_nearest_first)
             // render_result_header(angebotsinfos.spatial, $listing, 'in der N&auml;he des Standorts')
@@ -273,7 +279,9 @@ function render_angebote_search_results(distinct_results) {
             }
         }
         // overall (text search listing) not necessarily with locations assigned
-        if (angebotsinfos.fulltext) {
+        if (angebotsinfos.fulltext && angebotsinfos.fulltext.length > 0) {
+            // ### support many keywords
+            render_list_item_header($listing, 'Angebote unter dem Stichwort "' + search_input[0] + '"', true)
             angebotsinfos.fulltext.sort(angebote_compare_by_end_earliest_last)
             // render_result_header(angebotsinfos.fulltext, $listing, 'in der Stichwortsuche')
             for (var el in angebotsinfos.fulltext) {
@@ -396,12 +404,7 @@ function toggle_location_parameter_display($filter_area) {
         parameterHTML += '&nbsp;in der N&auml;he von'
         parameterHTML += '<div class="name">'
         if (location_coords.name) { // cleanup location name
-            if (location_coords.name.indexOf(', Germany') !== -1) {
-                location_coords.name = location_coords.name.replace(', Germany', '')
-            }
-            if (location_coords.name.indexOf(' Berlin') !== -1) {
-                location_coords.name = location_coords.name.replace(' Berlin', '')
-            }
+            cleanup_location_coords_name(location_coords.name)
             parameterHTML += ' \"' + location_coords.name + '\"'
         }
         parameterHTML += ' <span class="coord-values">(' + location_coords.longitude.toFixed(3)
@@ -419,6 +422,18 @@ function toggle_location_parameter_display($filter_area) {
         }
     } else {
         $('.query-parameter .parameter.location').remove()
+    }
+}
+
+function cleanup_location_coords_name() {
+    if (location_coords.name.indexOf(', Germany') !== -1) {
+        location_coords.name = location_coords.name.replace(', Germany', '')
+    }
+    if (location_coords.name.indexOf(', Berlin') !== -1) {
+        location_coords.name = location_coords.name.replace(', Berlin', '')
+    }
+    if (location_coords.name.indexOf(' Berlin') !== -1) {
+        location_coords.name = location_coords.name.replace(' Berlin', '')
     }
 }
 
@@ -570,15 +585,6 @@ function remove_all_text_parameter(e) {
     render_query_parameter()
     update_search_location_parameter()
     angebotsinfos = undefined
-}
-
-function handle_tag_button_select(e) {
-    var tagname = e.text
-    remove_all_text_parameter(false)
-    remove_time_parameter(false)
-    $("#query").val(tagname + ", ")
-    scroll_to_element("query")
-    fire_angebote_search()
 }
 
 function handle_location_form(e) {
