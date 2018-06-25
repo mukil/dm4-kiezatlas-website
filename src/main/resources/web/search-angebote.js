@@ -281,7 +281,9 @@ function render_angebote_search_results(distinct_results) {
         // overall (text search listing) not necessarily with locations assigned
         if (angebotsinfos.fulltext && angebotsinfos.fulltext.length > 0) {
             // ### support many keywords
-            render_list_item_header($listing, 'Angebote unter dem Stichwort "' + search_input[0] + '"', true)
+            if (angebotsinfos.spatial.length > 0) {
+                render_list_item_header($listing, 'Angebote unter dem Stichwort "' + search_input[0] + '"', true)
+            }
             angebotsinfos.fulltext.sort(angebote_compare_by_end_earliest_last)
             // render_result_header(angebotsinfos.fulltext, $listing, 'in der Stichwortsuche')
             for (var el in angebotsinfos.fulltext) {
