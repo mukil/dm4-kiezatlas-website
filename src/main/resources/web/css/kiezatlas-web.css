@@ -93,6 +93,11 @@ form .invalid {
     height: 52px;
 }
 
+.ui .top.menu.fixed .fixed-border .ui.item,
+.ui .top.menu.fixed .fixed-border a {
+    color: #fff;
+}
+
 .ui.webpages .top.fixed.menu.transition.visible,
 .ui.webpages .top.menu.fixed .fixed-border {
     height: 58px;
@@ -2087,7 +2092,6 @@ div.location-label {
 }
 
 .webpages .masthead.segment {
-    padding-top: 0em;
     min-height: auto;
 }
 
@@ -2323,6 +2327,7 @@ div.location-label {
         display: none;
     }
     #map-sidebar {
+        top: 7.7em;
         width: 50%;
     }
     .page.detail .container.entry {
@@ -2335,6 +2340,9 @@ div.location-label {
         margin-top: 1em;
         margin-left: 1em;
         width: 50%;
+    }
+    .webpages .ui.vertical.stripe {
+        padding: 1em 0em;
     }
 }
 
