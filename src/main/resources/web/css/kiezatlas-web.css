@@ -93,8 +93,8 @@ form .invalid {
     height: 52px;
 }
 
-.ui .top.menu.fixed .fixed-border .ui.item,
-.ui .top.menu.fixed .fixed-border a {
+.webpages.ui .top.menu.fixed .fixed-border .ui.item,
+.webpages.ui .top.menu.fixed .fixed-border a {
     color: #fff;
 }
 
