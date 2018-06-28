@@ -3385,7 +3385,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     }
 
     private void sendGeoObjectCreationNotice(String subject, Topic geoObject, Topic username) {
-        String recipients = buildEditorialNotificationRecipients(geoObject, false, false, false);
+        String recipients = buildEditorialNotificationRecipients(geoObject, false, false, true);
         String detailsPage = SignupPlugin.DM4_HOST_URL+"website/geo/" + geoObject.getId();
         String loginPage = SignupPlugin.DM4_HOST_URL + "sign-up/login";
         signup.sendUserMailboxNotification(recipients, subject, "<br/>Liebe/r Bezirk-Administrator_in,<br/><br/>"
@@ -3554,6 +3554,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
                 String emailAddress = dm4.getAccessControl().getEmailAddress(username.getSimpleValue().toString());
                 if (emailAddress != null && !emailAddress.isEmpty()) {
                     mailboxes.add(emailAddress);
+                    log.info("> Added " + emailAddress + " to the notification-loop");
                 }
             } catch (RuntimeException re) {
                 log.warning("No Email Address assigned to username " + username);
@@ -3567,11 +3568,13 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         if (bezirk != null && (!onlyRegional || onlyDistrict)) {
             List<RelatedTopic> usernames = bezirk.getRelatedTopics("dm4.core.association", DEFAULT_ROLE,
                 DEFAULT_ROLE, "dm4.accesscontrol.username");
+            log.info("Add Bezirks Ansprechpartner for " + bezirk.getSimpleValue().toString() + " to the Notification-Loop... ");
             collectMailBoxes(mailboxes, usernames);
         }
         if (bezirksregion != null && !onlyDistrict) {
             List<RelatedTopic> regionals = bezirksregion.getRelatedTopics(USER_ASSIGNMENT, DEFAULT_ROLE,
                 DEFAULT_ROLE, "dm4.accesscontrol.username");
+            log.info("Add Bezirksregion Ansprechpartner for " + bezirksregion.getSimpleValue().toString() + " to the Notification-Loop... ");
             collectMailBoxes(mailboxes, regionals);
         }
         if (addSystemMailbox) mailboxes.add(SYSTEM_MAINTENANCE_MAILBOX);
