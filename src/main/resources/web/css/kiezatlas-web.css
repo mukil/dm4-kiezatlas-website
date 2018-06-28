@@ -1798,7 +1798,7 @@ ul.soziale-einrichtungen .einrichtungen li {
     position: fixed; bottom: 100px; left: 0px;
     padding: 10px;
     font-size: 1em;
-    line-height: 1.4; font-weight: italic;
+    line-height: 1.4; font-style: italic;
     z-index: 1002; display: none;
     /** background: linear-gradient(rgb(252, 237, 167), rgb(251, 239, 126)) repeat scroll 0% 0% rgb(250, 219, 78); **/
     max-width: 370px;
@@ -1813,6 +1813,46 @@ div.location-label {
     display: inline-block;
     font-style: italic;
 }
+
+.ui.mini.search-place {
+    margin-left: 1em;
+    position: relative;
+    top: -0.5em;
+    width: 250px;
+}
+
+#street-alternatives {
+    display: none;
+}
+
+.prev-location,
+.next-location {
+    margin: 10px;
+    background-color: #fff;
+    padding: 3px;
+    cursor: pointer;
+    border: 1px solid transparent;
+}
+
+.prev-location {
+    margin-right: 5px;
+    padding-right: .45em;
+    padding-left: .45em;
+}
+
+.next-location {
+    padding-right: .45em;
+    padding-left: .45em;
+    margin-left: 5px;
+}
+
+.prev-location.defused,
+.next-location.defused {
+    cursor: auto;
+    opacity: .3;
+    text-decoration: none;
+}
+
 
 .page.detail .angebote a i.icon,
 .result-list .item i.icon,
@@ -2290,6 +2330,11 @@ div.location-label {
     }
     .ui.page.detail #map {
         height: 300px;
+    }
+    .ui.mini.search-place {
+        margin-top: 1em;
+        margin-left: 1em;
+        width: 50%;
     }
 }
 

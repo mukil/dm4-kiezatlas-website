@@ -69,7 +69,7 @@ function hide_search_options() {
 
 // Register Near-By Text Search Handler
 function search_location_by_text() {
-    var streetFocus = $("#near-by").val() + ' Berlin, Deutschland'
+    var streetFocus = $("#search-place").val() + ' Berlin, Deutschland'
         streetFocus = encodeURIComponent(streetFocus, "UTF-8")
     $('.location-search-info').hide()
     // if a district filter is set on the website, remove it

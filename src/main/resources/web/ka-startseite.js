@@ -757,6 +757,12 @@ function register_key_handlers() {
             do_search_streetcoordinates()
         }
     })
+    $('#search-place').keyup(function(e) {
+        const keyName = e.key
+        if (keyName === "Enter") {
+            search_location_by_text()
+        }
+    })
 }
 
 function do_angebote_search() {
