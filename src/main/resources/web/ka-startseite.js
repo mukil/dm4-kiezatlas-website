@@ -788,15 +788,15 @@ function do_text_search() {
     searchText = get_search_input()
     show_results_container()
     show_loading_search()
-    // 1) Do kiezatlas specific query expansion
-    // ### do_text_query_expansion(searchText)
-    // 2) Do geo object or event fulltext search
+    // Do geo object or event fulltext search
     var queryUrl = '/website/search/name/quick?query=' + searchText
     if (searchType === "event") {
         // Fire search query
         do_angebote_search()
     } else if (searchType === "place") {
-        // Prepare the correct search endpoint
+        // 1) Do kiezatlas address and place specific query expansion
+        do_text_query_expansion(searchText)
+        // 2) Prepare the correct search endpoint
         if (searchMethod === "fulltext") {
             queryUrl = '/website/search/?search=' + searchText
             if (searchContext != 0) {
@@ -823,12 +823,43 @@ function do_text_search() {
 function do_text_query_expansion() {
     var query = get_search_input()
     var streetNameResource = "/website/search/name/street?name=" + encodeURIComponent(query)
-    var bezirksregionNameResource = "/website/search/name/region?name=" + encodeURIComponent(query)
+    // var bezirksregionNameResource = "/website/search/name/region?name=" + encodeURIComponent(query)
     $.getJSON(streetNameResource, function (addresses) {
-        console.log(addresses.length, "Addresses identified", addresses, "for street name query " + query)
+        console.log(addresses.length, "Addresses found", addresses)
+        if (addresses.length > 0) {
+            var streetNames = '<div>Stattdessen suchen nach Einrichtungen mit '
+            streetNames += '<span class="parameter" onclick="do_street_query(this)">' + query +'</span> als Adresse?'
+            /** for (var ai in addresses) {
+                var obj = addresses[ai]
+                streetNames += '<span class="parameter" id="'+obj.id+'" onclick="do_street_query(this)">' + obj.value +'</span>'
+            } **/
+            streetNames += '</div>'
+            $('.segment.query-hint').empty()
+            $('.segment.query-hint').append(streetNames)
+            $('.segment.query-hint').show()
+        }
     })
-    $.getJSON(bezirksregionNameResource, function (bezirksregionen) {
+    /** $.getJSON(bezirksregionNameResource, function (bezirksregionen) {
         console.log(bezirksregionen.length, "Bezirksregionen identified", bezirksregionen, "for bezirksregion name query " + query)
+    }) **/
+}
+
+function do_street_query(el) {
+    var streetNameResource = "/website/search/street?name=" + encodeURIComponent(el.innerText)
+    checkBerlinwideSearchbox()
+    show_search_loading_sign()
+    $.getJSON(streetNameResource, function (geo_objects) {
+        $('.segment.query-hint').empty()
+        $('.segment.query-hint').hide()
+        var $container = $('.result-list .container')
+        $container.empty()
+        if (geo_objects.length > 0) {
+            results = geo_objects
+            console.log("Render search results", results)
+            render_place_fulltext_search_results(0, geo_objects.length, geo_objects.length, $container)
+            hide_search_loading_sign()
+            show_results_container()
+        }
     })
 }
 
@@ -1101,7 +1132,7 @@ function render_place_fulltext_search_results(from, to, count, $container) {
                 + '<i class="icon caret right"></i>mehr Infos</a></div></div>')
         }
     }
-    if (to > count) {
+    if (to >= count) {
         hide_more_results_button()
     } else {
         show_more_results_button(count)

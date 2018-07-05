@@ -803,10 +803,20 @@ select option[selected] {
     padding: 0em;
 }
 
+.segment.query-hint .parameter,
 .segment.query-parameter .parameter,
 .page.detail .stichworte,
 .page.detail .related-topics {
     margin-top: .5em;
+}
+
+.segment.query-hint .parameter {
+    cursor: pointer;
+}
+
+.segment.query-hint .parameter:hover {
+    background-color: #3787ab;
+    color: #fff;
 }
 
 .page.detail .stichworte label,
@@ -818,6 +828,7 @@ select option[selected] {
     display: inline-block;
 }
 
+.segment.query-hint .parameter,
 .segment.query-parameter .parameter {
     border-radius: 8.5px;
     padding: .2em;
