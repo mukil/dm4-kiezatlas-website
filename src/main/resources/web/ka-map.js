@@ -330,7 +330,6 @@ var leafletMap = (function($, L) {
 
     map.calculate_selected_circle_options = function(geo_object) {
         var hasAngebote = (geo_object["angebote_count"] > 0) ? true : false
-        console.log("Selected Marker", geo_object, hasAngebote)
         return {
             color: (hasAngebote) ? model.colors.ka_yellow : model.colors.blue3, weight: 3, opacity: 1,
             fillColor: (hasAngebote) ? model.colors.blue3 : model.colors.blue2, fillOpacity: 1, className: "selected"
@@ -435,6 +434,10 @@ var leafletMap = (function($, L) {
 
     map.pan_to = function(coordinate) {
         return map.map.panTo(coordinate)
+    }
+
+    map.set_view = function(viewport) {
+        map.map.setView(viewport)
     }
 
     map.get_map_center = function() {
@@ -562,7 +565,6 @@ var leafletMap = (function($, L) {
     }
 
     map.fire_geo_marker_select = function(selection) {
-        console.log("fire geo marker select", map.elementId)
         var domElement = document.getElementById(map.elementId)
         fire_custom_event(domElement, 'marker_select', selection)
     }

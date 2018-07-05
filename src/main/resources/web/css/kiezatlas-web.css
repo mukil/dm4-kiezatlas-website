@@ -27,6 +27,7 @@ select.ui.multiple {
     max-width: 550px;
 }
 
+.front .warning,
 .edit .warning {
     margin-top: 1em;
     padding: .5em;

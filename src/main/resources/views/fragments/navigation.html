@@ -44,6 +44,7 @@
                  th:text="${district.simpleValue}" th:href="'/#' + ${district.id}">Mitte</a>
         </div-->
         <div class="menu">
+            <a href="/" th:class="'item gesamt'">Gesamtstadtplan</a>
             <a href="/#charlottenburg-wilmersdorf" th:class="'item cw'">Charlottenburg-Wilmersdorf</a>
             <a href="/#friedrichshain-kreuzberg" th:class="'item fk'">Friedrichshain-Kreuzberg</a>
             <a href="/#lichtenberg" th:class="'item lichtenberg'">Lichtenberg</a>
@@ -180,6 +181,7 @@
                         <!-- Find # NOJS Solution for navigating to district frontpages -->
                         <span>Bezirksseiten</span> <i class="dropdown icon"></i>
                         <div class="menu">
+                            <a href="/" th:class="'item gesamt'">Gesamtstadtplan</a>
                             <a href="/#charlottenburg-wilmersdorf" th:class="'item cw'">Charlottenburg-Wilmersdorf</a>
                             <a href="/#friedrichshain-kreuzberg" th:class="'item fk'">Friedrichshain-Kreuzberg</a>
                             <a href="/#lichtenberg" th:class="'item lichtenberg'">Lichtenberg</a>

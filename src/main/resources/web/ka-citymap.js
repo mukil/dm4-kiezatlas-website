@@ -248,7 +248,7 @@ var citymap = {
                 + '<a class="button" href="' + ortseintrag_link + '">Aktuelle Angebote anzeigen</a></div>'
         }
         if (kiezatlas.get_site_info() && !kiezatlas.get_site_info().fahrinfoLink) {
-            console.log("Website info", kiezatlas.get_site_info())
+            // ### TODO: implement remaining citymap configuration options
             fahrinfoLink = ''
         }
         var body_text = ""

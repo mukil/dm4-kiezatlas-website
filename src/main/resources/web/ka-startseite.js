@@ -38,7 +38,7 @@ var results = [],
     viewCityMap = false
 
 var $sidebarUi = undefined
-
+var currentViewport = undefined
 // --- Page Methods -- //
 
 function init_page(page) {
@@ -53,36 +53,31 @@ function init_page(page) {
     // ### $('.ui.sidebar').sidebar()
     // initialize data on districts
     load_district_data(function() {
-        // On any page this script is loaded we render the district menu
-        if (typeof districtId !== "undefined") {
-            render_district_menu({ id: districtId })
-        } else {
-            render_district_menu()
-        }
-            // --- End User Facing Pages --- //
+        // --- End User Facing Pages --- //
         if (page === "startseite") {
-            // Register historyState API
-            register_pop_state_navigation()
             get_location_hash_from_url()
-            get_viewport_from_url()
-            console.log("Initialized startseite page", parameter.page, searchText, searchType, searchMethod, searchContext, searchNearby, "mitte", subdomain_mitte)
+            currentViewport = get_viewport_from_url()
+            console.log("Initializing startseite", parameter.page, searchText, searchType, searchMethod, searchContext, searchNearby, "mitte", subdomain_mitte, "viewport", currentViewport)
             if (subdomain_mitte) {
                 bezirksTopic = get_bezirks_topic_by_id(7275)
                 searchContext = bezirksTopic.id
+                render_district_menu({ id: searchContext })
                 render_frontpage("bezirk") // by bezirksTopic
             } else if (searchContext !== 0 && searchContext != null) {
+                bezirksTopic = get_bezirks_topic_by_id(searchContext)
                 render_frontpage("bezirk") // by searchContext Id
-            } else if (parameter.page) {
+            } else if (parameter.page && parameter.page !== "#gesamt") {
                 bezirksTopic = get_bezirks_topic_by_hash(parameter.page)
                 searchContext = bezirksTopic.id
-                render_frontpage("bezirk") // by bezirksTopic
+                render_district_menu(searchContext)
+                render_frontpage("bezirk") // by location hash
             } else {
                 render_frontpage("gesamt")
+                render_district_menu()
             }
             init_search_page_fragment()
 
         } else if (page === "search-map") {
-            register_pop_state_navigation()
             get_location_hash_from_url()
             get_viewport_from_url()
             render_search_map()
@@ -199,10 +194,12 @@ function render_search_map() {
 }
 
 function render_frontpage(name) {
-    if (name === "gesamt") {
+    // init_map_segment()
+    if (name === "gesamt" || searchContext === 0 || searchContext == "0") {
         kiezatlas.render_gesamtstadtplan()
+        render_district_menu()
     } else if (name === "bezirk") {
-        render_district_frontpage()
+        kiezatlas.render_bezirkspage(bezirksTopic)
     }
 }
 
@@ -231,6 +228,7 @@ function init_citymap() {
     // 2) update layout
     leafletMap.fit_to_height(65)
     citymap.set_sidebar_height()
+    render_district_menu({id:0})
     // ### Double check if districts already loaded
 }
 
@@ -274,29 +272,29 @@ function init_angebots_page() {
 
 /** --- District Frontpage / Bezirks-Startseite Rendering --- */
 
-function render_district_frontpage() {
+/* function render_district_frontpage() {
     if (frontpage) {
         if (!bezirksTopic) {
             bezirksTopic = get_bezirks_topic_by_id(searchContext)
-            console.log("Rendering Bezirks-Startseite by searchContext ID:" , searchContext, "Topic", bezirksTopic.value)
-        } else {
-            console.log("Rendering Bezirks-Startseite by Topic", bezirksTopic.value)
         }
         if (bezirksTopic) { // Renders BEZIRKSPAGE
             set_site_info(bezirksTopic)
             // kiezatlas.load_marker_cluster_scripts()
             mapping.do_cluster_marker = true
-            kiezatlas.render_map(false, parameter.viewport, false, true) // detectLocation=false
+            kiezatlas.render_map(false, parameter.viewport, false, true, true)
             // sets district filter
             show_district_frontpage()
             render_district_menu(bezirksTopic)
-            return
+            return true
+        } else {
+            console.log("Abort rendering Bezirks-Startseite by bezirks topic", searchContext, "Topic", bezirksTopic)
+            return false
         }
-        kiezatlas.clear_district_page()
-        kiezatlas.render_gesamtstadtplan() // Renders GESAMTSTADTPLAN
-        console.info("Gesamtstadplan Fallback - No district with given ID found")
+        /** console.info("Gesamtstadplan Fallback - No district with given ID found")
+            kiezatlas.render_gesamtstadtplan() // Renders GESAMTSTADTPLAN
+        }
     }
-}
+} */
 
 function click_circle_search_action() {
     kiezatlas.clear_district_page()
@@ -304,6 +302,7 @@ function click_circle_search_action() {
     // leafletMap.scroll_into_view()
 }
 
+/** ### TODO: Render District Menu also into Lower Top Navigation **/
 function render_district_menu(districtVal) {
     var bezirke = districts
     var $bezirk = $('#bezirksauswahl')
@@ -338,14 +337,17 @@ function handle_bezirks_item_click(e) {
     }
     if (frontpage && click_href === "#gesamt") {
         kiezatlas.clear_district_page()
+        searchContext = 0
         render_frontpage("gesamt")
     } else if (frontpage) {
         bezirksTopic = get_bezirks_topic_by_hash(click_href)
         searchContext = bezirksTopic.id
         $('.ui.dropdown').dropdown('hide')
         render_frontpage("bezirk")
-        update_search_criteria_dialog()
     }
+    scroll_to("map")
+    update_search_criteria_dialog()
+    $('.top.menu .dropdown').dropdown('hide')
 }
 
 function show_district_frontpage() {
@@ -371,11 +373,11 @@ function show_district_frontpage() {
         leafletMap.clear_marker()
         // _self.hide_spinning_wheel()
         leafletMap.set_items(response)
-        /** if (parameter.viewport) {
+        if (currentViewport) {
             leafletMap.render_geo_objects(false)
-        } else { **/
-        leafletMap.render_geo_objects(true)
-        //}
+        } else {
+            leafletMap.render_geo_objects(true)
+        }
     })
 }
 
@@ -441,9 +443,10 @@ function show_newsfeed_area() {
 function init_map_segment() {
     // ### get page parameter
     // enable circle search
-    kiezatlas.render_map(false, false, false, true, false)
+    kiezatlas.render_map(false, currentViewport, false, true, false)
     kiezatlas.do_circle_search(undefined, undefined)
     kiezatlas.render_current_location_label()
+    leafletMap.render_circle_search_control()
     var radiusM = leafletMap.get_circle_control_radius()
     console.log("Im Umkreis von", radiusM, " Metern")
     // hide loading indicator
@@ -482,51 +485,6 @@ function create_nearby_marker(place) {
         })
         return marker
     }
-}
-
-function activate_circle_search() {
-    clear_map()
-    leafletMap.activate_circle_control()
-    leafletMap.set_zoom(mapping.kiez_detail)
-    leafletMap.set_circle_control_fixed(true)
-    leafletMap.set_circle_control_radius(NEIGHBOUR_QUERY_RADIUS)
-    var mapCenter = leafletMap.get_map_center()
-    leafletMap.set_current_location_coords(mapCenter)
-    leafletMap.map.setView(mapCenter, mapping.zoom_street)
-    leafletMap.render_circle_search_control()
-    do_circle_search(undefined, undefined)
-    // kiezatlas.do_reverse_geocode()
-    leafletMap.listen_to('drag_end', function(e) {
-        if (e.detail >= 8) {
-            if (leafletMap.is_circle_query_active() && leafletMap.is_circle_control_fixed()) {
-                do_circle_search(undefined, undefined)
-            }
-        }
-    })
-    leafletMap.listen_to('drag', function(e) {
-        if (leafletMap.is_circle_control_fixed()) {
-            leafletMap.set_current_location_coords(leafletMap.get_map_center())
-            leafletMap.set_circle_control_radius(leafletMap.get_circle_control_radius())
-            leafletMap.activate_circle_control()
-            leafletMap.render_circle_search_control(false)
-        }
-    })
-    leafletMap.listen_to('marker_select', function(e) {
-        // clear_details_area()
-        show_selected_geo_details(e.detail)
-        selected_marker = e
-    })
-    leafletMap.listen_to('marker_mouseover', function(e) {
-        var geo_objects_under_marker = leafletMap.find_all_geo_objects(e.detail.target.options['address_id'])
-        show_marker_name_info(geo_objects_under_marker)
-    })
-    leafletMap.listen_to('marker_mouseout', function(e) {
-        hide_marker_name_info()
-    })
-    if (leafletMap.is_circle_query_active()) {
-        $('#map .circle-control .button').remove()
-    }
-    scroll_to('map')
 }
 
 function show_selected_geo_details (result_list) {
@@ -618,53 +576,15 @@ function get_viewport_from_url() {
     if (zoomStart !== -1) {
         zoomstufe = window.location.search.slice(zoomStart + '&zoomstufe='.length)
     }
-    var koordStart = window.location.search.indexOf('?koordinate=')
+    var koordStart = window.location.search.indexOf('&koordinate=')
     var mapCenter = undefined
     if (koordStart !== -1) {
-        var koordinate = window.location.search.slice(koordStart + '?koordinate='.length, zoomStart)
+        var koordinate = window.location.search.slice(koordStart + '&koordinate='.length, zoomStart)
         mapCenter = L.latLng(koordinate.split(','))
     }
     if (!mapCenter && !zoomstufe) return undefined
-    parameter.viewport = { center: mapCenter, zoom: zoomstufe }
-}
-
-function register_pop_state_navigation() {
-    if (settings.history_api_supported) {
-        window.onpopstate = function(e) {
-            /** if (e.state) {
-                parameter = e.state
-                if (parameter.page === "#gesamt") {
-                    parameter.viewport = e.state.viewport
-                    // ### _self.render_gesamtstadtplan() ?
-                } else if (e.state.page === "#angebote") {
-                    // ### render angebote page?
-                } else {
-                    console.log("Pop Render Districts or Citymap Page", e.state)
-                }
-                // Currently we only pan the map if map is in "query" mode
-                if (parameter.viewport) {
-                    var coords = L.latLng(parameter.viewport.center)
-                    leafletMap.set_zoom(parameter.viewport.zoom)
-                    leafletMap.pan_to(coords)
-                    if (kiezatlas.is_map_query_control()) {
-                        leafletMap.set_current_location_coords(coords)
-                        leafletMap.activate_circle_control()
-                        leafletMap.render_circle_search_control()
-                        _self.do_circle_search()
-                        _self.do_reverse_geocode()
-                    }
-                } else {
-                    console.log("No Viewport Parameter")
-                }
-            }**/
-            console.log("Popstate event noticed", e.state)
-        }
-    }
-}
-
-function get_page_parameter() {
-    return "?search=" + parameter.searchText + "&type=" + parameter.searchType + "&method=" + parameter.searchMethod + "&context=" + parameter.searchContext
-            + "&nearby=" + encodeURIComponent(parameter.searchNearby)
+    var viewport = { center: mapCenter, zoom: (typeof zoomstufe !== "undefined") ? zoomstufe : mapping.zoom_kiez }
+    return viewport
 }
 
 function get_context_parameter_from_url () {
@@ -679,28 +599,35 @@ function get_context_parameter_from_url () {
     return 0
 }
 
-function replace_page_parameters() {
-    parameter.search = searchText
-    parameter.searchType = searchType
-    parameter.searchMethod = searchMethod
-    parameter.searchContext = searchContext
-    parameter.searchNearby = searchNearby
-    parameter.from = from
-    parameter.to = to
-    var url = window.document.location.origin
-    if (frontpage) {
-        url += '/website'
-    } else if (viewCityMap) {
+/** 
+ * See do_text_search, search_menu_changed, quickSearchChecked, fulltextSearchChecked,
+ * berlinSearchChecked and showNearbySearch
+ * @returns {undefined}
+ */
+function replace_page_url() {
+    if (viewCityMap) {
         console.log("Skipping update of url page parameter...")
         return
-    } else {
-        url += window.document.location.pathname
     }
-    url += get_page_parameter()
+    var params = {
+        searchText: searchText,
+        searchType: searchType,
+        searchMethod: searchMethod,
+        searchContext: searchContext,
+        searchNearby: searchNearby,
+        viewport: create_viewport_parameter(),
+        from: from,
+        to: to,
+        page: get_location_hash_from_url()
+    }
+    var url = window.document.location.origin + "/website" + create_page_parameter_string()
+    if (params.page) {
+        url += params.page
+    }
     if (history_api_supported) {
         // console.log("replace history state", parameter, url)
-        window.history.replaceState(parameter, webapp_title, url)
-        console.log("replaced page parameter in url", url)
+        window.history.replaceState(params, webapp_title, url)
+        console.log("replaced page url", url)
     } else {
         console.warn("window.history manipulation not supported", window.navigator)
     }
@@ -708,14 +635,15 @@ function replace_page_parameters() {
 
 function create_viewport_parameter() {
     var mapView = leafletMap.get_map_viewport()
-    var viewportState = undefined
-    if (mapView) {
-        viewportState = "?koordinate=" + mapView.center.lat.toFixed(5) + "," + mapView.center.lng.toFixed(5) + "&zoomstufe=" + mapView.zoom
-    }
-    return viewportState
+    return "&koordinate=" + mapView.center.lat.toFixed(5) + "," + mapView.center.lng.toFixed(5) + "&zoomstufe=" + mapView.zoom
 }
 
-
+function create_page_parameter_string() {
+    return "?search=" + searchText + "&type=" + searchType + "&method=" + searchMethod
+            + "&context=" + searchContext
+            + "&nearby=" + encodeURIComponent(searchNearby)
+            + create_viewport_parameter()
+}
 
 /** --- Search Dialog Handlers --- **/
 
@@ -742,6 +670,24 @@ function set_search_input(value) {
     searchText = value
     parameter.searchText = value
     $('#query').val(value)
+}
+
+function isValidSearchText() {
+    if (searchText.length < 2) {
+        show_input_warning("Bitte geben Sie einen Suchbegriff mit mindestens 2 Zeichen ein")
+        return false
+    } else if (searchText == "undefined") {
+        set_search_input("")
+        show_input_warning("Bitte geben Sie einen Suchbegriff ein")
+        return false
+    }
+    return true
+}
+
+function show_input_warning(warning) {
+    $('.message').html(warning)
+    $('.message').addClass("warning")
+    $('.message').show()
 }
 
 function set_nearby_input(value) {
@@ -786,6 +732,7 @@ function do_text_search() {
     $('.more-results').data("result-from", to)
     // fire query
     searchText = get_search_input()
+    if (!isValidSearchText()) return
     show_results_container()
     show_loading_search()
     // Do geo object or event fulltext search
@@ -816,7 +763,8 @@ function do_text_search() {
             render_search_results()
         })   
     }
-    replace_page_parameters()
+    console.log("doTextSearch changed, updating page parameters")
+    replace_page_url()
     update_search_criteria_dialog()
 }
 
@@ -910,7 +858,7 @@ function showAngeboteTags() {
 
 function click(e) {
     e.stopPropagation()
-    window.document.location.assign(e.currentTarget.href + get_page_parameter())
+    window.document.location.assign(e.currentTarget.href + create_page_parameter_string())
     return false
 }
 
@@ -938,7 +886,8 @@ function init_search_type_menu() {
 
 function search_menu_changed(value, text, $selectedItem) {
     searchType = value
-    replace_page_parameters()
+    console.log("searchMenu changed, updating page parameters")
+    replace_page_url()
     if (searchType === "event") {
         hide_street_search_hint()
     } else if (searchType === "place") {
@@ -948,7 +897,6 @@ function search_menu_changed(value, text, $selectedItem) {
 }
 
 function update_search_criteria_dialog() {
-    console.log("Updating search criteria dialog", searchType, searchContext, searchMethod, searchNearby)
     if (searchType === "place") {
         hideAngeboteTags()
         disableNearbySearchChecked()        // deactivate nearby search for both
@@ -1002,7 +950,8 @@ function quickSearchChecked() {
     berlinSearchChecked({id: 0}) // only available berlin wide
     searchMethod = "quick" // or "fulltext"
     parameter.searchMethod = searchMethod
-    replace_page_parameters()
+    console.log("quickSearchChecked, updating page parameters")
+    replace_page_url()
 }
 
 function fulltextSearchChecked() {
@@ -1013,13 +962,15 @@ function fulltextSearchChecked() {
         searchContext = parseInt(checkedDistrict[0].id)
         // ### console.log("fulltextSearchChecked - check if district filter is checked", searchContext, checkedDistrict[0])
     }
-    replace_page_parameters()
+    console.log("fulltextSearchChecked, updating page parameters")
+    replace_page_url()
     enableDistrictCheckboxes()
 }
 
 function showNearbySearch() {
     $('.ui.grid.filter .column.nearby').removeClass('hidden')
-    replace_page_parameters()
+    console.log("showNearbySearch changed, updating page parameters")
+    replace_page_url()
 }
 
 function hideNearbySearch() {
@@ -1040,12 +991,13 @@ function berlinSearchChecked(e) {
     // district search is only availabe with searchMethod=fulltext
     if (searchContext != 0) {
         fulltextSearchChecked()
-        if (frontpage) render_district_frontpage()
+        if (frontpage) kiezatlas.render_bezirkspage(bezirksTopic)
     } else if (searchContext == 0) {
         // check gesamtberlin
         checkBerlinwideSearchbox()
     }
-    replace_page_parameters()
+    console.log("berlinSearchChecked, updating page parameters")
+    replace_page_url()
     return true
 }
 
