@@ -663,8 +663,8 @@ function register_pop_state_navigation() {
 }
 
 function get_page_parameter() {
-    return "?search=" + searchText + "&type=" + searchType + "&method=" + searchMethod + "&context=" + searchContext
-            + "&nearby=" + encodeURIComponent(searchNearby)
+    return "?search=" + parameter.searchText + "&type=" + parameter.searchType + "&method=" + parameter.searchMethod + "&context=" + parameter.searchContext
+            + "&nearby=" + encodeURIComponent(parameter.searchNearby)
 }
 
 function get_context_parameter_from_url () {
@@ -700,6 +700,7 @@ function replace_page_parameters() {
     if (history_api_supported) {
         // console.log("replace history state", parameter, url)
         window.history.replaceState(parameter, webapp_title, url)
+        console.log("replaced page parameter in url", url)
     } else {
         console.warn("window.history manipulation not supported", window.navigator)
     }
@@ -731,16 +732,21 @@ function toggleSearchCriteria() {
 }
 
 function get_search_input() {
-    return $('#query').val()
+    var value = $('#query').val()
+    searchText = value
+    parameter.searchText = value
+    return value
 }
 
 function set_search_input(value) {
     searchText = value
+    parameter.searchText = value
     $('#query').val(value)
 }
 
 function set_nearby_input(value) {
     searchNearby = value
+    parameter.searchNearby = value
     $('#nearby').val(value)
 }
 
@@ -782,6 +788,9 @@ function do_text_search() {
     searchText = get_search_input()
     show_results_container()
     show_loading_search()
+    // 1) Do kiezatlas specific query expansion
+    // ### do_text_query_expansion(searchText)
+    // 2) Do geo object or event fulltext search
     var queryUrl = '/website/search/name/quick?query=' + searchText
     if (searchType === "event") {
         // Fire search query
@@ -809,6 +818,18 @@ function do_text_search() {
     }
     replace_page_parameters()
     update_search_criteria_dialog()
+}
+
+function do_text_query_expansion() {
+    var query = get_search_input()
+    var streetNameResource = "/website/search/name/street?name=" + encodeURIComponent(query)
+    var bezirksregionNameResource = "/website/search/name/region?name=" + encodeURIComponent(query)
+    $.getJSON(streetNameResource, function (addresses) {
+        console.log(addresses.length, "Addresses identified", addresses, "for street name query " + query)
+    })
+    $.getJSON(bezirksregionNameResource, function (bezirksregionen) {
+        console.log(bezirksregionen.length, "Bezirksregionen identified", bezirksregionen, "for bezirksregion name query " + query)
+    })
 }
 
 function show_loading_search() {
@@ -935,16 +956,16 @@ function update_search_criteria_dialog() {
 }
 
 function quickSearchChecked() {
-    searchMethod = "quick" // or "fulltext"
     berlinSearchChecked({id: 0}) // only available berlin wide
-    disableDistrictCheckboxes()
-    // checkBerlinwideSearchbox()
+    searchMethod = "quick" // or "fulltext"
+    parameter.searchMethod = searchMethod
     replace_page_parameters()
 }
 
 function fulltextSearchChecked() {
     var checkedDistrict = $('.ui.grid .district .checkbox.checked input')
     searchMethod = "fulltext" // or "quick"
+    parameter.searchMethod = searchMethod
     if (checkedDistrict[0]) {
         searchContext = parseInt(checkedDistrict[0].id)
         // ### console.log("fulltextSearchChecked - check if district filter is checked", searchContext, checkedDistrict[0])
@@ -968,27 +989,18 @@ function berlinSearchChecked(e) {
         // switch to fulltext search when user clicks on district
         fulltextSearchChecked()
     }
-    if (frontpage) {
-        // set district filter
-        $('.ui.grid.filter .column.nearby').addClass('hidden')
-        searchContext = e.id
-        bezirksTopic = get_bezirks_topic_by_id(e.id)
-        // district search is only availabe with searchMethod=fulltext
-        if (searchContext != 0) {
-            fulltextSearchChecked()
-            render_district_frontpage()
-        } else if (searchContext == 0) {
-            // check gesamtberlin
-            checkBerlinwideSearchbox()
-        }
-    } else {
-        searchContext = e.id
-        if (searchContext != 0) {
-            bezirksTopic = get_bezirks_topic_by_id(e.id)
-            show_context_subline()
-            // ### leave radiobutton unchecked and check preovious cheked again
-            console.log("Set District Filter", bezirksTopic.value)   
-        }
+    $('.ui.grid.filter .column.nearby').addClass('hidden')
+    // set district filter
+    searchContext = e.id
+    bezirksTopic = get_bezirks_topic_by_id(e.id)
+    show_context_subline()
+    // district search is only availabe with searchMethod=fulltext
+    if (searchContext != 0) {
+        fulltextSearchChecked()
+        if (frontpage) render_district_frontpage()
+    } else if (searchContext == 0) {
+        // check gesamtberlin
+        checkBerlinwideSearchbox()
     }
     replace_page_parameters()
     return true
@@ -1068,7 +1080,8 @@ function render_search_results() {
                 render_event_search_results(from, to, count, $container)
             }
         } else {
-            contextText = (searchContext == 0) ? (typeof searchNearby !== "undefined") ? " in der Nähe von " + searchNearby : " in Gesamtberlin " : (bezirksTopic) ? " im Bezirk " + bezirksTopic.value : " in diesem Bezirk"
+            console.log("searchNearby is", searchNearby, "undefined?", (typeof searchNearby !== "undefined"))
+            contextText = (searchContext == 0) ? (typeof searchNearby !== "undefined" || searchNearby) ? " in der Nähe von " + searchNearby : " in Gesamtberlin " : (bezirksTopic) ? " im Bezirk " + bezirksTopic.value : " in diesem Bezirk"
             // filterText = (searchText)
             $('.result-list .container').html('Zur Suchanfrage "' + searchText + '" ' + contextText + ' gab es keine Treffer')
         }
