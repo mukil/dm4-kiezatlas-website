@@ -836,7 +836,7 @@ function do_text_query_expansion() {
             streetNames += '</div>'
             $('.segment.query-hint').empty()
             $('.segment.query-hint').append(streetNames)
-            $('.segment.query-hint').show()
+            show_street_search_hint()
         }
     })
     /** $.getJSON(bezirksregionNameResource, function (bezirksregionen) {
@@ -849,8 +849,7 @@ function do_street_query(el) {
     checkBerlinwideSearchbox()
     show_search_loading_sign()
     $.getJSON(streetNameResource, function (geo_objects) {
-        $('.segment.query-hint').empty()
-        $('.segment.query-hint').hide()
+        hide_street_search_hint()
         var $container = $('.result-list .container')
         $container.empty()
         if (geo_objects.length > 0) {
@@ -861,6 +860,14 @@ function do_street_query(el) {
             show_results_container()
         }
     })
+}
+
+function show_street_search_hint() {
+    $('.segment.query-hint').show()
+}
+
+function hide_street_search_hint() {
+    $('.segment.query-hint').hide()
 }
 
 function show_loading_search() {
@@ -932,6 +939,11 @@ function init_search_type_menu() {
 function search_menu_changed(value, text, $selectedItem) {
     searchType = value
     replace_page_parameters()
+    if (searchType === "event") {
+        hide_street_search_hint()
+    } else if (searchType === "place") {
+        show_street_search_hint()
+    }
     update_search_criteria_dialog()
 }
 
