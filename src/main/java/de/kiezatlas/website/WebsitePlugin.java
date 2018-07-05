@@ -1543,6 +1543,10 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         }
     }
 
+
+
+    /*** ------------ Start of specialized (other than fulltext search for geo objects) search endpoints --------- ***/
+
     /**
      * Fetches a list of Geo Objects for assignment used in Angebotszeitraum editor.
      * @param referer
@@ -1647,6 +1651,127 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         }
     }
 
+    /**
+     * Fetches a list of Address / Street topics for the given name query.
+     * @param referer
+     * @param streetName
+     */
+    @GET
+    @Path("/search/name/street")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<Topic> searchStreetAddressTopics(@HeaderParam("Referer") String referer,
+                                                     @QueryParam("name") String streetName) {
+        if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
+        try {
+            // strip common prefixes as they irritate our search fo rduplicates leading to to many results
+            String queryValue = streetName;
+            List<Topic> results = new ArrayList<Topic>();
+            if (isInvalidSearchQuery(queryValue)) return results;
+            String queryPhrase = preparePhraseOrTermLuceneQuery(queryValue);
+            log.log(Level.INFO, "> addressSearchByStreetName=\"{0}\"", queryValue + "\"");
+            List<Topic> streets = dm4.searchTopics(queryPhrase, "dm4.contacts.street");
+            log.log(Level.INFO, streets.size() + " street topics found");
+            return streets;
+        } catch (Exception e) {
+            throw new RuntimeException("Searching address topics by street name failed", e);
+        }
+    }
+
+    /**
+     * Fetches a list of Bezirksregionen topics for the given name query.
+     * Search on Place Edit Form Name Input
+     * @param referer
+     * @param regionName
+     */
+    @GET
+    @Path("/search/name/region")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<Topic> searchBezirskregionenTopics(@HeaderParam("Referer") String referer,
+                                                     @QueryParam("name") String regionName) {
+        if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
+        try {
+            // strip common prefixes as they irritate our search fo rduplicates leading to to many results
+            String queryValue = regionName;
+            List<Topic> results = new ArrayList<Topic>();
+            if (isInvalidSearchQuery(queryValue)) return results;
+            String queryPhrase = preparePhraseOrTermLuceneQuery(queryValue);
+            log.log(Level.INFO, "> bezirksregionSearchByName=\"{0}\"", queryValue + "\"");
+            List<Topic> bezirksregionen = dm4.searchTopics(queryPhrase, "ka2.bezirksregion");
+            log.log(Level.INFO, bezirksregionen.size() + " bezirksregionen found");
+            return bezirksregionen;
+        } catch (Exception e) {
+            throw new RuntimeException("Searching bezirksregionen by name failed", e);
+        }
+    }
+
+    /**
+     * Fetches a list of Geo Objects related to the given street name.
+     * Search on Place Edit Form Name Input
+     * @param referer
+     * @param streetName
+     */
+    @GET
+    @Path("/search/street")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<GeoMapView> searchGeoObjectsByStreetName(@HeaderParam("Referer") String referer,
+                                                         @QueryParam("name") String streetName) {
+        if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
+        try {
+            // strip common prefixes as they irritate our search fo rduplicates leading to to many results
+            String queryValue = streetName;
+            ArrayList<GeoMapView> results = new ArrayList<GeoMapView>();
+            if (isInvalidSearchQuery(queryValue)) return results;
+            String queryPhrase = preparePhraseOrTermLuceneQuery(queryValue);
+            log.log(Level.INFO, "> placeSearchByStreetName=\"{0}\"", queryValue + "\"");
+            List<Topic> streets = dm4.searchTopics(queryPhrase, "dm4.contacts.street");
+            List<RelatedTopic> places = getStreetNameRelatedGeoObjects(streets);
+            log.log(Level.INFO, places.size() + " geo objects found in " + streets.size() + " streets ");
+            // TODO: sort resutls albhabetically
+            sortAlphabeticalDescending(places);
+            for (Topic place : places) {
+                results.add(new GeoMapView(place, geomaps));
+            }
+            return results;
+        } catch (Exception e) {
+            throw new RuntimeException("Searching geo object topics by streetn name failed", e);
+        }
+    }
+
+    /**
+     * Fetches a list of Geo Objects related to the given name of the region (Bezirksregion or LOR/Planungsraum).
+     * Search on Place Edit Form Name Input
+     * @param referer
+     * @param regionName
+     */
+    @GET
+    @Path("/search/region")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<GeoMapView> searchGeoObjectsByBezirksregionName(@HeaderParam("Referer") String referer,
+                                                                @QueryParam("name") String regionName) {
+        if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
+        try {
+            // strip common prefixes as they irritate our search fo rduplicates leading to to many results
+            String queryValue = regionName;
+            ArrayList<GeoMapView> results = new ArrayList<GeoMapView>();
+            if (isInvalidSearchQuery(queryValue)) return results;
+            String queryPhrase = preparePhraseOrTermLuceneQuery(queryValue);
+            log.log(Level.INFO, "> placeSearchByRegionName=\"{0}\"", queryValue + "\"");
+            List<Topic> bezirksregionen = dm4.searchTopics(queryPhrase, "ka2.bezirksregion");
+            /** List<Topic> lor_names = dm4.searchTopics(queryPhrase, "ka2.util.lor_name");
+            List<Topic> lor_numbers = dm4.searchTopics(queryPhrase, "ka2.lor_nummer"); **/
+            List<RelatedTopic> places = getRegionRelatedGeoObjects(bezirksregionen);
+            log.log(Level.INFO, places.size() + " geo objects found in " + bezirksregionen.size() + " bezirksregionen");
+            // TODO: sort resutls albhabetically
+            sortAlphabeticalDescending(places);
+            for (Topic place : places) {
+                results.add(new GeoMapView(place, geomaps));
+            }
+            return results;
+        } catch (Exception e) {
+            throw new RuntimeException("Searching geo object topics by region name failed", e);
+        }
+    }
+
     // -------------------------- Website Angebote Search Endpoints ------------------------------ //
 
     /**
@@ -1665,6 +1790,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
             if (isInvalidSearchQuery(query)) return results;
             // String queryValue = prepareLuceneQueryString(query, false, true, false, true);
             String queryValue = preparePhraseOrTermLuceneQuery(query);
+            log.log(Level.INFO, "> fulltextEventQuery=\"{0}\"", queryValue);
             // 2) Fetch unique geo object topics by text query string (leading AND ending ASTERISK)
             List<RelatedTopic> offers = angebote.searchInAngebotsinfoChildsByText(queryValue);
             // 3) Process saerch results and create DTS for map display
@@ -1706,6 +1832,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         // Refactor prepareLucenQuery...
         // boolean forceExactQuery = (query.contains("?") || doExact);
         String queryString = preparePhraseOrTermLuceneQuery(query);
+        log.log(Level.INFO, "> fulltextPlaceQuery=\"{0}\"", queryString);
         if (queryString != null) {
             List<Topic> searchResults = dm4.searchTopics(queryString, "ka2.geo_object.name");
             List<Topic> descrResults = dm4.searchTopics(queryString, "ka2.beschreibung");
@@ -3431,6 +3558,17 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
             queryPhrase.append("\"" + userQuery + "\"");
             queryPhrase.append(" OR ");
             queryPhrase.append("" + userQuery.replaceAll(" ", "?") + "*");
+            queryPhrase.append(" OR ");
+            String[] words = userQuery.split(" ");
+            for (int i = 0; i < words.length; i++) {
+                String word = words[i];
+                queryPhrase.append("*" + word + "*");
+                if (i < words.length -1) {
+                    queryPhrase.append(" AND ");
+                } else {
+                    queryPhrase.append(" ");
+                }
+            }
         } else {
             queryPhrase.append("*" + userQuery + "*");
         }
@@ -3546,6 +3684,45 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         Topic address = geoObject.getChildTopics().getTopicOrNull("dm4.contacts.address");
         if (address == null) log.warning("Geo Object ("+geoObject+") has no related ADDRESS topic");
         return address.getChildTopics().getTopicOrNull("dm4.contacts.street");
+    }
+
+    private List<RelatedTopic> getStreetNameRelatedGeoObjects(List<Topic> streetNames) {
+        List<RelatedTopic> places = new ArrayList<RelatedTopic>();
+        log.warning("> searching " + streetNames.size() + " streetnames for related geo object topics");
+        for (Topic streetName : streetNames) {
+            List<RelatedTopic> addresses = streetName.getRelatedTopics("dm4.core.aggregation", "dm4.core.child", "dm4.core.parent", "dm4.contacts.address");
+            if (addresses == null || addresses.size() <= 0) {
+            } else {
+                for (RelatedTopic address : addresses) {
+                    List<RelatedTopic> geoObjects = address.getRelatedTopics("dm4.core.composition", "dm4.core.child", "dm4.core.parent", "ka2.geo_object");
+                    places.addAll(geoObjects);
+                }
+            }
+        }
+        return places;
+    }
+
+    private List<RelatedTopic> getStreetRelatedAddressTopics(List<Topic> streetNames) {
+        List<RelatedTopic> addresses = new ArrayList<RelatedTopic>();
+        log.warning("> searching " + streetNames.size() + " streetnames for related address topics");
+        for (Topic streetName : streetNames) {
+            List<RelatedTopic> relatedAddresses = streetName.getRelatedTopics("dm4.core.aggregation", "dm4.core.child", "dm4.core.parent", "dm4.contacts.address");
+            addresses.addAll(relatedAddresses);
+        }
+        return addresses;
+    }
+
+    private List<RelatedTopic> getRegionRelatedGeoObjects(List<Topic> bezirksregionen) {
+        List<RelatedTopic> places = new ArrayList<RelatedTopic>();
+        log.warning("> searching " + bezirksregionen.size() + " bezirksregionen for related geo object topics");
+        for (Topic bezirksregion : bezirksregionen) {
+            List<RelatedTopic> geoObjects = bezirksregion.getRelatedTopics("dm4.core.aggregation", "dm4.core.child", "dm4.core.parent", "ka2.geo_object");
+            if (geoObjects == null || geoObjects.size() <= 0) {
+            } else {
+                places.addAll(geoObjects);
+            }
+        }
+        return places;
     }
 
     private void collectMailBoxes(List<String> mailboxes, List<RelatedTopic> usernames) {
