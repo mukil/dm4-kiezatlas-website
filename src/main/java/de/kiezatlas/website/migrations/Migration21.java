@@ -1,32 +1,26 @@
 package de.kiezatlas.website.migrations;
 
-import de.deepamehta.core.Topic;
-import de.deepamehta.core.service.Inject;
+import de.deepamehta.core.TopicType;
+import de.deepamehta.core.model.IndexMode;
 import de.deepamehta.core.service.Migration;
-import de.deepamehta.workspaces.WorkspacesService;
-import de.kiezatlas.KiezatlasService;
-import de.kiezatlas.website.WebsitePlugin;
 import java.util.logging.Logger;
 
 /**
- * Create VskA Kiezatlas Stadtteil und Gemeinwesenarbeit Stadtplan.
+ * Add index modes to topic type "Bezirksregion".
  * @author malted
  */
-public class Migration20 extends Migration {
+public class Migration21 extends Migration {
 
     private Logger log = Logger.getLogger(getClass().getName());
 
 
-    @Inject private KiezatlasService kiezService;
-    @Inject private WorkspacesService workspaces;
-
     @Override
     public void run() {
-        Topic kiezatlasWorkspace = workspaces.getWorkspace(KiezatlasService.KIEZATLAS_WORKSPACE_URI);
-        Topic vskaStadtplan = kiezService.createKiezatlasWebsite("VskA Kiezatlas Stadtteil- und Gemeinwesenarbeit", WebsitePlugin.VSKA_WEBSITE_URI);
-        log.info("Creating new Website \"" + vskaStadtplan.getSimpleValue() + "\", assigned to \"Kiezatlas\" workspace");
-        workspaces.assignToWorkspace(vskaStadtplan, kiezatlasWorkspace.getId());
-        log.info("### Migration 20 COMPLETED: Created new VskA Stadtplan \"" + vskaStadtplan + "\" in Kiezatlas Workspace");
+        TopicType bezirksregion = dm4.getTopicType("ka2.bezirksregion");
+        bezirksregion.addIndexMode(IndexMode.FULLTEXT);
+        bezirksregion.addIndexMode(IndexMode.FULLTEXT_KEY);
+        log.info("### Migration 21 COMPLETED: Added IndexMmode.FULLTEXT and FULLTEXT_KEY to topic type \""
+                + bezirksregion.getSimpleValue() + "\"");
     }
 
 }
