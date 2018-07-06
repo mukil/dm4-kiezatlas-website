@@ -205,7 +205,7 @@ var kiezatlas = (function($, leafletMap, restc, favourites) {
         if (currentViewport)  {
             leafletMap.set_current_location_coords(currentViewport.center)
                             // ask_location, viewport, jump_to_map, mousewheelzoom, skipCircleSearch
-            _self.render_map(false, currentViewport, true, true, false)
+            _self.render_map(false, currentViewport, false, true, false)
         } else {
                             // ask_location, viewport, jump_to_map, mousewheelzoom, skipCircleSearch
             _self.render_map(true, undefined, false, true, false)
@@ -217,7 +217,7 @@ var kiezatlas = (function($, leafletMap, restc, favourites) {
             _self.set_site_info(bezirksTopic)
             _self.load_marker_cluster_scripts()
                             // ask_location, viewport, jump_to_map, mousewheelzoom, skipCircleSearch
-            _self.render_map(false, currentViewport, true, true, true)
+            _self.render_map(false, currentViewport, false, true, true)
             show_district_frontpage()
             render_district_menu(bezirksTopic)
         } else {
