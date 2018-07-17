@@ -45,7 +45,7 @@ var list = (function($) {
                 set_search_district_filter()
             } else {
                 $("#name-search").val(query)
-                do_search_geo_objects_by_name(render_geo_object_search_results) // calls render function in 'edit-angebote.js'   
+                do_fulltext_geo_object_search(render_geo_object_search_results) // calls render function in 'edit-angebote.js'
             }
         }
         $("#name-search").on("keyup", api.handle_name_search_input)
@@ -89,7 +89,7 @@ var list = (function($) {
     }
 
     api.assignment_geo_object_search = function(callback) {
-        var queryString = do_search_geo_objects_by_name(callback)
+        var queryString = do_fulltext_geo_object_search(callback)
         // do url..
         window.document.location.hash = "query=" + queryString
     }

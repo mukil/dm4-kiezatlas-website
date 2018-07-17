@@ -149,7 +149,7 @@ function init_page(page) {
 
         } else if (page === "sign-up") {
             //
-        } else {
+        } else if (typeof page === "undefined") { // 401, 404 and 500 pages
             init_search_page_fragment()
         }
     })
