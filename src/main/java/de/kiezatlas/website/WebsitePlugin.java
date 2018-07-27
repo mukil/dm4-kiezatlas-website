@@ -1201,7 +1201,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
                 Topic bezirksregion = getRelatedBezirksregion(refTopic);
                 if (bezirk == null && bezirksregion == null) {
                     log.warning("Geo Object is neither in any Bezirk nor in any Bezirksregion. "
-                        + "Can not create ansprechpartner-assignment");
+                        + "Can not create ansprechpartner-assignment because we have no one with permission");
                 } else if ((bezirk != null && isUserAssociatedWithBezirk(bezirk.getId()))
                         || (bezirksregion != null && isUserAssociatedWithBezirksregion(bezirksregion.getId()))) {
                     Association assoc = createUserAssignment(refTopic, userPlayer, true);

@@ -742,7 +742,7 @@ function do_text_search() {
         do_angebote_search()
     } else if (searchType === "place") {
         // 1) Do kiezatlas address and place specific query expansion
-        do_text_query_expansion(searchText)
+        do_text_query_expansion()
         // 2) Prepare the correct search endpoint
         if (searchMethod === "fulltext") {
             queryUrl = '/website/search/?search=' + searchText

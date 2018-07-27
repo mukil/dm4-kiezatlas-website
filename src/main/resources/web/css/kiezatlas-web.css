@@ -804,6 +804,16 @@ select option[selected] {
     padding: 0em;
 }
 
+.search-hint .search-info {
+    padding: .25em;
+    margin-top: .25em;
+    display: block;
+}
+
+.search-info .street-hint {
+    margin-bottom: .25em;
+}
+
 .segment.query-hint .parameter,
 .segment.query-parameter .parameter,
 .page.detail .stichworte,
@@ -811,10 +821,12 @@ select option[selected] {
     margin-top: .5em;
 }
 
+.search-info .street-hint .parameter,
 .segment.query-hint .parameter {
     cursor: pointer;
 }
 
+.search-info .street-hint .parameter:hover,
 .segment.query-hint .parameter:hover {
     background-color: #3787ab;
     color: #fff;
@@ -829,6 +841,7 @@ select option[selected] {
     display: inline-block;
 }
 
+.search-info .street-hint .parameter,
 .segment.query-hint .parameter,
 .segment.query-parameter .parameter {
     border-radius: 8.5px;
