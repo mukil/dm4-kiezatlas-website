@@ -894,7 +894,7 @@ var kiezatlas = (function($, leafletMap, restc, favourites) {
     this.get_lor_link = function(entry) {
         if (!entry.hasOwnProperty("lor_id")) return ""
         var html = '<div class="lor-link">'
-            + '<a href="http://sozialraumdaten.kiezatlas.de/seiten/2017/06/?lor=' + entry.lor_id
+            + '<a href="http://sozialraumdaten.kiezatlas.de/seiten/2017/12/?lor=' + entry.lor_id
             + '" title="zur Einwohnerstatistik des Raums (LOR Nr. ' + entry.lor_id +')">Sozialraumdaten</a></div>'
         return html
     }
