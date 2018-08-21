@@ -391,10 +391,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
                 Association assignment = createUserAssignment(geoObject);
                 privilegedAssignToWorkspace(assignment, getConfirmationWorkspace().getId());
                 // Handles Image-File Upload (Seperately)
-                if (bildTopicId != 0) {
-                    log.info("> Bild File Topic Upload is file at=\"" + files.getFile(bildTopicId).toString());
-                    createBildAssignment(geoObject, username, bildTopicId);
-                }
+                processBildAssignment(geoObject, username, bildTopicId);
                 initiallyAssignGeoObjectFacetsToWorkspace(geoObject, getConfirmationWorkspace());
                 // Assign Geo Object to Confirmation WS (at last, otherwise we could not write its facets)
                 initiallyAssignGeoObjecToWorkspace(geoObject, getConfirmationWorkspace());
@@ -417,6 +414,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
                 attachGeoObjectChildTopics(geoObject, ansprechpartner, telefon, fax, email, beschreibung,
                     oeffnungszeiten, website, coordinatePair, district, themen, zielgruppen, angebote);
                 time.setModified(geoObject);
+                processBildAssignment(geoObject, username, bildTopicId);
                 viewData("message", "Danke, der <a href=\"/" + GEO_OBJECT_RESOURCE + geoObject.getId()
                     + "\" title=\"Anzeigen\">Datensatz</a> wurde aktualisiert.");
             } else {
@@ -428,6 +426,20 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         viewData("name", geoObject.getSimpleValue().toString());
         viewData("coordinates", coordinatePair);
         return getSimpleMessagePage();
+    }
+
+    private void processBildAssignment(Topic geoObject, Topic username, long bildTopicId) {
+        if (bildTopicId != 0) {
+            Topic existingBild = getBildFileAssignment(geoObject);
+            if (existingBild != null) {
+                log.info("Deleting existing Bild File Topic relation: " + existingBild.getSimpleValue());
+                existingBild.delete();
+            }
+            log.info("Assign Bild File Topic Upload is file at=\"" + files.getFile(bildTopicId).toString());
+            createBildAssignment(geoObject, username, bildTopicId);
+        } else {
+            log.info("NO Bild File Topic submitted for \"" + geoObject.getSimpleValue().toString());
+        }
     }
 
     /**
@@ -2104,6 +2116,24 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         }
     }
 
+    @PUT
+    @Path("/image/facet/delete/{geoObjectId}/{fileTopicId}")
+    @Transactional
+    public String updateImagePathFacet(@HeaderParam("Referer") String referer,
+            @PathParam("geoObjectId") long geoObjectId, @PathParam("fileTopicId") long fileTopicId) {
+        if (!isValidReferer(referer)) throw new WebApplicationException(Response.Status.UNAUTHORIZED);
+        JSONObject result = new JSONObject();
+        Topic geoObject = dm4.getTopic(geoObjectId);
+        // clear bild assignment association
+        RelatedTopic bildPath = geoObject.getRelatedTopic(BILD_ASSIGNMENT,
+                DEFAULT_ROLE, DEFAULT_ROLE, "dm4.files.file");
+        if (bildPath.getId() == fileTopicId) {
+            bildPath.getRelatingAssociation().delete();
+            log.info("Deleted Bild Facet Value Reference: " + bildPath.toString());
+        }
+        return result.toString();
+    }
+
     @GET
     @Path("/geocode")
     public String geoCodeAddressInput(@HeaderParam("Referer") String referer, @QueryParam("query") String input) {
@@ -2870,9 +2900,19 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
             detail.setCreator(accesscl.getCreator(geoObject.getId()));
             // Last Modified
             detail.setLastModified((Long) dm4.getProperty(geoObject.getId(), "dm4.time.modified"));
-            // Image Path
-            Topic imagePath = getImageFileFacetByGeoObject(geoObject);
-            if (imagePath != null) detail.setImageUrl(imagePath.getSimpleValue().toString());
+            // Either Use KA 2 Bild Assignment ### TOOD: Allow for multiple images
+            Topic imageFileTopic = getBildFileAssignment(geoObject);
+            if (imageFileTopic != null) {
+                detail.setImageUrl("/filerepo/" + imageFileTopic.getChildTopics().getStringOrNull("dm4.files.path"));
+                detail.setImageId(imageFileTopic.getId());
+            } else {
+                // or Kiezatlas 1 "Bild Pfad"
+                Topic bildPath = getBildPfadFacetValue(geoObject);
+                if (bildPath != null) {
+                    detail.setImageUrl(bildPath.getSimpleValue().toString());
+                    detail.setImageId(bildPath.getId());
+                }
+            }
             // Öffnungszeiten Facet
             Topic offnung = facets.getFacet(geoObject, OEFFNUNGSZEITEN_FACET);
             if (offnung != null) detail.setOeffnungszeiten(offnung.getSimpleValue().toString());
@@ -2891,7 +2931,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
             if (commentTopics != null) {
                 detail.setComments(assembleCommentViews(commentTopics));
             }
-            // Currently residing in "Trashed" workspace
+            // Currently residing in "Papierkorb" workspace
             if (isPendingForDeletion(geoObject)) {
                 detail.addClassName("in-trash");
             }
@@ -3039,7 +3079,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         try {
             // Kontakt, Bild
             Topic contactFacet = getContactFacet(geoObject);
-            Topic imageFacet = getImageFileFacetByGeoObject(geoObject);
+            Topic imageFacet = getBildPfadFacetValue(geoObject);
             if (contactFacet != null) contactFacet.delete();
             if (imageFacet != null) imageFacet.delete();
             // Beschreibung, Öffnungszeit, Website
@@ -3140,7 +3180,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
 
     private Association createBildAssignment(final Topic geoObject, final Topic username, final long fileTopicId) {
         final Topic usernameTopic = username;
-        if (isTopicAssignedToUsername(geoObject, usernameTopic.getSimpleValue().toString())) {
+        if (isGeoObjectEditable(geoObject, username) || isTopicAssignedToUsername(geoObject, usernameTopic.getSimpleValue().toString())) {
             try {
                 return dm4.getAccessControl().runWithoutWorkspaceAssignment(new Callable<Association>() {
                     @Override
@@ -3152,13 +3192,16 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
                         // ### Workspace Selection Either OR ...
                         log.info("Created Bild Assignment ("+username+") for Geo Object \"" + geoObject.getSimpleValue()
                             + "\" and File Topic \""+files.getFile(fileTopicId).toString()+"\"");
-                        privilegedAssignToWorkspace(assignment, getStandardWorkspace().getId());
+                        privilegedAssignToWorkspace(assignment, angebote.getAngeboteWorkspace().getId());
                         return assignment;
                     }
                 });
             } catch (Exception e) {
                 throw new RuntimeException("Creating User Assignment to Geo Object FAILED", e);
             }
+        } else {
+            log.info("User has no permission to update Bild Assignment ("+username+") for Geo Object \"" + geoObject.getSimpleValue()
+                            + "\" and File Topic \""+files.getFile(fileTopicId).toString()+"\"");
         }
         return null;
     }
@@ -3186,7 +3229,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
 
     /** ------------------- Model and Facet Model Helper Methods ------------------------ **/
 
-    private void updateImageFileFacet(Topic geoObject, String imageFilePath) {
+    private void updateBildPfadFacet(Topic geoObject, String imageFilePath) {
         facets.updateFacet(geoObject, IMAGE_FACET,
             mf.newFacetValueModel(IMAGE_PATH).put(imageFilePath));
     }
@@ -3195,8 +3238,12 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         return facets.getFacet(geoObject, KONTAKT_FACET);
     }
 
-    private Topic getImageFileFacetByGeoObject(Topic geoObject) {
+    private Topic getBildPfadFacetValue(Topic geoObject) {
         return facets.getFacet(geoObject, IMAGE_FACET);
+    }
+
+    private Topic getBildFileAssignment(Topic geoObject) {
+        return geoObject.getRelatedTopic(BILD_ASSIGNMENT, DEFAULT_ROLE, DEFAULT_ROLE, "dm4.files.file");
     }
 
     private Topic getBezirksregionFacet(Topic facettedTopic) {

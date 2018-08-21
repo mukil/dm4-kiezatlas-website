@@ -81,6 +81,11 @@
                     }
                 })
                 // circleMarker.bringToFront()
+                var imageTopicId = JSON.parse($('#bild-topic').val())
+                if (imageTopicId !== 0) {
+                    // $('.button.resize-image').show()
+                    $('.button.remove-image').show()
+                }
             }
 
             function do_reverse_geocode() {
@@ -106,7 +111,6 @@
                 var queryString = streetNr + ", "
                 if (zipCode.length > 0) queryString += zipCode + " "
                 if (selectedCity.value !== "undefined") queryString += selectedCity.text + " "
-                console.log("Selected District", districtSelect, selectedDistrict.value)
                 if (selectedDistrict.value !== -1 && !selectedDistrict.text.startsWith("Bitte Bezirk")) queryString += selectedDistrict.text + " "
                 queryString += selectedCountry.text
                 karestc.do_geocode(queryString, function(response) {
@@ -166,17 +170,6 @@
                     draggableMarker.addTo(map)
                 }
                 update_marker_position()
-            }
-
-            function start_upload() {
-                open_upload_dialog("/images/upload", function(response) {
-                    $('#bild-topic').val(response.id)
-                    /** var fileName = response.value
-                    var filePath = response.childs["dm4.files.name"].value
-                    $('#bild-topic').val(response.id) **/
-                    /** $('.ui.fluid.image').append('<img class="bild" src="' + filePath + '" title="' + fileName + '">') **/
-                    console.log("Bild File Topic", response)
-                }, $("body"))
             }
 
             function is_valid_email() {
@@ -246,6 +239,10 @@
                 $('.message').show()
             }
 
+            function hide_input_warning() {
+                $('.message').hide()
+            }
+
             function search_for_duplicates() {
                 if (geoObjectId === -1) { // In an attempt to create a new geo object
                     var nameInput = $('#geoname').val()
@@ -281,6 +278,37 @@
                 is_default_coordinate_pair()
             }
 
+            var upload_dialog = undefined
+            var bild_topic = undefined
+            var file_uploaded = false
+
+            function start_upload() {
+                open_upload_dialog("/images/upload")
+            }
+
+            function remove_related_image() {
+                var bildTopicId = JSON.parse($('#bild-topic').val())
+                $.ajax({
+                    type: "PUT",
+                    url: "/website/image/facet/delete/" + geoObjectId + "/" + bildTopicId // deletes assigned bild path facet value
+                }).success(function(result) {
+                    console.log("Deleting Bild Facet Value OK", result)
+                    $('.remove-image.button').remove()
+                    hide_uploaded_file()
+                }).error(function(err) {
+                    if (err.status === 401) {
+                        show_input_warning("Ihnen fehlt aktuell die Berechtigung um dieses Bild zu entfernen. Versuchen Sie bitte ein neues Bild hochzuladen.")
+                    } else {
+                        console.error("Deleting Bild Facet Value Failed", err)
+                    }
+                })
+            }
+
+            function resize_related_image() {
+                var topicId = JSON.parse($('#bild-topic').val())
+                console.log("Resize related image", topicId, "file_uploaded", bild_topic)
+            }
+
             /**
              * GUIToolkit Helper Methods copied from dm4-webclient module
              * @param   uploadResource    the file repository path (a string) to upload the selected file to. Must begin with "/".
@@ -289,10 +317,18 @@
              *                      returned by the (server-side) executeCommandHook. ### FIXDOC
              * @param   $parent     jQuery Parent (DOM) Element
              */
-            function open_upload_dialog(uploadResource, callback, $parent) {
+            function open_upload_dialog(uploadResource) {
+                // allowing re-uploads
+                file_uploaded = false
+                $('iframe[name="upload-target"]').remove()
                 // install upload target
                 var upload_target = $("<iframe>", {name: "upload-target"}).hide()
                 $("body").append(upload_target)
+                //
+                upload_target.unbind("load")    // Note: the previous handler must be removed
+                upload_target.load(upload_complete_handler)
+                console.log("Upload Complete Handler Registered")
+
                 // create upload dialog
                 var upload_form = $("<form>", {
                     method:  "post", enctype: "multipart/form-data",
@@ -302,27 +338,47 @@
                 .append($('<input class=\"button\" type="submit">').attr({value: "Upload"}))
                 //
                 var toolkit = new GUIToolkit()
-                var upload_dialog = toolkit.dialog({id:"picture-upload", title: "Bild hochladen", content: upload_form})
+                upload_dialog = toolkit.dialog({id:"picture-upload", title: "Bild hochladen", content: upload_form})
                 $('.ui-dialog.ui-widget').show()
 
                 // bind handler
-                upload_target.unbind("load")    // Note: the previous handler must be removed
-                upload_target.load(upload_complete)
 
-                    function upload_complete() {
-                        upload_dialog.close()
-                        // Note: iframes must be accessed via window.frames
-                        var response = $("pre", window.frames["upload-target"].document).text()
-                        try {
-                            var response_object = JSON.parse(response)
-                            callback(response_object, $parent)
-                        } catch (e) {
-                            console.warn("Upload failed: \"" + response_object + "\"\nException=" + JSON.stringify(e))
-                        } finally {
-                            $('.ui-dialog.ui-widget').hide()
-                        }
-                    }
                 return undefined
+            }
+
+            function hide_uploaded_file() {
+                $('#bild-topic').val(0)
+                $('.info-area .ui.fluid.image').empty()
+            }
+
+            function show_uploaded_file() {
+                $('#bild-topic').val(bild_topic.id)
+                var fileName = bild_topic.value
+                var filePath = bild_topic.childs["dm4.files.path"].value
+                $('.info-area .ui.fluid.image').html('<img class="bild" src="/filerepo/' + filePath + '" title="' + fileName + '">')
+                $('.button.remove-image').show()
+                hide_input_warning()
+            }
+
+            function upload_complete_handler() {
+                // Note: iframes must be accessed via window.frames
+                var response = $("pre", window.frames["upload-target"].document).text()
+                try {
+                    if (typeof response !== "undefined") {
+                        var response_object = JSON.parse(response)
+                        bild_topic = response_object
+                        file_uploaded = true
+                        console.log("file as uploaded")
+                        show_uploaded_file()
+                    }
+                } catch (e) {
+                    console.warn("Upload failed: \"" + response_object + "\"\nException=" + JSON.stringify(e))
+                } finally {
+                    if (file_uploaded) {
+                        upload_dialog.close()
+                        $('.ui-dialog.ui-widget').hide()
+                    }
+                }
             }
 
         /*]]>*/
@@ -434,14 +490,22 @@
                                         th:value="${category.id}" th:text="${category.simpleValue}"></option>
                             </select><br/>
                             <a onclick="javascript:clear_multiple_selection(this)" class="ui button small red" id="select-thema">Themen zur&uuml;cksetzen</a>
-                            <!-- Image File Upload>
-                            <label for="bild">Bild</label>
+                            <!--Image File Upload-->
+                            <p>&nbsp;</p>
+                            <label for="bild">Bild <span class="image-size"></span></label>
                             <div class="ui fluid image">
+                                <div th:if="${not #strings.isEmpty(geoobject.imageUrl)}">
+                                    <img class="bild" th:src="${geoobject.imageUrl}"/>
+                                </div>
                             </div>
-                            <div class="ui fluid input">
-                                <input type="button" class="button" value="Bild hochladen" onclick="start_upload()"/>
-                                <input type="hidden" id="bild-topic" name="fileTopicId" value=""/>
-                            </div-->
+                            <div class="ui input form fluid image-commands">
+                                <div class="ui fluid input group">
+                                    <input type="button" class="button" value="Neues Bild hochladen" onclick="start_upload()"/>
+                                    <input type="hidden" id="bild-topic" name="fileTopicId" th:value="${geoobject.imageId}"/>
+                                    <input type="button" class="remove-image button" value="Bild entfernen" onclick="remove_related_image()"/>
+                                    <input type="button" class="resize-image button" value="Bildgr&ouml;&szlig;e optimieren" onclick="resize_related_image()"/>
+                                </div>
+                            </div>
                         </div>
 
                         <div class="right-side ui column">

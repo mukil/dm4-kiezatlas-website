@@ -231,6 +231,14 @@ public class EinrichtungView implements JSONEnabled {
         }
     }
 
+    public void setImageId(long id) {
+        try {
+            json.put("image_id", id);
+        } catch (JSONException ex) {
+            log.log(Level.SEVERE, null, ex);
+        }
+    }
+
     public void setAssignedUsername(String username) {
         try {
             json.put("username", username);
@@ -366,6 +374,15 @@ public class EinrichtungView implements JSONEnabled {
         } catch (JSONException ex) {
             log.log(Level.FINE, "Einrichtung has no Image URL (Id: " + getId() + ")", ex);
             return "";
+        }
+    }
+
+    public long getImageId() {
+        try {
+            return json.getLong("image_id");
+        } catch (JSONException ex) {
+            log.log(Level.FINE, "Einrichtung has no Image ID (Id: " + getId() + ")", ex);
+            return -1;
         }
     }
 
