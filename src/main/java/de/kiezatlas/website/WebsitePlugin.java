@@ -169,6 +169,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     public static final String ANGEBOTE_RESOURCE = "angebote/";
     public static final String GEO_OBJECT_RESOURCE = "website/geo/";
     public static final String MY_ENTRIES_RESOURCE = "angebote/my";
+    public static final String GOOGLE_API_KEY = "";
 
     // DM4 URIs
     static final String DEFAULT_ROLE = "dm4.core.default";
@@ -4004,8 +4005,8 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
             // Encoded url to open
             log.info("Requested geo code query=\"" + query + "\" - Processing");
             query = URLEncoder.encode(query, "UTF-8");
-            String url = "http://maps.googleapis.com/maps/api/geocode/json?address="
-                + query + "&sensor=false&locale=de";
+            String url = "https://maps.googleapis.com/maps/api/geocode/json?address="
+                + query + "&sensor=false&locale=de&key=" + GOOGLE_API_KEY;
             URLConnection connection = new URL(url).openConnection();
             connection.setRequestProperty("Content-Type", "application/json");
             connection.setRequestProperty("Charset", "UTF-8");
@@ -4058,7 +4059,8 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     private String geoCodeLocationInput(String inputValue) {
         String result = "";
         try {
-            String url = "https://maps.googleapis.com/maps/api/geocode/json?latlng=" + inputValue + "&language=de";
+            String url = "https://maps.googleapis.com/maps/api/geocode/json?latlng="
+                    + inputValue + "&language=de&key=" + GOOGLE_API_KEY;
             // &result_type=street_address|postal_code&key=API_KEY
             URLConnection connection = new URL(url).openConnection();
             connection.setRequestProperty("Content-Type", "application/json");
