@@ -51,6 +51,17 @@ select.ui.multiple {
     color: #f8f6e9;
 }
 
+.edit .image.fluid img {
+    max-width: 100%;
+    height: auto;
+}
+
+.edit .button.resize-image,
+.edit .button.remove-image {
+    display: none;
+    margin-left: 1em;
+}
+
 form .invalid {
     border-color: #ce0000 !important;
     border-width: 2px;

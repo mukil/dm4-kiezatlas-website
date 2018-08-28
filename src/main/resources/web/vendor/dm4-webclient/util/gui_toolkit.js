@@ -127,10 +127,6 @@ function GUIToolkit(config) {
             // dialog.dialog("option", "dialogClass",    no_close_button ? "no-close-button" : "")
             // dialog.dialog("option", "closeOnEscape", !no_close_button)
             //
-            // Firefox workaround, see http://bugs.jqueryui.com/ticket/3623 ### TODO: still needed?
-            options.open = function() {
-                $("body").css("overflow", "hidden")
-            }
             //
             $("body").append(dialog)
             dialog.dialog(options)
