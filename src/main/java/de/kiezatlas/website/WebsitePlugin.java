@@ -430,16 +430,21 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     }
 
     private void processBildAssignment(Topic geoObject, Topic username, long bildTopicId) {
-        if (bildTopicId != 0) {
+        if (bildTopicId != 0 && bildTopicId != -1) {
             Topic existingBild = getBildFileAssignment(geoObject);
             if (existingBild != null) {
-                log.info("Deleting existing Bild File Topic relation: " + existingBild.getSimpleValue());
+                log.info("Remove existing Bild File Topic relation: " + existingBild.getSimpleValue());
                 existingBild.delete();
             }
-            log.info("Assign Bild File Topic Upload is file at=\"" + files.getFile(bildTopicId).toString());
-            createBildAssignment(geoObject, username, bildTopicId);
+            Topic bildTopic = dm4.getTopic(bildTopicId);
+            if (bildTopic.getTypeUri().equals("dm4.files.file")) {
+                log.info("Assigning Bild File Topic " + files.getFile(bildTopicId).getPath());
+                createBildAssignment(geoObject, username, bildTopicId);
+            } else {
+                log.info("Processing Bild Pfad Assignment ("+bildTopic.getSimpleValue()+") - Doing Nothing");
+            }
         } else {
-            log.info("NO Bild File Topic submitted for \"" + geoObject.getSimpleValue().toString());
+            log.info("NO Bild File Topic ID submitted for \"" + geoObject.getSimpleValue().toString());
         }
     }
 
@@ -2126,11 +2131,13 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         JSONObject result = new JSONObject();
         Topic geoObject = dm4.getTopic(geoObjectId);
         // clear bild assignment association
-        RelatedTopic bildPath = geoObject.getRelatedTopic(BILD_ASSIGNMENT,
+        RelatedTopic bildFileTopic = geoObject.getRelatedTopic(BILD_ASSIGNMENT,
                 DEFAULT_ROLE, DEFAULT_ROLE, "dm4.files.file");
-        if (bildPath.getId() == fileTopicId) {
-            bildPath.getRelatingAssociation().delete();
-            log.info("Deleted Bild Facet Value Reference: " + bildPath.toString());
+        if (bildFileTopic != null && bildFileTopic.getId() == fileTopicId) {
+            bildFileTopic.getRelatingAssociation().delete();
+            log.info("Deleted Bild Facet Value Reference: " + bildFileTopic.toString());
+        } else {
+            log.info("Could not delete Bild Facet Value for given fileTopicId: " + bildFileTopic);
         }
         return result.toString();
     }
