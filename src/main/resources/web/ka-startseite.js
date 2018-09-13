@@ -635,7 +635,11 @@ function replace_page_url() {
 
 function create_viewport_parameter() {
     var mapView = leafletMap.get_map_viewport()
-    return "&koordinate=" + mapView.center.lat.toFixed(5) + "," + mapView.center.lng.toFixed(5) + "&zoomstufe=" + mapView.zoom
+    if (typeof mapView !== "undefined") {
+        return "&koordinate=" + mapView.center.lat.toFixed(5) + "," + mapView.center.lng.toFixed(5) + "&zoomstufe=" + mapView.zoom
+    } else {
+        return ""
+    }
 }
 
 function create_page_parameter_string() {
