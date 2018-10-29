@@ -114,6 +114,30 @@ form .invalid {
     color: #fff;
 }
 
+.webpages .body .ui.spaced.segment {
+    padding-bottom: 0em;
+}
+
+.webpages .body .ui.spaced.segment .content {
+    padding: 0em;
+}
+
+.webpages .body .sections-above {
+    padding-top: 3em;
+}
+
+.webpages.page.detail .metadata {
+    display: none;
+}
+
+.webpages.page.detail .ui.vertical.stripe {
+    padding: 0em;
+}
+
+.webpages.page.detail .ui.vertical.stripe.main-segment {
+    padding-top: 3em;
+}
+
 .ui.webpages .top.fixed.menu.transition.visible,
 .ui.webpages .top.menu.fixed .fixed-border {
     height: 58px;

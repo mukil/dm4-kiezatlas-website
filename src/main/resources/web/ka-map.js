@@ -617,7 +617,7 @@ var leafletMap = (function($, L) {
     }
 
     map.on_browser_location_error = function(e) {
-        map.scroll_into_view()
+        // map.scroll_into_view()
         handle_locating_error()
     }
 

@@ -625,9 +625,7 @@ function replace_page_url() {
         url += params.page
     }
     if (history_api_supported) {
-        // console.log("replace history state", parameter, url)
         window.history.replaceState(params, webapp_title, url)
-        console.log("replaced page url", url)
     } else {
         console.warn("window.history manipulation not supported", window.navigator)
     }
