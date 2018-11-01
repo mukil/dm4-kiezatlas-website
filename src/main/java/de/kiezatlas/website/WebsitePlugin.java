@@ -92,6 +92,7 @@ import de.kiezatlas.angebote.events.ContactAnbieterListener;
 import de.kiezatlas.angebote.events.RemovedAngebotListener;
 import de.kiezatlas.comments.CommentsService;
 import de.kiezatlas.etl.KiezatlasETLService;
+import static de.kiezatlas.etl.KiezatlasETLService.ANGEBOT_CRIT;
 import static de.kiezatlas.etl.KiezatlasETLService.ANGEBOT_FACET;
 import static de.kiezatlas.etl.KiezatlasETLService.BEZIRK;
 import static de.kiezatlas.etl.KiezatlasETLService.BEZIRK_FACET;
@@ -3259,11 +3260,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     }
 
     private void updateSimpleCompositeFacet(Topic geoObject, String facetTypeUri, String childTypeUri, String value) {
-        if (!value.trim().isEmpty()) {
-            facets.updateFacet(geoObject.getId(), facetTypeUri, mf.newFacetValueModel(childTypeUri).put(value.trim()));
-        } else {
-            log.info("COULD update simple composite facet (" + childTypeUri + ") WITHOUT VALUE");
-        }
+        facets.updateFacet(geoObject.getId(), facetTypeUri, mf.newFacetValueModel(childTypeUri).put(value.trim()));
     }
 
     private void addCityTopicValue(ChildTopicsModel model, long value) {
@@ -3329,13 +3326,13 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     private void updateCriteriaFacets(Topic geoObject, List<Long> themen, List<Long> zielgruppen, List<Long> angebote) {
         List<RelatedTopic> formerThemen = facets.getFacets(geoObject, THEMA_FACET);
         List<RelatedTopic> formerZielgruppen = facets.getFacets(geoObject, ZIELGRUPPE_FACET);
-        // List<RelatedTopic> formerAngebote = facetsService.getFacets(geoObject, ANGEBOT_FACET);
+        List<RelatedTopic> formerAngebote = facets.getFacets(geoObject, ANGEBOT_FACET);
         delFacetTopicReferences(geoObject, formerThemen, THEMA_FACET, THEMA_CRIT);
         delFacetTopicReferences(geoObject, formerZielgruppen, ZIELGRUPPE_FACET, ZIELGRUPPE_CRIT);
-        /// delRefFacetTopics(geoObject, formerAngebote, ANGEBOT_FACET, ANGEBOT_CRIT);
+        delFacetTopicReferences(geoObject, formerAngebote, ANGEBOT_FACET, ANGEBOT_CRIT);
         putFacetTopicsReferences(geoObject, themen, THEMA_FACET, THEMA_CRIT);
         putFacetTopicsReferences(geoObject, zielgruppen, ZIELGRUPPE_FACET, ZIELGRUPPE_CRIT);
-        // putRefFacets(geoObject, angebote, ANGEBOT_FACET, ANGEBOT_CRIT);
+        putFacetTopicsReferences(geoObject, angebote, ANGEBOT_FACET, ANGEBOT_CRIT);
     }
 
     private void updateContactFacet(Topic geoObject, String ansprechpartner, String telefon, String email, String fax) {
@@ -3361,7 +3358,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         // check if a former value was already assigned and we're updating
         Topic oldFacetTopic = facets.getFacet(geoObject.getId(), facetTypeUri);
         // check if new value is empty
-        if (value.trim().isEmpty()) {
+        if (value.trim().isEmpty() && oldFacetTopic != null) {
             log.info("Passed empty value as new simple key composite facet (" + childTypeUri + ") - DELETING facet value");
             facets.updateFacet(geoObject, facetTypeUri, mf.newFacetValueModel(childTypeUri)
                     .putDeletionRef(oldFacetTopic.getId()));

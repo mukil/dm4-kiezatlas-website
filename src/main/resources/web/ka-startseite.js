@@ -39,10 +39,12 @@ var results = [],
 
 var $sidebarUi = undefined
 var currentViewport = undefined
+var currentPage = undefined
 // --- Page Methods -- //
 
 function init_page(page) {
     var subdomain_mitte = (window.location.host.indexOf("mitte.") !== -1 || window.location.hostname.indexOf("mitte.") !== -1) ? true : false
+    currentPage = page
     // Build up UI handlers
     $('.ui.checkbox').checkbox()
     $('.ui.menu .dropdown').dropdown()
@@ -620,7 +622,13 @@ function replace_page_url() {
         to: to,
         page: get_location_hash_from_url()
     }
-    var url = window.document.location.origin + "/website" + create_page_parameter_string()
+    var url = window.document.location.origin
+    if (currentPage === "place" && objectId != "-1") {
+        url += "/website/geo/" + objectId
+    } else if (currentPage === "event") {
+        url += "/angebote/" + objectId
+    }
+    url += create_page_parameter_string()
     if (params.page) {
         url += params.page
     }
