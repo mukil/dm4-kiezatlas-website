@@ -210,7 +210,7 @@ $(document).ready(function () {
                 infoEW = features[i].get('EW');
                 infoLink = features[i].get('SCHLUESSEL');
             }
-            var link = '<a href="https://sozialraumdaten.kiezatlas.de/seiten/2017/12/?lor='+infoLink+'">Link zur Auswertung</a><br/>'
+            var link = '<a href="https://sozialraumdaten.kiezatlas.de/seiten/2018/06/?lor='+infoLink+'">Link zur Auswertung</a><br/>'
             var statusDyn = 'Status Index: ' + (infoStatus).toFixed(2) + ', ' + 'Dynamik: ' + infoDyn + '<br/>'
             if (infoDyn == null) {
                 link = "Keine Auswertung aufgrund zu geringer Einwohnerzahl, "
