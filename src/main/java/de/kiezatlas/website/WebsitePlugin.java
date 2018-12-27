@@ -170,7 +170,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     public static final String ANGEBOTE_RESOURCE = "angebote/";
     public static final String GEO_OBJECT_RESOURCE = "website/geo/";
     public static final String MY_ENTRIES_RESOURCE = "angebote/my";
-    public static final String GOOGLE_API_KEY = "AIzaSyBNb7gyZlgI_wY6E7hRxZl6RWk5SEcZOV8";
+    public static final String GOOGLE_API_KEY = "";
 
     // DM4 URIs
     static final String DEFAULT_ROLE = "dm4.core.default";
