@@ -121,6 +121,8 @@ import de.mikromedia.webpages.model.MenuItem;
 import java.net.URI;
 import java.net.URISyntaxException;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.UriInfo;
 import org.thymeleaf.context.AbstractContext;
 
 /**
@@ -4156,20 +4158,33 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
     }
 
     @Override
-    public void frontpageRequested(AbstractContext context, Topic website, String name) {
+    public void frontpageRequested(AbstractContext context, Topic website, String name, UriInfo uriInfo) {
         if (name.equals("/")) {
             // frontpage root resource
-            log.info("Kiezatlas frontpage requested");
-            prepareSearchTemplateParameter(null, 0, "quick", "place", "undefined");
+            log.info("Kiezatlas frontpage requested, uriInfo=\"" + uriInfo.getQueryParameters().toString() + "\"");
+            prepareSearchTemplateParameter(getSearchParameter(uriInfo), 0, "quick", "place", "undefined");
         } else {
             // citymap resource
             log.info("Citymap at /" + name + " requested");
             Topic citymap = dm4.getTopicByValue("ka2.website.web_alias", new SimpleValue(name));
             if (citymap != null) { // requested custom resource is not a citymap topic
-                prepareSearchTemplateParameter(null, citymap.getId(), "quick", "place", "undefined");
+                prepareSearchTemplateParameter(getSearchParameter(uriInfo), citymap.getId(), "quick", "place", "undefined");
             }
         }
         preparePageTemplate(name);
+    }
+
+    private String getSearchParameter(UriInfo uriInfo) {
+        MultivaluedMap<String, String> params = uriInfo.getQueryParameters();
+        Set<String> keys = params.keySet();
+        Iterator<String> iterator = keys.iterator();
+        while (iterator.hasNext()) {
+            String key = iterator.next();
+            if (key.equals("search")) {
+                return params.get(key).get(0).toString();
+            }
+        }
+        return null;
     }
 
     @Override
