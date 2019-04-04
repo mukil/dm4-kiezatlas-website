@@ -670,7 +670,7 @@ function toggleSearchCriteria() {
 }
 
 function get_search_input() {
-    var value = $('#query').val()
+    var value = filterXSS($('#query').val(), {stripIgnoreTagBody: true})
     searchText = value
     parameter.searchText = value
     return value
@@ -691,6 +691,7 @@ function isValidSearchText() {
         show_input_warning("Bitte geben Sie einen Suchbegriff ein")
         return false
     }
+    hide_input_warning()
     return true
 }
 
@@ -698,6 +699,10 @@ function show_input_warning(warning) {
     $('.message').html(warning)
     $('.message').addClass("warning")
     $('.message').show()
+}
+
+function hide_input_warning() {
+    $('.message').hide()
 }
 
 function set_nearby_input(value) {

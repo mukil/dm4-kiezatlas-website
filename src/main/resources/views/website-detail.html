@@ -11,6 +11,7 @@
         <link rel="stylesheet" type="text/css" href="/de.kiezatlas.angebote/dist/vendor/jquery-ui-1.12.1-kiezatlas.min.css"/>
         <link rel="stylesheet" type="text/css" href="/de.kiezatlas.website/css/kiezatlas-web.css" />
 
+        <script src="/de.kiezatlas.website/vendor/xss.min.js"></script>
         <script defer="true" src="/de.kiezatlas.angebote/dist/vendor/jquery-1.9.1-and-1.12.1-ui-custom.min.js"></script>
         <script defer="true" src="/de.kiezatlas.website/css/semantic-ui/2.3/dist/semantic.min.js"></script>
         <script defer="true" src="/de.kiezatlas.website/vendor/leaflet-1.3.1/leaflet.js"></script>
@@ -33,6 +34,7 @@
                 var lCoordinate = undefined
                 console.log("initialized district filter in frontend", districtId, districtName)
                 searchText = /*[[${search}]]*/ ''
+                searchText = filterXSS(searchText, {stripIgnoreTagBody: true})
                 searchType = /*[[${searchType}]]*/ 'place'
                 searchContext = /*[[${searchContext}]]*/ '0'
                 searchMethod = /*[[${searchMethod}]]*/ 'quick'
