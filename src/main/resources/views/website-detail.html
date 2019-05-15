@@ -116,8 +116,9 @@
     <body class="ui page detail kiezatlas place">
 
         <!-- Following Menu -->
-        <nav id="lower-page-nav" th:include="fragments/navigation :: lower-page-nav"></nav>
+        <nav id="lower-page-nav" th:include="fragments/navigation :: lower-page-nav (publisher=${is_publisher})"></nav>
 
+        <!-- Top Navigation Menu -->
         <div class="navigation">
             <div class="top-menu" th:include="fragments/navigation :: top-menu (publisher=${is_publisher})"></div>
         </div>

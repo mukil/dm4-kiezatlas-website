@@ -98,7 +98,7 @@ $(document).ready(function () {
 
     $.ajax({
         dataType: "json",
-        url: '/de.kiezatlas.website/vendor/monitoring/data/metaDB.json',
+        url: '/de.kiezatlas.website/vendor/monitoring/data/meta2017.geojson',
         success: function (data) {
             populateMap(data)
         }
@@ -110,7 +110,7 @@ $(document).ready(function () {
     function populateMap(y) {
         var source = new ol.source.Vector({
             attributions: [new ol.Attribution({
-                html: " | Autoren: D. Methke, L. Friebel, S. Dieckmann | Statistische Daten: <a href='http://www.stadtentwicklung.berlin.de/planen/basisdaten_stadtentwicklung/monitoring/index.shtml' target='_blank'>Monitoring Soziale Stadtentwicklung Berlin 2015 </a> | &#169 <a href='https://www.mapboy.com/about/maps' target='_blank'> Mapbox</a> | &#169 <a href='https://www.openstreetmap.org/copyright' target='_blank'> OpenStreetMap</a> contributors",
+                html: " | Autoren: D. Methke, L. Friebel, S. Dieckmann | Statistische Daten: <a href='http://www.stadtentwicklung.berlin.de/planen/basisdaten_stadtentwicklung/monitoring/index.shtml' target='_blank'>Monitoring Soziale Stadtentwicklung Berlin 2017 </a> | &#169 <a href='https://www.mapboy.com/about/maps' target='_blank'> Mapbox</a> | &#169 <a href='https://www.openstreetmap.org/copyright' target='_blank'> OpenStreetMap</a> contributors",
                 collapsed: false,
                 collapsible: false,
             })]
@@ -219,7 +219,7 @@ $(document).ready(function () {
             document.getElementById('popup-content').innerHTML = '<b>' + infoName + '</b>, ' + infoBR + ', ' + infoBN + '<br/>' 
                     + link
                     + 'EinwohnerInnen: ' + infoEW + '<br/>'
-                    + statusDyn + 'Quelle: Monitoring Soziale Stadt 2015'
+                    + statusDyn + 'Quelle: Monitoring Soziale Stadt 2017'
             popup.setPosition(coordinate);
         } else {
             document.getElementById('popup-content').innerHTML = '';

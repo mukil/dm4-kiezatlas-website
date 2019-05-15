@@ -47,7 +47,7 @@
     <body class="ui page front">
 
         <!-- Following Menu -->
-        <nav id="lower-page-nav" th:include="fragments/navigation :: lower-page-nav"></nav>
+        <nav id="lower-page-nav" th:include="fragments/navigation :: lower-page-nav (publisher=${is_publisher})"></nav>
 
         <div class="navigation">
             <div class="top-menu" th:include="fragments/navigation :: top-menu (publisher=${is_publisher})"></div>
