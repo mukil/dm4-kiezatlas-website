@@ -119,7 +119,11 @@ form .invalid {
 }
 
 .webpages .body .ui.spaced.segment .content {
-    padding: 0em;
+    padding: 0em 1em 1em 1em
+}
+
+.webpages .ui.styled.accordion {
+    margin-top: 1em;
 }
 
 .webpages .body .sections-above {
