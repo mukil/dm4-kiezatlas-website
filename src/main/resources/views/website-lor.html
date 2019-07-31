@@ -38,7 +38,7 @@
     <body class="ui page detail kiezatlas monitoring topic">
 
         <!-- Following Menu -->
-        <nav id="lower-page-nav" th:include="fragments/navigation :: lower-page-nav"></nav>
+        <nav id="lower-page-nav" th:include="fragments/navigation :: lower-page-nav (publisher=${is_publisher})"></nav>
 
         <div class="navigation">
             <div class="top-menu" th:include="fragments/navigation :: top-menu (publisher=${is_publisher})"></div>
@@ -54,11 +54,11 @@
             <div id="header" class="ui vertical segment blue4bg">
                 <div class="welcome ui container">
                     <p>
-                        Diese Karte zeigt den Status von 447 kleinr&auml;umlichen Planungseinheiten Berlins (<em title="Lebensweltlich orientierter Planungsraum">LORs</em>) aus dem <b>Monitoring Soziale Stadt 2015</b>.
+                        Diese Karte zeigt den Status von 447 kleinr&auml;umlichen Planungseinheiten Berlins (<em title="Lebensweltlich orientierter Planungsraum">LORs</em>) aus dem <b>Monitoring Soziale Stadt 2017</b>.
                         &Uuml;ber die Auswahl eines Planungsraums in der Karte gelangen Sie zu den Kiezatlas-Sozialraumdaten.
                     </p>
                     <p>
-                        Datenbasis der Sozialraumdaten:<br/>Altersverteilung, Staatsangeh&ouml;rigkeit und Migration des <a target="_blank" title="zur Website des Amts f&uuml;r Statistik BB" href="https://www.statistik-berlin-brandenburg.de/regionales/kleinraumdaten/einwohnerOD.asp?Kat=6101">Amts für Statistik Berlin Brandenburg</a> (2011/12 - 2017/12), <a target="_blank" href="https://www.stadtentwicklung.berlin.de/planen/basisdaten_stadtentwicklung/monitoring/index.shtml" title="zur Website des Monitorings Soziale Stadt">Monitoring Soziale Stadt</a> (2015).
+                        Datenbasis der Sozialraumdaten:<br/>Altersverteilung, Staatsangeh&ouml;rigkeit und Migration des <a target="_blank" title="zur Website des Amts f&uuml;r Statistik BB" href="https://www.statistik-berlin-brandenburg.de/regionales/kleinraumdaten/einwohnerOD.asp?Kat=6101">Amts für Statistik Berlin Brandenburg</a> (2011/12 - 2018/12), <a target="_blank" href="https://www.stadtentwicklung.berlin.de/planen/basisdaten_stadtentwicklung/monitoring/index.shtml" title="zur Website des Monitorings Soziale Stadt">Monitoring Soziale Stadt</a> (2017).
                     </p>
                 </div>
             </div>
