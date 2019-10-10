@@ -144,6 +144,9 @@
 
             <!-- Name, Description Area -->
             <div class="ui vertical container segment entry">
+                <h3 class="header thin">
+                    <span title="Bezirk" th:utext='${geoobject.bezirk}'>Bezirk</span> &gt; <span title="Bezirksregion" th:utext='${geoobject.bezirksregionName}'>Bezirksregion</span>
+                </h3>
                 <h3>
                     <img src="/de.kiezatlas.website/images/g4208.png" class="marker" alt="Icon für Datensätze"/>
                     <span th:text='${geoobject.name}'></span>
@@ -188,9 +191,9 @@
                         <br/>Lade Stadtplan...
                     </div>
                     <div id="map-sidebar"></div>
-                    <div class="ui input circle-control blue4">
+                    <!--div class="ui input circle-control blue4">
                         <input type="button" class="ui button" onclick="activate_circle_search()" value="Umkreissuche aktivieren" />
-                    </div>
+                    </div-->
                 </div>
             </div>
 
