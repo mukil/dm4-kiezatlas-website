@@ -1,6 +1,6 @@
 
 <!--- Sidebar Vertical Navigation (Experimental) -->
-<div th:fragment="vertical-nav" class="ui vertical left menu sidebar">
+<div th:fragment="vertical-nav (publisher)" class="ui vertical left menu sidebar">
 
     <div class="menu-header"></div>
 
@@ -87,7 +87,7 @@
     Kiezatlas 2.0 UI Navigation Menu (White)
     Note: A copy of this needs to be maintainede in in dm4-kiezatlas-angebote views/fragments/navigation.html
 -->
-<div th:fragment="top-menu">
+<div th:fragment="top-menu (publisher)">
 
     <div class="ui container">
 
@@ -114,7 +114,7 @@
                 <span>Bezirksseiten</span> <i class="dropdown icon"></i>
                 <div class="menu" id="bezirksauswahl">
                     <a class="item" th:each="district : ${districts}" th:id="${district.id}"
-                         th:text="${district.simpleValue}" th:href="'/#' + ${district.simpleValue}">Mitte</a>
+                         th:text="${district.simpleValue}" th:href="'/#' + ${#strings.toLowerCase(district.simpleValue)}">Mitte</a>
                 </div>
             </div>
             <div class="ui dropdown item">

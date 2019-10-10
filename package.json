@@ -21,7 +21,7 @@
   },
   "homepage": "https://github.com/mukil/dm4-kiezatlas-website#readme",
   "devDependencies": {
-    "grunt": "^1.0.1",
+    "grunt-cli": "^1.3.2",
     "grunt-contrib-concat": "^1.0.1",
     "grunt-contrib-uglify": "^2.0.0"
   }

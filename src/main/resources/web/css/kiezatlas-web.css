@@ -118,6 +118,14 @@ form .invalid {
     padding-bottom: 0em;
 }
 
+.webpages .body .ui.spaced.segment .content {
+    padding: 0em 1em 1em 1em
+}
+
+.webpages .ui.styled.accordion {
+    margin-top: 1em;
+}
+
 .webpages .body .sections-above {
     padding-top: 3em;
 }
