@@ -2232,7 +2232,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
         districts.addAll(regions);
         viewData("userDistricts", districts);
         // viewData("availableLor", getAvailableLORNumberTopics());
-        viewData("workspace", getStandardWorkspace());
+        viewData("workspace", workspaces.getWorkspace(KiezatlasService.KIEZATLAS_WORKSPACE_URI));
     }
 
     private Viewable prepareGeoObjectTemplate(@PathParam("topicId") long topicId) {
@@ -3683,7 +3683,7 @@ public class WebsitePlugin extends ThymeleafPlugin implements WebsiteService, As
 
     @Override
     public Topic getStandardWorkspace() {
-        return workspaces.getWorkspace(workspaces.DEEPAMEHTA_WORKSPACE_URI);
+        return angebote.getAngeboteWorkspace();
     }
 
     @Override
