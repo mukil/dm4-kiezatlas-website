@@ -49,11 +49,9 @@
                 }
                 document.cookie = " dm4_no_geocoding=true;"
                 map = L.map('map', { scrollWheelZoom: true } ).setView(lCoordinate, (geoObjectId !== -1) ? 17 : 14)
-                L.tileLayer('https://api.tiles.mapbox.com/v4/kiezatlas.pd8lkp64/{z}/{x}/{y}.png?' // old style id="kiezatlas.map-feifsq6f"
-                    + 'access_token=pk.eyJ1Ijoia2llemF0bGFzIiwiYSI6ImNpa3BndjU2ODAwYm53MGxzM3JtOXFmb2IifQ._PcBhOcfLYDD8RP3BS0U_g', {
-                    attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors,'
-                    + '<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery &#169; <a href="http://mapbox.com">Mapbox</a>',
-                    id: 'kiezatlas.m7222ia5'}).addTo(map)
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: 'Map data &copy; <a href="http://openstreetmap.org/copyright">OpenStreetMap</a> contributors,'
+                    + '<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>', maxZoom: 19}).addTo(map)
                 draggableMarker = L.marker(lCoordinate, { draggable: true} )
                 draggableMarker.on('dragend', function(e) {
                     var pos = draggableMarker.getLatLng()

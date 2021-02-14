@@ -32,6 +32,7 @@ var model = {
             leafletMap.render_circle_search_control(fitBounds)
             console.log("Activating circle query control...")
         } else {
+            leafletMap.set_circle_control_fixed(true)
             leafletMap.render_circle_search_control(fitBounds)
         }
     },

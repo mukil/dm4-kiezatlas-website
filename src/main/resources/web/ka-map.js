@@ -36,11 +36,9 @@ var leafletMap = (function($, L) {
         } else {
             map.map = new L.Map(elementId)
             map.elementId = elementId
-            L.tileLayer('https://api.tiles.mapbox.com/v4/kiezatlas.pd8lkp64/{z}/{x}/{y}.png?' // old style id="kiezatlas.map-feifsq6f"
-                + 'access_token=pk.eyJ1Ijoia2llemF0bGFzIiwiYSI6ImNpa3BndjU2ODAwYm53MGxzM3JtOXFmb2IifQ._PcBhOcfLYDD8RP3BS0U_g', {
-                attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors,'
-                + '<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery &#169; <a href="http://mapbox.com">Mapbox</a>',
-                id: 'kiezatlas.m7222ia5'}).addTo(map.map)
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: 'Map data &copy; <a href="http://openstreetmap.org/copyright">OpenStreetMap</a> contributors,'
+                + '<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>', maxZoom: 19}).addTo(map.map)
         }
         L.Util.setOptions(map.map, {
             dragging: true, touchZoom: true, scrollWheelZoom: false, doubleClickZoom: true,
@@ -110,8 +108,8 @@ var leafletMap = (function($, L) {
         if (map.is_circle_query_active()) {
             mapping.circle_search_control = new L.CircleEditor(
                 map.get_current_location_coords(), mapping.circle_search_radius, {
-                color: colors.ka_gold, weight: 3, opacity: .4, extendedIconClass: "extend-icon-medium",
-                className: "leaflet-search-control", clickable: false, zIndexOffset: 101, fillColor: colors.ka_gold
+                color: colors.ka_blue ,weight: 3, opacity: .4, extendedIconClass: "extend-icon-medium",
+                className: "leaflet-search-control", clickable: false, zIndexOffset: 101, fillColor: colors.m_blue
             })
             mapping.control_group.addLayer(mapping.circle_search_control)
             mapping.circle_search_control.on('edit', function(event) {

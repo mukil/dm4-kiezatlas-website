@@ -51,11 +51,9 @@
                         bounds = L.latLngBounds(corner1, corner2)
                     lCoordinate = L.latLng(latitude, longitude)
                     map = L.map('map', { center: [ latitude, longitude ], zoom: 16, minZoom: 10, maxBounds: bounds, zoomSnap: 0.5 })
-                    L.tileLayer('https://api.tiles.mapbox.com/v4/kiezatlas.pd8lkp64/{z}/{x}/{y}.png?' // old style id="kiezatlas.map-feifsq6f"
-                       + 'access_token=pk.eyJ1Ijoia2llemF0bGFzIiwiYSI6ImNpa3BndjU2ODAwYm53MGxzM3JtOXFmb2IifQ._PcBhOcfLYDD8RP3BS0U_g', {
-                       attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors,'
-                       + '<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery &#169; <a href="http://mapbox.com">Mapbox</a>',
-                       id: 'kiezatlas.m7222ia5'}).addTo(map)
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: 'Map data &copy; <a href="http://openstreetmap.org/copyright">OpenStreetMap</a> contributors,'
+                        + '<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>', maxZoom: 19}).addTo(map)
                     // override map instance of leafletMap
                     leafletMap.setup('map', false, map, 16)
                     leafletMap.set_map_center(lCoordinate)
@@ -192,7 +190,7 @@
                     </div>
                     <div id="map-sidebar"></div>
                     <!--div class="ui input circle-control blue4">
-                        <input type="button" class="ui button" onclick="activate_circle_search()" value="Umkreissuche aktivieren" />
+                        <input type="button" class="ui button" onclick="set_mapcontrol_mode_query()" value="Umkreissuche aktivieren" />
                     </div-->
                 </div>
             </div>
@@ -262,8 +260,8 @@
                             </div>
                             <div class="sozialraumdaten" th:if="${!#strings.isEmpty(geoobject.LORId)}">
                                 <label>Sozialraumdaten:</label>
-                                <a th:href="@{http://sozialraumdaten.kiezatlas.de/seiten/2018/12/(lor=${geoobject.LORId})}">
-                                    Statistische Informationen zur Bev&ouml;lkerungsstruktur in der Umgebung dieses Ortes
+                                <a th:href="@{http://sozialraumdaten.kiezatlas.de/seiten/2020/06/(lor=${geoobject.LORId})}">
+                                    Statistische Informationen zur Bev&ouml;lkerungsstruktur in der Umgebung dieses Ortes (Stand: Juni 2020)
                                 </a>
                             </div>
                             <div class="regionen" th:if="${!#strings.isEmpty(geoobject.bezirk)}">
